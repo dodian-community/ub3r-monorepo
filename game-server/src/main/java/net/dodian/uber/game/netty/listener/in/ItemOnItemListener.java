@@ -1,6 +1,7 @@
 package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
+import net.dodian.uber.game.engine.metrics.PacketRejectTelemetry;
 import net.dodian.uber.game.engine.systems.interaction.items.ItemCombinationService;
 import net.dodian.uber.game.engine.event.GameEventBus;
 import net.dodian.uber.game.events.item.ItemOnItemEvent;
@@ -26,6 +27,7 @@ public class ItemOnItemListener implements PacketListener {
     public void handle(Client client, GamePacket packet) {
         ByteBuf buf = packet.payload();
         if (buf.readableBytes() < MIN_PAYLOAD_BYTES) {
+            PacketRejectTelemetry.record(packet.opcode(), "short_payload");
             return;
         }
 
@@ -35,11 +37,13 @@ public class ItemOnItemListener implements PacketListener {
         buf.readUnsignedShort();
 
         if (usedWithSlot < 0 || usedWithSlot >= client.playerItems.length || itemUsedSlot < 0 || itemUsedSlot >= client.playerItems.length) {
+            PacketRejectTelemetry.record(packet.opcode(), "invalid_slot_bounds");
             return;
         }
         int usedWithId = client.playerItems[usedWithSlot] - 1;
         int itemUsedId = client.playerItems[itemUsedSlot] - 1;
         if (usedWithId < 0 || itemUsedId < 0) {
+            PacketRejectTelemetry.record(packet.opcode(), "invalid_item_id");
             return;
         }
         if (GameEventBus.postWithResult(new ItemOnItemEvent(client, itemUsedSlot, usedWithSlot, itemUsedId, usedWithId))) {

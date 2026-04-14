@@ -1,7 +1,7 @@
 package net.dodian.uber.game.api.plugin.skills
 
-import net.dodian.uber.game.content.items.ItemContent
-import net.dodian.uber.game.content.objects.ObjectContent
+import net.dodian.uber.game.item.ItemContent
+import net.dodian.uber.game.objects.ObjectContent
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
 
 fun SkillPluginBuilder.bindObjectContentClick(
@@ -35,6 +35,22 @@ fun SkillPluginBuilder.bindObjectContentUseItem(
             itemId = itemId,
             itemSlot = itemSlot,
             interfaceId = interfaceId,
+        )
+    }
+}
+
+fun SkillPluginBuilder.bindObjectContentMagic(
+    preset: PolicyPreset,
+    content: ObjectContent,
+    spellIds: IntArray = intArrayOf(-1),
+) {
+    magicOnObject(preset, *content.objectIds, spellIds = spellIds) { client, objectId, position, obj, spellId ->
+        content.onMagic(
+            client = client,
+            objectId = objectId,
+            position = position,
+            obj = obj,
+            spellId = spellId,
         )
     }
 }

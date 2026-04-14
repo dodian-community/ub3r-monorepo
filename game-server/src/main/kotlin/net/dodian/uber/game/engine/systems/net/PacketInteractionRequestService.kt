@@ -3,7 +3,7 @@ package net.dodian.uber.game.engine.systems.net
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.content.combat.CombatLogoutLockService
+import net.dodian.uber.game.engine.systems.combat.CombatLogoutLockService
 import net.dodian.uber.game.engine.systems.interaction.PlayerInteractionGuardService
 
 /**
@@ -34,10 +34,10 @@ object PacketInteractionRequestService {
             client.send(SendMessage("It would not be a wise idea to trade with the heat in the background!"))
             return
         }
-        if (client.isBusy() || other.isBusy()) {
+        if (client.isBusy || other.isBusy) {
             client.send(
                 SendMessage(
-                    if (client.isBusy()) "You are currently busy"
+                    if (client.isBusy) "You are currently busy"
                     else "${other.getPlayerName()} is currently busy!"
                 )
             )
@@ -68,10 +68,10 @@ object PacketInteractionRequestService {
             client.send(SendMessage("You cant duel in the wilderness!"))
             return
         }
-        if (client.isBusy() || other.isBusy()) {
+        if (client.isBusy || other.isBusy) {
             client.send(
                 SendMessage(
-                    if (client.isBusy()) "You are currently busy"
+                    if (client.isBusy) "You are currently busy"
                     else "${other.getPlayerName()} is currently busy!"
                 )
             )
@@ -110,15 +110,15 @@ object PacketInteractionRequestService {
     @JvmStatic
     fun handleLegacyTradeRequest(client: Client, targetSlot: Int, other: Client) {
         // Rubber-chicken emote
-        if (client.getEquipment()[Equipment.Slot.WEAPON.id] == 4566) {
+        if (client.equipment[Equipment.Slot.WEAPON.id] == 4566) {
             client.facePlayer(targetSlot)
             client.performAnimation(1833, 0)
             return
         }
-        if (client.isBusy() || other.isBusy()) {
+        if (client.isBusy || other.isBusy) {
             client.send(
                 SendMessage(
-                    if (client.isBusy()) "You are currently busy"
+                    if (client.isBusy) "You are currently busy"
                     else "${other.getPlayerName()} is currently busy!"
                 )
             )

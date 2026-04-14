@@ -1,7 +1,7 @@
 package net.dodian.uber.game.engine.systems.animation
 
 import net.dodian.uber.game.Server
-import net.dodian.uber.game.content.combat.style.CombatStyle
+import net.dodian.uber.game.model.entity.CombatStyle
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.Equipment
 

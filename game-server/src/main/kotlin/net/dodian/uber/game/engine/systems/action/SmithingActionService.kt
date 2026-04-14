@@ -1,13 +1,13 @@
 package net.dodian.uber.game.engine.systems.action
 
-import net.dodian.uber.game.content.skills.smithing.SmithingData
-import net.dodian.uber.game.content.skills.smithing.SmithingRequest
+import net.dodian.uber.game.skill.smithing.SmithingData
+import net.dodian.uber.game.skill.smithing.SmithingRequest
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.engine.systems.skills.ProgressionService
-import net.dodian.uber.game.content.skills.runtime.action.SkillingRandomEventService
+import net.dodian.uber.game.skill.runtime.action.SkillingRandomEventService
 import net.dodian.uber.game.engine.systems.action.playerAction
 
 object SmithingActionService {
@@ -17,13 +17,11 @@ object SmithingActionService {
 
     @JvmStatic
     fun startSmithing(client: Client, request: SmithingRequest) {
-        client.setActiveSmithingSelection(
-            net.dodian.uber.game.content.skills.smithing.ActiveSmithingSelection(
-                request.tierId,
-                request.barId,
-                request.anvilX,
-                request.anvilY,
-            ),
+        client.activeSmithingSelection = net.dodian.uber.game.skill.smithing.ActiveSmithingSelection(
+            request.tierId,
+            request.barId,
+            request.anvilX,
+            request.anvilY,
         )
         playerAction(
             player = client,
@@ -54,7 +52,7 @@ object SmithingActionService {
     }
 
     private fun resolveSpec(player: Client, request: SmithingRequest): SmithingSpec? {
-        if (player.isBusy()) {
+        if (player.isBusy) {
             player.sendMessage("You are currently busy to be smithing!")
             stop(player)
             return null

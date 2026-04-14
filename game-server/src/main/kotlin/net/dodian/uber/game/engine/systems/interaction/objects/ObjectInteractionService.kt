@@ -1,6 +1,6 @@
 package net.dodian.uber.game.engine.systems.interaction.objects
 
-import net.dodian.cache.`object`.GameObjectData
+import net.dodian.cache.objects.GameObjectData
 import net.dodian.uber.game.engine.systems.interaction.ObjectInteractionContext
 import net.dodian.uber.game.engine.systems.interaction.ObjectInteractionType
 import net.dodian.uber.game.engine.event.GameEventBus
@@ -162,6 +162,23 @@ object ObjectInteractionService {
                     itemId = context.itemId ?: -1,
                     itemSlot = context.itemSlot ?: -1,
                     interfaceId = context.interfaceId ?: -1,
+                )
+            ) {
+                ObjectClickLoggingService.log(
+                    context,
+                    resolution = null,
+                    handled = true,
+                    handlerSource = SkillInteractionDispatcher::class.java.simpleName,
+                )
+                return DispatchTiming(true, 0L, 0L, SkillInteractionDispatcher::class.java.name)
+            }
+            if (context.type == ObjectInteractionType.MAGIC &&
+                SkillInteractionDispatcher.tryHandleMagicOnObject(
+                    client = context.client,
+                    objectId = context.objectId,
+                    position = context.position,
+                    obj = context.obj,
+                    spellId = context.spellId ?: -1,
                 )
             ) {
                 ObjectClickLoggingService.log(

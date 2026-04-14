@@ -1,6 +1,6 @@
 package net.dodian.uber.game.engine.systems.cache
 
-import net.dodian.cache.`object`.GameObjectData
+import net.dodian.cache.objects.GameObjectData
 
 private const val REGION_SIZE = 64
 private const val MAP_PLANES = 4

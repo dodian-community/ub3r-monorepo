@@ -10,7 +10,7 @@ import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService;
-import net.dodian.uber.game.content.skills.runecrafting.Runecrafting;
+import net.dodian.uber.game.skill.runecrafting.Runecrafting;
 import net.dodian.uber.game.engine.systems.net.PacketItemActionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

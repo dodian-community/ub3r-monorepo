@@ -67,24 +67,20 @@ class ArchitectureBoundaryTest {
         val forbiddenContentFiles = setOf(
             "src/main/kotlin/net/dodian/uber/game/content/items/ItemContentRegistry.kt",
             "src/main/kotlin/net/dodian/uber/game/content/items/ItemDispatcher.kt",
-            "src/main/kotlin/net/dodian/uber/game/content/npcs/NpcContentRegistry.kt",
-            "src/main/kotlin/net/dodian/uber/game/content/npcs/NpcContentDispatcher.kt",
             "src/main/kotlin/net/dodian/uber/game/content/objects/ObjectContentRegistry.kt",
             "src/main/kotlin/net/dodian/uber/game/content/objects/ObjectInteractionService.kt",
             "src/main/kotlin/net/dodian/uber/game/content/objects/ObjectClickLoggingService.kt",
-            "src/main/kotlin/net/dodian/uber/game/content/commands/CommandAccess.kt",
-            "src/main/kotlin/net/dodian/uber/game/content/commands/CommandContent.kt",
-            "src/main/kotlin/net/dodian/uber/game/content/commands/CommandContentRegistry.kt",
-            "src/main/kotlin/net/dodian/uber/game/content/commands/CommandContext.kt",
-            "src/main/kotlin/net/dodian/uber/game/content/commands/CommandDispatcher.kt",
-            "src/main/kotlin/net/dodian/uber/game/content/commands/CommandLogging.kt",
-            "src/main/kotlin/net/dodian/uber/game/content/commands/CommandParsing.kt",
-            "src/main/kotlin/net/dodian/uber/game/content/commands/CommandReply.kt",
+            "src/main/kotlin/net/dodian/uber/game/command/CommandAccess.kt",
+            "src/main/kotlin/net/dodian/uber/game/command/CommandContent.kt",
+            "src/main/kotlin/net/dodian/uber/game/command/CommandContentRegistry.kt",
+            "src/main/kotlin/net/dodian/uber/game/command/CommandContext.kt",
+            "src/main/kotlin/net/dodian/uber/game/command/CommandDispatcher.kt",
+            "src/main/kotlin/net/dodian/uber/game/command/CommandLogging.kt",
+            "src/main/kotlin/net/dodian/uber/game/command/CommandParsing.kt",
+            "src/main/kotlin/net/dodian/uber/game/command/CommandReply.kt",
             "src/main/kotlin/net/dodian/uber/game/content/items/ItemCombinationService.kt",
             "src/main/kotlin/net/dodian/uber/game/content/items/ItemOnNpcContentService.kt",
-            "src/main/kotlin/net/dodian/uber/game/content/npcs/NpcInteractionActionService.kt",
-            "src/main/kotlin/net/dodian/uber/game/content/npcs/NpcClickMetrics.kt",
-            "src/main/kotlin/net/dodian/uber/game/content/ui/SkillingInterfaceItemService.kt",
+            "src/main/kotlin/net/dodian/uber/game/ui/SkillingInterfaceItemService.kt",
             "src/main/kotlin/net/dodian/uber/game/content/ContentModuleIndex.kt",
         )
         val missingSystemsFiles = setOf(
@@ -230,7 +226,6 @@ class ArchitectureBoundaryTest {
     @Test
     fun `legacy gameplay packages are no longer under systems`() {
         val legacyPrefixes = listOf(
-            "package net.dodian.uber.game.engine.systems.combat",
             "package net.dodian.uber.game.engine.systems.ui",
             "package net.dodian.uber.game.engine.systems.chat",
             "package net.dodian.uber.game.engine.systems.dispatch",
@@ -263,10 +258,10 @@ class ArchitectureBoundaryTest {
     @Test
     fun `new gameplay package depths stay practical`() {
         val cappedRoots = mapOf(
-            "src/main/kotlin/net/dodian/uber/game/content/combat" to 1,
-            "src/main/kotlin/net/dodian/uber/game/content/social" to 2,
-            "src/main/kotlin/net/dodian/uber/game/content/skills/runtime" to 2,
-            "src/main/kotlin/net/dodian/uber/game/content/ui/buttons" to 1,
+            "src/main/kotlin/net/dodian/uber/game/combat" to 1,
+            "src/main/kotlin/net/dodian/uber/game/social" to 2,
+            "src/main/kotlin/net/dodian/uber/game/skill/runtime" to 2,
+            "src/main/kotlin/net/dodian/uber/game/ui/buttons" to 1,
             "src/main/kotlin/net/dodian/uber/game/engine/systems/interaction" to 2,
         )
         val violations = cappedRoots.flatMap { (root, maxDepth) ->
@@ -368,6 +363,7 @@ class ArchitectureBoundaryTest {
                     definition.itemOnItemBindings.isEmpty() &&
                     definition.itemBindings.isEmpty() &&
                     definition.itemOnObjectBindings.isEmpty() &&
+                    definition.magicOnObjectBindings.isEmpty() &&
                     definition.buttonBindings.isEmpty()
             }
             .map { "${it.definition.name}(${it.definition.skill.name.lowercase()})" }
@@ -381,8 +377,8 @@ class ArchitectureBoundaryTest {
     @Test
     fun `migrated resource skills do not expose direct ObjectContent bindings`() {
         val files = listOf(
-            Paths.get("src/main/kotlin/net/dodian/uber/game/content/skills/mining/Mining.kt"),
-            Paths.get("src/main/kotlin/net/dodian/uber/game/content/skills/woodcutting/Woodcutting.kt"),
+            Paths.get("src/main/kotlin/net/dodian/uber/game/skill/mining/Mining.kt"),
+            Paths.get("src/main/kotlin/net/dodian/uber/game/skill/woodcutting/Woodcutting.kt"),
         )
 
         val violations = files.flatMap { path ->
@@ -401,10 +397,33 @@ class ArchitectureBoundaryTest {
     }
 
     @Test
+    fun `skill modules avoid singleton ObjectContent wrappers`() {
+        val skillFiles = sourceFiles.filter { path ->
+            path.extension == "kt" &&
+                path.invariantSeparatorsPathString.contains("/net/dodian/uber/game/skill/")
+        }
+
+        val singletonWrapperRegex = Regex("""\bobject\s+\w+\s*:\s*ObjectContent\b""")
+        val violations = skillFiles.mapNotNull { path ->
+            val source = Files.readString(path)
+            if (singletonWrapperRegex.containsMatchIn(source)) {
+                "$path: contains singleton ObjectContent wrapper; use plugin-owned class instances"
+            } else {
+                null
+            }
+        }
+
+        assertTrue(
+            violations.isEmpty(),
+            "Skill modules should use plugin-owned ObjectContent instances, not singleton wrappers.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
     fun `migrated skill plugin modules must use skilling templates instead of ad-hoc loops`() {
         val pluginFiles = sourceFiles.filter { path ->
             path.extension == "kt" &&
-                path.invariantSeparatorsPathString.contains("/net/dodian/uber/game/content/skills/") &&
+                path.invariantSeparatorsPathString.contains("/net/dodian/uber/game/skill/") &&
                 Files.readString(path).contains(Regex("""object\s+\w+SkillPlugin\s*:"""))
         }
 
@@ -430,7 +449,7 @@ class ArchitectureBoundaryTest {
     fun `skill plugin route bindings require explicit policy presets`() {
         val pluginFiles = sourceFiles.filter { path ->
             path.extension == "kt" &&
-                path.invariantSeparatorsPathString.contains("/net/dodian/uber/game/content/skills/") &&
+                path.invariantSeparatorsPathString.contains("/net/dodian/uber/game/skill/") &&
                 Files.readString(path).contains(Regex("""object\s+\w+SkillPlugin\s*:"""))
         }
 
@@ -440,6 +459,7 @@ class ArchitectureBoundaryTest {
             "itemOnItem" to Regex("""itemOnItem\s*\((.*?)\)""", setOf(RegexOption.DOT_MATCHES_ALL)),
             "itemClick" to Regex("""itemClick\s*\((.*?)\)""", setOf(RegexOption.DOT_MATCHES_ALL)),
             "itemOnObject" to Regex("""itemOnObject\s*\((.*?)\)""", setOf(RegexOption.DOT_MATCHES_ALL)),
+            "magicOnObject" to Regex("""magicOnObject\s*\((.*?)\)""", setOf(RegexOption.DOT_MATCHES_ALL)),
             "button" to Regex("""button\s*\((.*?)\)""", setOf(RegexOption.DOT_MATCHES_ALL)),
         )
 
@@ -466,9 +486,14 @@ class ArchitectureBoundaryTest {
     @Test
     fun `mapped skill wrappers use shared skill route bridge helpers`() {
         val requiredBridgeUsage = mapOf(
-            "src/main/kotlin/net/dodian/uber/game/content/skills/cooking/Cooking.kt" to "bindObjectContentUseItem(",
-            "src/main/kotlin/net/dodian/uber/game/content/skills/herblore/Herblore.kt" to "bindItemContentClick(",
-            "src/main/kotlin/net/dodian/uber/game/content/skills/slayer/Slayer.kt" to "bindItemContentClick(",
+            "src/main/kotlin/net/dodian/uber/game/skill/cooking/Cooking.kt" to "bindObjectContentUseItem(",
+            "src/main/kotlin/net/dodian/uber/game/skill/crafting/Crafting.kt" to "bindObjectContentUseItem(",
+            "src/main/kotlin/net/dodian/uber/game/skill/farming/Farming.kt" to "bindObjectContentUseItem(",
+            "src/main/kotlin/net/dodian/uber/game/skill/herblore/Herblore.kt" to "bindItemContentClick(",
+            "src/main/kotlin/net/dodian/uber/game/skill/prayer/Prayer.kt" to "bindItemContentClick(",
+            "src/main/kotlin/net/dodian/uber/game/skill/runecrafting/Runecrafting.kt" to "bindObjectContentClick(",
+            "src/main/kotlin/net/dodian/uber/game/skill/slayer/Slayer.kt" to "bindItemContentClick(",
+            "src/main/kotlin/net/dodian/uber/game/skill/smithing/Smithing.kt" to "bindObjectContentMagic(",
         )
 
         val violations = requiredBridgeUsage.mapNotNull { (pathText, helperCall) ->
@@ -491,7 +516,7 @@ class ArchitectureBoundaryTest {
     fun `skill plugin modules do not import legacy split policy types`() {
         val pluginFiles = sourceFiles.filter { path ->
             path.extension == "kt" &&
-                path.invariantSeparatorsPathString.contains("/net/dodian/uber/game/content/skills/") &&
+                path.invariantSeparatorsPathString.contains("/net/dodian/uber/game/skill/") &&
                 Files.readString(path).contains(Regex("""object\s+\w+SkillPlugin\s*:"""))
         }
 
@@ -642,8 +667,7 @@ class ArchitectureBoundaryTest {
             val fileName = file.fileName.toString()
             val isLegacy =
                 packageName.startsWith("net.dodian.uber.game.content.entities") ||
-                    packageName.startsWith("net.dodian.uber.game.content.ui.interfaces") ||
-                    packageName.startsWith("net.dodian.uber.game.content.social.dialogue.modules") ||
+                    packageName.startsWith("net.dodian.uber.game.ui.interfaces") ||
                     (packageName == "net.dodian.uber.game.skills.farming" && fileName == "FarmingProcessor.kt") ||
                     (packageName == "net.dodian.uber.game.skills.thieving.plunder" && fileName == "PlunderDoorProcessor.kt") ||
                     packageName.startsWith("net.dodian.jobs") ||
@@ -662,7 +686,6 @@ class ArchitectureBoundaryTest {
             val isLegacyPath =
                     normalized.contains("/net/dodian/uber/game/content/entities/") ||
                     normalized.contains("/net/dodian/uber/engine/systems/ui/interfaces/") ||
-                    normalized.contains("/net/dodian/uber/engine/systems/ui/dialogue/modules/") ||
                     normalized.endsWith("/net/dodian/uber/game/skills/farming/FarmingProcessor.kt") ||
                     normalized.endsWith("/net/dodian/uber/game/skills/thieving/plunder/PlunderDoorProcessor.kt") ||
                     normalized.contains("src/main/java/net/dodian/jobs/") ||
@@ -680,8 +703,8 @@ class ArchitectureBoundaryTest {
             Files.readAllLines(file).mapIndexedNotNull { idx, line ->
                 val trimmed = line.trim()
                 val isLegacyLoopMarker =
-                    (normalized.endsWith("/content/skills/woodcutting/WoodcuttingService.kt") ||
-                        normalized.endsWith("/content/skills/mining/MiningService.kt")) &&
+                    (normalized.endsWith("/game/skill/woodcutting/WoodcuttingService.kt") ||
+                        normalized.endsWith("/game/skill/mining/MiningService.kt")) &&
                         (trimmed.contains("nextSwingAnimationCycle") ||
                             trimmed.contains("nextResourceCycle") ||
                             trimmed.contains("PlayerActionController.start("))
@@ -716,7 +739,7 @@ class ArchitectureBoundaryTest {
                         !normalized.endsWith("/model/entity/player/Client.java")
                 val isManualCoreSkillControllerMarker =
                     (normalized.endsWith("/systems/action/SmithingActionService.kt") ||
-                        normalized.endsWith("/content/skills/smithing/SmeltingActionService.kt")) &&
+                        normalized.endsWith("/game/skill/smithing/SmeltingActionService.kt")) &&
                         trimmed.contains("PlayerActionController.start(")
                 val isRemovedInteractionRuntimeSymbol =
                     trimmed.contains("WalkToTask") ||
@@ -771,7 +794,6 @@ class ArchitectureBoundaryTest {
         val rootSettings = repoRoot.resolve("settings.gradle.kts")
         val serverBuild = repoRoot.resolve("game-server/build.gradle.kts")
         val legacyModuleDir = repoRoot.resolve("game-plugin-index-processor")
-        val kspProcessorDir = repoRoot.resolve("ksp-processor/src/main")
         val generatedIndexSource = repoRoot.resolve("game-server/src/main/kotlin/net/dodian/uber/game/plugin/GeneratedPluginModuleIndex.kt")
 
         val settingsText = Files.readString(rootSettings)
@@ -920,7 +942,7 @@ class ArchitectureBoundaryTest {
         val violations = sourceFiles.flatMap { file ->
             Files.readAllLines(file).mapIndexedNotNull { idx, line ->
                 val trimmed = line.trim()
-                val referencesLegacySkillEvents = trimmed.contains("net.dodian.uber.game.content.skills.core.events")
+                val referencesLegacySkillEvents = trimmed.contains("net.dodian.uber.game.skill.core.events")
                 if (!referencesLegacySkillEvents) {
                     return@mapIndexedNotNull null
                 }
@@ -1084,7 +1106,7 @@ class ArchitectureBoundaryTest {
                     if (!trimmed.startsWith("import ")) {
                         return@mapIndexedNotNull null
                     }
-                    if (!trimmed.contains("net.dodian.uber.game.content.skills.core.runtime")) {
+                    if (!trimmed.contains("net.dodian.uber.game.skill.core.runtime")) {
                         return@mapIndexedNotNull null
                     }
                     "${file}:${idx + 1} -> $trimmed"
@@ -1106,7 +1128,7 @@ class ArchitectureBoundaryTest {
                     if (!trimmed.startsWith("import ")) {
                         return@mapIndexedNotNull null
                     }
-                    if (!trimmed.contains("net.dodian.uber.game.content.skills.core.progression")) {
+                    if (!trimmed.contains("net.dodian.uber.game.skill.core.progression")) {
                         return@mapIndexedNotNull null
                     }
                     "${file}:${idx + 1} -> $trimmed"
@@ -1128,7 +1150,7 @@ class ArchitectureBoundaryTest {
                     if (!trimmed.startsWith("import ")) {
                         return@mapIndexedNotNull null
                     }
-                    if (!trimmed.contains("net.dodian.uber.game.content.skills.core.resource")) {
+                    if (!trimmed.contains("net.dodian.uber.game.skill.core.resource")) {
                         return@mapIndexedNotNull null
                     }
                     "${file}:${idx + 1} -> $trimmed"
@@ -1196,6 +1218,92 @@ class ArchitectureBoundaryTest {
         assertTrue(
             Files.exists(boundaryTestPath),
             "Expected Netty listener boundary test to exist at $boundaryTestPath",
+        )
+    }
+
+    @Test
+    fun `content module index has no legacy compat scan roots`() {
+        val path = sourceRoot.resolve("kotlin/net/dodian/uber/game/api/plugin/ContentModuleIndex.kt")
+        val source = Files.readString(path)
+        assertTrue(
+            !source.contains("LEGACY_COMPAT_SCAN_PACKAGES"),
+            "ContentModuleIndex must not keep a legacy compatibility scan package list",
+        )
+    }
+
+    @Test
+    fun `server bootstrap uses single loop service scheduler`() {
+        val path = sourceRoot.resolve("java/net/dodian/uber/game/Server.java")
+        val source = Files.readString(path)
+        assertTrue(
+            !source.contains("GameTickScheduler"),
+            "Server bootstrap should not keep dead GameTickScheduler scaffolding",
+        )
+        assertTrue(
+            source.contains("gameLoopService.start()"),
+            "Server bootstrap must start GameLoopService",
+        )
+    }
+
+    @Test
+    fun `gameplay runtime avoids direct walkBlock wall clock checks in kotlin services`() {
+        val watchedFiles = listOf(
+            sourceRoot.resolve("kotlin/net/dodian/uber/game/engine/systems/interaction/InteractionProcessor.kt"),
+            sourceRoot.resolve("kotlin/net/dodian/uber/game/engine/systems/net/PacketWalkingService.kt"),
+            sourceRoot.resolve("kotlin/net/dodian/uber/game/ui/UiInterface.kt"),
+            sourceRoot.resolve("kotlin/net/dodian/uber/game/engine/lifecycle/PlayerDeferredLifecycleService.kt"),
+        )
+        val violations = watchedFiles.flatMap { file ->
+            Files.readAllLines(file).mapIndexedNotNull { idx, line ->
+                val trimmed = line.trim()
+                if (!trimmed.contains("walkBlock") || !trimmed.contains("System.currentTimeMillis")) {
+                    return@mapIndexedNotNull null
+                }
+                "${file}:${idx + 1} -> $trimmed"
+            }
+        }
+        assertTrue(
+            violations.isEmpty(),
+            "Kotlin gameplay runtime should use centralized walk-block guards instead of direct wall-clock checks.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `netty listeners include decode-time sanity guards before delegation`() {
+        val npcPath = sourceRoot.resolve("java/net/dodian/uber/game/netty/listener/in/NpcInteractionListener.java")
+        val objectPath = sourceRoot.resolve("java/net/dodian/uber/game/netty/listener/in/ObjectInteractionListener.java")
+        val npcSource = Files.readString(npcPath)
+        val objectSource = Files.readString(objectPath)
+        assertTrue(
+            npcSource.contains("isKnownNpcIndex"),
+            "NpcInteractionListener should verify NPC index sanity at decode-time",
+        )
+        assertTrue(
+            objectSource.contains("isValidObjectClick"),
+            "ObjectInteractionListener should verify object/coordinate sanity at decode-time",
+        )
+    }
+
+    @Test
+    fun `kotlin first content boundaries block new java content modules`() {
+        val violations = sourceFiles
+            .filter { it.invariantSeparatorsPathString.endsWith(".java") }
+            .mapNotNull { file ->
+                val normalized = file.invariantSeparatorsPathString
+                val isLegacyNpcModel =
+                    normalized.contains("/net/dodian/uber/game/model/entity/npc/")
+                val isContentNamespaceJava =
+                    normalized.contains("/net/dodian/uber/game/command/") ||
+                        normalized.contains("/net/dodian/uber/game/item/") ||
+                        normalized.contains("/net/dodian/uber/game/objects/") ||
+                        normalized.contains("/net/dodian/uber/game/skill/") ||
+                        normalized.contains("/net/dodian/uber/game/ui/")
+                if (isContentNamespaceJava && !isLegacyNpcModel) normalized else null
+            }
+
+        assertTrue(
+            violations.isEmpty(),
+            "Kotlin-first content boundary violated by Java content files.\n${violations.joinToString("\n")}",
         )
     }
 }

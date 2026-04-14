@@ -42,18 +42,18 @@ object PacketChatService {
             return
         }
 
-        client.setChatTextEffects(effects)
-        client.setChatTextColor(color)
+        client.chatTextEffects = effects
+        client.chatTextColor = color
 
-        val copyLen = minOf(chatBytes.size, client.getChatText().size)
-        client.setChatTextSize(copyLen)
+        val copyLen = minOf(chatBytes.size, client.chatText.size)
+        client.chatTextSize = copyLen
         if (copyLen > 0) {
-            System.arraycopy(chatBytes, 0, client.getChatText(), 0, copyLen)
+            System.arraycopy(chatBytes, 0, client.chatText, 0, copyLen)
         }
-        client.setChatTextMessage(chat)
+        client.chatTextMessage = chat
         GameEventBus.post(ChatMessageEvent(client, chat))
         client.invalidateCachedUpdateBlock()
-        client.getUpdateFlags().setRequired(UpdateFlag.CHAT, true)
+        client.updateFlags.setRequired(UpdateFlag.CHAT, true)
         ChatLog.recordPublicChat(client, chat)
     }
 }

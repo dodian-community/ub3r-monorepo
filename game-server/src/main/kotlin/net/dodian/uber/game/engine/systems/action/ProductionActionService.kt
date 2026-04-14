@@ -7,7 +7,7 @@ import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.engine.systems.skills.sendFilterMessage
 import net.dodian.uber.game.engine.systems.skills.RuneCostService
-import net.dodian.uber.game.content.skills.runtime.action.SkillingRandomEventService
+import net.dodian.uber.game.skill.runtime.action.SkillingRandomEventService
 
 object ProductionActionService {
     @JvmStatic
@@ -25,7 +25,7 @@ object ProductionActionService {
         titleLineBreaks: Int = if (request.skillId == Skill.HERBLORE.id) 4 else 5,
     ) {
         client.resetAction()
-        client.setPendingProductionSelection(PendingProductionSelection(request, interfaceModelZoom, titleLineBreaks))
+        client.pendingProductionSelection = PendingProductionSelection(request, interfaceModelZoom, titleLineBreaks)
         client.sendInterfaceModel(1746, interfaceModelZoom, request.productId)
         client.sendString("\\n".repeat(titleLineBreaks) + client.getItemName(request.productId), 2799)
         client.sendChatboxInterface(4429)
@@ -40,7 +40,7 @@ object ProductionActionService {
         ),
     )
     fun startPending(client: Client, cycleCount: Int): Boolean {
-        val selection = client.getPendingProductionSelection() ?: return false
+        val selection = client.pendingProductionSelection ?: return false
         client.send(RemoveInterfaces())
         client.clearPendingProductionSelection()
         return start(client, selection.request, cycleCount)
@@ -63,17 +63,17 @@ object ProductionActionService {
             client.clearActiveProductionSelection()
             return false
         }
-        client.setActiveProductionSelection(ActiveProductionSelection(request, cycleCount))
+        client.activeProductionSelection = ActiveProductionSelection(request, cycleCount)
         PlayerActionController.start(
             player = client,
             type = PlayerActionType.PRODUCTION,
         ) {
             while (true) {
-                val active = player.getActiveProductionSelection() ?: return@start
+                val active = player.activeProductionSelection ?: return@start
                 if (active.remainingCycles <= 0) return@start
                 if (!isActive()) return@start
                 if (!executeCycle(player)) return@start
-                val updated = player.getActiveProductionSelection() ?: return@start
+                val updated = player.activeProductionSelection ?: return@start
                 if (updated.remainingCycles <= 0) return@start
                 wait(updated.request.tickDelay.coerceAtLeast(1))
             }
@@ -83,7 +83,7 @@ object ProductionActionService {
 
     @JvmStatic
     fun executeCycle(client: Client): Boolean {
-        val active = client.getActiveProductionSelection()
+        val active = client.activeProductionSelection
         if (active == null || active.remainingCycles < 1) {
             client.resetAction()
             return false
@@ -179,7 +179,7 @@ object ProductionActionService {
             ProgressionService.addXp(client, xp, skill)
         }
         SkillingRandomEventService.trigger(client, xp)
-        client.setActiveProductionSelection(active.copy(remainingCycles = active.remainingCycles - 1))
+        client.activeProductionSelection = active.copy(remainingCycles = active.remainingCycles - 1)
         if (request.completionMessage.isNotEmpty()) {
             client.sendFilterMessage(request.completionMessage)
         }

@@ -1,6 +1,6 @@
 package net.dodian.uber.game.engine.systems.cache
 
-import net.dodian.cache.`object`.GameObjectData
+import net.dodian.cache.objects.GameObjectData
 import net.dodian.uber.game.engine.systems.pathing.collision.CollisionFlag
 import net.dodian.uber.game.engine.systems.pathing.collision.CollisionManager
 import org.junit.jupiter.api.Assertions.assertEquals

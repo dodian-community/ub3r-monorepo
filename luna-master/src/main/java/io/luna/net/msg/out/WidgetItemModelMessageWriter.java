@@ -1,0 +1,53 @@
+package io.luna.net.msg.out;
+
+import io.luna.game.model.mob.Player;
+import io.luna.net.codec.ByteMessage;
+import io.luna.net.codec.ByteOrder;
+import io.luna.net.codec.ValueType;
+import io.luna.net.msg.GameMessageWriter;
+import io.netty.buffer.ByteBuf;
+
+/**
+ * A {@link GameMessageWriter} implementation that displays an item model on a widget.
+ *
+ * @author lare96
+ */
+public final class WidgetItemModelMessageWriter extends GameMessageWriter {
+
+    /**
+     * The widget identifier.
+     */
+    private final int widgetId;
+
+    /**
+     * The item's scale.
+     */
+    private final int scale;
+
+    /**
+     * The item.
+     */
+    private final int itemId;
+
+    /**
+     * Creates a new {@link WidgetItemModelMessageWriter}.
+     *
+     * @param widgetId The widget identifier.
+     * @param scale The item's scale.
+     * @param itemId The item.
+     */
+    public WidgetItemModelMessageWriter(int widgetId, int scale, int itemId) {
+        this.widgetId = widgetId;
+        this.scale = scale;
+        this.itemId = itemId;
+    }
+
+    @Override
+    public ByteMessage write(Player player, ByteBuf buffer) {
+        ByteMessage msg = ByteMessage.message(21, buffer);
+        msg.putShort(scale);
+        msg.putShort(itemId, ByteOrder.LITTLE);
+        msg.putShort(widgetId, ByteOrder.LITTLE, ValueType.ADD);
+        return msg;
+    }
+}

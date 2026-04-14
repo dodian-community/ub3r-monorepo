@@ -1,16 +1,16 @@
 package net.dodian.uber.game.engine.systems.action
 
-import net.dodian.uber.game.content.social.dialogue.DialogueService
-import net.dodian.uber.game.content.skills.cooking.Cooking
-import net.dodian.uber.game.content.skills.fishing.Fishing
-import net.dodian.uber.game.content.skills.fletching.Fletching
-import net.dodian.uber.game.content.skills.crafting.Crafting
-import net.dodian.uber.game.content.skills.prayer.Prayer
-import net.dodian.uber.game.content.skills.smithing.Smithing
+import net.dodian.uber.game.engine.systems.dialogue.DialogueService
+import net.dodian.uber.game.skill.cooking.Cooking
+import net.dodian.uber.game.skill.fishing.Fishing
+import net.dodian.uber.game.skill.fletching.Fletching
+import net.dodian.uber.game.skill.crafting.Crafting
+import net.dodian.uber.game.skill.prayer.Prayer
+import net.dodian.uber.game.skill.smithing.Smithing
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
-import net.dodian.uber.game.content.skills.smithing.SmithingInterface
-import net.dodian.uber.game.content.combat.CombatPreemptionPolicy
+import net.dodian.uber.game.skill.smithing.SmithingInterface
+import net.dodian.uber.game.engine.systems.combat.CombatPreemptionPolicy
 
 object PlayerActionCancellationService {
     @JvmStatic
@@ -60,7 +60,7 @@ object PlayerActionCancellationService {
         player.clearCookingState()
         player.clearMiningState()
         player.clearWoodcuttingState()
-        if (player.getActiveSmithingSelection() != null || player.IsAnvil) {
+        if (player.activeSmithingSelection != null || player.IsAnvil) {
             SmithingInterface.resetRuntimeState(player)
             player.send(RemoveInterfaces())
         }

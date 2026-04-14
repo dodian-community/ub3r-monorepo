@@ -9,25 +9,24 @@ import net.dodian.uber.game.events.trade.TradeCancelEvent;
 import net.dodian.uber.game.events.trade.TradeCompleteEvent;
 import net.dodian.uber.game.events.trade.TradeRequestEvent;
 import net.dodian.uber.game.model.Position;
-import net.dodian.uber.game.content.shop.ShopDefinitions;
-import net.dodian.uber.game.content.shop.ShopManager;
-import net.dodian.uber.game.content.shop.ShopRulesService;
+import net.dodian.uber.game.shop.ShopCatalog;
+import net.dodian.uber.game.shop.ShopManager;
+import net.dodian.uber.game.shop.ShopRulesService;
 import net.dodian.uber.game.model.entity.UpdateFlag;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.item.*;
-import net.dodian.uber.game.model.object.DoorRegistry;
-import net.dodian.uber.game.model.object.RS2Object;
-import net.dodian.uber.game.content.skills.Skillcape;
-import net.dodian.uber.game.model.player.bank.PlayerBankService;
+import net.dodian.uber.game.model.objects.DoorRegistry;
+import net.dodian.uber.game.model.objects.WorldObject;
+import net.dodian.uber.game.skill.Skillcape;
+import net.dodian.uber.game.ui.bank.PlayerBankService;
 import net.dodian.uber.game.netty.listener.OutgoingPacket;
-import net.dodian.uber.game.model.player.quests.QuestSend;
+import net.dodian.uber.game.ui.QuestTabEntry;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
-import net.dodian.uber.game.model.player.skills.prayer.Prayers;
-import net.dodian.uber.game.content.skills.slayer.Slayer;
-import net.dodian.uber.game.content.skills.farming.Farming;
-import net.dodian.uber.game.content.skills.farming.FarmingState;
+import net.dodian.uber.game.skill.prayer.PrayerManager;
+import net.dodian.uber.game.skill.farming.Farming;
+import net.dodian.uber.game.skill.farming.FarmingState;
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry;
 import net.dodian.uber.game.persistence.admin.CommandDbService;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
@@ -38,60 +37,38 @@ import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
 import net.dodian.uber.game.engine.net.InboundPacketMailbox;
 import net.dodian.uber.game.engine.net.OutboundSessionQueue;
 import net.dodian.uber.game.engine.processing.EntityProcessor;
-import net.dodian.uber.game.content.skills.mining.Mining;
-import net.dodian.uber.game.content.skills.woodcutting.Woodcutting;
-import net.dodian.uber.game.content.skills.fletching.Fletching;
-import net.dodian.uber.game.content.skills.fletching.FletchingState;
-import net.dodian.uber.game.content.skills.fishing.Fishing;
-import net.dodian.uber.game.content.skills.fishing.FishingState;
-import net.dodian.uber.game.content.skills.cooking.Cooking;
-import net.dodian.uber.game.content.skills.cooking.CookingState;
-import net.dodian.uber.game.content.skills.crafting.Crafting;
-import net.dodian.uber.game.content.skills.crafting.CraftingMode;
-import net.dodian.uber.game.content.skills.crafting.CraftingState;
-import net.dodian.uber.game.content.skills.crafting.GoldJewelry;
-import net.dodian.uber.game.content.skills.crafting.TanningRequest;
-import net.dodian.uber.game.content.skills.crafting.Tanning;
-import net.dodian.uber.game.content.skills.prayer.Prayer;
-import net.dodian.uber.game.content.skills.prayer.PrayerOfferingState;
-import net.dodian.uber.game.content.skills.runecrafting.RunecraftingData;
-import net.dodian.uber.game.content.skills.runecrafting.Runecrafting;
-import net.dodian.uber.game.content.skills.runecrafting.RunecraftingState;
-import net.dodian.uber.game.content.social.dialogue.DialogueOptionService;
-import net.dodian.uber.game.content.social.dialogue.DialogueDisplayService;
-import net.dodian.uber.game.content.social.dialogue.DialogueService;
-import net.dodian.uber.game.content.skills.smithing.SmithingData;
-import net.dodian.uber.game.content.skills.smithing.SmithingInterface;
+import net.dodian.uber.game.skill.crafting.Tanning;
+import net.dodian.uber.game.engine.systems.dialogue.DialogueOptionService;
+import net.dodian.uber.game.ui.dialogue.DialogueDisplayService;
+import net.dodian.uber.game.engine.systems.dialogue.DialogueService;
 import net.dodian.uber.game.netty.listener.out.*;
-import net.dodian.uber.game.content.events.partyroom.PartyRoomRewardItem;
+import net.dodian.uber.game.activity.partyroom.PartyRoomRewardItem;
 import net.dodian.uber.game.persistence.audit.*;
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancellationService;
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason;
 import net.dodian.uber.game.engine.systems.action.PlayerActionType;
-import net.dodian.uber.game.engine.systems.action.ProductionActionService;
-import net.dodian.uber.game.engine.systems.action.SmithingActionService;
 import net.dodian.uber.game.engine.systems.action.TeleportActionService;
 import net.dodian.uber.game.engine.systems.action.TravelDecision;
 import net.dodian.uber.game.engine.systems.action.TravelRouteService;
 import net.dodian.uber.game.engine.systems.action.DuelCountdownService;
 import net.dodian.uber.game.engine.systems.action.DuelCountdownState;
 import net.dodian.uber.game.engine.systems.animation.PlayerAnimationService;
-import net.dodian.uber.game.content.combat.CombatStartService;
+import net.dodian.uber.game.engine.systems.combat.CombatStartService;
 import net.dodian.uber.game.engine.systems.interaction.PlayerInteractionGuardService;
 import net.dodian.uber.game.engine.systems.interaction.InteractionAnchorState;
 import net.dodian.uber.game.engine.lifecycle.PlayerDeferredLifecycleService;
-import net.dodian.utilities.*;
+import net.dodian.uber.game.engine.util.Misc;
+import net.dodian.utilities.MD5;
+import net.dodian.utilities.Utils;
 import net.dodian.uber.game.engine.systems.skills.ProgressionService;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import io.netty.channel.Channel;
 
 /* Kotlin imports */
 import net.dodian.uber.game.engine.systems.world.item.Ground;
-import static net.dodian.uber.game.content.combat.CombatPlayerExtensionsKt.getRangedStr;
-import static net.dodian.uber.game.content.combat.PlayerAttackCombatKt.attackTarget;
+import static net.dodian.uber.game.combat.CombatPlayerExtensionsKt.getRangedStr;
 import static net.dodian.uber.game.model.player.skills.Skill.*;
 import static net.dodian.uber.game.engine.config.DotEnvKt.*;
 import org.slf4j.Logger;
@@ -123,7 +100,7 @@ public class Client extends Player implements Runnable {
     int otherdbId = -1;
     public int convoId = -1, nextDiag = -1, npcFace = 591;
     public boolean pLoaded = false;
-    public int maxQuests = QuestSend.values().length;
+    public int maxQuests = QuestTabEntry.values().length;
     public int[] quests = new int[maxQuests];
     public int[] playerBonus = new int[12];
     private final Map<Integer, String> uiTextCache = new HashMap<>();
@@ -181,7 +158,7 @@ public class Client extends Player implements Runnable {
     public CopyOnWriteArrayList<GameItem> offeredItems = new CopyOnWriteArrayList<>();
     public CopyOnWriteArrayList<GameItem> otherOfferedItems = new CopyOnWriteArrayList<>();
     public boolean adding = false;
-    public ArrayList<RS2Object> objects = new ArrayList<>();
+    public ArrayList<WorldObject> objects = new ArrayList<>();
     public long lastButton = 0;
     public int enterAmountId = 0;
     // Dodian: teleports
@@ -526,19 +503,19 @@ public class Client extends Player implements Runnable {
     }
 
     public void sendInterfaceAnimation(int MainFrame, int SubFrame) {
-        send(new SendFrame200(MainFrame, SubFrame));
+        send(new SendInterfaceAnimation(MainFrame, SubFrame));
     }
 
     public void sendChatboxInterface(int Frame) {
-        send(new SendFrame164(Frame));
+        send(new SendChatboxInterface(Frame));
     }
 
     public void sendInterfaceModel(int MainFrame, int SubFrame, int SubFrame2) {
-        send(new SendFrame246(MainFrame, SubFrame, SubFrame2));
+        send(new SendInterfaceModel(MainFrame, SubFrame, SubFrame2));
     }
 
     public void sendQuestSomething(int id) {
-        send(new SendQuestSomething(id));
+        send(new SetScrollPosition(id));
     }
 
     public void clearQuestInterface() {
@@ -954,10 +931,10 @@ public class Client extends Player implements Runnable {
             openedInterfaceId = ((ShowInterface) packet).interfaceId();
             openedVia = "ShowInterface";
         } else if (packet instanceof InventoryInterface) {
-            openedInterfaceId = ((InventoryInterface) packet).getInterfaceId();
+            openedInterfaceId = ((InventoryInterface) packet).interfaceId();
             openedVia = "InventoryInterface";
-        } else if (packet instanceof SendFrame164) {
-            openedInterfaceId = ((SendFrame164) packet).frame();
+        } else if (packet instanceof SendChatboxInterface) {
+            openedInterfaceId = ((SendChatboxInterface) packet).frame();
             openedVia = "Frame164";
         } else if (packet instanceof RemoveInterfaces) {
             closedVia = "RemoveInterfaces";
@@ -1640,7 +1617,7 @@ public class Client extends Player implements Runnable {
             send(new SendMessage("Shopping have been disabled!"));
             return;
         }
-        if (ShopID < 0 || ShopID >= ShopManager.MaxShops || ShopDefinitions.find(ShopID) == null) {
+        if (ShopID < 0 || ShopID >= ShopManager.MaxShops || ShopCatalog.find(ShopID) == null) {
             send(new SendMessage("This shop is currently unavailable."));
             return;
         }
@@ -1857,7 +1834,7 @@ public class Client extends Player implements Runnable {
         if (isBusy() || interFace != 3214) {
             return;
         }
-        if (net.dodian.uber.game.content.skills.runecrafting.Runecrafting.emptyPouch(this, wearID)) { //Runecrafting Pouches
+        if (net.dodian.uber.game.skill.runecrafting.Runecrafting.emptyPouch(this, wearID)) { //Runecrafting Pouches
             return;
         }
         if (wearID == 5733) { //Potato
@@ -1878,7 +1855,7 @@ public class Client extends Player implements Runnable {
             return;
         }
         if (wearID == 4155) { //Enchanted gem
-            net.dodian.uber.game.content.skills.slayer.Slayer.sendCurrentTask(this);
+            net.dodian.uber.game.skill.slayer.Slayer.sendCurrentTask(this);
             return;
         }
         if (duelConfirmed && !duelFight)
@@ -3644,9 +3621,9 @@ public class Client extends Player implements Runnable {
             send(new SendMessage(isBusy() ? "You are currently busy" : other.getPlayerName() + " is currently busy!"));
             return;
         }
-        if (net.dodian.uber.game.content.combat.CombatLogoutLockService.isLocked(this)
-                || net.dodian.uber.game.content.combat.CombatLogoutLockService.isLocked(other)) {
-            send(new SendMessage(net.dodian.uber.game.content.combat.CombatLogoutLockService.isLocked(this)
+        if (net.dodian.uber.game.engine.systems.combat.CombatLogoutLockService.isLocked(this)
+                || net.dodian.uber.game.engine.systems.combat.CombatLogoutLockService.isLocked(other)) {
+            send(new SendMessage(net.dodian.uber.game.engine.systems.combat.CombatLogoutLockService.isLocked(this)
                     ? "You can't duel while in combat."
                     : other.getPlayerName() + " can't duel while in combat."));
             return;
@@ -3768,7 +3745,7 @@ public class Client extends Player implements Runnable {
         canAttack = false;
         canOffer = false;
         duelFight = true;
-        prayers.reset();
+        prayerManager.reset();
         addEffectTime(2, 0); //Need to reset this for dueling!
         GetBonus(true); //Set bonus due to blessing!
         for (int i = 0; i < boostedLevel.length; i++) {
@@ -4080,13 +4057,13 @@ public class Client extends Player implements Runnable {
 
     public void AddToWalkCords(int X, int Y, long time) {
         newWalkCmdIsRunning = false;
-        if (time > 0) walkBlock = System.currentTimeMillis() + time;
+        if (time > 0) applyWalkBlockMs(time);
         AddToCords(X, Y, false);
     }
 
     public void AddToRunCords(int X, int Y, long time) {
         newWalkCmdIsRunning = true;
-        if (time > 0) walkBlock = System.currentTimeMillis() + time;
+        if (time > 0) applyWalkBlockMs(time);
         AddToCords(X, Y, true);
     }
 
@@ -4446,8 +4423,8 @@ public class Client extends Player implements Runnable {
         }
     }
 
-    public Prayers getPrayerManager() {
-        return prayers;
+    public PrayerManager getPrayerManager() {
+        return prayerManager;
     }
 
     public void checkBow() {
@@ -4456,10 +4433,7 @@ public class Client extends Player implements Runnable {
     }
 
     public boolean bowWeapon(int weaponId) {
-        boolean bow = false;
-        if (net.dodian.uber.game.content.skills.fletching.FletchingData.isBowWeapon(weaponId)) {
-            bow = true;
-        }
+        boolean bow = net.dodian.uber.game.skill.fletching.FletchingData.isBowWeapon(weaponId);
         if (weaponId == 839 || weaponId == 841 || weaponId == 4212 || weaponId == 6724 || weaponId == 20997 ||
                 weaponId == 11235 || weaponId == 4734 || (weaponId >= 12765 && weaponId <= 12768))
             bow = true;

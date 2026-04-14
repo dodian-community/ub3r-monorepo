@@ -4,7 +4,7 @@ import io.netty.channel.embedded.EmbeddedChannel
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.Item
-import net.dodian.uber.game.model.item.ItemManager
+import net.dodian.uber.game.item.ItemManager
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Assertions.assertEquals

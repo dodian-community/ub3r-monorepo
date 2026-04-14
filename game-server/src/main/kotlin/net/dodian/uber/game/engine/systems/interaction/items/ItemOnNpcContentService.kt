@@ -1,9 +1,9 @@
 package net.dodian.uber.game.engine.systems.interaction.items
 
-import net.dodian.uber.game.content.social.dialogue.DialogueService
+import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.content.skills.Skillcape
+import net.dodian.uber.game.skill.Skillcape
 import net.dodian.uber.game.netty.listener.out.SendMessage
 
 object ItemOnNpcContentService {

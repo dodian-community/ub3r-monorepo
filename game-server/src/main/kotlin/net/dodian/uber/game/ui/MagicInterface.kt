@@ -2,7 +2,10 @@
 
 package net.dodian.uber.game.ui
 
-import net.dodian.uber.game.content.combat.style.CombatStyleService
+import net.dodian.uber.game.ui.buttons.InterfaceButtonContent
+import net.dodian.uber.game.ui.buttons.buttonBinding
+
+import net.dodian.uber.game.ui.combat.CombatStyleService
 import net.dodian.uber.game.engine.util.Misc
 
 object MagicInterface : InterfaceButtonContent {

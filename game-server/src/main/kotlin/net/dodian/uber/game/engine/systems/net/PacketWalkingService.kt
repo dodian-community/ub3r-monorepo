@@ -1,6 +1,6 @@
 package net.dodian.uber.game.engine.systems.net
 
-import net.dodian.uber.game.content.skills.thieving.PyramidPlunder
+import net.dodian.uber.game.skill.thieving.PyramidPlunder
 import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.engine.lifecycle.PlayerDeferredLifecycleService
 import net.dodian.uber.game.events.player.WalkEvent
@@ -12,7 +12,7 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancellationService
 import net.dodian.uber.game.engine.systems.follow.FollowService
-import net.dodian.uber.game.content.social.dialogue.DialogueService
+import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicLong
 
@@ -23,20 +23,19 @@ object PacketWalkingService {
 
     @JvmStatic
     fun handle(player: Client, request: WalkRequest) {
-        val now = System.currentTimeMillis()
         if (player.deathStage > 0 ||
             player.getCurrentHealth() < 1 ||
             player.randomed ||
             !player.validClient ||
             !player.pLoaded ||
-            now < player.walkBlock
+            player.isWalkBlocked()
         ) {
             return
         }
         if (player.doingTeleport() || PyramidPlunder.isLooting(player)) {
             return
         }
-        if (player.isVerticalTransitionActive()) {
+        if (player.isVerticalTransitionActive) {
             player.resetWalkingQueue()
             return
         }
@@ -133,7 +132,7 @@ object PacketWalkingService {
             if (player.NpcWanneTalk > 0) {
                 player.send(RemoveInterfaces())
                 player.NpcWanneTalk = -1
-            } else if (!player.isBusy()) {
+            } else if (!player.isBusy) {
                 player.send(RemoveInterfaces())
             }
             player.rerequestAnim()
@@ -193,7 +192,7 @@ object PacketWalkingService {
             player.send(RemoveInterfaces())
             player.checkItemUpdate()
         }
-        if (player.isShopping()) {
+        if (player.isShopping) {
             player.MyShopID = -1
             player.send(RemoveInterfaces())
             player.checkItemUpdate()

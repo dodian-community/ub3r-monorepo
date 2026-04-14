@@ -1,9 +1,9 @@
 package net.dodian.uber.game.engine.systems.interaction.ui
 
-import net.dodian.uber.game.content.skills.crafting.Crafting
-import net.dodian.uber.game.content.skills.crafting.GoldJewelryRequest
-import net.dodian.uber.game.content.skills.smithing.SmithingInterface
-import net.dodian.uber.game.content.skills.smithing.Smithing
+import net.dodian.uber.game.skill.crafting.Crafting
+import net.dodian.uber.game.skill.crafting.GoldJewelryRequest
+import net.dodian.uber.game.skill.smithing.SmithingInterface
+import net.dodian.uber.game.skill.smithing.Smithing
 import net.dodian.uber.game.model.entity.player.Client
 
 object SkillingInterfaceItemService {

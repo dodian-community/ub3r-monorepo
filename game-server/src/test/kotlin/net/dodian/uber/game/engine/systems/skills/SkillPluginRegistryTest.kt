@@ -4,7 +4,6 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
 import net.dodian.uber.game.api.plugin.PluginRegistry
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
-import net.dodian.uber.game.api.plugin.skills.SkillPluginRegistry
 import net.dodian.uber.game.api.plugin.skills.skillPlugin
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -23,29 +22,35 @@ class SkillPluginRegistryTest {
 
     @Test
     fun `legacy SkillPluginRegistry forwards to PluginRegistry`() {
-        SkillPluginRegistry.resetForTests()
-        SkillPluginRegistry.bootstrap()
-        assertNotNull(SkillPluginRegistry.current().itemBinding(option = 1, itemId = 4155))
+        @Suppress("DEPRECATION")
+        run {
+            net.dodian.uber.game.api.plugin.skills.SkillPluginRegistry.resetForTests()
+            net.dodian.uber.game.api.plugin.skills.SkillPluginRegistry.bootstrap()
+            assertNotNull(net.dodian.uber.game.api.plugin.skills.SkillPluginRegistry.current().itemBinding(option = 1, itemId = 4155))
+        }
     }
 
     @Test
     fun `registry resolves migrated skill bindings`() {
-        SkillPluginRegistry.resetForTests()
-        SkillPluginRegistry.bootstrap()
-        val snapshot = SkillPluginRegistry.current()
+        PluginRegistry.resetForTests()
+        PluginRegistry.bootstrap()
+        val snapshot = PluginRegistry.currentSkills()
 
         assertNotNull(snapshot.objectBinding(option = 1, objectId = 7451), "Expected mining rock object binding")
         assertNotNull(snapshot.objectBinding(option = 1, objectId = 1276), "Expected woodcutting tree object binding")
         assertNotNull(snapshot.npcBinding(option = 1, npcId = 1511), "Expected fishing npc option binding")
         assertNotNull(snapshot.itemBinding(option = 1, itemId = 4155), "Expected slayer gem item option binding")
         assertNotNull(snapshot.itemOnObjectBinding(objectId = 2728, itemId = 317), "Expected cooking range item-on-object binding")
+        assertNotNull(snapshot.magicOnObjectBinding(objectId = 2151, spellId = 1179), "Expected smithing orb charging magic-on-object binding")
+        assertNotNull(snapshot.magicOnObjectBinding(objectId = 2151, spellId = 9999), "Expected smithing wildcard magic-on-object ownership")
+        assertNotNull(snapshot.buttonBinding(rawButtonId = 3987, opIndex = -1, activeInterfaceId = 2400), "Expected smithing smelting button binding")
     }
 
     @Test
     fun `registry rejects duplicate ownership for same binding key`() {
-        SkillPluginRegistry.resetForTests()
+        PluginRegistry.resetForTests()
 
-        SkillPluginRegistry.register(
+        PluginRegistry.registerSkill(
             object : SkillPlugin {
                 override val definition =
                     skillPlugin("TestOne", Skill.MINING) {
@@ -54,7 +59,7 @@ class SkillPluginRegistryTest {
             },
         )
 
-        SkillPluginRegistry.register(
+        PluginRegistry.registerSkill(
             object : SkillPlugin {
                 override val definition =
                     skillPlugin("TestTwo", Skill.WOODCUTTING) {
@@ -64,16 +69,16 @@ class SkillPluginRegistryTest {
         )
 
         assertThrows(IllegalArgumentException::class.java) {
-            SkillPluginRegistry.bootstrap()
+            PluginRegistry.bootstrap()
         }
 
-        SkillPluginRegistry.resetForTests()
+        PluginRegistry.resetForTests()
     }
 
     @Test
     fun `registry supports item on object wildcard binding`() {
-        SkillPluginRegistry.resetForTests()
-        SkillPluginRegistry.register(
+        PluginRegistry.resetForTests()
+        PluginRegistry.registerSkill(
             object : SkillPlugin {
                 override val definition =
                     skillPlugin("Wildcard", Skill.COOKING) {
@@ -81,12 +86,55 @@ class SkillPluginRegistryTest {
                     }
             },
         )
-        SkillPluginRegistry.bootstrap()
-        val snapshot = SkillPluginRegistry.current()
+        PluginRegistry.bootstrap()
+        val snapshot = PluginRegistry.currentSkills()
 
         assertNotNull(snapshot.itemOnObjectBinding(objectId = 888_001, itemId = 111))
 
-        SkillPluginRegistry.resetForTests()
+        PluginRegistry.resetForTests()
+    }
+
+    @Test
+    fun `registry supports magic on object wildcard binding`() {
+        PluginRegistry.resetForTests()
+        PluginRegistry.registerSkill(
+            object : SkillPlugin {
+                override val definition =
+                    skillPlugin("MagicWildcard", Skill.MAGIC) {
+                        magicOnObject(PolicyPreset.PRODUCTION, 777_001, spellIds = intArrayOf(-1)) { _, _, _, _, _ -> true }
+                    }
+            },
+        )
+        PluginRegistry.bootstrap()
+        val snapshot = PluginRegistry.currentSkills()
+
+        assertNotNull(snapshot.magicOnObjectBinding(objectId = 777_001, spellId = 1234))
+
+        PluginRegistry.resetForTests()
+    }
+
+    @Test
+    fun `registry resolves interface specific skill buttons before wildcard routes`() {
+        PluginRegistry.resetForTests()
+        PluginRegistry.registerSkill(
+            object : SkillPlugin {
+                override val definition =
+                    skillPlugin("Buttons", Skill.CRAFTING) {
+                        button(preset = PolicyPreset.PRODUCTION, requiredInterfaceId = -1, rawButtonIds = intArrayOf(555_001)) { _, _, _ -> true }
+                        button(preset = PolicyPreset.PRODUCTION, requiredInterfaceId = 2400, rawButtonIds = intArrayOf(555_001)) { _, _, _ -> true }
+                    }
+            },
+        )
+        PluginRegistry.bootstrap()
+        val snapshot = PluginRegistry.currentSkills()
+
+        val interfaceScoped = requireNotNull(snapshot.buttonBinding(rawButtonId = 555_001, opIndex = -1, activeInterfaceId = 2400))
+        val wildcard = requireNotNull(snapshot.buttonBinding(rawButtonId = 555_001, opIndex = -1, activeInterfaceId = 1234))
+
+        assertTrue(interfaceScoped.requiredInterfaceId == 2400)
+        assertTrue(wildcard.requiredInterfaceId == -1)
+
+        PluginRegistry.resetForTests()
     }
 
     @Test

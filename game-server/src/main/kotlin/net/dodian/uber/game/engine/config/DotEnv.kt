@@ -17,6 +17,9 @@ val serverPort = dotenv["SERVER_PORT"]?.toInt() ?: 43594
 val serverDebugMode = dotenv["SERVER_DEBUG_MODE"]?.toBoolean() ?: false
 val serverEnv = dotenv["SERVER_ENVIRONMENT"] ?: "prod"
 val nettyLeakDetection = dotenv["NETTY_LEAK_DETECTION"] ?: "disabled"
+val dodianLogLevel = dotenv["DODIAN_LOG_LEVEL"] ?: "info"
+val webApiEnabled = dotenv["WEB_API_ENABLED"]?.toBoolean() ?: true
+val webApiPort = dotenv["WEB_API_PORT"]?.toInt() ?: 8080
 
 // Database Settings
 val databaseHost = requiredNonBlankEnv("DATABASE_HOST")

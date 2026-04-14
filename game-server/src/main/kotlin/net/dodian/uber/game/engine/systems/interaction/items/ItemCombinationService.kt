@@ -1,15 +1,15 @@
 package net.dodian.uber.game.engine.systems.interaction.items
 
-import net.dodian.uber.game.content.items.combination.CraftingItemCombinations
-import net.dodian.uber.game.content.items.combination.DialogueGateItemCombinations
-import net.dodian.uber.game.content.items.combination.EquipmentAssemblyItemCombinations
-import net.dodian.uber.game.content.items.combination.FiremakingItemCombinations
-import net.dodian.uber.game.content.items.combination.FletchingItemCombinations
-import net.dodian.uber.game.content.items.combination.HerbloreItemCombinations
-import net.dodian.uber.game.content.items.combination.NoveltyItemCombinations
-import net.dodian.uber.game.content.items.combination.PotatoItemInteractionState
-import net.dodian.uber.game.content.items.combination.RepairPlaceholderItemCombinations
-import net.dodian.uber.game.content.items.combination.SaplingItemCombinations
+import net.dodian.uber.game.item.admin.PotatoItemInteractionState
+import net.dodian.uber.game.item.cosmetic.NoveltyItemCombinations
+import net.dodian.uber.game.item.equipment.RepairPlaceholderItemCombinations
+import net.dodian.uber.game.skill.farming.SaplingItemCombinations
+import net.dodian.uber.game.skill.firemaking.FiremakingItemCombinations
+import net.dodian.uber.game.skill.fletching.FletchingItemCombinations
+import net.dodian.uber.game.skill.herblore.HerbloreItemCombinations
+import net.dodian.uber.game.skill.crafting.CraftingItemCombinations
+import net.dodian.uber.game.skill.slayer.EquipmentAssemblyItemCombinations
+import net.dodian.uber.game.skill.smithing.rockshell.DialogueGateItemCombinations
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.api.content.ContentActionCancelReason
 import net.dodian.uber.game.api.content.ContentActions

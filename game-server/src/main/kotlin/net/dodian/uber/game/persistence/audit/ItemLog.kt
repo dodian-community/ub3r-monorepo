@@ -2,7 +2,7 @@ package net.dodian.uber.game.persistence.audit
 
 import java.sql.SQLException
 import net.dodian.uber.game.model.Position
-import net.dodian.uber.game.content.social.chat.YellSystem
+import net.dodian.uber.game.social.chat.YellSystem
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.persistence.db.DbTables
 import net.dodian.uber.game.persistence.repository.DbAsyncRepository

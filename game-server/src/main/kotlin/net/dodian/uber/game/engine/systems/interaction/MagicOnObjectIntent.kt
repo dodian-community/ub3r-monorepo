@@ -1,7 +1,7 @@
 package net.dodian.uber.game.engine.systems.interaction
 
-import net.dodian.cache.`object`.GameObjectData
-import net.dodian.cache.`object`.GameObjectDef
+import net.dodian.cache.objects.GameObjectData
+import net.dodian.cache.objects.GameObjectDef
 import net.dodian.uber.game.model.Position
 
 data class MagicOnObjectIntent(

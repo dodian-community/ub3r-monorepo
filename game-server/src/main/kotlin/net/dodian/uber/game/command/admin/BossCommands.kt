@@ -2,9 +2,9 @@
 
 package net.dodian.uber.game.command.admin
 
-import net.dodian.uber.game.command.CommandContent
-import net.dodian.uber.game.command.CommandContext
-import net.dodian.uber.game.command.commands
+import net.dodian.uber.game.engine.systems.interaction.commands.CommandContent
+import net.dodian.uber.game.engine.systems.interaction.commands.CommandContext
+import net.dodian.uber.game.engine.systems.interaction.commands.commands
 import net.dodian.uber.game.engine.config.gameWorldId
 
 object BossCommands : CommandContent {
@@ -24,7 +24,7 @@ private fun handleBoss(context: CommandContext): Boolean {
     if (context.alias == "forcetask" && (specialRights || gameWorldId > 1)) {
         return try {
             val taskId = cmd[1].toInt()
-            val length = net.dodian.uber.game.content.skills.slayer.SlayerTaskDefinition.values().size - 1
+            val length = net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.values().size - 1
             if (taskId < 0 || taskId > length) {
                 context.reply("Task id out of bound! Can only be 0 - $length")
                 return true
@@ -33,7 +33,7 @@ private fun handleBoss(context: CommandContext): Boolean {
             client.slayerData[1] = taskId
             client.slayerData[2] = 1337
             client.slayerData[3] = 1337
-            val task = net.dodian.uber.game.content.skills.slayer.SlayerTaskDefinition.forOrdinal(taskId) ?: return false
+            val task = net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forOrdinal(taskId) ?: return false
             context.reply("[DEBUG]: You force the task to be 1337 of  ${task.textRepresentation} (${task})")
             true
         } catch (_: Exception) {
@@ -90,4 +90,3 @@ private fun handleBoss(context: CommandContext): Boolean {
     }
     return false
 }
-

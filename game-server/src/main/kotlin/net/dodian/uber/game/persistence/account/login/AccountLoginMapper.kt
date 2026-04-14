@@ -8,7 +8,7 @@ import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.engine.systems.world.item.Ground
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
-import net.dodian.uber.game.model.player.skills.prayer.Prayers
+import net.dodian.uber.game.skill.prayer.PrayerManager
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.uber.game.persistence.account.Login
@@ -122,7 +122,7 @@ internal object AccountLoginMapper {
     private fun applyPrayerBoosts(player: Client, prayerParse: Array<String>, boostedParse: Array<String>, prayer: String, boosted: String) {
         if (prayer.isNotEmpty()) {
             for (index in 1 until prayerParse.size) {
-                val prayerButton = Prayers.Prayer.forButton(prayerParse[index].toInt()) ?: continue
+                val prayerButton = PrayerManager.Prayer.forButton(prayerParse[index].toInt()) ?: continue
                 player.prayerManager.togglePrayer(prayerButton)
             }
         }

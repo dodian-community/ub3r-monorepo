@@ -9,7 +9,7 @@ import net.dodian.uber.game.engine.systems.skills.ProgressionService;
 import net.dodian.uber.game.api.content.ContentRuntimeApi;
 import net.dodian.uber.game.persistence.db.DbTables;
 import net.dodian.uber.game.model.item.Equipment;
-import net.dodian.uber.game.model.player.quests.QuestSend;
+import net.dodian.uber.game.ui.QuestTabEntry;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.engine.lifecycle.PlayerDeferredLifecycleService;
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry;
@@ -34,7 +34,7 @@ public class PlayerInitializer {
         client.varbit(287, 1); // SPLIT PRIVATE CHAT ON/OFF
         
 
-        QuestSend.clearQuestName(client);
+        QuestTabEntry.clearQuestName(client);
         client.questPage = 1;
         client.pmstatus(2);
         client.setConfigIds();

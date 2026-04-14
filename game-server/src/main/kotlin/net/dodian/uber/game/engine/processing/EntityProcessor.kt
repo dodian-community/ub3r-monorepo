@@ -12,19 +12,19 @@ import net.dodian.uber.game.engine.sync.util.LongHashSet
 import net.dodian.uber.game.engine.tasking.GameTaskRuntime
 import net.dodian.uber.game.model.EntityType
 import net.dodian.uber.game.model.Position
-import net.dodian.uber.game.model.chunk.ChunkRepository
+import net.dodian.uber.game.model.chunk.ChunkEntityIndex
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.engine.systems.follow.FollowPathfindingTelemetry
 import net.dodian.uber.game.engine.systems.follow.FollowService
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
-import net.dodian.uber.game.model.`object`.GlobalObject
+import net.dodian.uber.game.model.objects.GlobalObject
 import net.dodian.uber.game.netty.NetworkConstants
-import net.dodian.uber.game.content.events.partyroom.Balloons
+import net.dodian.uber.game.activity.partyroom.PartyRoomBalloons
 import net.dodian.uber.game.engine.lifecycle.PlayerLifecycleTickService
 import net.dodian.uber.game.engine.systems.animation.PlayerAnimationService
-import net.dodian.uber.game.content.combat.CombatRuntimeService
-import net.dodian.uber.game.content.social.dialogue.DialogueService
+import net.dodian.uber.game.engine.systems.combat.CombatRuntimeService
+import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.engine.systems.world.npc.NpcTimerScheduler
 import net.dodian.uber.game.engine.util.Misc
 import net.dodian.uber.game.engine.util.Utils
@@ -208,7 +208,7 @@ class EntityProcessor : Runnable {
             activeChunks.forEach { key ->
                 val chunkX = unpackChunkX(key)
                 val chunkY = unpackChunkY(key)
-                val repo: ChunkRepository = chunkManager.getLoaded(chunkX, chunkY) ?: return@forEach
+                val repo: ChunkEntityIndex = chunkManager.getLoaded(chunkX, chunkY) ?: return@forEach
                 for (npc in repo.getAll<Npc>(EntityType.NPC)) {
                     if (npc != null && activeNpcSlots.add(npc.slot)) {
                         output.add(npc)
@@ -346,7 +346,7 @@ class EntityProcessor : Runnable {
 
     private fun handleJackpotAnnouncement(npc: Npc) {
         if (Misc.chance(100) == 1) {
-            val jackpot = minOf(Server.slots.slotsJackpot + Server.slots.peteBalance, Int.MAX_VALUE)
+            val jackpot = minOf(Server.slots.jackpotPool + Server.slots.houseBalance, Int.MAX_VALUE)
             npc.setText("Current Jackpot is $jackpot coins!")
         }
     }
@@ -376,9 +376,9 @@ class EntityProcessor : Runnable {
     }
 
     private fun handlePartyAnnouncement(npc: Npc) {
-        if (Balloons.eventActive()) {
+        if (PartyRoomBalloons.isPartyEventActive()) {
             npc.performAnimation(866, 0)
-            npc.setText(if (Balloons.spawnedBalloons()) "A party is going on right now!" else "A party is about to Start!!!!")
+            npc.setText(if (PartyRoomBalloons.hasSpawnedPartyBalloons()) "A party is going on right now!" else "A party is about to Start!!!!")
         }
     }
 

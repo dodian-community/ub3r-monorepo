@@ -1,8 +1,8 @@
 package net.dodian.uber.game.engine.systems.skills.farming.runtime
 
 import com.google.gson.JsonArray
-import net.dodian.uber.game.content.skills.farming.FarmingData
-import net.dodian.uber.game.content.skills.farming.FarmingState
+import net.dodian.uber.game.skill.farming.FarmingData
+import net.dodian.uber.game.skill.farming.FarmingState
 import net.dodian.uber.game.model.entity.player.Client
 
 object FarmingPersistenceCodec {

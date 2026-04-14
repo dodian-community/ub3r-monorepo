@@ -3,7 +3,7 @@ package net.dodian.uber.game.engine.sync.viewport
 import java.util.IdentityHashMap
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.EntityType
-import net.dodian.uber.game.model.chunk.ChunkRepository
+import net.dodian.uber.game.model.chunk.ChunkEntityIndex
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
@@ -50,7 +50,7 @@ class ViewportIndex private constructor(
             val level = center.z
             val players = ArrayList<Player>()
             val npcs = ArrayList<Npc>()
-            chunkManager.forEachViewableChunk(center, distance) { repo: ChunkRepository ->
+            chunkManager.forEachViewableChunk(center, distance) { repo: ChunkEntityIndex ->
                 for (other in repo.getAll<Player>(EntityType.PLAYER)) {
                     if (other.isActive && other.position?.z == level) {
                         players += other

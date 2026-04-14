@@ -5,7 +5,7 @@ import java.util.Date
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Friend
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.model.player.skills.prayer.Prayers
+import net.dodian.uber.game.skill.prayer.PrayerManager
 import net.dodian.uber.game.persistence.db.DbTables
 
 data class PlayerSaveSnapshot(
@@ -95,7 +95,7 @@ data class PlayerSaveSnapshot(
             }
 
             prayer.append(client.currentPrayer)
-            for (pray in Prayers.Prayer.values()) {
+            for (pray in PrayerManager.Prayer.values()) {
                 if (client.prayerManager.isPrayerOn(pray)) {
                     prayer.append(':').append(pray.buttonId)
                 }

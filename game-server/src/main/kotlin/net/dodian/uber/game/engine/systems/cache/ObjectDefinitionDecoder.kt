@@ -1,6 +1,6 @@
 package net.dodian.uber.game.engine.systems.cache
 
-import net.dodian.cache.`object`.GameObjectData
+import net.dodian.cache.objects.GameObjectData
 
 object ObjectDefinitionDecoder {
     data class Result(

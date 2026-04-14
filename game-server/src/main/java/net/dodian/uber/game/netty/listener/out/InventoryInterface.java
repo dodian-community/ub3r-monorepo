@@ -5,23 +5,7 @@ import net.dodian.uber.game.netty.listener.OutgoingPacket;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ValueType;
 
-public class InventoryInterface implements OutgoingPacket {
-
-    private final int interfaceId;
-    private final int inventoryId;
-
-    public InventoryInterface(int interfaceId, int inventoryId) {
-        this.interfaceId = interfaceId;
-        this.inventoryId = inventoryId;
-    }
-
-    public int getInterfaceId() {
-        return interfaceId;
-    }
-
-    public int getInventoryId() {
-        return inventoryId;
-    }
+public record InventoryInterface(int interfaceId, int inventoryId) implements OutgoingPacket {
 
     @Override
     public void send(Client client) {

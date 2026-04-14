@@ -266,7 +266,7 @@ final class PlayerMovementState {
                 addToWalkingQueue(owner.newWalkCmdX[i], owner.newWalkCmdY[i]);
             }
         }
-        owner.isRunning = owner.UsingAgility && System.currentTimeMillis() < owner.walkBlock ? owner.newWalkCmdIsRunning : owner.buttonOnRun;
+        owner.isRunning = owner.UsingAgility && owner.isWalkBlocked() ? owner.newWalkCmdIsRunning : owner.buttonOnRun;
         owner.newWalkCmdSteps = 0;
     }
 

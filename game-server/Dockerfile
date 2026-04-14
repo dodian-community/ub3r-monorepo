@@ -1,6 +1,7 @@
-FROM openjdk:11-jre-slim
+FROM eclipse-temurin:17-jre
 
 EXPOSE 43594
+EXPOSE 8080
 
 RUN mkdir /app
 WORKDIR /app
@@ -14,7 +15,12 @@ COPY ./data/shops.cfg ./data/shops.cfg
 COPY ./build/libs/*.jar ./ub3r-server.jar
 
 ENTRYPOINT ["java", \
-	"-XX:+UnlockExperimentalVMOptions", \
-	"-Djava.security.egd=file:/dev/./urandom","-jar", \
+	"-Xms1g", \
+	"-Xmx4g", \
+	"-XX:+UseG1GC", \
+	"-XX:MaxGCPauseMillis=100", \
+	"-Djava.security.egd=file:/dev/./urandom", \
+	"-Ddodian.log.level=info", \
+	"-jar", \
 	"./ub3r-server.jar" \
 ]

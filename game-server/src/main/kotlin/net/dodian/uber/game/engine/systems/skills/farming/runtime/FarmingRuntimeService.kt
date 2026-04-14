@@ -3,8 +3,8 @@ package net.dodian.uber.game.engine.systems.skills.farming.runtime
 import java.util.IdentityHashMap
 import java.util.TreeMap
 import kotlin.system.measureNanoTime
-import net.dodian.uber.game.content.skills.farming.FarmingData
-import net.dodian.uber.game.content.skills.farming.markFarmingDirty
+import net.dodian.uber.game.skill.farming.FarmingData
+import net.dodian.uber.game.skill.farming.markFarmingDirty
 import net.dodian.uber.game.api.content.ContentScheduling
 import net.dodian.uber.game.api.content.ContentTiming
 import net.dodian.uber.game.engine.config.runtimePhaseWarnMs

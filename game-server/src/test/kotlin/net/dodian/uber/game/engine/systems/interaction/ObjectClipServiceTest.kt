@@ -1,9 +1,9 @@
 package net.dodian.uber.game.engine.systems.interaction
 
-import net.dodian.cache.`object`.GameObjectData
+import net.dodian.cache.objects.GameObjectData
 import net.dodian.uber.game.model.Position
-import net.dodian.uber.game.model.`object`.DoorRegistry
-import net.dodian.uber.game.model.`object`.RS2Object
+import net.dodian.uber.game.model.objects.DoorRegistry
+import net.dodian.uber.game.model.objects.WorldObject
 import net.dodian.uber.game.engine.systems.pathing.collision.CollisionManager
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -31,7 +31,7 @@ class ObjectClipServiceTest {
             DoorRegistry.doorFace = intArrayOf(3)
             DoorRegistry.doorState = intArrayOf(0)
 
-            ObjectClipService.bootstrapStartupOverlays(listOf(RS2Object(2000, 15, 15, 10, 0)))
+            ObjectClipService.bootstrapStartupOverlays(listOf(WorldObject(2000, 15, 15, 0, 10, 0)))
 
             assertTrue(collision.isTileBlocked(15, 15, 0))
             assertFalse(collision.canMove(20, 19, 20, 20, 0, 1, 1))
@@ -220,6 +220,31 @@ class ObjectClipServiceTest {
     fun `static override registry includes nmz removed rectangle tile`() {
         val positions = StaticObjectOverrides.all().map { it.position.x to it.position.y }.toSet()
         assertTrue(positions.contains(2609 to 3111))
+    }
+
+    @Test
+    fun `static override registry includes migrated replacement objects`() {
+        val overridesByPosition = StaticObjectOverrides.all().associateBy { Triple(it.position.x, it.position.y, it.position.z) }
+
+        val brick = overridesByPosition[Triple(2869, 9813, 0)]
+        assertEquals(2343, brick?.replacementObjectId)
+        assertEquals(0, brick?.replacementFace)
+        assertEquals(10, brick?.replacementType)
+
+        val ancientSlayer = overridesByPosition[Triple(2662, 9815, 0)]
+        assertEquals(2392, ancientSlayer?.replacementObjectId)
+        assertEquals(-2, ancientSlayer?.replacementFace)
+        assertEquals(0, ancientSlayer?.replacementType)
+    }
+
+    @Test
+    fun `static override registry preserves explicit removal face metadata`() {
+        val overridesByPosition = StaticObjectOverrides.all().associateBy { Triple(it.position.x, it.position.y, it.position.z) }
+
+        val removedPortal = overridesByPosition[Triple(2542, 3097, 0)]
+        assertEquals(-1, removedPortal?.replacementObjectId)
+        assertEquals(0, removedPortal?.replacementFace)
+        assertEquals(10, removedPortal?.replacementType)
     }
 
     private fun blockingDefinition(id: Int): GameObjectData =

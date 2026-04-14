@@ -2,9 +2,9 @@
 
 package net.dodian.uber.game.command.player
 
-import net.dodian.uber.game.command.CommandContent
-import net.dodian.uber.game.command.CommandContext
-import net.dodian.uber.game.command.commands
+import net.dodian.uber.game.engine.systems.interaction.commands.CommandContent
+import net.dodian.uber.game.engine.systems.interaction.commands.CommandContext
+import net.dodian.uber.game.engine.systems.interaction.commands.commands
 import net.dodian.uber.game.engine.config.gameWorldId
 import net.dodian.uber.game.model.Position
 
@@ -62,5 +62,4 @@ private fun handlePosition(context: CommandContext): Boolean {
     }
     return false
 }
-
 

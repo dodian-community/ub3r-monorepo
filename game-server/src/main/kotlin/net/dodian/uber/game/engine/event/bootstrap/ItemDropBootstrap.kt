@@ -1,7 +1,7 @@
 package net.dodian.uber.game.engine.event.bootstrap
 
 import net.dodian.uber.game.Server
-import net.dodian.uber.game.content.skills.Skillcape
+import net.dodian.uber.game.skill.Skillcape
 import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.events.item.ItemDropEvent
 import net.dodian.uber.game.netty.listener.out.SendMessage

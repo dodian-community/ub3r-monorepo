@@ -2,7 +2,7 @@
 
 package net.dodian.uber.game.engine.util
 
-import net.dodian.cache.`object`.GameObjectDef
+import net.dodian.cache.objects.GameObjectDef
 import net.dodian.uber.game.model.Position
 import net.dodian.utilities.Formatting
 import net.dodian.utilities.Geometry

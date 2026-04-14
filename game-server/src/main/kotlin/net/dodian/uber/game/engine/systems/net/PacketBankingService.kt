@@ -1,12 +1,12 @@
 package net.dodian.uber.game.engine.systems.net
 
 import net.dodian.uber.game.Server
-import net.dodian.uber.game.content.events.partyroom.Balloons
-import net.dodian.uber.game.content.skills.cooking.Cooking
-import net.dodian.uber.game.content.skills.herblore.Herblore
-import net.dodian.uber.game.content.skills.slayer.Slayer
-import net.dodian.uber.game.content.skills.smithing.SmithingInterface
-import net.dodian.uber.game.content.shop.ShopRulesService
+import net.dodian.uber.game.activity.partyroom.PartyRoomBalloons
+import net.dodian.uber.game.skill.cooking.Cooking
+import net.dodian.uber.game.skill.herblore.Herblore
+import net.dodian.uber.game.skill.slayer.Slayer
+import net.dodian.uber.game.skill.smithing.SmithingInterface
+import net.dodian.uber.game.shop.ShopRulesService
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.InventoryInterface
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
@@ -171,7 +171,7 @@ object PacketBankingService {
                     ConsoleAuditLog.bankDeposit(client, resolvedItemId, "ALL", removeSlot)
                     client.bankItem(resolvedItemId, removeSlot, amount)
                 } else if (client.isPartyInterface) {
-                    Balloons.offerItems(client, resolvedItemId, amount, removeSlot)
+                    PartyRoomBalloons.offerPartyItems(client, resolvedItemId, amount, removeSlot)
                 }
                 client.checkItemUpdate()
             }
@@ -184,7 +184,7 @@ object PacketBankingService {
             }
 
             interfaceId == 2274 -> {
-                Balloons.removeOfferItems(client, removeId, if (!stack) 8 else Int.MAX_VALUE, removeSlot)
+                PartyRoomBalloons.removeOfferedPartyItems(client, removeId, if (!stack) 8 else Int.MAX_VALUE, removeSlot)
             }
 
             interfaceId == 3322 && client.inTrade && client.canOffer -> {
@@ -273,7 +273,7 @@ object PacketBankingService {
                     ConsoleAuditLog.bankDeposit(client, removeId, amount.toString(), removeSlot)
                     client.bankItem(removeId, removeSlot, amount)
                 } else if (client.isPartyInterface) {
-                    Balloons.offerItems(client, removeId, amount, removeSlot)
+                    PartyRoomBalloons.offerPartyItems(client, removeId, amount, removeSlot)
                 }
                 client.checkItemUpdate()
             }
@@ -286,7 +286,7 @@ object PacketBankingService {
             }
 
             2274 -> {
-                Balloons.removeOfferItems(client, removeId, amount, removeSlot)
+                PartyRoomBalloons.removeOfferedPartyItems(client, removeId, amount, removeSlot)
             }
 
             3415 -> {
@@ -428,7 +428,7 @@ object PacketBankingService {
                         ConsoleAuditLog.bankDeposit(client, client.playerItems[client.XremoveSlot] - 1, enteredAmount.toString(), client.XremoveSlot)
                         client.bankItem(client.playerItems[client.XremoveSlot] - 1, client.XremoveSlot, enteredAmount)
                     } else if (client.isPartyInterface) {
-                        Balloons.offerItems(
+                        PartyRoomBalloons.offerPartyItems(
                             client,
                             client.playerItems[client.XremoveSlot] - 1,
                             enteredAmount,
@@ -456,7 +456,7 @@ object PacketBankingService {
                     if (!isValidPartyOfferSlot(client, client.XremoveSlot)) {
                         return
                     }
-                    Balloons.removeOfferItems(
+                    PartyRoomBalloons.removeOfferedPartyItems(
                         client,
                         client.offeredPartyItems[client.XremoveSlot].getId(),
                         enteredAmount,
@@ -543,8 +543,8 @@ object PacketBankingService {
 
             interfaceId == 1688 -> {
                 if (client.hasSpace()) {
-                    val id = client.getEquipment()[removeSlot]
-                    val amount = client.getEquipmentN()[removeSlot]
+                    val id = client.equipment[removeSlot]
+                    val amount = client.equipmentN[removeSlot]
                     if (client.remove(removeSlot, false)) {
                         client.addItem(id, amount)
                     }
@@ -559,7 +559,7 @@ object PacketBankingService {
                     ConsoleAuditLog.bankDeposit(client, removeId, "1", removeSlot)
                     client.bankItem(removeId, removeSlot, 1)
                 } else if (client.isPartyInterface) {
-                    Balloons.offerItems(client, removeId, 1, removeSlot)
+                    PartyRoomBalloons.offerPartyItems(client, removeId, 1, removeSlot)
                 }
                 client.checkItemUpdate()
             }
@@ -572,7 +572,7 @@ object PacketBankingService {
             }
 
             interfaceId == 2274 -> {
-                Balloons.removeOfferItems(client, removeId, 1, removeSlot)
+                PartyRoomBalloons.removeOfferedPartyItems(client, removeId, 1, removeSlot)
             }
 
             interfaceId == 3322 && client.inTrade && client.canOffer -> {
@@ -690,8 +690,8 @@ object PacketBankingService {
                 if (!isValidEquipmentSlot(client, removeSlot)) {
                     false
                 } else {
-                    val equippedId = client.getEquipment()[removeSlot]
-                    val equippedAmount = client.getEquipmentN()[removeSlot]
+                    val equippedId = client.equipment[removeSlot]
+                    val equippedAmount = client.equipmentN[removeSlot]
                     equippedId >= 0 && equippedAmount > 0 && equippedId == removeId
                 }
             }
@@ -710,7 +710,7 @@ object PacketBankingService {
 
     private fun isValidPartyOfferSlot(client: Client, slot: Int): Boolean = slot in 0 until client.offeredPartyItems.size
 
-    private fun isValidEquipmentSlot(client: Client, slot: Int): Boolean = slot in client.getEquipment().indices
+    private fun isValidEquipmentSlot(client: Client, slot: Int): Boolean = slot in client.equipment.indices
 
     private fun formatValueSuffix(value: Int): String {
         val thousand = 1_000

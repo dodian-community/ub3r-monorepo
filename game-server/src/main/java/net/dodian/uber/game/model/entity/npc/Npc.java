@@ -10,7 +10,7 @@ import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.UpdateFlag;
 import net.dodian.uber.game.model.chunk.Chunk;
-import net.dodian.uber.game.model.chunk.ChunkRepository;
+import net.dodian.uber.game.model.chunk.ChunkEntityIndex;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.PendingHitBuffer;
 import net.dodian.uber.game.model.entity.player.Client;
@@ -23,14 +23,14 @@ import net.dodian.uber.game.netty.listener.out.SendString;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.engine.systems.skills.ProgressionService;
 import net.dodian.uber.game.engine.systems.skills.SkillingRandomEventService;
-import net.dodian.uber.game.content.skills.slayer.Slayer;
+import net.dodian.uber.game.skill.slayer.Slayer;
 import net.dodian.uber.game.persistence.audit.ItemLog;
-import net.dodian.uber.game.content.combat.CombatCancellationReason;
-import net.dodian.uber.game.content.combat.CombatRuntimeService;
+import net.dodian.uber.game.engine.systems.combat.CombatCancellationReason;
+import net.dodian.uber.game.engine.systems.combat.CombatRuntimeService;
 import net.dodian.uber.game.engine.tasking.GameTaskSet;
 import net.dodian.uber.game.engine.systems.world.npc.NpcSpawnLocator;
 import net.dodian.uber.game.engine.systems.world.npc.NpcTimerScheduler;
-import net.dodian.utilities.Misc;
+import net.dodian.uber.game.engine.util.Misc;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,7 +72,7 @@ public class Npc extends Entity {
     private int pendingWalkingDirection = -1;
     private boolean walking = false;
     private Chunk currentChunk;
-    private ChunkRepository chunkRepository;
+    private ChunkEntityIndex chunkEntityIndex;
     private volatile GameTaskSet<?> npcTaskSet;
 
     public Npc(int slot, int id, Position position, int face) {
@@ -248,25 +248,25 @@ public class Npc extends Entity {
         }
 
         Chunk newChunk = getPosition().getChunk();
-        if (currentChunk != null && currentChunk.equals(newChunk) && chunkRepository != null) {
+        if (currentChunk != null && currentChunk.equals(newChunk) && chunkEntityIndex != null) {
             return;
         }
 
-        if (chunkRepository != null) {
-            chunkRepository.remove(this);
+        if (chunkEntityIndex != null) {
+            chunkEntityIndex.remove(this);
         }
 
-        ChunkRepository repo = Server.chunkManager.load(newChunk);
+        ChunkEntityIndex repo = Server.chunkManager.load(newChunk);
         repo.add(this);
         currentChunk = newChunk;
-        chunkRepository = repo;
+        chunkEntityIndex = repo;
     }
 
     public void removeFromChunk() {
-        if (chunkRepository != null) {
-            chunkRepository.remove(this);
+        if (chunkEntityIndex != null) {
+            chunkEntityIndex.remove(this);
         }
-        chunkRepository = null;
+        chunkEntityIndex = null;
         currentChunk = null;
     }
 
@@ -614,7 +614,7 @@ public class Npc extends Entity {
             p.yellAreaKilled("<col=006400>" + yell, miniBoss);
         }
 
-        net.dodian.uber.game.content.skills.slayer.SlayerTaskDefinition task = net.dodian.uber.game.content.skills.slayer.SlayerTaskDefinition.forNpc(id);
+        net.dodian.uber.game.skill.slayer.SlayerTaskDefinition task = net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forNpc(id);
         if (task != null) {
             if (task.ordinal() == p.getSlayerData().get(1) && p.getSlayerData().get(3) > 0) {
                 p.getSlayerData().set(3, p.getSlayerData().get(3) - 1);

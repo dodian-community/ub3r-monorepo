@@ -2,7 +2,7 @@ package net.dodian.uber.game.engine.systems.cache
 
 import java.util.HashMap
 import java.nio.file.Path
-import net.dodian.cache.`object`.GameObjectData
+import net.dodian.cache.objects.GameObjectData
 import net.dodian.uber.game.engine.systems.pathing.collision.CollisionManager
 import org.slf4j.LoggerFactory
 
@@ -13,6 +13,7 @@ class CacheBootstrapService(
     private val collisionBuildService = CollisionBuildService(CollisionManager.global())
 
     fun bootstrap(): MapIndexTable {
+        CacheUpdateService(cachePath).updateIfNecessary()
         val store = CacheStore(cachePath).open()
         return try {
             val objectDefinitions = ObjectDefinitionDecoder.decode(store)

@@ -40,7 +40,7 @@ object PlayerDeferredLifecycleService {
                             state.xLogExpiryTask = null
                             return@BooleanSupplier false
                         }
-                        if (System.currentTimeMillis() < player.walkBlock) {
+                        if (player.isWalkBlocked()) {
                             return@BooleanSupplier true
                         }
                         player.UsingAgility = false

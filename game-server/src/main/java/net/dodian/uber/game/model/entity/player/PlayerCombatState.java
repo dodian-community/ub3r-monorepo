@@ -1,6 +1,6 @@
 package net.dodian.uber.game.model.entity.player;
 
-import net.dodian.uber.game.content.combat.PlayerAttackCombatKt;
+import net.dodian.uber.game.combat.PlayerAttackCombatKt;
 import net.dodian.uber.game.engine.event.GameEventScheduler;
 import net.dodian.uber.game.model.entity.UpdateFlag;
 import net.dodian.uber.game.model.entity.Entity;
@@ -8,11 +8,11 @@ import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.PendingHitBuffer;
 import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.player.skills.Skill;
-import net.dodian.uber.game.model.player.skills.prayer.Prayers;
+import net.dodian.uber.game.skill.prayer.PrayerManager;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
-import net.dodian.uber.game.content.combat.CombatDefenderReaction;
-import net.dodian.uber.game.content.combat.CombatLogoutLockService;
-import net.dodian.utilities.Misc;
+import net.dodian.uber.game.engine.systems.combat.CombatDefenderReaction;
+import net.dodian.uber.game.engine.systems.combat.CombatLogoutLockService;
+import net.dodian.uber.game.engine.util.Misc;
 
 class PlayerCombatState {
     private final Player owner;
@@ -28,7 +28,7 @@ class PlayerCombatState {
                 || (attacker.getType() == Entity.Type.PLAYER && ((Client) attacker).getCurrentHealth() < 1))) {
             setLastCombat(16);
         }
-        if (((Client) owner).isDeathSequenceActive() || owner.getCurrentHealth() < 1) {
+        if (owner.isDeathSequenceActive() || owner.getCurrentHealth() < 1) {
             amt = 0;
         } else if (amt > owner.currentHealth) {
             amt = owner.currentHealth;
@@ -56,7 +56,7 @@ class PlayerCombatState {
         if (damageType.equals(Entity.damageType.FIRE_BREATH)) {
             boolean gotAntiEffect = player.getEquipment()[Equipment.Slot.SHIELD.getId()] == 1540
                     || player.getEquipment()[Equipment.Slot.SHIELD.getId()] == 11284
-                    || owner.prayers.isPrayerOn(Prayers.Prayer.PROTECT_MAGIC)
+                    || owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_MAGIC)
                     || owner.antiFireEffect();
             if (npc != null && npc.getId() == 239 && gotAntiEffect) {
                 amt /= 2;
@@ -66,15 +66,15 @@ class PlayerCombatState {
             } else {
                 player.send(new SendMessage("You are badly burnt by the dragon fire!"));
             }
-        } else if (damageType.equals(Entity.damageType.MELEE) && owner.prayers.isPrayerOn(Prayers.Prayer.PROTECT_MELEE)) {
+        } else if (damageType.equals(Entity.damageType.MELEE) && owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_MELEE)) {
             amt /= 2;
-        } else if (damageType.equals(Entity.damageType.RANGED) && owner.prayers.isPrayerOn(Prayers.Prayer.PROTECT_RANGE)) {
+        } else if (damageType.equals(Entity.damageType.RANGED) && owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_RANGE)) {
             amt /= 2;
-        } else if (damageType.equals(Entity.damageType.MAGIC) && owner.prayers.isPrayerOn(Prayers.Prayer.PROTECT_MAGIC)) {
+        } else if (damageType.equals(Entity.damageType.MAGIC) && owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_MAGIC)) {
             amt /= 2;
-        } else if (damageType.equals(Entity.damageType.JAD_RANGED) && owner.prayers.isPrayerOn(Prayers.Prayer.PROTECT_RANGE)) {
+        } else if (damageType.equals(Entity.damageType.JAD_RANGED) && owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_RANGE)) {
             amt = 0;
-        } else if (damageType.equals(Entity.damageType.JAD_MAGIC) && owner.prayers.isPrayerOn(Prayers.Prayer.PROTECT_MAGIC)) {
+        } else if (damageType.equals(Entity.damageType.JAD_MAGIC) && owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_MAGIC)) {
             amt = 0;
         }
         CombatLogoutLockService.refreshInteraction(attacker, owner);
@@ -165,7 +165,7 @@ class PlayerCombatState {
     }
 
     boolean isDeadOrDying() {
-        return ((Client) owner).isDeathSequenceActive() || owner.getCurrentHealth() < 1;
+        return owner.isDeathSequenceActive() || owner.getCurrentHealth() < 1;
     }
 
     private PendingHitBuffer.AppendResult appendHit(int damage, Entity.hitType type) {

@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.util.AttributeKey;
+import net.dodian.uber.game.engine.metrics.PacketRejectTelemetry;
 import net.dodian.utilities.ISAACCipher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,6 +61,7 @@ public class GamePacketDecoder extends ByteToMessageDecoder {
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
         ISAACCipher cipher = ctx.channel().attr(IN_CIPHER_KEY).get();
         if (cipher == null) {
+            PacketRejectTelemetry.record(-1, "missing_cipher");
             logger.warn("[Netty] Missing ISAAC cipher attribute – closing {}", ctx.channel().remoteAddress());
             ctx.close();
             return;
@@ -75,6 +77,7 @@ public class GamePacketDecoder extends ByteToMessageDecoder {
                 opcode = dec;
                 //logger.info("Raw byte {} decrypted opcode {}", raw, opcode);
                 if (opcode < 0 || opcode > 0xFF) {
+                    PacketRejectTelemetry.record(opcode, "invalid_opcode");
                     logger.debug("[Netty] Invalid packet opcode {} from {}", opcode, ctx.channel().remoteAddress());
                     ctx.close();
                     return;
@@ -91,6 +94,7 @@ public class GamePacketDecoder extends ByteToMessageDecoder {
                 int rawLen = in.readUnsignedByte();
                 int decLen = (rawLen - cipher.getNextKey()) & 0xFF; // total packet size (opcode+len+payload)
                 if (decLen < 2) {
+                    PacketRejectTelemetry.record(opcode, "invalid_length_byte");
                     logger.debug("[Netty] Invalid packet length {} for opcode {} from {}", decLen, opcode, ctx.channel().remoteAddress());
                     ctx.close();
                     return;
@@ -104,6 +108,7 @@ public class GamePacketDecoder extends ByteToMessageDecoder {
                 int rawLen = in.readUnsignedShort();
                 int decLen = (rawLen - cipher.getNextKey()) & 0xFFFF;
                 if (decLen < 2) {
+                    PacketRejectTelemetry.record(opcode, "invalid_length_short");
                     logger.debug("[Netty] Invalid short packet length {} for opcode {} from {}", decLen, opcode, ctx.channel().remoteAddress());
                     ctx.close();
                     return;

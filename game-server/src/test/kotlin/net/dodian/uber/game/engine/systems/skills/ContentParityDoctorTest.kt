@@ -3,9 +3,9 @@ package net.dodian.uber.game.engine.systems.skills
 import net.dodian.uber.game.npc.NO_CLICK_HANDLER
 import net.dodian.uber.game.npc.NpcContentDefinition
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.content.skills.runtime.parity.ContentParityCatalog
-import net.dodian.uber.game.content.skills.runtime.parity.ContentParityDoctor
-import net.dodian.uber.game.content.skills.runtime.parity.NpcClickRouteKey
+import net.dodian.uber.game.skill.runtime.parity.ContentParityCatalog
+import net.dodian.uber.game.skill.runtime.parity.ContentParityDoctor
+import net.dodian.uber.game.skill.runtime.parity.NpcClickRouteKey
 import net.dodian.uber.game.api.plugin.skills.SkillPluginSnapshot
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test

@@ -1,0 +1,52 @@
+package game.skill.fletching.cutLog
+
+import api.predef.*
+import api.predef.ext.*
+import io.luna.game.action.impl.ItemContainerAction.InventoryAction
+import io.luna.game.model.item.Item
+import io.luna.game.model.mob.Player
+import game.player.Animations
+import game.player.Sound
+import game.skill.fletching.attachArrow.Arrow
+import game.skill.fletching.stringBow.Bow
+
+/**
+ * An [InventoryAction] implementation that cuts logs.
+ *
+ * @author lare96
+ */
+class CutLogActionItem(plr: Player,
+                       val log: Int,
+                       val bow: Bow,
+                       makeTimes: Int) : InventoryAction(plr, true, 3, makeTimes) {
+// todo sounds     FLETCH_ONCE(812), FLETCH(813),
+    override fun add(): List<Item> {
+        val unstrungItem =
+            when (bow) {
+                Bow.ARROW_SHAFT -> Item(bow.unstrung, Arrow.SET_AMOUNT)
+                else -> Item(bow.unstrung)
+            }
+        return listOf(unstrungItem)
+    }
+
+    override fun remove() = listOf(Item(log))
+
+    override fun executeIf(start: Boolean) =
+        when {
+            mob.fletching.level < bow.level -> {
+                mob.sendMessage("You need a Fletching level of ${bow.level} to cut this.")
+                false
+            }
+            else -> true
+        }
+
+
+    override fun execute() {
+        val unstrungName = itemName(bow.unstrung)
+        mob.sendMessage("You carefully cut the wood into ${addArticle(unstrungName)}.")
+
+       //mob.playSound(Sound.LIGHT_FIRE)
+        mob.animation(Animations.CUT_LOG)
+        mob.fletching.addExperience(bow.exp)
+    }
+}

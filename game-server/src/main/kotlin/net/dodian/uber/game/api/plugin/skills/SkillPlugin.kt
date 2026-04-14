@@ -1,6 +1,6 @@
 package net.dodian.uber.game.api.plugin.skills
 
-import net.dodian.cache.`object`.GameObjectData
+import net.dodian.cache.objects.GameObjectData
 import net.dodian.uber.game.api.plugin.PluginModuleMetadata
 import net.dodian.uber.game.api.plugin.PluginModuleMetadataProvider
 import net.dodian.uber.game.model.Position
@@ -30,6 +30,7 @@ data class SkillPluginDefinition(
     val itemOnItemBindings: List<SkillItemOnItemBinding> = emptyList(),
     val itemBindings: List<SkillItemClickBinding> = emptyList(),
     val itemOnObjectBindings: List<SkillItemOnObjectBinding> = emptyList(),
+    val magicOnObjectBindings: List<SkillMagicOnObjectBinding> = emptyList(),
     val buttonBindings: List<SkillButtonBinding> = emptyList(),
     val lifecycle: SkillPluginLifecycleHooks = SkillPluginLifecycleHooks(),
 )
@@ -84,9 +85,23 @@ data class SkillItemOnObjectBinding(
     ) -> Boolean,
 )
 
+data class SkillMagicOnObjectBinding(
+    val preset: PolicyPreset,
+    val objectIds: IntArray,
+    val spellIds: IntArray,
+    val handler: (
+        client: Client,
+        objectId: Int,
+        position: Position,
+        obj: GameObjectData?,
+        spellId: Int,
+    ) -> Boolean,
+)
+
 data class SkillButtonBinding(
     val preset: PolicyPreset,
     val rawButtonIds: IntArray,
+    val requiredInterfaceId: Int = -1,
     val opIndex: Int? = null,
     val handler: (client: Client, rawButtonId: Int, opIndex: Int) -> Boolean,
 )
@@ -94,3 +109,6 @@ data class SkillButtonBinding(
 fun SkillObjectClickBinding.objectPolicy() = UnifiedPolicyDsl.toObjectPolicy(preset)
 
 fun SkillItemOnObjectBinding.objectPolicy() = UnifiedPolicyDsl.toObjectPolicy(preset)
+
+fun SkillMagicOnObjectBinding.objectPolicy() = UnifiedPolicyDsl.toObjectPolicy(preset)
+

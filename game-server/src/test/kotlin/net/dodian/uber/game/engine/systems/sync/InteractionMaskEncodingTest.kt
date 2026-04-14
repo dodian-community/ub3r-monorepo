@@ -8,7 +8,7 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.npc.NpcUpdating
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.PlayerUpdating
-import net.dodian.uber.game.model.item.ItemManager
+import net.dodian.uber.game.item.ItemManager
 import net.dodian.uber.game.netty.codec.ByteMessage
 import net.dodian.uber.game.engine.util.Utils
 import net.dodian.uber.game.engine.systems.world.npc.NpcManager

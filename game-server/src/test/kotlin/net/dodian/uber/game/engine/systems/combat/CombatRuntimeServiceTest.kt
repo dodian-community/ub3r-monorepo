@@ -1,4 +1,4 @@
-package net.dodian.uber.game.content.combat
+package net.dodian.uber.game.engine.systems.combat
 
 import io.netty.channel.embedded.EmbeddedChannel
 import kotlin.math.abs

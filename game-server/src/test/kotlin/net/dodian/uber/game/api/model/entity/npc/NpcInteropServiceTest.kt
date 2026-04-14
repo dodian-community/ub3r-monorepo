@@ -1,5 +1,7 @@
 package net.dodian.uber.game.model.entity.npc
 
+import net.dodian.uber.game.persistence.world.npc.NpcDataInterop
+import net.dodian.uber.game.persistence.world.npc.NpcDefinitionData
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test

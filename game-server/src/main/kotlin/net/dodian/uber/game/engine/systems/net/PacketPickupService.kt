@@ -47,13 +47,13 @@ object PacketPickupService {
             PlayerActionCancelReason.GROUND_ITEM_INTERACTION,
             false, false, false, true
         )
-        client.attemptGround = Ground.findGroundItem(client, itemId, itemX, itemY, client.getPosition().getZ())
+        client.attemptGround = Ground.findGroundItem(client, itemId, itemX, itemY, client.position.getZ())
         if (client.attemptGround == null) {
             client.pickupWanted = false
             PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(client)
             return
         }
-        if (client.getPosition().getX() != itemX || client.getPosition().getY() != itemY) {
+        if (client.position.getX() != itemX || client.position.getY() != itemY) {
             client.pickupWanted = true
             PlayerDeferredLifecycleService.scheduleGroundPickupArrivalWatch(client, client.attemptGround)
         } else {

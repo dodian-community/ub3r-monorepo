@@ -2,7 +2,10 @@
 
 package net.dodian.uber.game.ui
 
-import net.dodian.uber.game.content.skills.Skillcape
+import net.dodian.uber.game.ui.buttons.InterfaceButtonContent
+import net.dodian.uber.game.ui.buttons.buttonBinding
+
+import net.dodian.uber.game.skill.Skillcape
 import net.dodian.uber.game.model.entity.player.Emotes
 import net.dodian.uber.game.model.item.Equipment
 

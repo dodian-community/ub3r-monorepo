@@ -1,6 +1,6 @@
 package net.dodian.uber.game.engine.systems.net
 
-import net.dodian.cache.`object`.GameObjectData
+import net.dodian.cache.objects.GameObjectData
 import net.dodian.uber.game.engine.util.Misc
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client

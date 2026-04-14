@@ -83,6 +83,16 @@ object GameEventBus {
         listeners.computeIfAbsent(clazz) { CopyOnWriteArrayList() }.add(listener)
     }
 
+    @JvmStatic
+    fun <E : GameEvent> on(
+        clazz: Class<E>,
+        condition: (E) -> Boolean = { true },
+        otherwiseAction: (E) -> Unit = {},
+        action: (E) -> Boolean,
+    ) {
+        on(clazz, EventListener(condition, action, otherwiseAction))
+    }
+
     inline fun <reified E : GameEvent, T> onReturnable(
         noinline condition: (E) -> Boolean = { true },
         noinline otherwiseAction: (E) -> Unit = {},
@@ -96,6 +106,16 @@ object GameEventBus {
         returnableListeners.computeIfAbsent(clazz) { CopyOnWriteArrayList() }.add(listener as ReturnableEventListener<out GameEvent, out Any>)
     }
 
+    @JvmStatic
+    fun <E : GameEvent, T> onReturnable(
+        clazz: Class<E>,
+        condition: (E) -> Boolean = { true },
+        otherwiseAction: (E) -> Unit = {},
+        action: (E) -> T?,
+    ) {
+        onReturnable(clazz, ReturnableEventListener(condition, action, otherwiseAction))
+    }
+
     inline fun <reified E : GameEvent> addFilter(noinline filter: (E) -> Boolean) {
         addFilter(E::class.java, EventFilter(filter))
     }
@@ -103,6 +123,11 @@ object GameEventBus {
     @JvmStatic
     fun <E : GameEvent> addFilter(clazz: Class<E>, filter: EventFilter<E>) {
         filters.computeIfAbsent(clazz) { CopyOnWriteArrayList() }.add(filter)
+    }
+
+    @JvmStatic
+    fun <E : GameEvent> addFilter(clazz: Class<E>, filter: (E) -> Boolean) {
+        addFilter(clazz, EventFilter(filter))
     }
 
     @JvmStatic

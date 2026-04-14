@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
 
 class SkillRuntimeOwnershipBoundaryTest {
     private val kotlinSourceRoot: Path = Paths.get("src/main/kotlin")
-    private val skillsRoot: Path = Paths.get("src/main/kotlin/net/dodian/uber/game/content/skills")
+    private val skillsRoot: Path = Paths.get("src/main/kotlin/net/dodian/uber/game/skill")
     private val retiredServiceFile: Path =
         Paths.get("src/main/kotlin/net/dodian/uber/game/systems/action/SkillingActionService.kt")
 
@@ -45,14 +45,14 @@ class SkillRuntimeOwnershipBoundaryTest {
     @Test
     fun `runtime action ownership lives under skill content package`() {
         val runtimeOwners = listOf(
-            "content/skills/cooking/Cooking.kt",
-            "content/skills/crafting/Crafting.kt",
-            "content/skills/fishing/Fishing.kt",
-            "content/skills/fletching/Fletching.kt",
-            "content/skills/mining/Mining.kt",
-            "content/skills/prayer/Prayer.kt",
-            "content/skills/smithing/Smithing.kt",
-            "content/skills/woodcutting/Woodcutting.kt",
+            "skill/cooking/Cooking.kt",
+            "skill/crafting/Crafting.kt",
+            "skill/fishing/Fishing.kt",
+            "skill/fletching/Fletching.kt",
+            "skill/mining/Mining.kt",
+            "skill/prayer/Prayer.kt",
+            "skill/smithing/Smithing.kt",
+            "skill/woodcutting/Woodcutting.kt",
         )
 
         runtimeOwners.forEach { relativePath ->
@@ -64,12 +64,12 @@ class SkillRuntimeOwnershipBoundaryTest {
     @Test
     fun `runtime owned skills expose normalized action api`() {
         val apiOwners = listOf(
-            "content/skills/cooking/Cooking.kt",
-            "content/skills/crafting/Crafting.kt",
-            "content/skills/fishing/Fishing.kt",
-            "content/skills/fletching/Fletching.kt",
-            "content/skills/prayer/Prayer.kt",
-            "content/skills/smithing/Smithing.kt",
+            "skill/cooking/Cooking.kt",
+            "skill/crafting/Crafting.kt",
+            "skill/fishing/Fishing.kt",
+            "skill/fletching/Fletching.kt",
+            "skill/prayer/Prayer.kt",
+            "skill/smithing/Smithing.kt",
         )
 
         val missing = mutableListOf<String>()
@@ -93,4 +93,3 @@ class SkillRuntimeOwnershipBoundaryTest {
         )
     }
 }
-

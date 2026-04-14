@@ -3,13 +3,13 @@ package net.dodian.uber.game.api.plugin
 import com.google.common.reflect.ClassPath
 import net.dodian.uber.game.api.plugin.dsl.PluginMetadata as DslPluginMetadata
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
-import net.dodian.uber.game.content.items.ItemContent
+import net.dodian.uber.game.item.ItemContent
 import net.dodian.uber.game.npc.NpcContentDefinition
 import net.dodian.uber.game.npc.NpcModule
-import net.dodian.uber.game.content.objects.ObjectContent
-import net.dodian.uber.game.content.shop.plugin.ShopPlugin
-import net.dodian.uber.game.content.ui.buttons.InterfaceButtonBinding
-import net.dodian.uber.game.content.ui.buttons.InterfaceButtonContent
+import net.dodian.uber.game.objects.ObjectContent
+import net.dodian.uber.game.shop.ShopPlugin
+import net.dodian.uber.game.ui.buttons.InterfaceButtonBinding
+import net.dodian.uber.game.ui.buttons.InterfaceButtonContent
 import net.dodian.uber.game.engine.systems.interaction.commands.CommandContent
 import org.slf4j.LoggerFactory
 import java.lang.reflect.Method
@@ -38,41 +38,24 @@ object ContentModuleIndex {
         "net.dodian.uber.game.skill",
         "net.dodian.uber.game.npc",
         "net.dodian.uber.game.item",
-        "net.dodian.uber.game.object",
+        "net.dodian.uber.game.objects",
         "net.dodian.uber.game.combat",
         "net.dodian.uber.game.social",
         "net.dodian.uber.game.ui",
         "net.dodian.uber.game.command",
         "net.dodian.uber.game.activity",
+        "net.dodian.uber.game.shop",
         "net.dodian.uber.game.world",
         "net.dodian.uber.game.player",
         "net.dodian.uber.game.engine.event.bootstrap",
-    )
-
-    /** Temporary compatibility roots while modules remain under legacy content packages. */
-    private val LEGACY_COMPAT_SCAN_PACKAGES = listOf(
-        "net.dodian.uber.game.content.skills",
-        "net.dodian.uber.game.content.npcs",
-        "net.dodian.uber.game.content.items",
-        "net.dodian.uber.game.content.objects",
-        "net.dodian.uber.game.content.combat",
-        "net.dodian.uber.game.content.social",
-        "net.dodian.uber.game.content.ui.buttons",
-        "net.dodian.uber.game.content.commands",
-        "net.dodian.uber.game.content.minigames",
-        "net.dodian.uber.game.content.events",
-        "net.dodian.uber.game.content.shop.plugin",
-        "net.dodian.uber.game.content.shop.plugins",
         "net.dodian.uber.game.engine.systems.interaction.commands",
         "net.dodian.uber.game.engine.systems.interaction.items",
         "net.dodian.uber.game.engine.systems.interaction.npcs",
         "net.dodian.uber.game.engine.systems.interaction.objects",
     )
-
-    private val SCAN_PACKAGES = (CANONICAL_SCAN_PACKAGES + LEGACY_COMPAT_SCAN_PACKAGES).distinct()
+    private val SCAN_PACKAGES = CANONICAL_SCAN_PACKAGES.distinct()
 
     @JvmField val canonicalScanPackages: List<String> = CANONICAL_SCAN_PACKAGES.toList()
-    @JvmField val legacyCompatScanPackages: List<String> = LEGACY_COMPAT_SCAN_PACKAGES.toList()
 
     @Volatile
     private var lifecycle: IndexLifecycle = IndexLifecycle.DISCOVER
@@ -206,7 +189,7 @@ object ContentModuleIndex {
             contentBootstraps.size,
             pluginCatalog.size,
             CANONICAL_SCAN_PACKAGES.size,
-            LEGACY_COMPAT_SCAN_PACKAGES.size,
+            0,
         )
     }
 

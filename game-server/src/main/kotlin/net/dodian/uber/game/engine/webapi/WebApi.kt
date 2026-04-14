@@ -3,8 +3,12 @@ package net.dodian.uber.game.engine.webapi
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import net.dodian.uber.game.engine.config.webApiEnabled
+import net.dodian.uber.game.engine.config.webApiPort
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
+import spark.Spark.awaitInitialization
 import spark.Spark.get
+import spark.Spark.port
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -37,6 +41,11 @@ object WebApi {
         if (!started.compareAndSet(false, true)) {
             return
         }
+        if (!webApiEnabled) {
+            return
+        }
+        port(webApiPort)
+
 
         get("/api/server-status") { _, res ->
             serverStatus.playersOnline = getOnlinePlayers().toSet()
@@ -49,8 +58,7 @@ object WebApi {
 
             return@get mapper.writeValueAsString(serverStatus)
         }
+
+        awaitInitialization()
     }
 }
-
-@Deprecated("Use WebApi.start() from engine bootstrap")
-fun launchWebApi() = WebApi.start()

@@ -13,14 +13,14 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Player
 
 class ChunkManager {
-    private val chunks = ConcurrentHashMap<Long, ChunkRepository>()
+    private val chunks = ConcurrentHashMap<Long, ChunkEntityIndex>()
 
-    fun load(chunk: Chunk): ChunkRepository =
-        chunks.computeIfAbsent(pack(chunk.x, chunk.y)) { ChunkRepository(chunk) }
+    fun load(chunk: Chunk): ChunkEntityIndex =
+        chunks.computeIfAbsent(pack(chunk.x, chunk.y)) { ChunkEntityIndex(chunk) }
 
-    fun getLoaded(chunk: Chunk): ChunkRepository? = chunks[pack(chunk.x, chunk.y)]
+    fun getLoaded(chunk: Chunk): ChunkEntityIndex? = chunks[pack(chunk.x, chunk.y)]
 
-    fun getLoaded(chunkX: Int, chunkY: Int): ChunkRepository? = chunks[pack(chunkX, chunkY)]
+    fun getLoaded(chunkX: Int, chunkY: Int): ChunkEntityIndex? = chunks[pack(chunkX, chunkY)]
 
     fun <E : Entity> find(center: Position, type: EntityType, distance: Int): MutableSet<E> {
         return find(center, type, distance, Supplier { HashSet<E>() }, Predicate { true })
@@ -75,7 +75,7 @@ class ChunkManager {
         )
     }
 
-    fun forEachViewableChunk(center: Position, distance: Int, consumer: Consumer<ChunkRepository>) {
+    fun forEachViewableChunk(center: Position, distance: Int, consumer: Consumer<ChunkEntityIndex>) {
         val chunkRadius = (distance / Chunk.SIZE) + 2
         val centerChunkX = center.chunkX
         val centerChunkY = center.chunkY

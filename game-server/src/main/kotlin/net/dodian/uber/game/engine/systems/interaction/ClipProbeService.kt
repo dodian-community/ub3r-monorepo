@@ -1,6 +1,6 @@
 package net.dodian.uber.game.engine.systems.interaction
 
-import net.dodian.cache.`object`.GameObjectData
+import net.dodian.cache.objects.GameObjectData
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.engine.systems.cache.CacheCollisionAuditStore
 import net.dodian.uber.game.engine.systems.cache.CollisionBuildService

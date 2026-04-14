@@ -1,7 +1,7 @@
-package net.dodian.uber.game.content.npcs
+package net.dodian.uber.game.npc
 
 import io.netty.channel.embedded.EmbeddedChannel
-import net.dodian.uber.game.content.social.dialogue.DialogueService
+import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.model.entity.player.Client
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue

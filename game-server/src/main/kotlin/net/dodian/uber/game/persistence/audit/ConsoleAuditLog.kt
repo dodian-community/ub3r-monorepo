@@ -6,7 +6,7 @@ import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.item.GameItem
 import net.dodian.uber.game.engine.systems.interaction.objects.ObjectContentRegistry
 import net.dodian.uber.game.engine.systems.interaction.ObjectInteractionContext
-import net.dodian.uber.game.content.ui.buttons.ButtonClickRequest
+import net.dodian.uber.game.ui.buttons.ButtonClickRequest
 import org.slf4j.LoggerFactory
 
 /**
@@ -362,7 +362,7 @@ object ConsoleAuditLog {
     }
 
     private fun shopName(shopId: Int): String =
-        net.dodian.uber.game.content.shop.ShopDefinitions.find(shopId)?.name
+        net.dodian.uber.game.shop.ShopCatalog.find(shopId)?.name
             ?: "shop#$shopId"
 }
 

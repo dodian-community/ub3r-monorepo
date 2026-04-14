@@ -1,11 +1,12 @@
 package net.dodian.uber.game.engine.systems.skills
 
-import net.dodian.uber.game.content.items.ItemContent
-import net.dodian.uber.game.content.objects.ObjectContent
+import net.dodian.uber.game.item.ItemContent
+import net.dodian.uber.game.objects.ObjectContent
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.api.plugin.PluginRegistry
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
 import net.dodian.uber.game.api.plugin.skills.bindItemContentClick
+import net.dodian.uber.game.api.plugin.skills.bindObjectContentMagic
 import net.dodian.uber.game.api.plugin.skills.bindObjectContentUseItem
 import net.dodian.uber.game.api.plugin.skills.skillPlugin
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -60,6 +61,28 @@ class SkillPluginRouteBridgeTest {
         assertEquals(PolicyPreset.PRODUCTION, binding.preset)
         assertEquals(setOf(200, 201), binding.objectIds.toSet())
         assertEquals(setOf(-1), binding.itemIds.toSet())
+        assertNotNull(binding.handler)
+    }
+
+    @Test
+    fun `bind object content magic emits magic on object bindings`() {
+        val plugin =
+            skillPlugin(name = "BridgeMagic", skill = Skill.MAGIC) {
+                bindObjectContentMagic(
+                    preset = PolicyPreset.PRODUCTION,
+                    content =
+                        object : ObjectContent {
+                            override val objectIds: IntArray = intArrayOf(300, 301)
+                        },
+                    spellIds = intArrayOf(1179, 1182),
+                )
+            }
+
+        assertEquals(1, plugin.magicOnObjectBindings.size)
+        val binding = plugin.magicOnObjectBindings.first()
+        assertEquals(PolicyPreset.PRODUCTION, binding.preset)
+        assertEquals(setOf(300, 301), binding.objectIds.toSet())
+        assertEquals(setOf(1179, 1182), binding.spellIds.toSet())
         assertNotNull(binding.handler)
     }
 }

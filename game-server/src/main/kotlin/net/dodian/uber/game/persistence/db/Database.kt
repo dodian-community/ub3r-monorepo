@@ -110,7 +110,6 @@ private fun startPoolMonitoring(hikariDataSource: HikariDataSource) {
     scheduler.scheduleAtFixedRate({
         try {
             val poolStats = hikariDataSource.hikariPoolMXBean
-            logger.info("[Pool Monitor] Active: ${poolStats.activeConnections}, Idle: ${poolStats.idleConnections}, Total: ${poolStats.totalConnections}, Waiting: ${poolStats.threadsAwaitingConnection}")
 
             // Warn if pool utilization is high
             val utilizationPercent = (poolStats.activeConnections.toDouble() / databasePoolMaxSize) * 100
@@ -127,7 +126,7 @@ private fun startPoolMonitoring(hikariDataSource: HikariDataSource) {
         }
     }, 30, 30, TimeUnit.SECONDS)
 
-    logger.info("Pool monitoring started - logging stats every 30 seconds")
+    logger.info("Pool monitoring started - warnings will be emitted only on high utilization or waiting threads")
 }
 
 fun closeConnectionPool() {

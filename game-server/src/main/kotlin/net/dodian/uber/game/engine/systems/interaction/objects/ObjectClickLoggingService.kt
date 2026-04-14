@@ -1,6 +1,6 @@
 package net.dodian.uber.game.engine.systems.interaction.objects
 
-import net.dodian.cache.`object`.GameObjectData
+import net.dodian.cache.objects.GameObjectData
 import net.dodian.uber.game.persistence.audit.ConsoleAuditLog
 import net.dodian.uber.game.engine.systems.cache.CacheCollisionAuditStore
 import net.dodian.uber.game.engine.systems.interaction.ClipProbeService

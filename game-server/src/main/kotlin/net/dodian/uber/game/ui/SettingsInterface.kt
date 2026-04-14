@@ -2,6 +2,9 @@
 
 package net.dodian.uber.game.ui
 
+import net.dodian.uber.game.ui.buttons.InterfaceButtonContent
+import net.dodian.uber.game.ui.buttons.buttonBinding
+
 object SettingsInterface : InterfaceButtonContent {
     private const val SETTINGS_TAB_ID = 44500
     private const val MORE_SETTINGS_TAB_ID = 23000

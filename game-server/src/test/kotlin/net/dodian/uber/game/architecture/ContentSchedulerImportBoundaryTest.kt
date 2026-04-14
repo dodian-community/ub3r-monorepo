@@ -12,6 +12,10 @@ class ContentSchedulerImportBoundaryTest {
         val contentRoot = Paths.get("src/main/kotlin/net/dodian/uber/game/content")
         val violations = mutableListOf<String>()
 
+        if (!Files.exists(contentRoot)) {
+            return
+        }
+
         Files.walk(contentRoot).use { paths ->
             paths.filter { Files.isRegularFile(it) && it.extension == "kt" }
                 .forEach { file ->

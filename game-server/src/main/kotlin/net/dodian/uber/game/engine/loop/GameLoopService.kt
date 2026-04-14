@@ -15,13 +15,14 @@ import net.dodian.uber.game.engine.processing.ItemProcessor
 import net.dodian.uber.game.engine.processing.PlunderDoorProcessor
 import net.dodian.uber.game.engine.processing.ShopProcessor
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
-import net.dodian.uber.game.content.combat.CombatHitQueueService
+import net.dodian.uber.game.engine.systems.combat.CombatHitQueueService
 import net.dodian.uber.game.engine.phases.InboundPacketPhase
 import net.dodian.uber.game.engine.phases.MovementFinalizePhase
 import net.dodian.uber.game.engine.phases.NpcMainPhase
 import net.dodian.uber.game.engine.phases.OutboundPacketProcessor
 import net.dodian.uber.game.engine.phases.PlayerMainPhase
 import net.dodian.uber.game.engine.phases.WorldMaintenancePhase
+import net.dodian.uber.game.engine.metrics.OperationalTelemetry
 import org.slf4j.LoggerFactory
 
 class GameLoopService(
@@ -90,6 +91,7 @@ class GameLoopService(
         try {
             val elapsedNanos = measureNanoTime { runTick() }
             val elapsedMillis = TimeUnit.NANOSECONDS.toMillis(elapsedNanos)
+            OperationalTelemetry.recordTick(elapsedMillis, GAME_TICK_INTERVAL_MS)
             if (elapsedMillis > GAME_TICK_INTERVAL_MS) {
                 logger.warn("Game loop overran tick budget: {}ms", elapsedMillis)
             }
@@ -126,23 +128,31 @@ class GameLoopService(
     private fun runTick() {
         currentCycle = GameCycleClock.advance()
         val now = System.currentTimeMillis()
-        GameThreadTimers.drainDue()
-        GameThreadIngress.drainTickIngress()
-        inboundPhase.run()
-        worldMaintenancePhase.runWorldDbInputBuild(currentCycle)
-        worldMaintenancePhase.runWorldDbResultRead(currentCycle)
-        worldMaintenancePhase.runWorldDbApply(currentCycle)
-        worldMaintenancePhase.runPlunder(now)
-        npcMainPhase.run(now)
-        playerMainPhase.run()
-        worldMaintenancePhase.runWorldTasks()
-        CombatHitQueueService.process(currentCycle)
-        worldMaintenancePhase.runGroundItems()
-        worldMaintenancePhase.runShops()
-        movementFinalizePhase.run()
-        outboundPacketProcessor.run()
-        entityProcessor.runHousekeepingPhase(now)
-        GameThreadTimers.drainDue()
+        timedPhase("timers.pre") { GameThreadTimers.drainDue() }
+        timedPhase("ingress.tick") { GameThreadIngress.drainTickIngress() }
+        timedPhase("inbound") { inboundPhase.run() }
+        timedPhase("worldDb.input") { worldMaintenancePhase.runWorldDbInputBuild(currentCycle) }
+        timedPhase("worldDb.read") { worldMaintenancePhase.runWorldDbResultRead(currentCycle) }
+        timedPhase("worldDb.apply") { worldMaintenancePhase.runWorldDbApply(currentCycle) }
+        timedPhase("plunder") { worldMaintenancePhase.runPlunder(now) }
+        timedPhase("npc.main") { npcMainPhase.run(now) }
+        timedPhase("player.main") { playerMainPhase.run() }
+        timedPhase("world.tasks") { worldMaintenancePhase.runWorldTasks() }
+        timedPhase("combat.hitQueue") { CombatHitQueueService.process(currentCycle) }
+        timedPhase("groundItems") { worldMaintenancePhase.runGroundItems() }
+        timedPhase("shops") { worldMaintenancePhase.runShops() }
+        timedPhase("movement.finalize") { movementFinalizePhase.run() }
+        timedPhase("outbound") { outboundPacketProcessor.run() }
+        timedPhase("housekeeping") { entityProcessor.runHousekeepingPhase(now) }
+        timedPhase("timers.post") { GameThreadTimers.drainDue() }
+    }
+
+    private inline fun timedPhase(
+        name: String,
+        block: () -> Unit,
+    ) {
+        val elapsedNs = measureNanoTime(block)
+        OperationalTelemetry.recordPhaseMillis(name, TimeUnit.NANOSECONDS.toMillis(elapsedNs))
     }
 
     private fun maybeLogCycle(elapsedMillis: Long) {
@@ -153,12 +163,17 @@ class GameLoopService(
             return
         }
         val average = accumulatedCycleTimeMs.toDouble() / debugTick.toDouble()
+        val runtime = Runtime.getRuntime()
+        val usedMemoryMb = ((runtime.totalMemory() - runtime.freeMemory()) / MB).toInt()
+        val maxMemoryMb = (runtime.maxMemory() / MB).toInt()
         logger.info(
-            "[Cycle time: {}ms avg / {}ms last] [Players: {}] [Tick: {}]",
+            "[Cycle time: {}ms avg / {}ms last] [Players: {}] [Tick: {}] [mem={}/{}MB]",
             String.format("%.2f", average),
             elapsedMillis,
             PlayerRegistry.getPlayerCount(),
             currentCycle,
+            usedMemoryMb,
+            maxMemoryMb,
         )
         debugTick = 0
         accumulatedCycleTimeMs = 0L
@@ -186,6 +201,7 @@ class GameLoopService(
 
     companion object {
         private val staticLogger = LoggerFactory.getLogger(GameLoopService::class.java)
+        private const val MB = 1024L * 1024L
         private const val GAME_TICK_INTERVAL_MS = 600L
         private const val CYCLE_LOG_INTERVAL_MS = 60_000L
         private const val IDLE_INGRESS_INTERVAL_MS = 25L

@@ -1,6 +1,6 @@
 package net.dodian.uber.game.engine.systems.action
 
-import net.dodian.uber.game.content.social.dialogue.DialogueService
+import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.engine.tasking.GameTask
 
@@ -27,13 +27,13 @@ class PlayerActionContext internal constructor(
         if (policy.cancelOnLogout && player.isLoggingOut) {
             return PlayerActionCancelReason.LOGOUT
         }
-        if (policy.cancelOnDeath && player.isDeathSequenceActive()) {
+        if (policy.cancelOnDeath && player.isDeathSequenceActive) {
             return PlayerActionCancelReason.DEATH
         }
         if (policy.cancelOnTeleport && player.doingTeleport() && player.activeActionType != PlayerActionType.TELEPORT) {
             return PlayerActionCancelReason.TELEPORT
         }
-        if (policy.cancelOnCombatEntry && player.isInCombat()) {
+        if (policy.cancelOnCombatEntry && player.isInCombat) {
             return PlayerActionCancelReason.COMBAT_INTERRUPTED
         }
         if (policy.cancelOnDialogueOpen &&

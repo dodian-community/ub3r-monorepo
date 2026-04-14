@@ -10,8 +10,8 @@ import net.dodian.uber.game.engine.util.Misc
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancellationService
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
-import net.dodian.uber.game.content.skills.runtime.action.SkillingRandomEventService
-import net.dodian.uber.game.content.skills.thieving.PyramidPlunder
+import net.dodian.uber.game.skill.runtime.action.SkillingRandomEventService
+import net.dodian.uber.game.skill.thieving.PyramidPlunder
 
 object PlayerLifecycleTickService {
     data class TimerSnapshot(
@@ -117,7 +117,7 @@ object PlayerLifecycleTickService {
         player.snareTimer = decremented.snareTimer
 
         player.changeEffectTime()
-        if (player.genieCombatFlag && !player.isInCombat()) {
+        if (player.genieCombatFlag && !player.isInCombat) {
             player.genieCombatFlag = false
             SkillingRandomEventService.show(player)
         }
@@ -161,11 +161,11 @@ object PlayerLifecycleTickService {
 
     @JvmStatic
     fun processEffectsPeriodicPersistence(player: Client, wallClockNow: Long) {
-        if (!shouldPersistActiveEffects(player.effects, player.getLastEffectsPeriodicDirtyAtMs(), wallClockNow)) {
+        if (!shouldPersistActiveEffects(player.effects, player.lastEffectsPeriodicDirtyAtMs, wallClockNow)) {
             return
         }
         player.markSaveDirty(PlayerSaveSegment.EFFECTS.mask)
-        player.setLastEffectsPeriodicDirtyAtMs(wallClockNow)
+        player.lastEffectsPeriodicDirtyAtMs = wallClockNow
     }
 
     private fun handlePrayerDrain(player: Client) {

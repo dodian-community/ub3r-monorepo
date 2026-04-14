@@ -1,20 +1,20 @@
 package net.dodian.uber.game;
 
-import net.dodian.cache.object.GameObjectData;
+import net.dodian.cache.objects.GameObjectData;
 import net.dodian.uber.game.persistence.account.Login;
-import net.dodian.uber.game.content.shop.ShopManager;
+import net.dodian.uber.game.shop.ShopManager;
 import net.dodian.uber.game.model.chunk.ChunkManager;
 import net.dodian.uber.game.engine.systems.world.npc.NpcManager;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry;
-import net.dodian.uber.game.model.item.ItemManager;
-import net.dodian.uber.game.model.object.DoorRegistry;
-import net.dodian.uber.game.model.object.RS2Object;
-import net.dodian.uber.game.content.minigames.casino.SlotMachine;
+import net.dodian.uber.game.item.ItemManager;
+import net.dodian.uber.game.model.objects.DoorRegistry;
+import net.dodian.uber.game.model.objects.WorldObject;
+import net.dodian.uber.game.activity.casino.SlotMachine;
 import net.dodian.uber.game.engine.lifecycle.EnginePluginBootstrap;
+import net.dodian.uber.game.engine.lifecycle.StartupValidationService;
 import net.dodian.uber.game.engine.loop.GameLoopService;
-import net.dodian.uber.game.engine.loop.GameTickScheduler;
 import net.dodian.uber.game.engine.systems.world.npc.NpcTimerScheduler;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.persistence.world.WorldDbPollService;
@@ -54,26 +54,23 @@ public class Server {
     public static ArrayList connections = new ArrayList<>();
     public static ArrayList banned = new ArrayList<>();
 
-    public static ArrayList<RS2Object> objects = new ArrayList<>();
+    public static ArrayList<WorldObject> objects = new ArrayList<>();
     public static int nullConnections = 0;
     public static Login login = null;
     public static ItemManager itemManager = null;
     public static NpcManager npcManager = null;
     public static SlotMachine slots = new SlotMachine();
-    public static Map tempConns = new HashMap<>();
     public static Server clientHandler = null;
-    public static boolean shutdownServer = false;
     public static ShopManager shopManager = null;
-    public static boolean antiddos = false;
     public static ChunkManager chunkManager = null;
 
 
     private static NettyGameServer nettyServer;
-    private static final GameTickScheduler gameTickScheduler = new GameTickScheduler(TICK);
     private static final GameLoopService gameLoopService = new GameLoopService();
     private static final AtomicBoolean SHUTDOWN_STARTED = new AtomicBoolean(false);
 
     public static void main(String[] args) throws Exception {
+        StartupValidationService.validateOrThrow();
 
         serverStartup = System.currentTimeMillis();
         System.out.println();
@@ -135,17 +132,6 @@ public class Server {
         Utils.println(message);
     }
 
-    public static int totalHostConnection(String host) {
-        int num = 0;
-        for (int slot = 0; slot < PlayerRegistry.players.length; slot++) {
-            Player p = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[slot];
-            if (p != null) {
-                if (host.equals(p.connectedFrom))
-                    num++;
-            }
-        }
-        return num;
-    }
 
 
     public static void loadObjects() {

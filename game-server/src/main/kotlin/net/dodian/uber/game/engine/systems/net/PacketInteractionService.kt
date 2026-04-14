@@ -2,7 +2,7 @@ package net.dodian.uber.game.engine.systems.net
 
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.engine.event.GameEventBus
-import net.dodian.uber.game.content.objects.travel.LegendsGuildGateService
+import net.dodian.uber.game.objects.travel.LegendsGuildGateService
 import net.dodian.uber.game.events.combat.PlayerAttackEvent
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
@@ -12,7 +12,6 @@ import net.dodian.uber.game.engine.systems.interaction.NpcInteractionIntent
 import net.dodian.uber.game.engine.systems.interaction.scheduler.InteractionTaskScheduler
 import net.dodian.uber.game.engine.systems.interaction.scheduler.NpcInteractionTask
 import net.dodian.uber.game.engine.systems.interaction.scheduler.PlayerInteractionTask
-import net.dodian.uber.game.engine.systems.interaction.npcs.NpcClickMetrics
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 
 /**
@@ -55,17 +54,14 @@ object PacketInteractionService {
     @JvmStatic
     fun handleNpcClick(client: Client, opcode: Int, option: Int, npcIndex: Int) {
         if (npcIndex < 0) {
-            NpcClickMetrics.recordRejected("invalid_index", opcode, option, npcIndex, client.playerName)
             return
         }
 
         val npc = Server.npcManager.npcMap[npcIndex]
         if (npc == null) {
-            NpcClickMetrics.recordRejected("npc_not_found", opcode, option, npcIndex, client.playerName)
             return
         }
         if (client.randomed || client.UsingAgility) {
-            NpcClickMetrics.recordRejected("blocked_state", opcode, option, npcIndex, client.playerName)
             return
         }
         if (client.playerPotato.isNotEmpty()) {
@@ -80,7 +76,6 @@ object PacketInteractionService {
 
         val intent = NpcInteractionIntent(opcode, PlayerRegistry.cycle.toLong(), npcIndex, option)
         InteractionTaskScheduler.schedule(client, intent, NpcInteractionTask(client, intent))
-        NpcClickMetrics.recordScheduled(opcode, option, npc.id, npcIndex, client.playerName)
     }
 
     /**
@@ -94,18 +89,15 @@ object PacketInteractionService {
 
         val npc = Server.npcManager.npcMap[npcIndex]
         if (npc == null) {
-            NpcClickMetrics.recordRejected("npc_not_found", opcode, 5, npcIndex, client.playerName)
             return
         }
         if (client.randomed || client.UsingAgility) {
-            NpcClickMetrics.recordRejected("blocked_state", opcode, 5, npcIndex, client.playerName)
             return
         }
 
         GameEventBus.post(PlayerAttackEvent(client, npcIndex, false))
         val intent = NpcInteractionIntent(opcode, PlayerRegistry.cycle.toLong(), npcIndex, 5)
         InteractionTaskScheduler.schedule(client, intent, NpcInteractionTask(client, intent))
-        NpcClickMetrics.recordScheduled(opcode, 5, npc.id, npcIndex, client.playerName)
     }
 
     internal fun shouldClearRedundantWalkForNpcInteraction(client: Client, npc: Npc, option: Int): Boolean {

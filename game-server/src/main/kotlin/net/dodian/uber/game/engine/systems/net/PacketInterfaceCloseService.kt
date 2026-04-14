@@ -24,7 +24,7 @@ object PacketInterfaceCloseService {
             client.checkItemUpdate()
             client.send(RemoveInterfaces())
         }
-        if (client.isShopping()) {
+        if (client.isShopping) {
             client.MyShopID = -1
             client.checkItemUpdate()
             client.send(RemoveInterfaces())

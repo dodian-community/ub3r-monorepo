@@ -2,6 +2,7 @@ package net.dodian.uber.game.netty.game;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import net.dodian.uber.game.engine.metrics.PacketRejectTelemetry;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.NetworkConstants;
 import org.slf4j.Logger;
@@ -43,6 +44,7 @@ public class GamePacketHandler extends SimpleChannelInboundHandler<GamePacket> {
         }
 
         if (packetsInWindow >= NetworkConstants.PACKET_RATE_LIMIT_PER_WINDOW) {
+            PacketRejectTelemetry.record(packet.opcode(), "rate_limit_window");
             if (!windowRateLimitLogged) {
                 logger.warn("[Netty] Rate limit exceeded for {}: opcode={} size={} (>{} packets in {}ms window)",
                         client.getPlayerName(), packet.opcode(), packet.size(),
@@ -66,6 +68,7 @@ public class GamePacketHandler extends SimpleChannelInboundHandler<GamePacket> {
         }
 
         if (!client.queueInboundPacket(packet)) {
+            PacketRejectTelemetry.record(packet.opcode(), "inbound_queue_overflow");
             logger.warn("[Netty] Inbound queue overflow for {}, closing channel", client.getPlayerName());
             releasePacket(packet);
             ctx.close();

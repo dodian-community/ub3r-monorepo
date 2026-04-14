@@ -2,7 +2,7 @@ package net.dodian.uber.game.engine.systems.skills.farming.runtime
 
 import com.google.gson.JsonPrimitive
 import io.netty.channel.embedded.EmbeddedChannel
-import net.dodian.uber.game.content.skills.farming.FarmingData
+import net.dodian.uber.game.skill.farming.FarmingData
 import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.uber.game.engine.tasking.GameTaskRuntime
 import net.dodian.uber.game.model.entity.player.Client

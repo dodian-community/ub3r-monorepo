@@ -19,10 +19,11 @@ import net.dodian.uber.game.engine.sync.player.PlayerSyncDecision
 import net.dodian.uber.game.engine.sync.player.PlayerSyncRevisionIndex
 import net.dodian.uber.game.engine.sync.player.ViewerPlayerSyncState
 import net.dodian.uber.game.engine.sync.playerinfo.RootPlayerInfoService
-import net.dodian.uber.game.content.ui.PlayerUiDeltaProcessor
+import net.dodian.uber.game.ui.PlayerUiDeltaProcessor
 import net.dodian.uber.game.engine.sync.viewport.ViewportIndex
 import net.dodian.uber.game.engine.systems.zone.ZoneUpdateBus
 import net.dodian.uber.game.engine.config.runtimePhaseWarnMs
+import net.dodian.uber.game.engine.metrics.OperationalTelemetry
 import org.slf4j.LoggerFactory
 
 class WorldSynchronizationService {
@@ -38,6 +39,7 @@ class WorldSynchronizationService {
     private var tick = 0L
 
     fun run() {
+        val startedNs = System.nanoTime()
         tick++
         val activePlayers = currentActivePlayers()
         val viewportIndex = ViewportIndex.build(activePlayers, VIEW_DISTANCE)
@@ -82,6 +84,7 @@ class WorldSynchronizationService {
         } finally {
             SynchronizationContext.clear()
         }
+        OperationalTelemetry.recordPhaseMillis("sync.total", (System.nanoTime() - startedNs) / 1_000_000L)
     }
 
     private fun currentActivePlayers(): List<Client> {
@@ -255,7 +258,9 @@ class WorldSynchronizationService {
         val elapsed = measureNanoTime(block)
         cycle.recordStage(stage, elapsed)
         val elapsedMs = elapsed / 1_000_000L
+        OperationalTelemetry.recordPhaseMillis("sync.${stage.name.lowercase()}", elapsedMs)
         if (elapsedMs >= runtimePhaseWarnMs) {
+            OperationalTelemetry.incrementCounter("sync.slow")
             when (stage) {
                 SynchronizationStage.SYNC_PLAYER_ENCODE -> {
                     val built = cycle.playerPacketsBuilt + cycle.playerPacketsTemplated

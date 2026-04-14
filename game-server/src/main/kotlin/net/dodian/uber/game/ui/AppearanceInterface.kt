@@ -2,6 +2,9 @@
 
 package net.dodian.uber.game.ui
 
+import net.dodian.uber.game.ui.buttons.InterfaceButtonContent
+import net.dodian.uber.game.ui.buttons.buttonBinding
+
 import net.dodian.uber.game.model.entity.UpdateFlag
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 

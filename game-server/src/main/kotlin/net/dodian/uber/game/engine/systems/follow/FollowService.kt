@@ -286,7 +286,7 @@ object FollowService {
             player.isActive &&
             !player.disconnected &&
             player.currentHealth > 0 &&
-            !player.isDeathSequenceActive() &&
+            !player.isDeathSequenceActive &&
             player.channel?.isActive == true
 
 }

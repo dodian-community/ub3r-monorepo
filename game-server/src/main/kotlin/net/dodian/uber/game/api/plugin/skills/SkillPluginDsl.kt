@@ -1,6 +1,6 @@
 package net.dodian.uber.game.api.plugin.skills
 
-import net.dodian.cache.`object`.GameObjectData
+import net.dodian.cache.objects.GameObjectData
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
@@ -16,6 +16,7 @@ class SkillPluginBuilder internal constructor(
     private val itemOnItemBindings = ArrayList<SkillItemOnItemBinding>()
     private val itemBindings = ArrayList<SkillItemClickBinding>()
     private val itemOnObjectBindings = ArrayList<SkillItemOnObjectBinding>()
+    private val magicOnObjectBindings = ArrayList<SkillMagicOnObjectBinding>()
     private val buttonBindings = ArrayList<SkillButtonBinding>()
     private var lifecycle = SkillPluginLifecycleHooks()
 
@@ -86,14 +87,38 @@ class SkillPluginBuilder internal constructor(
         )
     }
 
+    fun magicOnObject(
+        preset: PolicyPreset,
+        vararg objectIds: Int,
+        spellIds: IntArray = intArrayOf(-1),
+        handler: (
+            client: Client,
+            objectId: Int,
+            position: Position,
+            obj: GameObjectData?,
+            spellId: Int,
+        ) -> Boolean,
+    ) {
+        require(objectIds.isNotEmpty()) { "Magic-on-object binding requires at least one object id." }
+        require(spellIds.isNotEmpty()) { "Magic-on-object binding requires at least one spell id or wildcard (-1)." }
+        magicOnObjectBindings += SkillMagicOnObjectBinding(
+            preset = preset,
+            objectIds = objectIds.toSet().toIntArray(),
+            spellIds = spellIds.toSet().toIntArray(),
+            handler = handler,
+        )
+    }
+
     fun button(
         preset: PolicyPreset,
-        vararg rawButtonIds: Int,
+        requiredInterfaceId: Int = -1,
         opIndex: Int? = null,
+        vararg rawButtonIds: Int,
         handler: (client: Client, rawButtonId: Int, op: Int) -> Boolean,
     ) {
         require(rawButtonIds.isNotEmpty()) { "Button binding requires at least one raw button id." }
-        buttonBindings += SkillButtonBinding(preset, rawButtonIds.toSet().toIntArray(), opIndex, handler)
+        require(requiredInterfaceId >= -1) { "Button requiredInterfaceId must be -1 or a non-negative interface id." }
+        buttonBindings += SkillButtonBinding(preset, rawButtonIds.toSet().toIntArray(), requiredInterfaceId, opIndex, handler)
     }
 
     fun lifecycle(block: SkillPluginLifecycleBuilder.() -> Unit) {
@@ -109,6 +134,7 @@ class SkillPluginBuilder internal constructor(
             itemOnItemBindings = itemOnItemBindings.toList(),
             itemBindings = itemBindings.toList(),
             itemOnObjectBindings = itemOnObjectBindings.toList(),
+            magicOnObjectBindings = magicOnObjectBindings.toList(),
             buttonBindings = buttonBindings.toList(),
             lifecycle = lifecycle,
         )

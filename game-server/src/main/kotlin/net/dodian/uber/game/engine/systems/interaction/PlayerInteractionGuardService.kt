@@ -1,6 +1,6 @@
 package net.dodian.uber.game.engine.systems.interaction
 
-import net.dodian.uber.game.content.social.dialogue.DialogueService
+import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.model.entity.player.Client
 
 object PlayerInteractionGuardService {

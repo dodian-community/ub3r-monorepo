@@ -18,7 +18,7 @@ final class NpcUpdateBlockSet {
         }
         SynchronizationContext.recordNpcBlockCacheHit(false);
 
-        int mask = NpcUpdateMaskService.computeMask(npc);
+        int mask = NpcUpdateMaskCalculator.computeMask(npc);
         if (mask == 0) {
             return;
         }

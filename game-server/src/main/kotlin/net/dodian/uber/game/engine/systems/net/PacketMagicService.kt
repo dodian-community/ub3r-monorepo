@@ -1,9 +1,9 @@
 package net.dodian.uber.game.engine.systems.net
 
 import net.dodian.uber.game.Server
-import net.dodian.cache.`object`.GameObjectData
+import net.dodian.cache.objects.GameObjectData
 import net.dodian.uber.game.model.Position
-import net.dodian.uber.game.content.skills.smithing.Smithing
+import net.dodian.uber.game.skill.smithing.Smithing
 import net.dodian.uber.game.model.entity.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
@@ -250,7 +250,7 @@ object PacketMagicService {
         client.performAnimation(713, 0)
         client.callGfxMask(113, 100)
         client.send(SendSideTab(6))
-        client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true)
+        client.updateFlags.setRequired(UpdateFlag.APPEARANCE, true)
     }
 }
 

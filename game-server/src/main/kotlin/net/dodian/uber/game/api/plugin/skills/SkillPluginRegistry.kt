@@ -43,6 +43,10 @@ internal object SkillPluginKeys {
         return (objectId.toLong() shl 32) or (itemId.toLong() and 0xffffffffL)
     }
 
+    fun magicOnObjectKey(objectId: Int, spellId: Int): Long {
+        return (objectId.toLong() shl 32) or (spellId.toLong() and 0xffffffffL)
+    }
+
     fun buttonKey(rawButtonId: Int, opIndex: Int): Long {
         return (rawButtonId.toLong() shl 32) or (opIndex.toLong() and 0xffffffffL)
     }
@@ -112,13 +116,14 @@ internal class SkillPluginRegistryEngine {
     private fun rebuildSnapshotLocked() {
         snapshot = buildSnapshot(definitions)
         logger.info(
-            "skills bootstrapped {} plugins (object={}, npc={}, itemOnItem={}, item={}, itemOnObject={}, button={})",
+            "skills bootstrapped {} plugins (object={}, npc={}, itemOnItem={}, item={}, itemOnObject={}, magicOnObject={}, button={})",
             definitions.size,
             snapshot.objectBindingCount,
             snapshot.npcBindingCount,
             snapshot.itemOnItemBindingCount,
             snapshot.itemBindingCount,
             snapshot.itemOnObjectBindingCount,
+            snapshot.magicOnObjectBindingCount,
             snapshot.buttonBindingCount,
         )
     }
@@ -129,7 +134,8 @@ internal class SkillPluginRegistryEngine {
         val itemOnItemBindings = HashMap<Long, SkillItemOnItemBinding>()
         val itemBindings = HashMap<Long, SkillItemClickBinding>()
         val itemOnObjectBindings = HashMap<Long, SkillItemOnObjectBinding>()
-        val buttonBindings = HashMap<Long, SkillButtonBinding>()
+        val magicOnObjectBindings = HashMap<Long, SkillMagicOnObjectBinding>()
+        val buttonBindings = HashMap<Long, MutableList<SkillButtonBinding>>()
         val objectPresetById = HashMap<Int, MutableSet<net.dodian.uber.game.engine.systems.action.PolicyPreset>>()
 
         source.forEach { plugin ->
@@ -191,14 +197,30 @@ internal class SkillPluginRegistryEngine {
                 }
             }
 
+            definition.magicOnObjectBindings.forEach { binding ->
+                binding.objectIds.forEach { objectId ->
+                    binding.spellIds.forEach { spellId ->
+                        val key = SkillPluginKeys.magicOnObjectKey(objectId, spellId)
+                        val existing = magicOnObjectBindings.putIfAbsent(key, binding)
+                        require(existing == null) {
+                            "Duplicate skill magic-on-object binding objectId=$objectId spellId=$spellId " +
+                                "for plugin=${definition.name}"
+                        }
+                        objectPresetById.computeIfAbsent(objectId) { linkedSetOf() }.add(binding.preset)
+                    }
+                }
+            }
+
             definition.buttonBindings.forEach { binding ->
                 binding.rawButtonIds.forEach { rawButtonId ->
                     val key = SkillPluginKeys.buttonKey(rawButtonId, binding.opIndex ?: -1)
-                    val existing = buttonBindings.putIfAbsent(key, binding)
+                    val siblings = buttonBindings.getOrPut(key) { mutableListOf() }
+                    val existing = siblings.firstOrNull { it.requiredInterfaceId == binding.requiredInterfaceId }
                     require(existing == null) {
                         "Duplicate skill button binding raw=$rawButtonId op=${binding.opIndex ?: -1} " +
-                            "for plugin=${definition.name}"
+                            "requiredInterfaceId=${binding.requiredInterfaceId} for plugin=${definition.name}"
                     }
+                    siblings += binding
                 }
             }
         }
@@ -209,7 +231,8 @@ internal class SkillPluginRegistryEngine {
             itemOnItemBindings = itemOnItemBindings,
             itemBindings = itemBindings,
             itemOnObjectBindings = itemOnObjectBindings,
-            buttonBindings = buttonBindings,
+            magicOnObjectBindings = magicOnObjectBindings,
+            buttonBindings = buttonBindings.mapValues { it.value.toList() },
             objectPresetById = objectPresetById,
         )
     }
@@ -221,7 +244,8 @@ data class SkillPluginSnapshot(
     private val itemOnItemBindings: Map<Long, SkillItemOnItemBinding>,
     private val itemBindings: Map<Long, SkillItemClickBinding>,
     private val itemOnObjectBindings: Map<Long, SkillItemOnObjectBinding>,
-    private val buttonBindings: Map<Long, SkillButtonBinding>,
+    private val magicOnObjectBindings: Map<Long, SkillMagicOnObjectBinding>,
+    private val buttonBindings: Map<Long, List<SkillButtonBinding>>,
     private val objectPresetById: Map<Int, Set<net.dodian.uber.game.engine.systems.action.PolicyPreset>>,
 ) {
     val objectBindingCount: Int get() = objectBindings.size
@@ -229,7 +253,8 @@ data class SkillPluginSnapshot(
     val itemOnItemBindingCount: Int get() = itemOnItemBindings.size
     val itemBindingCount: Int get() = itemBindings.size
     val itemOnObjectBindingCount: Int get() = itemOnObjectBindings.size
-    val buttonBindingCount: Int get() = buttonBindings.size
+    val magicOnObjectBindingCount: Int get() = magicOnObjectBindings.size
+    val buttonBindingCount: Int get() = buttonBindings.values.sumOf { it.size }
 
     fun objectBinding(option: Int, objectId: Int): SkillObjectClickBinding? =
         objectBindings[SkillPluginKeys.objectKey(option, objectId)]
@@ -247,9 +272,13 @@ data class SkillPluginSnapshot(
         itemOnObjectBindings[SkillPluginKeys.itemOnObjectKey(objectId, itemId)]
             ?: itemOnObjectBindings[SkillPluginKeys.itemOnObjectKey(objectId, -1)]
 
-    fun buttonBinding(rawButtonId: Int, opIndex: Int): SkillButtonBinding? {
-        return buttonBindings[SkillPluginKeys.buttonKey(rawButtonId, opIndex)]
-            ?: buttonBindings[SkillPluginKeys.buttonKey(rawButtonId, -1)]
+    fun magicOnObjectBinding(objectId: Int, spellId: Int): SkillMagicOnObjectBinding? =
+        magicOnObjectBindings[SkillPluginKeys.magicOnObjectKey(objectId, spellId)]
+            ?: magicOnObjectBindings[SkillPluginKeys.magicOnObjectKey(objectId, -1)]
+
+    fun buttonBinding(rawButtonId: Int, opIndex: Int, activeInterfaceId: Int): SkillButtonBinding? {
+        return resolveButtonBinding(rawButtonId, opIndex, activeInterfaceId)
+            ?: resolveButtonBinding(rawButtonId, -1, activeInterfaceId)
     }
 
     fun ownsObjectId(objectId: Int): Boolean = objectPresetById.containsKey(objectId)
@@ -260,6 +289,12 @@ data class SkillPluginSnapshot(
     companion object {
         @JvmStatic
         fun empty(): SkillPluginSnapshot =
-            SkillPluginSnapshot(emptyMap(), emptyMap(), emptyMap(), emptyMap(), emptyMap(), emptyMap(), emptyMap())
+            SkillPluginSnapshot(emptyMap(), emptyMap(), emptyMap(), emptyMap(), emptyMap(), emptyMap(), emptyMap(), emptyMap())
+    }
+
+    private fun resolveButtonBinding(rawButtonId: Int, opIndex: Int, activeInterfaceId: Int): SkillButtonBinding? {
+        val bindings = buttonBindings[SkillPluginKeys.buttonKey(rawButtonId, opIndex)] ?: return null
+        return bindings.firstOrNull { it.requiredInterfaceId == activeInterfaceId }
+            ?: bindings.firstOrNull { it.requiredInterfaceId == -1 }
     }
 }

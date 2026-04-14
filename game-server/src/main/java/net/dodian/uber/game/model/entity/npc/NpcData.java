@@ -3,6 +3,8 @@
  */
 package net.dodian.uber.game.model.entity.npc;
 
+import net.dodian.uber.game.persistence.world.npc.NpcDataInterop;
+import net.dodian.uber.game.persistence.world.npc.NpcDefinitionData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

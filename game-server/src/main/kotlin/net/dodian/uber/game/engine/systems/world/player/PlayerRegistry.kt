@@ -3,7 +3,6 @@ package net.dodian.uber.game.engine.systems.world.player
 import net.dodian.uber.game.Constants
 import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.uber.game.engine.loop.GameThreadTaskQueue
-import net.dodian.uber.game.engine.metrics.MemoryReporter
 import net.dodian.uber.game.engine.util.Utils
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
@@ -121,7 +120,7 @@ object PlayerRegistry {
                 !existing.channel.isActive
         if (stale) {
             playersOnline.remove(playerId, existing)
-            GameThreadTaskQueue.submit { PlayerRegistry.removePlayer(existing) }
+            GameThreadTaskQueue.submit { removePlayer(existing) }
             return false
         }
 
@@ -163,7 +162,6 @@ object PlayerRegistry {
         playersOnline.remove(client.longName, client)
         client.isActive = false
         client.disconnected = true
-        MemoryReporter.getSingleton().process()
     }
 
     @JvmStatic

@@ -1,6 +1,6 @@
 package net.dodian.uber.game.engine.systems.skills
 
-import net.dodian.cache.`object`.GameObjectData
+import net.dodian.cache.objects.GameObjectData
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
@@ -168,6 +168,36 @@ object SkillInteractionDispatcher {
     }
 
     @JvmStatic
+    fun tryHandleMagicOnObject(
+        client: Client,
+        objectId: Int,
+        position: Position,
+        obj: GameObjectData?,
+        spellId: Int,
+    ): Boolean {
+        val binding = PluginRegistry.currentSkills().magicOnObjectBinding(objectId, spellId) ?: return false
+        return try {
+            val handled = binding.handler(client, objectId, position, obj, spellId)
+            SkillPolicyMetrics.record(
+                binding.preset,
+                SkillPolicyRoute.MAGIC_ON_OBJECT,
+                if (handled) SkillPolicyResult.HANDLED else SkillPolicyResult.POLICY_REJECT,
+            )
+            handled
+        } catch (exception: RuntimeException) {
+            logger.error(
+                "Error handling skill magic-on-object objectId={} spellId={} at {}",
+                objectId,
+                spellId,
+                position,
+                exception,
+            )
+            SkillPolicyMetrics.record(binding.preset, SkillPolicyRoute.MAGIC_ON_OBJECT, SkillPolicyResult.POLICY_REJECT)
+            false
+        }
+    }
+
+    @JvmStatic
     fun resolveItemOnObjectPolicy(
         objectId: Int,
         itemId: Int,
@@ -187,8 +217,27 @@ object SkillInteractionDispatcher {
     }
 
     @JvmStatic
+    fun resolveMagicOnObjectPolicy(
+        objectId: Int,
+        spellId: Int,
+    ): ObjectInteractionPolicy? {
+        val binding = PluginRegistry.currentSkills().magicOnObjectBinding(objectId, spellId) ?: return null
+        return try {
+            binding.objectPolicy()
+        } catch (exception: RuntimeException) {
+            logger.error(
+                "Error resolving skill magic-on-object policy objectId={} spellId={}",
+                objectId,
+                spellId,
+                exception,
+            )
+            null
+        }
+    }
+
+    @JvmStatic
     fun tryHandleButton(client: Client, rawButtonId: Int, opIndex: Int): Boolean {
-        val binding = PluginRegistry.currentSkills().buttonBinding(rawButtonId, opIndex) ?: return false
+        val binding = PluginRegistry.currentSkills().buttonBinding(rawButtonId, opIndex, client.activeInterfaceId) ?: return false
         return try {
             val handled = binding.handler(client, rawButtonId, opIndex)
             SkillPolicyMetrics.record(

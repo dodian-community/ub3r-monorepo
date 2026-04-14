@@ -2,11 +2,17 @@ package net.dodian.uber.game.engine.systems.interaction.npcs
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.shop.ShopId
 
 object NpcInteractionActionService {
     @JvmStatic
     fun openShop(client: Client, shopId: Int) {
         client.openUpShopRouted(shopId)
+    }
+
+    @JvmStatic
+    fun openShop(client: Client, shopId: ShopId) {
+        openShop(client, shopId.id)
     }
 
     @JvmStatic

@@ -117,7 +117,7 @@ object NpcDataRepository {
     }
 
     @JvmStatic
-    fun updateDefinitionField(id: Int, field: String, value: String): Unit {
+    fun updateDefinitionField(id: Int, field: String, value: String) {
         val typedField = parseDefinitionField(field)
         updateDefinitionField(id, typedField, value)
     }

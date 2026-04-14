@@ -1,8 +1,8 @@
 package net.dodian.uber.game.engine.systems.interaction
 
 import net.dodian.uber.game.model.Position
-import net.dodian.uber.game.model.`object`.GlobalObject
-import net.dodian.uber.game.model.`object`.Object as GameObject
+import net.dodian.uber.game.model.objects.GlobalObject
+import net.dodian.uber.game.model.objects.WorldObject
 import java.util.concurrent.ConcurrentHashMap
 
 object ObjectSpawnService {
@@ -29,7 +29,7 @@ object ObjectSpawnService {
         if (durationMs <= 0) {
             return false
         }
-        val worldObject = GameObject(objectId, position.x, position.y, position.z, type, face, oldObjectId)
+        val worldObject = WorldObject(objectId, position.x, position.y, position.z, type, face, oldObjectId)
         val created = GlobalObject.addGlobalObject(worldObject, durationMs.toInt())
         if (created) {
             activeSpawns[key(position)] = ActiveGlobalSpawn(

@@ -2,10 +2,13 @@
 
 package net.dodian.uber.game.ui
 
+import net.dodian.uber.game.ui.buttons.InterfaceButtonContent
+import net.dodian.uber.game.ui.buttons.buttonBinding
+
 import net.dodian.uber.game.api.content.ContentActionCancelReason
 import net.dodian.uber.game.api.content.ContentActions
 import net.dodian.uber.game.api.content.ContentSafety
-import net.dodian.uber.game.content.social.dialogue.DialogueService
+import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.netty.listener.out.SetTabInterface
 
 object UiInterface : InterfaceButtonContent {
@@ -104,7 +107,7 @@ object UiInterface : InterfaceButtonContent {
                 if (client.disconnected) {
                     return@buttonBinding true
                 }
-                if (System.currentTimeMillis() < client.walkBlock && !client.UsingAgility) {
+                if (client.isWalkBlocked() && !client.UsingAgility) {
                     client.sendMessage("You are unable to logout right now.")
                     return@buttonBinding true
                 }
@@ -132,4 +135,3 @@ object UiInterface : InterfaceButtonContent {
             },
         )
 }
-

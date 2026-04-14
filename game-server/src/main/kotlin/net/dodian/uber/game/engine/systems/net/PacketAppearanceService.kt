@@ -18,7 +18,7 @@ object PacketAppearanceService {
     @JvmStatic
     fun handleAppearanceChange(client: Client, looks: IntArray) {
         client.setLook(looks)
-        client.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true)
+        client.updateFlags.setRequired(UpdateFlag.APPEARANCE, true)
     }
 }
 

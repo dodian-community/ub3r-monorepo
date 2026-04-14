@@ -12,41 +12,41 @@ import net.dodian.uber.game.model.entity.npc.NpcData;
 import net.dodian.uber.game.model.entity.npc.NpcDrop;
 import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.chunk.Chunk;
-import net.dodian.uber.game.model.chunk.ChunkRepository;
+import net.dodian.uber.game.model.chunk.ChunkEntityIndex;
 import net.dodian.uber.game.engine.systems.zone.RegionSong;
-import net.dodian.uber.game.model.object.GlobalObject;
-import net.dodian.uber.game.model.object.Object;
-import net.dodian.uber.game.content.skills.Skillcape;
+import net.dodian.uber.game.model.objects.GlobalObject;
+import net.dodian.uber.game.model.objects.WorldObject;
+import net.dodian.uber.game.skill.Skillcape;
 import net.dodian.uber.game.netty.listener.out.InventoryInterface;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.netty.listener.out.SendSideTab;
 import net.dodian.uber.game.netty.listener.out.SendString;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
-import net.dodian.uber.game.model.player.skills.prayer.Prayers;
-import net.dodian.uber.game.content.skills.slayer.Slayer;
-import net.dodian.uber.game.content.social.dialogue.DialogueService;
-import net.dodian.uber.game.content.events.partyroom.Balloons;
-import net.dodian.uber.game.content.events.partyroom.PartyRoomRewardItem;
+import net.dodian.uber.game.skill.prayer.PrayerManager;
+import net.dodian.uber.game.skill.slayer.Slayer;
+import net.dodian.uber.game.engine.systems.dialogue.DialogueService;
+import net.dodian.uber.game.activity.partyroom.PartyRoomBalloons;
+import net.dodian.uber.game.activity.partyroom.PartyRoomRewardItem;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
-import net.dodian.uber.game.content.skills.mining.MiningState;
-import net.dodian.uber.game.content.skills.woodcutting.WoodcuttingState;
-import net.dodian.uber.game.content.skills.fletching.FletchingState;
-import net.dodian.uber.game.content.skills.fishing.FishingState;
-import net.dodian.uber.game.content.skills.cooking.CookingState;
-import net.dodian.uber.game.content.skills.crafting.CraftingState;
-import net.dodian.uber.game.content.skills.prayer.PrayerOfferingState;
-import net.dodian.uber.game.content.skills.runecrafting.RunecraftingState;
+import net.dodian.uber.game.skill.mining.MiningState;
+import net.dodian.uber.game.skill.woodcutting.WoodcuttingState;
+import net.dodian.uber.game.skill.fletching.FletchingState;
+import net.dodian.uber.game.skill.fishing.FishingState;
+import net.dodian.uber.game.skill.cooking.CookingState;
+import net.dodian.uber.game.skill.crafting.CraftingState;
+import net.dodian.uber.game.skill.prayer.PrayerOfferingState;
+import net.dodian.uber.game.skill.runecrafting.RunecraftingState;
 import net.dodian.uber.game.engine.systems.interaction.ActiveInteraction;
 import net.dodian.uber.game.engine.systems.interaction.StaticObjectOverrides;
 import net.dodian.uber.game.engine.systems.interaction.InteractionAnchorState;
 import net.dodian.uber.game.engine.systems.interaction.InteractionIntent;
-import net.dodian.uber.game.content.combat.CombatCancellationReason;
-import net.dodian.uber.game.content.combat.CombatTargetState;
+import net.dodian.uber.game.engine.systems.combat.CombatCancellationReason;
+import net.dodian.uber.game.engine.systems.combat.CombatTargetState;
 import net.dodian.uber.game.engine.lifecycle.DeathTaskState;
-import net.dodian.uber.game.content.skills.smithing.ActiveSmithingSelection;
-import net.dodian.uber.game.content.skills.smithing.SmeltingSelection;
-import net.dodian.uber.game.content.skills.thieving.PyramidPlunderPlayerState;
+import net.dodian.uber.game.skill.smithing.ActiveSmithingSelection;
+import net.dodian.uber.game.skill.smithing.SmeltingSelection;
+import net.dodian.uber.game.skill.thieving.PyramidPlunderPlayerState;
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason;
 import net.dodian.uber.game.engine.systems.action.PendingProductionSelection;
 import net.dodian.uber.game.engine.systems.action.ActiveProductionSelection;
@@ -54,7 +54,8 @@ import net.dodian.uber.game.engine.systems.action.PlayerActionType;
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry;
 import net.dodian.uber.game.engine.scheduler.QueueTaskHandle;
 import net.dodian.uber.game.engine.tasking.GameTaskSet;
-import net.dodian.utilities.Misc;
+import net.dodian.uber.game.engine.loop.GameCycleClock;
+import net.dodian.uber.game.engine.util.Misc;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,7 +97,8 @@ public abstract class Player extends Entity {
     public int MyShopID = -1;
     public int NpcDialogue = 0, NpcTalkTo = 0, NpcWanneTalk = 0;
     public boolean IsBanking = false, isPartyInterface = false, checkBankInterface, bankStyleViewOpen = false, NpcDialogueSend = false;
-    private Entity.hitType hitType, hitType2 = Entity.hitType.STANDARD;
+    private Entity.hitType hitType;
+    private final Entity.hitType hitType2 = Entity.hitType.STANDARD;
     public boolean isNpc, morph = false;
     public boolean initialized = false, disconnected = false, isKicked = false;
     public boolean isActive = false, debug = false;
@@ -119,12 +121,12 @@ public abstract class Player extends Entity {
     public final static int maxPlayerListSize = Constants.maxPlayers;
     public Player[] playerList = new Player[maxPlayerListSize]; // To remove -Dashboard
     public int playerListSize = 0;
-    public Set<Player> playersUpdating = new LinkedHashSet<>(255);
+    public PlayerSlotMembershipSet playersUpdating = new PlayerSlotMembershipSet(Constants.maxPlayers + 1);
     private final Set<Npc> localNpcs = new LinkedHashSet<>(254);
     private long localPlayerMembershipRevision = 0L;
     private long localNpcMembershipRevision = 0L;
     private Chunk currentChunk;
-    private ChunkRepository chunkRepository;
+    private ChunkEntityIndex chunkEntityIndex;
     public boolean loaded = false;
     public int[] newWalkCmdX = new int[WALKING_QUEUE_SIZE];
     public int[] newWalkCmdY = new int[WALKING_QUEUE_SIZE];
@@ -150,6 +152,7 @@ public abstract class Player extends Entity {
     public boolean UsingAgility = false;
     public int agilityCourseStage = 0;
     public long walkBlock = 0;
+    private long walkBlockUntilCycle = -1L;
     public boolean xLog = false;
     public ArrayList<PartyRoomRewardItem> offeredPartyItems = new ArrayList<>();
     /*
@@ -184,6 +187,23 @@ public abstract class Player extends Entity {
         currentPrayer = maxPrayer;
         movementState.initializeRegionState();
         resetWalkingQueue();
+    }
+
+    public void applyWalkBlockMs(long durationMs) {
+        if (durationMs <= 0L) {
+            return;
+        }
+        walkBlock = Math.max(walkBlock, System.currentTimeMillis() + durationMs);
+        long ticks = Math.max(1, GameCycleClock.ticksForDurationMs(durationMs));
+        walkBlockUntilCycle = Math.max(walkBlockUntilCycle, GameCycleClock.currentCycle() + ticks);
+    }
+
+    public boolean isWalkBlockedAtCycle(long cycle) {
+        return cycle < walkBlockUntilCycle || System.currentTimeMillis() < walkBlock;
+    }
+
+    public boolean isWalkBlocked() {
+        return isWalkBlockedAtCycle(GameCycleClock.currentCycle());
     }
 
     public boolean isShopping() {
@@ -373,14 +393,13 @@ public abstract class Player extends Entity {
     }
 
     public void println(String str) {
-        return;
     }
 
     public String getSongUnlockedSaveText() {
         return progressState.getSongUnlockedSaveText();
     }
 
-    public boolean withinDistance(Object o) {
+    public boolean withinDistance(WorldObject o) {
         if (getPosition().getZ() != o.z)
             return false;
         int deltaX = o.x - getPosition().getX(),
@@ -1273,21 +1292,21 @@ public abstract class Player extends Entity {
         teleportToZ = getPosition().getZ();
     }
 
-    Prayers prayers = new Prayers(this);
+    PrayerManager prayerManager = new PrayerManager(this);
 
     public boolean isSongUnlocked(int songId) {
         return progressState.isSongUnlocked(songId);
     }
     public boolean blackMaskEffect(int npcId) {
-        String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : Objects.requireNonNull(net.dodian.uber.game.content.skills.slayer.SlayerTaskDefinition.forOrdinal(getSlayerData().get(1))).getTextRepresentation();
-        net.dodian.uber.game.content.skills.slayer.SlayerTaskDefinition slayerTask = net.dodian.uber.game.content.skills.slayer.SlayerTaskDefinition.forNpc(npcId);
+        String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : Objects.requireNonNull(net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forOrdinal(getSlayerData().get(1))).getTextRepresentation();
+        net.dodian.uber.game.skill.slayer.SlayerTaskDefinition slayerTask = net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forNpc(npcId);
         boolean onTask = slayerTask != null && slayerTask.getTextRepresentation().equals(taskName) && getSlayerData().get(3) > 0;
         int itemId = getEquipment()[Equipment.Slot.HEAD.getId()];
         return (itemId == 8921 || itemId == 11864) && onTask;
     }
     public boolean blackMaskImbueEffect(int npcId) {
-        String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : Objects.requireNonNull(net.dodian.uber.game.content.skills.slayer.SlayerTaskDefinition.forOrdinal(getSlayerData().get(1))).getTextRepresentation();
-        net.dodian.uber.game.content.skills.slayer.SlayerTaskDefinition slayerTask = net.dodian.uber.game.content.skills.slayer.SlayerTaskDefinition.forNpc(npcId);
+        String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : Objects.requireNonNull(net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forOrdinal(getSlayerData().get(1))).getTextRepresentation();
+        net.dodian.uber.game.skill.slayer.SlayerTaskDefinition slayerTask = net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forNpc(npcId);
         boolean onTask = slayerTask != null && slayerTask.getTextRepresentation().equals(taskName) && getSlayerData().get(3) > 0;
         String headName = ((Client) this).getItemName(getEquipment()[Equipment.Slot.HEAD.getId()]).toLowerCase();
         return (headName.contains("black mask (i)") || headName.contains("slayer helmet (i)")) && onTask;
@@ -1928,84 +1947,21 @@ public abstract class Player extends Entity {
         Client client = (Client) this;
         client.replaceDoors();
         StaticObjectOverrides.replayTo(client);
-        Balloons.updateBalloons(client);
+        PartyRoomBalloons.updateVisibleBalloons(client);
         GlobalObject.updateObject(client);
         for(int i = 0; i <= 4; i++) //Refresh farming varbits!
             client.varbit(client.farming.getFarmData().getFarmPatchConfig() + i, 0);
         client.farming.updateCompost(client);
         client.farming.updateFarmPatch(client);
-        if(client.getPosition().getZ() == 0) {
-            /* NMZ object removal!*/
-            for (int x = 0; x <= 9; x++)
-                for (int y = 0; y <= 8; y++)
-                    client.ReplaceObject2(new Position(2600 + x, 3111 + y, 0), -1, 0, 10);
-            client.ReplaceObject2(new Position(2869, 9813, 0), 2343, 0, 10); //Brick
-            client.ReplaceObject2(new Position(2870, 9813, 0), 2343, 0, 10); //Brick
-            client.ReplaceObject2(new Position(2871, 9813, 0), 2343, 0, 10); //Brick
-
-            client.ReplaceObject2(new Position(2866, 9797, 0), 2343, 0, 10); //Brick
-            client.ReplaceObject2(new Position(2866, 9798, 0), 2343, 0, 10); //Brick
-            client.ReplaceObject2(new Position(2866, 9799, 0), 2343, 0, 10); //Brick
-            client.ReplaceObject2(new Position(2866, 9800, 0), 2343, 0, 10); //Brick
-
-            client.ReplaceObject2(new Position(2885, 9794, 0), 882, 0, 10); // Shortcut entrance Taverly
-            client.ReplaceObject2(new Position(2899, 9728, 0), 882, 0, 10); // Shortcut exit Taverly
-
-            client.ReplaceObject2(new Position(2572, 3105, 0), 14890, 0, 10); //Sand Pit in Yanille!
-            client.ReplaceObject2(new Position(2542, 3097, 0), -1, 0, 10); //Remove portal near dad!
-            client.ReplaceObject2(new Position(2942, 4688, 0), 12260, 3, 10); //Teleport of some sort!
-
-            client.ReplaceObject2(new Position(2613, 3084, 0), 3994, -3, 11);
-            client.ReplaceObject2(new Position(2628, 3151, 0), 2104, -3, 11);
-            client.ReplaceObject2(new Position(2629, 3151, 0), 2105, -3, 11);
-            client.ReplaceObject2(new Position(2733, 3374, 0), 375, -1, 11);
-            client.ReplaceObject2(new Position(2688, 3481, 0), 27978, 1, 11); //Blood altar
-            client.ReplaceObject2(new Position(2626, 3116, 0), 14905, -1, 11); //Nature altar
-            client.ReplaceObject2(new Position(2595, 3409, 0), 133, -1, 10); // Dragon lair
-
-            /* Rope from Tzhaar city */
-            client.ReplaceObject2(new Position(2443, 5169, 0), 2352, 0, 10);
-            /*
-             * Danno: Box off new area from noobs =]
-             */
-            client.ReplaceObject2(new Position(2770, 3140, 0), 2050, 0, 10);
-            client.ReplaceObject2(new Position(2771, 3140, 0), 2050, 0, 10);
-            client.ReplaceObject2(new Position(2772, 3140, 0), 2050, 0, 10);
-            client.ReplaceObject2(new Position(2772, 3141, 0), 2050, 0, 10);
-            client.ReplaceObject2(new Position(2772, 3142, 0), 2050, 0, 10);
-            client.ReplaceObject2(new Position(2772, 3143, 0), 2050, 0, 10);
-            /* Blocking object! */
-            //client.ReplaceObject2(new Position(2832, 2971, 0), 2050, 0, 10);
-            /* ? */
-            client.ReplaceObject2(new Position(2998, 3931, 0), 6951, 0, 0);
-            client.ReplaceObject2(new Position(2904, 9678, 0), 6951, 0, 10);
-            // slayer update
-            // ReplaceObject2(2904, 9678, -1, -1, 11);
-            // ReplaceObject2(2691, 9774, 2107, 0, 11);
-            // Ancient slayer dunegon
-            client.ReplaceObject(2661, 9815, 2391, 0, 0);
-            client.ReplaceObject(2662, 9815, 2392, -2, 0);
-            /* Gnome mining cavern */
-            client.ReplaceObject2(new Position(2492, 9916, 0), 7491, 0, 10);
-            client.ReplaceObject2(new Position(2493, 9915, 0), 7491, 0, 10);
-            /* Elemental obelisk */
-            client.ReplaceObject2(new Position(2863, 3427, 0), 2151, 0, 10); //Water
-            client.ReplaceObject2(new Position(3531, 3536, 0), 2150, 0, 10); //Earth
-            client.ReplaceObject2(new Position(3059, 3564, 0), 2153, 0, 10); //Fire
-            client.ReplaceObject2(new Position(2743, 3174, 0), 2152, 0, 10); //Air
-            /* Desert shiet */
-            client.ReplaceObject2(new Position(3284, 2809, 0), 20391, 2, 0);
-            client.ReplaceObject2(new Position(3283, 2809, 0), 20391, 4, 0);
-        }
     }
 
     public boolean rejectTeleport() {
-        return net.dodian.uber.game.content.skills.thieving.PyramidPlunder.hindersTeleport(((Client) this));
+        return net.dodian.uber.game.skill.thieving.PyramidPlunder.hindersTeleport(((Client) this));
     }
     public void loginPosition(int x, int y, int z) {
         moveTo(x, y, z);
         if(getPositionName(getPosition()) == positions.PYRAMID_PLUNDER)
-            net.dodian.uber.game.content.skills.thieving.PyramidPlunder.reset(((Client) this));
+            net.dodian.uber.game.skill.thieving.PyramidPlunder.reset(((Client) this));
     }
 
     public void examineItem(Client c, int id, int amount) {
@@ -2080,8 +2036,8 @@ public abstract class Player extends Entity {
         return currentChunk;
     }
 
-    public ChunkRepository getChunkRepository() {
-        return chunkRepository;
+    public ChunkEntityIndex getChunkEntityIndex() {
+        return chunkEntityIndex;
     }
 
     public void syncChunkMembership() {
@@ -2091,25 +2047,25 @@ public abstract class Player extends Entity {
 
         Chunk newChunk = getPosition().getChunk();
 
-        if (currentChunk != null && currentChunk.equals(newChunk) && chunkRepository != null) {
+        if (currentChunk != null && currentChunk.equals(newChunk) && chunkEntityIndex != null) {
             return;
         }
 
-        if (chunkRepository != null) {
-            chunkRepository.remove(this);
+        if (chunkEntityIndex != null) {
+            chunkEntityIndex.remove(this);
         }
 
-        ChunkRepository repo = Server.chunkManager.load(newChunk);
+        ChunkEntityIndex repo = Server.chunkManager.load(newChunk);
         repo.add(this);
         currentChunk = newChunk;
-        chunkRepository = repo;
+        chunkEntityIndex = repo;
     }
 
     public void removeFromChunk() {
-        if (chunkRepository != null) {
-            chunkRepository.remove(this);
+        if (chunkEntityIndex != null) {
+            chunkEntityIndex.remove(this);
         }
-        chunkRepository = null;
+        chunkEntityIndex = null;
         currentChunk = null;
     }
 

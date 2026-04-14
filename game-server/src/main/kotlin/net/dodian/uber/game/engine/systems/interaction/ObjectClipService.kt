@@ -1,9 +1,9 @@
 package net.dodian.uber.game.engine.systems.interaction
 
-import net.dodian.cache.`object`.GameObjectData
+import net.dodian.cache.objects.GameObjectData
 import net.dodian.uber.game.model.Position
-import net.dodian.uber.game.model.`object`.DoorRegistry
-import net.dodian.uber.game.model.`object`.RS2Object
+import net.dodian.uber.game.model.objects.DoorRegistry
+import net.dodian.uber.game.model.objects.WorldObject
 import net.dodian.uber.game.engine.systems.cache.CollisionBuildService
 import net.dodian.uber.game.engine.systems.pathing.collision.CollisionDirection
 import net.dodian.uber.game.engine.systems.pathing.collision.CollisionManager
@@ -25,7 +25,7 @@ object ObjectClipService {
     private val appliedClips = ConcurrentHashMap<String, AppliedClip>()
 
     @JvmStatic
-    fun bootstrapStartupOverlays(worldObjects: Iterable<RS2Object>) {
+    fun bootstrapStartupOverlays(worldObjects: Iterable<WorldObject>) {
         clearTrackedClips()
 
         var appliedWorldObjects = 0
@@ -34,7 +34,7 @@ object ObjectClipService {
                 continue
             }
             applyDecodedObject(
-                position = Position(worldObject.x, worldObject.y, 0),
+                position = Position(worldObject.x, worldObject.y, worldObject.z),
                 objectId = worldObject.id,
                 type = worldObject.type,
                 direction = worldObject.face,

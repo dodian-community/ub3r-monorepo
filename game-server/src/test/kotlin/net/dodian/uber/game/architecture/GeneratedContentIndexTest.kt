@@ -12,13 +12,13 @@ class GeneratedContentIndexTest {
     fun `generated command contents include expected module groups`() {
         val moduleNames = ContentModuleIndex.commandContents.map { it::class.java.name }.toSet()
 
-        assertTrue(moduleNames.any { it.endsWith("content.commands.dev.DevDebugCommands") }, "Expected dev command module in generated index")
+        assertTrue(moduleNames.any { it.endsWith("game.command.dev.DevDebugCommands") }, "Expected dev command module in generated index")
         assertTrue(moduleNames.any { it.endsWith("game.command.player.TravelCommands") }, "Expected canonical travel command module in generated index")
         assertTrue(moduleNames.any { it.endsWith("game.command.admin.BossCommands") }, "Expected canonical boss command module in generated index")
         assertTrue(moduleNames.any { it.endsWith("game.command.dev.ShopDevCommand") }, "Expected canonical shop dev command module in generated index")
-        assertTrue(moduleNames.any { it.endsWith("content.commands.beta.BetaOnlyCommands") }, "Expected beta command module in generated index")
-        assertTrue(moduleNames.any { it.endsWith("content.commands.player.PlayerCommands") }, "Expected player command module in generated index")
-        assertTrue(moduleNames.any { it.endsWith("content.commands.admin.StaffCommands") }, "Expected admin command module in generated index")
+        assertTrue(moduleNames.any { it.endsWith("game.command.beta.BetaOnlyCommands") }, "Expected beta command module in generated index")
+        assertTrue(moduleNames.any { it.endsWith("game.command.player.PlayerCommands") }, "Expected player command module in generated index")
+        assertTrue(moduleNames.any { it.endsWith("game.command.admin.StaffCommands") }, "Expected admin command module in generated index")
     }
 
     @Test
@@ -73,21 +73,21 @@ class GeneratedContentIndexTest {
 
         assertEquals(expectedSkills, skills, "Expected full gameplay skill plugin coverage")
 
-        assertTrue(moduleNames.any { it.endsWith("content.skills.agility.AgilitySkillPlugin") }, "Expected agility skill plugin in generated index")
-        assertTrue(moduleNames.any { it.endsWith("content.skills.cooking.CookingSkillPlugin") }, "Expected cooking skill plugin in generated index")
-        assertTrue(moduleNames.any { it.endsWith("content.skills.crafting.CraftingSkillPlugin") }, "Expected crafting skill plugin in generated index")
-        assertTrue(moduleNames.any { it.endsWith("content.skills.farming.FarmingSkillPlugin") }, "Expected farming skill plugin in generated index")
-        assertTrue(moduleNames.any { it.endsWith("content.skills.firemaking.FiremakingSkillPlugin") }, "Expected firemaking skill plugin in generated index")
-        assertTrue(moduleNames.any { it.endsWith("content.skills.fishing.FishingSkillPlugin") }, "Expected fishing skill plugin in generated index")
-        assertTrue(moduleNames.any { it.endsWith("content.skills.fletching.FletchingSkillPlugin") }, "Expected fletching skill plugin in generated index")
-        assertTrue(moduleNames.any { it.endsWith("content.skills.herblore.HerbloreSkillPlugin") }, "Expected herblore skill plugin in generated index")
-        assertTrue(moduleNames.any { it.endsWith("content.skills.mining.MiningSkillPlugin") }, "Expected mining skill plugin in generated index")
-        assertTrue(moduleNames.any { it.endsWith("content.skills.prayer.PrayerSkillPlugin") }, "Expected prayer skill plugin in generated index")
-        assertTrue(moduleNames.any { it.endsWith("content.skills.runecrafting.RunecraftingSkillPlugin") }, "Expected runecrafting skill plugin in generated index")
-        assertTrue(moduleNames.any { it.endsWith("content.skills.slayer.SlayerSkillPlugin") }, "Expected slayer skill plugin in generated index")
-        assertTrue(moduleNames.any { it.endsWith("content.skills.smithing.SmithingSkillPlugin") }, "Expected smithing skill plugin in generated index")
-        assertTrue(moduleNames.any { it.endsWith("content.skills.thieving.ThievingSkillPlugin") }, "Expected thieving skill plugin in generated index")
-        assertTrue(moduleNames.any { it.endsWith("content.skills.woodcutting.WoodcuttingSkillPlugin") }, "Expected woodcutting skill plugin in generated index")
+        assertTrue(moduleNames.any { it.endsWith("game.skill.agility.AgilitySkillPlugin") }, "Expected agility skill plugin in generated index")
+        assertTrue(moduleNames.any { it.endsWith("game.skill.cooking.CookingSkillPlugin") }, "Expected cooking skill plugin in generated index")
+        assertTrue(moduleNames.any { it.endsWith("game.skill.crafting.CraftingSkillPlugin") }, "Expected crafting skill plugin in generated index")
+        assertTrue(moduleNames.any { it.endsWith("game.skill.farming.FarmingSkillPlugin") }, "Expected farming skill plugin in generated index")
+        assertTrue(moduleNames.any { it.endsWith("game.skill.firemaking.FiremakingSkillPlugin") }, "Expected firemaking skill plugin in generated index")
+        assertTrue(moduleNames.any { it.endsWith("game.skill.fishing.FishingSkillPlugin") }, "Expected fishing skill plugin in generated index")
+        assertTrue(moduleNames.any { it.endsWith("game.skill.fletching.FletchingSkillPlugin") }, "Expected fletching skill plugin in generated index")
+        assertTrue(moduleNames.any { it.endsWith("game.skill.herblore.HerbloreSkillPlugin") }, "Expected herblore skill plugin in generated index")
+        assertTrue(moduleNames.any { it.endsWith("game.skill.mining.MiningSkillPlugin") }, "Expected mining skill plugin in generated index")
+        assertTrue(moduleNames.any { it.endsWith("game.skill.prayer.PrayerSkillPlugin") }, "Expected prayer skill plugin in generated index")
+        assertTrue(moduleNames.any { it.endsWith("game.skill.runecrafting.RunecraftingSkillPlugin") }, "Expected runecrafting skill plugin in generated index")
+        assertTrue(moduleNames.any { it.endsWith("game.skill.slayer.SlayerSkillPlugin") }, "Expected slayer skill plugin in generated index")
+        assertTrue(moduleNames.any { it.endsWith("game.skill.smithing.SmithingSkillPlugin") }, "Expected smithing skill plugin in generated index")
+        assertTrue(moduleNames.any { it.endsWith("game.skill.thieving.ThievingSkillPlugin") }, "Expected thieving skill plugin in generated index")
+        assertTrue(moduleNames.any { it.endsWith("game.skill.woodcutting.WoodcuttingSkillPlugin") }, "Expected woodcutting skill plugin in generated index")
     }
 
     @Test
@@ -104,21 +104,21 @@ class GeneratedContentIndexTest {
     }
 
     @Test
-    fun `plugin scanning roots use canonical domains with explicit legacy compatibility list`() {
+    fun `plugin scanning roots use canonical domains only`() {
         val canonical = ContentModuleIndex.canonicalScanPackages.toSet()
-        val legacy = ContentModuleIndex.legacyCompatScanPackages.toSet()
 
         val expectedCanonical = setOf(
             "net.dodian.uber.game.api.plugin",
             "net.dodian.uber.game.skill",
             "net.dodian.uber.game.npc",
             "net.dodian.uber.game.item",
-            "net.dodian.uber.game.object",
+            "net.dodian.uber.game.objects",
             "net.dodian.uber.game.combat",
             "net.dodian.uber.game.social",
             "net.dodian.uber.game.ui",
             "net.dodian.uber.game.command",
             "net.dodian.uber.game.activity",
+            "net.dodian.uber.game.shop",
             "net.dodian.uber.game.world",
             "net.dodian.uber.game.player",
             "net.dodian.uber.game.engine.event.bootstrap",
@@ -126,7 +126,9 @@ class GeneratedContentIndexTest {
 
         assertTrue(canonical.containsAll(expectedCanonical), "canonical scan roots missing expected domains")
         assertFalse(canonical.contains("net.dodian.uber.game.content"), "broad legacy content root must not be canonical")
-        assertFalse(legacy.isEmpty(), "legacy compatibility roots should be explicit while migration is in flight")
-        assertTrue(legacy.all { it.startsWith("net.dodian.uber.game.content.") || it.startsWith("net.dodian.uber.game.engine.systems.interaction.") })
+        assertTrue(
+            canonical.none { it.startsWith("net.dodian.uber.game.content.") },
+            "canonical roots must not include legacy content package roots",
+        )
     }
 }

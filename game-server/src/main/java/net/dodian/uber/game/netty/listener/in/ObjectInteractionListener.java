@@ -1,8 +1,9 @@
 package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
-import net.dodian.cache.object.GameObjectData;
-import net.dodian.cache.object.GameObjectDef;
+import net.dodian.cache.objects.GameObjectData;
+import net.dodian.cache.objects.GameObjectDef;
+import net.dodian.uber.game.engine.metrics.PacketRejectTelemetry;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
@@ -18,13 +19,14 @@ import net.dodian.uber.game.engine.systems.interaction.scheduler.InteractionTask
 import net.dodian.uber.game.engine.systems.interaction.scheduler.ObjectInteractionTask;
 import net.dodian.uber.game.engine.systems.net.PacketMagicService;
 import net.dodian.uber.game.engine.systems.net.PacketObjectService;
-import net.dodian.utilities.Misc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @PacketHandler(opcode = 132)
 public class ObjectInteractionListener implements PacketListener {
     private static final Logger logger = LoggerFactory.getLogger(ObjectInteractionListener.class);
+    private static final int MIN_COORD = -1;
+    private static final int MAX_COORD = 16382;
 
     static {
         ObjectInteractionListener listener = new ObjectInteractionListener();
@@ -73,6 +75,7 @@ public class ObjectInteractionListener implements PacketListener {
     private void handleClick(Client client, GamePacket packet, int option) {
         DecodedObjectClick decoded = decodeClickPacket(packet, option);
         if (decoded == null) {
+            PacketRejectTelemetry.record(packet.opcode(), "decode_failed");
             logger.warn("Object click packet decode failed option={} player={}", option, client.getPlayerName());
             return;
         }
@@ -80,6 +83,18 @@ public class ObjectInteractionListener implements PacketListener {
         final int objectId = decoded.objectId;
         final int objectX = decoded.objectX;
         final int objectY = decoded.objectY;
+        if (!isValidObjectClick(objectId, objectX, objectY)) {
+            PacketRejectTelemetry.record(packet.opcode(), "invalid_object_click");
+            logger.debug(
+                "Rejected invalid object click player={} option={} objectId={} x={} y={}",
+                client.getPlayerName(),
+                option,
+                objectId,
+                objectX,
+                objectY
+            );
+            return;
+        }
 
         PacketObjectService.handleObjectClick(client, packet.opcode(), option, objectId, objectX, objectY);
     }
@@ -87,6 +102,7 @@ public class ObjectInteractionListener implements PacketListener {
     private void handleItemOnObject(Client client, GamePacket packet) {
         ByteBuf buf = packet.payload();
         if (buf.readableBytes() < 12) {
+            PacketRejectTelemetry.record(packet.opcode(), "short_payload");
             logger.warn("ItemOnObject packet too short for player={}", client.getPlayerName());
             return;
         }
@@ -97,6 +113,19 @@ public class ObjectInteractionListener implements PacketListener {
         final int itemSlot = readLEShort(buf);
         final int objectX = readLEShortA(buf);
         final int itemId = buf.readShort();
+        if (!isValidObjectClick(objectId, objectX, objectY) || itemSlot < 0 || itemId < 0) {
+            PacketRejectTelemetry.record(packet.opcode(), "invalid_item_on_object");
+            logger.debug(
+                "Rejected invalid item-on-object player={} objectId={} x={} y={} itemSlot={} itemId={}",
+                client.getPlayerName(),
+                objectId,
+                objectX,
+                objectY,
+                itemSlot,
+                itemId
+            );
+            return;
+        }
 
         PacketObjectService.handleItemOnObject(client, packet.opcode(), interfaceId, objectId, objectX, objectY, itemSlot, itemId);
     }
@@ -104,6 +133,7 @@ public class ObjectInteractionListener implements PacketListener {
     private void handleMagicOnObject(Client client, GamePacket packet) {
         ByteBuf buf = packet.payload();
         if (buf.readableBytes() < 8) {
+            PacketRejectTelemetry.record(packet.opcode(), "short_payload");
             logger.warn("MagicOnObject packet too short for player={}", client.getPlayerName());
             return;
         }
@@ -112,6 +142,18 @@ public class ObjectInteractionListener implements PacketListener {
         final int spellId = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.ADD);
         final int objectY = ByteBufReader.readShortSigned(buf, ByteOrder.LITTLE, ValueType.ADD);
         final int objectId = ByteBufReader.readShortUnsigned(buf, ByteOrder.LITTLE, ValueType.ADD) - 128;
+        if (!isValidObjectClick(objectId, objectX, objectY) || spellId < 0) {
+            PacketRejectTelemetry.record(packet.opcode(), "invalid_magic_on_object");
+            logger.debug(
+                "Rejected invalid magic-on-object player={} objectId={} x={} y={} spellId={}",
+                client.getPlayerName(),
+                objectId,
+                objectX,
+                objectY,
+                spellId
+            );
+            return;
+        }
 
         PacketMagicService.handleMagicOnObject(client, packet.opcode(), objectX, objectY, objectId, spellId);
     }
@@ -191,6 +233,12 @@ public class ObjectInteractionListener implements PacketListener {
         int low = (buf.readUnsignedByte() - 128) & 0xFF;
         int high = buf.readUnsignedByte();
         return (high << 8) | low;
+    }
+
+    private static boolean isValidObjectClick(int objectId, int objectX, int objectY) {
+        return objectId >= 0 &&
+            objectX >= MIN_COORD && objectX <= MAX_COORD &&
+            objectY >= MIN_COORD && objectY <= MAX_COORD;
     }
 
     private static void safeRegister(int opcode, PacketListener listener) {

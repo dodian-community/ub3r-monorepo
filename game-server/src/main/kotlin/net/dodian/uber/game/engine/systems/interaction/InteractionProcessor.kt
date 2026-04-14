@@ -1,13 +1,12 @@
 package net.dodian.uber.game.engine.systems.interaction
 
 import net.dodian.uber.game.Server
-import net.dodian.cache.`object`.GameObjectData
-import net.dodian.cache.`object`.GameObjectDef
-import net.dodian.uber.game.content.combat.getAttackStyle
+import net.dodian.cache.objects.GameObjectData
+import net.dodian.cache.objects.GameObjectDef
+import net.dodian.uber.game.combat.getAttackStyle
 import net.dodian.uber.game.engine.systems.interaction.objects.ObjectContentRegistry
 import net.dodian.uber.game.engine.systems.interaction.objects.ObjectInteractionService
 import net.dodian.uber.game.engine.systems.interaction.npcs.NpcContentDispatcher
-import net.dodian.uber.game.engine.systems.interaction.npcs.NpcClickMetrics
 import net.dodian.uber.game.engine.systems.interaction.items.ItemOnNpcContentService
 import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.events.item.ItemOnNpcEvent
@@ -16,12 +15,10 @@ import net.dodian.uber.game.events.magic.MagicOnPlayerEvent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
-import net.dodian.uber.game.model.`object`.GlobalObject
-import net.dodian.uber.game.model.`object`.Object as WorldObject
-import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.model.`object`.RS2Object
-import net.dodian.uber.game.content.combat.CombatIntent
-import net.dodian.uber.game.content.combat.CombatStartService
+import net.dodian.uber.game.model.objects.GlobalObject
+import net.dodian.uber.game.model.objects.WorldObject
+import net.dodian.uber.game.engine.systems.combat.CombatIntent
+import net.dodian.uber.game.engine.systems.combat.CombatStartService
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancellationService
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.engine.systems.interaction.scheduler.InteractionExecutionResult
@@ -69,18 +66,15 @@ object InteractionProcessor {
         val startNs = System.nanoTime()
         val npc = Server.npcManager.getNpc(intent.npcIndex)
         if (npc == null) {
-            NpcClickMetrics.recordRejected("npc_not_found_runtime", intent.opcode, intent.option, intent.npcIndex, player.playerName)
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
 
         if (player.randomed || player.UsingAgility) {
-            NpcClickMetrics.recordRejected("blocked_state_runtime", intent.opcode, intent.option, intent.npcIndex, player.playerName)
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
         if (intent.option != NPC_ATTACK_OPTION && !npc.isAlive) {
-            NpcClickMetrics.recordRejected("npc_dead", intent.opcode, intent.option, intent.npcIndex, player.playerName)
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
@@ -95,11 +89,9 @@ object InteractionProcessor {
         val legendsGuardFrontLane = isLegendsGuardFrontLaneInteraction(player, npc, intent.option)
         val routeStart = System.nanoTime()
         if (!legendsGuardFrontLane && !player.goodDistanceEntity(npc, range)) {
-            NpcClickMetrics.recordWait("out_of_range", intent.option, npc.id, intent.npcIndex, player.playerName)
             return InteractionExecutionResult.WAITING
         }
         if (npc.position.withinDistance(player.position, 0)) {
-            NpcClickMetrics.recordWait("overlap_tile", intent.option, npc.id, intent.npcIndex, player.playerName)
             return InteractionExecutionResult.WAITING
         }
         if (intent.option != NPC_ATTACK_OPTION && !legendsGuardFrontLane) {
@@ -117,13 +109,6 @@ object InteractionProcessor {
                 NPC_ATTACK_OPTION -> handleNpcAttack(player, npc)
                 else -> DispatchTiming(false, 0L, 0L, null)
             }
-        NpcClickMetrics.recordDispatch(
-            option = intent.option,
-            npcId = npc.id,
-            handled = timing.handled,
-            handlerName = timing.handlerName,
-            playerName = player.playerName,
-        )
         clear(player)
         slowLogIfNeeded(
             player,
@@ -206,15 +191,16 @@ object InteractionProcessor {
             if (player.adding) {
                 // Preserve legacy debug behavior.
                 player.objects.add(
-                    RS2Object(
+                    WorldObject(
                         intent.objectId,
                         targetPosition.x,
                         targetPosition.y,
+                        targetPosition.z,
                         1,
                     ),
                 )
             }
-            if (System.currentTimeMillis() < player.walkBlock || player.genie || player.antique) {
+            if ((player.isWalkBlocked() && !player.UsingAgility) || player.genie || player.antique) {
                 clear(player)
                 return InteractionExecutionResult.CANCELLED
             }
@@ -230,15 +216,16 @@ object InteractionProcessor {
         } else if (intent.option == 2) {
             if (player.adding) {
                 player.objects.add(
-                    RS2Object(
+                    WorldObject(
                         intent.objectId,
                         targetPosition.x,
                         targetPosition.y,
+                        targetPosition.z,
                         2,
                     ),
                 )
             }
-            if (System.currentTimeMillis() < player.walkBlock) {
+            if (player.isWalkBlocked()) {
                 clear(player)
                 return InteractionExecutionResult.CANCELLED
             }
@@ -438,8 +425,12 @@ object InteractionProcessor {
                 fallbackData = intent.objectData,
                 fallbackDef = intent.objectDef,
             )
+        val skillMagicOnObjectBinding = PluginRegistry.currentSkills().magicOnObjectBinding(intent.objectId, intent.spellId)
         val policy =
-            ObjectContentRegistry.resolvePolicy(
+            SkillInteractionDispatcher.resolveMagicOnObjectPolicy(
+                objectId = intent.objectId,
+                spellId = intent.spellId,
+            ) ?: ObjectContentRegistry.resolvePolicy(
                 objectId = intent.objectId,
                 position = targetPosition,
                 interactionType = ObjectInteractionPolicy.InteractionType.MAGIC,
@@ -458,11 +449,17 @@ object InteractionProcessor {
                 resolveDistanceMode(policy.distanceRule),
             ) == null
         ) {
+            skillMagicOnObjectBinding?.let {
+                SkillPolicyMetrics.record(it.preset, SkillPolicyRoute.MAGIC_ON_OBJECT, SkillPolicyResult.POLICY_REJECT)
+            }
             return InteractionExecutionResult.WAITING
         }
         val routeNs = System.nanoTime() - routeStart
 
         if (!isSettleGateSatisfied(player, intent, policy)) {
+            skillMagicOnObjectBinding?.let {
+                SkillPolicyMetrics.record(it.preset, SkillPolicyRoute.MAGIC_ON_OBJECT, SkillPolicyResult.SETTLE_WAIT)
+            }
             return InteractionExecutionResult.WAITING
         }
 
@@ -496,6 +493,16 @@ object InteractionProcessor {
                     packetOpcode = intent.opcode,
                 ),
             )
+        if (skillMagicOnObjectBinding != null &&
+            timing.handled &&
+            timing.handlerName != SkillInteractionDispatcher::class.java.name
+        ) {
+            SkillPolicyMetrics.record(
+                skillMagicOnObjectBinding.preset,
+                SkillPolicyRoute.MAGIC_ON_OBJECT,
+                SkillPolicyResult.ROUTE_BYPASS_REJECT,
+            )
+        }
         clear(player)
         slowLogIfNeeded(
             player,
@@ -697,7 +704,6 @@ object InteractionProcessor {
 
     private fun handleNpcClick3(player: Client, npc: net.dodian.uber.game.model.entity.npc.Npc): DispatchTiming {
         if (player.isBusy) {
-            NpcClickMetrics.recordRejected("player_busy", 21, 3, npc.slot, player.playerName)
             return DispatchTiming(false, 0L, 0L, null)
         }
         PlayerActionCancellationService.cancel(player, PlayerActionCancelReason.NPC_INTERACTION, false, false, false, true)
@@ -708,7 +714,6 @@ object InteractionProcessor {
 
     private fun handleNpcClick4(player: Client, npc: net.dodian.uber.game.model.entity.npc.Npc): DispatchTiming {
         if (player.isBusy) {
-            NpcClickMetrics.recordRejected("player_busy", 18, 4, npc.slot, player.playerName)
             return DispatchTiming(false, 0L, 0L, null)
         }
         player.setInteractionAnchor(npc.position.x, npc.position.y, npc.position.z)

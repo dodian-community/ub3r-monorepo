@@ -3,7 +3,7 @@ package net.dodian.uber.game.engine.processing
 import java.util.ArrayList
 import net.dodian.uber.game.engine.util.Misc
 import net.dodian.uber.game.model.Position
-import net.dodian.uber.game.content.skills.thieving.PyramidPlunder
+import net.dodian.uber.game.skill.thieving.PyramidPlunder
 
 class PlunderDoorProcessor : Runnable {
     private var hourTick = 4

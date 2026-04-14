@@ -1,6 +1,6 @@
 package net.dodian.uber.game.model.entity.npc
 
-import net.dodian.utilities.Misc
+import net.dodian.uber.game.engine.util.Misc
 
 object NpcDropMath {
     @JvmStatic

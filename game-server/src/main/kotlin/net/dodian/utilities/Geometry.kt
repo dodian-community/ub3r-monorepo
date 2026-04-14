@@ -1,9 +1,9 @@
 package net.dodian.utilities
 
-import net.dodian.cache.`object`.GameObjectDef
+import net.dodian.cache.objects.GameObjectDef
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.Position
-import net.dodian.uber.game.model.`object`.DoorRegistry
+import net.dodian.uber.game.model.objects.DoorRegistry
 
 object Geometry {
     @JvmStatic

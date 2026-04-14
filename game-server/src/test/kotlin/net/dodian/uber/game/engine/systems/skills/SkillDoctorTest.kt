@@ -1,6 +1,6 @@
 package net.dodian.uber.game.engine.systems.skills
 
-import net.dodian.uber.game.content.skills.runtime.parity.SkillDoctor
+import net.dodian.uber.game.skill.runtime.parity.SkillDoctor
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 

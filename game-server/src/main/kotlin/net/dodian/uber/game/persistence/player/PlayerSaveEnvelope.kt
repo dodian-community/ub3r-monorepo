@@ -3,7 +3,7 @@ package net.dodian.uber.game.persistence.player
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Friend
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.model.player.skills.prayer.Prayers
+import net.dodian.uber.game.skill.prayer.PrayerManager
 import net.dodian.uber.game.persistence.player.PlayerSaveReason
 
 data class ItemSlotEntry(
@@ -64,7 +64,7 @@ data class PlayerSaveEnvelope(
                 totalXp += experience
             }
             val prayerButtons =
-                Prayers.Prayer.values()
+                PrayerManager.Prayer.values()
                     .filter { prayer -> client.prayerManager.isPrayerOn(prayer) }
                     .map { it.buttonId }
                     .toIntArray()

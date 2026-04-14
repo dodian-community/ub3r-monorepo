@@ -102,7 +102,7 @@ final class PlayerStats {
         pray(-amount);
         if (getCurrentPrayer() <= 0) {
             setCurrentPrayer(0);
-            owner.prayers.reset();
+            owner.prayerManager.reset();
             ((Client) owner).send(new net.dodian.uber.game.netty.listener.out.SendMessage("<col=8B8000>Your prayer has ran out! Please recharge at a nearby altar!"));
         }
     }

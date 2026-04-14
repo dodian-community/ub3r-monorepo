@@ -1,7 +1,7 @@
 package net.dodian.uber.game.engine.systems.interaction.items
 
 import net.dodian.uber.game.api.plugin.ContentModuleIndex
-import net.dodian.uber.game.content.items.ItemContent
+import net.dodian.uber.game.item.ItemContent
 import net.dodian.uber.game.api.plugin.ContentBootstrap
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean

@@ -1,12 +1,12 @@
 package net.dodian.uber.game.engine.systems.interaction
 
-import net.dodian.cache.`object`.GameObjectData
-import net.dodian.cache.`object`.GameObjectDef
+import net.dodian.cache.objects.GameObjectData
+import net.dodian.cache.objects.GameObjectDef
 import net.dodian.uber.game.engine.util.Misc
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.`object`.GlobalObject
-import net.dodian.uber.game.model.`object`.Object as GameObject
+import net.dodian.uber.game.model.objects.GlobalObject
+import net.dodian.uber.game.model.objects.WorldObject
 import kotlin.math.abs
 
 /**
@@ -42,7 +42,7 @@ object ObjectInteractionDistance {
             return resolveNearestBoundaryDistancePosition(client, walkTo, objectData, def, objectId, false)
         }
 
-        val objectAtTile = GameObject(objectId, walkTo.x, walkTo.y, walkTo.z, 10)
+        val objectAtTile = WorldObject(objectId, walkTo.x, walkTo.y, walkTo.z, 10)
         if (def != null && !GlobalObject.hasGlobalObject(objectAtTile)) {
             if (objectData != null) {
                 objectPosition = Misc.goodDistanceObject(

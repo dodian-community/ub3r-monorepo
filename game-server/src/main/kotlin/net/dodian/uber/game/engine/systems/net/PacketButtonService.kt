@@ -1,6 +1,6 @@
 package net.dodian.uber.game.engine.systems.net
 
-import net.dodian.uber.game.content.skills.smithing.SmithingData
+import net.dodian.uber.game.skill.smithing.SmithingData
 import net.dodian.uber.game.model.entity.player.Client
 
 /**

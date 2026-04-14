@@ -1,7 +1,7 @@
 package net.dodian.uber.game.model
 
 import net.dodian.uber.game.model.chunk.Chunk
-import net.dodian.utilities.Misc
+import net.dodian.uber.game.engine.util.Misc
 import kotlin.jvm.JvmName
 
 class Position @JvmOverloads constructor(x: Int = 2611, y: Int = 3093, z: Int = 0) {
