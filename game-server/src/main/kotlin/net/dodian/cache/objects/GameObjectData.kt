@@ -16,6 +16,10 @@ class GameObjectData(
     private val blockWalk: Int = if (solid) 2 else 0,
     private val blockRange: Boolean = blockWalk != 0,
     private val breakRouteFinding: Boolean = false,
+    val interactionFaceMask: Int = 0,
+    val varbitId: Int = -1,
+    val varpId: Int = -1,
+    val childIds: IntArray? = null,
 ) {
     fun unknown(): Boolean = unknownValue
     fun getSizeX(rotation: Int): Int = if (rotation == 1 || rotation == 3) sizeY else sizeX
@@ -84,6 +88,10 @@ class GameObjectData(
                 blockWalk = 0,
                 blockRange = false,
                 breakRouteFinding = false,
+                interactionFaceMask = 0,
+                varbitId = -1,
+                varpId = -1,
+                childIds = null,
             )
         }
     }

@@ -16,7 +16,9 @@ data class DecodedMapTile(
     val attributes: Int,
     val underlay: Int,
 ) {
-    fun isBlocked(): Boolean = (attributes and BLOCKED) == BLOCKED
+    fun isBlocked(): Boolean = (attributes and BLOCKED) == BLOCKED || isWater()
+
+    fun isWater(): Boolean = overlay == 6
 
     fun isBridge(): Boolean = (attributes and BRIDGE) == BRIDGE
 

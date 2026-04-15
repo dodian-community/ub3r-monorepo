@@ -66,6 +66,10 @@ object ObjectDefinitionDecoder {
         var breakRouteFinding = false
         var hasModelData = false
         var firstModelType: Int? = null
+        var interactionFaceMask = 0
+        var varbitId = -1
+        var varpId = -1
+        var childIds: IntArray? = null
         val interactions = arrayOfNulls<String>(9)
 
         while (true) {
@@ -93,6 +97,10 @@ object ObjectDefinitionDecoder {
                         blockWalk = blockWalk,
                         blockRange = blockRange,
                         breakRouteFinding = breakRouteFinding,
+                        interactionFaceMask = interactionFaceMask,
+                        varbitId = varbitId,
+                        varpId = varpId,
+                        childIds = childIds,
                     )
                 }
 
@@ -135,7 +143,8 @@ object ObjectDefinitionDecoder {
                 21, 22, 23, 62, 64, 89 -> Unit
                 27 -> blockWalk = 1
                 24 -> data.skip(2)
-                28, 29, 39, 69 -> data.skip(1)
+                28, 29, 39 -> data.skip(1)
+                69 -> interactionFaceMask = data.readUnsignedByte()
                 75, 81 -> supportItems = data.readUnsignedByte()
                 in 30..38 -> {
                     val action = data.readString()
@@ -164,14 +173,19 @@ object ObjectDefinitionDecoder {
                 74 -> breakRouteFinding = true
 
                 77, 92 -> {
-                    data.skip(2)
-                    data.skip(2)
+                    varbitId = data.readUnsignedShort()
+                    if (varbitId == 65535) varbitId = -1
+                    varpId = data.readUnsignedShort()
+                    if (varpId == 65535) varpId = -1
                     if (opcode == 92) {
-                        data.skip(2)
+                        data.readUnsignedShort() // ignore extra value
                     }
                     val childCount = data.readUnsignedByte()
-                    repeat(childCount + 1) {
-                        data.skip(2)
+                    childIds = IntArray(childCount + 1)
+                    repeat(childCount + 1) { index ->
+                        var childId = data.readUnsignedShort()
+                        if (childId == 65535) childId = -1
+                        childIds!![index] = childId
                     }
                 }
 

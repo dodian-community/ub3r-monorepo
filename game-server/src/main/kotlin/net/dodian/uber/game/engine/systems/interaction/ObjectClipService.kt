@@ -85,7 +85,7 @@ object ObjectClipService {
     @JvmStatic
     fun applyDecodedObject(position: Position, objectId: Int, type: Int, direction: Int, obj: GameObjectData?) {
         removeDecodedObject(position)
-        if (obj == null) {
+        if (obj == null || CollisionBuildService.ignoredObjectIds.contains(objectId)) {
             return
         }
         appliedClips[key(position)] = AppliedClip(position.copy(), objectId, type, direction, obj.isSolid())

@@ -312,7 +312,8 @@ final class PlayerMovementState {
             probe.getStaticOverridePresent(),
             probe.getRuntimeOverlayPresent(),
             probe.getObjectMatches().size(),
-            ClipProbeService.formatOverlapSummary(probe, 3)
+            ClipProbeService.formatOverlapSummary(probe, 10)
+
         );
         logger.info(
             "Blocked movement passageProbe player={} edge={}:{}->{}:{}:{} forward={} reverse={}",

@@ -781,6 +781,8 @@ object InteractionProcessor {
                 ObjectInteractionDistance.DistanceMode.POLICY_NEAREST_BOUNDARY_CARDINAL
             ObjectInteractionPolicy.DistanceRule.NEAREST_BOUNDARY_ANY ->
                 ObjectInteractionDistance.DistanceMode.POLICY_NEAREST_BOUNDARY_ANY
+            ObjectInteractionPolicy.DistanceRule.REACHABLE ->
+                ObjectInteractionDistance.DistanceMode.REACHABLE
         }
     }
 

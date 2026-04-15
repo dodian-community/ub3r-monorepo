@@ -22,6 +22,7 @@ object ObjectInteractionDistance {
         MAGIC,
         POLICY_NEAREST_BOUNDARY_CARDINAL,
         POLICY_NEAREST_BOUNDARY_ANY,
+        REACHABLE,
     }
 
     @JvmStatic
@@ -33,6 +34,21 @@ object ObjectInteractionDistance {
         def: GameObjectDef?,
         mode: DistanceMode,
     ): Position? {
+        if (mode == DistanceMode.REACHABLE) {
+            val reached = net.dodian.uber.game.engine.systems.pathing.collision.InteractionReachService.reachedObject(
+                client.position,
+                WorldObject(
+                    objectId,
+                    walkTo.x,
+                    walkTo.y,
+                    walkTo.z,
+                    def?.type ?: 10,
+                    def?.face ?: 0
+                )
+            )
+            return if (reached) client.position else null
+        }
+
         var objectPosition: Position? = null
 
         if (mode == DistanceMode.POLICY_NEAREST_BOUNDARY_CARDINAL) {
