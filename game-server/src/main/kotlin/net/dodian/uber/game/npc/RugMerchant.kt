@@ -85,7 +85,15 @@ internal object RugMerchant : NpcModule {
             }
             client.checkItemUpdate()
         } else {
-            client.showNPCChat(npcId, 594, arrayOf("You do not have enough coins to do this!", "You are currently missing ${missing - amount} coins."))
+            DialogueService.start(client) {
+                npcChat(
+                    npcId,
+                    DialogueEmote.EVIL3,
+                    "You do not have enough coins to do this!",
+                    "You are currently missing ${missing - amount} coins.",
+                )
+                finish()
+            }
             return
         }
 

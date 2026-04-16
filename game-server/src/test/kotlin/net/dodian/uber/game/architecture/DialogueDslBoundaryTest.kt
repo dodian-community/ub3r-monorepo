@@ -6,9 +6,10 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class DialogueDslBoundaryTest {
+    private val npcRoot = Path.of("src/main/kotlin/net/dodian/uber/game/npc")
     private val roots =
         listOf(
-            Path.of("src/main/kotlin/net/dodian/uber/game/npc"),
+            npcRoot,
             Path.of("src/main/kotlin/net/dodian/uber/game/skill"),
         )
 
@@ -63,6 +64,32 @@ class DialogueDslBoundaryTest {
         assertTrue(
             violations.isEmpty(),
             "Guarded dialogue modules must use DSL session steps only; remove legacy showNPCChat/showPlayerChat calls.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `npc modules avoid legacy chat api except explicit legacy registry exceptions`() {
+        val allowedLegacyUsage =
+            setOf(
+                Path.of("src/main/kotlin/net/dodian/uber/game/npc/DukeHoracio.kt"),
+            )
+
+        val violations = mutableListOf<String>()
+        Files.walk(npcRoot).use { paths ->
+            paths
+                .filter { Files.isRegularFile(it) && it.toString().endsWith(".kt") }
+                .forEach { file ->
+                    val source = Files.readString(file)
+                    val hasLegacyCalls = source.contains("showNPCChat(") || source.contains("showPlayerChat(")
+                    if (hasLegacyCalls && file !in allowedLegacyUsage) {
+                        violations += file.toString()
+                    }
+                }
+        }
+
+        assertTrue(
+            violations.isEmpty(),
+            "NPC modules should use DSL dialogue session steps; direct showNPCChat/showPlayerChat is blocked outside explicit legacy exceptions.\n${violations.joinToString("\n")}",
         )
     }
 }
