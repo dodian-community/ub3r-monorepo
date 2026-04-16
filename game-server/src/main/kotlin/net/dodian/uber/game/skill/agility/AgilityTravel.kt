@@ -5,6 +5,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.api.content.ContentTiming
+import net.dodian.uber.game.skill.agility.runtime.AgilityPassageOverlayService
 
 class AgilityTravel(private val c: Client) {
     private fun runLater(delayMs: Int, action: () -> Unit) {
@@ -17,6 +18,11 @@ class AgilityTravel(private val c: Client) {
         ContentTiming.runRepeatingMs(delayMs) {
             action()
         }
+    }
+
+    private fun queueAgilityWalk(deltaX: Int, deltaY: Int, durationMs: Long) {
+        AgilityPassageOverlayService.grantForDelta(c, deltaX, deltaY, durationMs)
+        c.AddToWalkCords(deltaX, deltaY, durationMs)
     }
 
     private fun startRide(initialCount: Int, beforeLoop: () -> Unit, tickHandler: (Int) -> Boolean) {
@@ -47,10 +53,10 @@ class AgilityTravel(private val c: Client) {
         c.faceNpc(-1)
         c.setMovementLocked(true)
         c.clearTabs()
-        c.AddToWalkCords(x, y, 600 + (600L * 35))
+        queueAgilityWalk(x, y, 600 + (600L * 35))
         startRide(if (extraStep) -1 else 0, {
             if (extraStep) {
-                c.AddToWalkCords(-1, 0, 600 + (600L * 35))
+                queueAgilityWalk(-1, 0, 600 + (600L * 35))
             }
         }) { count ->
             val countAbove = count > 0
@@ -74,7 +80,7 @@ class AgilityTravel(private val c: Client) {
                     }
                     if (count == 25) {
                         landed(c)
-                        c.AddToWalkCords(0, -1, 600)
+                        queueAgilityWalk(0, -1, 600)
                         c.sendMessage("Welcome to Pollnivneach.")
                         return@startRide false
                     }
@@ -87,7 +93,7 @@ class AgilityTravel(private val c: Client) {
                     }
                     if (count == 28) {
                         landed(c)
-                        c.AddToWalkCords(0, 1, 600)
+                        queueAgilityWalk(0, 1, 600)
                         c.sendMessage("Welcome to Nardah.")
                         return@startRide false
                     }
@@ -100,7 +106,7 @@ class AgilityTravel(private val c: Client) {
                     }
                     if (count == 31) {
                         landed(c)
-                        c.AddToWalkCords(-1, 0, 600)
+                        queueAgilityWalk(-1, 0, 600)
                         c.sendMessage("Welcome to Bedabin Camp.")
                         return@startRide false
                     }
@@ -132,10 +138,10 @@ class AgilityTravel(private val c: Client) {
         c.faceNpc(-1)
         c.setMovementLocked(true)
         c.clearTabs()
-        c.AddToWalkCords(x, y, 600 + (600L * 35))
+        queueAgilityWalk(x, y, 600 + (600L * 35))
         startRide(if (extraStep) -1 else 0, {
             if (extraStep) {
-                c.AddToWalkCords(1, 1, 600 + (600L * 35))
+                queueAgilityWalk(1, 1, 600 + (600L * 35))
             }
         }) { count ->
             val countAbove = count > 0
@@ -177,7 +183,7 @@ class AgilityTravel(private val c: Client) {
                     }
                     if (count == 25) {
                         landed(c)
-                        c.AddToWalkCords(0, 1, 600)
+                        queueAgilityWalk(0, 1, 600)
                         c.sendMessage("Welcome to Nardah.")
                         false
                     } else {
@@ -192,7 +198,7 @@ class AgilityTravel(private val c: Client) {
                     }
                     if (count == 28) {
                         landed(c)
-                        c.AddToWalkCords(-1, 0, 600)
+                        queueAgilityWalk(-1, 0, 600)
                         c.sendMessage("Welcome to Bedabin Camp.")
                         false
                     } else {
@@ -207,7 +213,7 @@ class AgilityTravel(private val c: Client) {
                     }
                     if (count == 31) {
                         landed(c)
-                        c.AddToWalkCords(0, -1, 600)
+                        queueAgilityWalk(0, -1, 600)
                         c.sendMessage("Welcome to Sophanem.")
                         false
                     } else {
@@ -239,10 +245,10 @@ class AgilityTravel(private val c: Client) {
         c.faceNpc(-1)
         c.setMovementLocked(true)
         c.clearTabs()
-        c.AddToWalkCords(x, y, 600 + (600L * 35))
+        queueAgilityWalk(x, y, 600 + (600L * 35))
         startRide(if (extraStep) -1 else 0, {
             if (extraStep) {
-                c.AddToWalkCords(0, -1, 600 + (600L * 35))
+                queueAgilityWalk(0, -1, 600 + (600L * 35))
             }
         }) { count ->
             val countAbove = count > 0
@@ -270,7 +276,7 @@ class AgilityTravel(private val c: Client) {
                     }
                     if (count == 25) {
                         landed(c)
-                        c.AddToWalkCords(0, -1, 600)
+                        queueAgilityWalk(0, -1, 600)
                         c.sendMessage("Welcome to Pollnivneach.")
                         false
                     } else {
@@ -285,7 +291,7 @@ class AgilityTravel(private val c: Client) {
                     }
                     if (count == 28) {
                         landed(c)
-                        c.AddToWalkCords(0, -1, 600)
+                        queueAgilityWalk(0, -1, 600)
                         c.sendMessage("Welcome to Sophanem.")
                         false
                     } else {
@@ -300,7 +306,7 @@ class AgilityTravel(private val c: Client) {
                     }
                     if (count == 31) {
                         landed(c)
-                        c.AddToWalkCords(-1, 0, 600)
+                        queueAgilityWalk(-1, 0, 600)
                         c.sendMessage("Welcome to Bedabin Camp.")
                         false
                     } else {
@@ -331,7 +337,7 @@ class AgilityTravel(private val c: Client) {
         c.faceNpc(-1)
         c.setMovementLocked(true)
         c.clearTabs()
-        c.AddToWalkCords(x, y, 600 + (600L * 35L))
+        queueAgilityWalk(x, y, 600 + (600L * 35L))
         var count = 0
         runRepeating(600) {
             count++
@@ -356,7 +362,7 @@ class AgilityTravel(private val c: Client) {
                     }
                     if (count == 25) {
                         landed(c)
-                        c.AddToWalkCords(0, -1, 600)
+                        queueAgilityWalk(0, -1, 600)
                         c.sendMessage("Welcome to Pollnivneach.")
                         false
                     } else {
@@ -371,7 +377,7 @@ class AgilityTravel(private val c: Client) {
                     }
                     if (count == 28) {
                         landed(c)
-                        c.AddToWalkCords(0, 1, 600)
+                        queueAgilityWalk(0, 1, 600)
                         c.sendMessage("Welcome to Nardah.")
                         false
                     } else {
@@ -386,7 +392,7 @@ class AgilityTravel(private val c: Client) {
                     }
                     if (count == 31) {
                         landed(c)
-                        c.AddToWalkCords(0, -1, 600)
+                        queueAgilityWalk(0, -1, 600)
                         c.sendMessage("Welcome to Sophanem.")
                         false
                     } else {

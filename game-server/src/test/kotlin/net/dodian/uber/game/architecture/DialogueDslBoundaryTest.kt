@@ -40,4 +40,29 @@ class DialogueDslBoundaryTest {
             "Dialogue branches must use session DSL chat steps only. Found mixed legacy chat + finish(closeInterfaces=false) in:\n${violations.joinToString("\n")}",
         )
     }
+
+    @Test
+    fun `high risk dialogue modules avoid legacy chat api entirely`() {
+        val guardedModules =
+            listOf(
+                Path.of("src/main/kotlin/net/dodian/uber/game/npc/SlayerMasterDialogue.kt"),
+                Path.of("src/main/kotlin/net/dodian/uber/game/npc/HerbloreNpcDialogue.kt"),
+                Path.of("src/main/kotlin/net/dodian/uber/game/npc/Saniboch.kt"),
+                Path.of("src/main/kotlin/net/dodian/uber/game/npc/TzhaarMejJal.kt"),
+            )
+
+        val violations =
+            guardedModules
+                .filter(Files::exists)
+                .filter { path ->
+                    val source = Files.readString(path)
+                    source.contains("showNPCChat(") || source.contains("showPlayerChat(")
+                }
+                .map(Path::toString)
+
+        assertTrue(
+            violations.isEmpty(),
+            "Guarded dialogue modules must use DSL session steps only; remove legacy showNPCChat/showPlayerChat calls.\n${violations.joinToString("\n")}",
+        )
+    }
 }

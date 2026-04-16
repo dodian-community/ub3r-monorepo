@@ -7,6 +7,10 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 
 internal object Saniboch : NpcModule {
+    private data class NpcReply(
+        val emote: DialogueEmote = DialogueEmote.DEFAULT,
+        val lines: Array<String>,
+    )
     // Stats: 2345: r=60 a=0 d=0 s=0 hp=0 rg=0 mg=0
 
     val entries: List<NpcSpawnDef> = listOf(
@@ -36,67 +40,20 @@ internal object Saniboch : NpcModule {
                         options(
                             title = "Select a payment option",
                             DialogueOption("Ship ticket") {
-                                action { c ->
-                                    if (c.checkUnlockPaid(0) > 0) {
-                                        c.showNPCChat(npc.id, 591, arrayOf("You have already paid me.", "Please step into my dungeon."))
-                                    } else if (c.getInvAmt(621) > 0 || c.getBankAmt(621) > 0) {
-                                        c.addUnlocks(0, "1", if (c.checkUnlock(0)) "1" else "0")
-                                        if (c.getInvAmt(621) > 0) c.deleteItem(621, 1) else c.deleteItemBank(621, 1)
-                                        c.checkItemUpdate()
-                                        c.showNPCChat(npc.id, 591, arrayOf("You can now step into the dungeon."))
-                                    } else {
-                                        c.showNPCChat(npc.id, 596, arrayOf("You need a ship ticket to enter my dungeon!"))
-                                    }
-                                }
+                                val reply = shipTicketReply(client)
+                                npcChat(npc.id, reply.emote, *reply.lines)
                                 finish()
                             },
                             DialogueOption("Coins") {
-                                action { c ->
-                                    val amount = c.getInvAmt(995).toLong() + c.getBankAmt(995)
-                                    val total = 300_000
-                                    if (amount >= total) {
-                                        c.addUnlocks(0, "1", if (c.checkUnlock(0)) "1" else "0")
-                                        val remain = total - c.getInvAmt(995)
-                                        c.deleteItem(995, total)
-                                        if (remain > 0) c.deleteItemBank(995, remain)
-                                        c.showNPCChat(npc.id, 591, arrayOf("You can now step into the dungeon."))
-                                    } else {
-                                        c.showNPCChat(npc.id, 596, arrayOf("You need at least ${total - amount} more coins to enter my dungeon!"))
-                                    }
-                                }
+                                val reply = coinPaymentReply(client)
+                                npcChat(npc.id, reply.emote, *reply.lines)
                                 finish()
                             },
                         )
                     },
                     DialogueOption("Permanent unlock") {
-                        action { c ->
-                            if (!c.checkUnlock(0)) {
-                                val maximumTickets = 10
-                                val minimumTicket = 1
-                                val ticketValue = 300_000
-                                var missing = (maximumTickets - minimumTicket) * ticketValue
-                                if (!c.playerHasItem(621, minimumTicket)) {
-                                    c.showNPCChat(npc.id, 591, arrayOf("You need a minimum of $minimumTicket ship ticket", "to unlock permanent!"))
-                                } else {
-                                    missing -= (c.getInvAmt(621) - minimumTicket) * ticketValue
-                                    if (missing > 0) {
-                                        if (c.getInvAmt(995) >= missing) {
-                                            c.deleteItem(621, kotlin.math.min(c.getInvAmt(621), maximumTickets))
-                                            c.deleteItem(995, missing)
-                                            c.addUnlocks(0, c.checkUnlockPaid(0).toString(), "1")
-                                            c.showNPCChat(npc.id, 591, arrayOf("Thank you for the payment.", "You may enter freely into my dungeon."))
-                                        } else {
-                                            c.showNPCChat(npc.id, 591, arrayOf("You do not have enough coins to do this!"))
-                                        }
-                                    } else {
-                                        c.deleteItem(621, maximumTickets)
-                                        c.addUnlocks(0, c.checkUnlockPaid(0).toString(), "1")
-                                        c.showNPCChat(npc.id, 591, arrayOf("Thank you for the ship tickets.", "You may enter freely into my dungeon."))
-                                    }
-                                    c.checkItemUpdate()
-                                }
-                            }
-                        }
+                        val reply = permanentUnlockReply(client)
+                        npcChat(npc.id, reply.emote, *reply.lines)
                         finish()
                     },
                     DialogueOption("Nevermind") {
@@ -111,5 +68,66 @@ internal object Saniboch : NpcModule {
 
     fun onSecondClick(client: Client, npc: Npc): Boolean {
         return onFirstClick(client, npc)
+    }
+
+    private fun shipTicketReply(client: Client): NpcReply {
+        if (client.checkUnlockPaid(0) > 0) {
+            return NpcReply(lines = arrayOf("You have already paid me.", "Please step into my dungeon."))
+        }
+        if (client.getInvAmt(621) > 0 || client.getBankAmt(621) > 0) {
+            client.addUnlocks(0, "1", if (client.checkUnlock(0)) "1" else "0")
+            if (client.getInvAmt(621) > 0) client.deleteItem(621, 1) else client.deleteItemBank(621, 1)
+            client.checkItemUpdate()
+            return NpcReply(lines = arrayOf("You can now step into the dungeon."))
+        }
+        return NpcReply(emote = DialogueEmote.DISTRESSED, lines = arrayOf("You need a ship ticket to enter my dungeon!"))
+    }
+
+    private fun coinPaymentReply(client: Client): NpcReply {
+        val amount = client.getInvAmt(995).toLong() + client.getBankAmt(995)
+        val total = 300_000
+        if (amount >= total) {
+            client.addUnlocks(0, "1", if (client.checkUnlock(0)) "1" else "0")
+            val remain = total - client.getInvAmt(995)
+            client.deleteItem(995, total)
+            if (remain > 0) client.deleteItemBank(995, remain)
+            return NpcReply(lines = arrayOf("You can now step into the dungeon."))
+        }
+        return NpcReply(
+            emote = DialogueEmote.DISTRESSED,
+            lines = arrayOf("You need at least ${total - amount} more coins to enter my dungeon!"),
+        )
+    }
+
+    private fun permanentUnlockReply(client: Client): NpcReply {
+        if (client.checkUnlock(0)) {
+            return NpcReply(lines = arrayOf("You can already enter freely."))
+        }
+        val maximumTickets = 10
+        val minimumTicket = 1
+        val ticketValue = 300_000
+        var missing = (maximumTickets - minimumTicket) * ticketValue
+        if (!client.playerHasItem(621, minimumTicket)) {
+            return NpcReply(lines = arrayOf("You need a minimum of $minimumTicket ship ticket", "to unlock permanent!"))
+        }
+
+        missing -= (client.getInvAmt(621) - minimumTicket) * ticketValue
+        val reply =
+            if (missing > 0) {
+                if (client.getInvAmt(995) >= missing) {
+                    client.deleteItem(621, kotlin.math.min(client.getInvAmt(621), maximumTickets))
+                    client.deleteItem(995, missing)
+                    client.addUnlocks(0, client.checkUnlockPaid(0).toString(), "1")
+                    NpcReply(lines = arrayOf("Thank you for the payment.", "You may enter freely into my dungeon."))
+                } else {
+                    NpcReply(lines = arrayOf("You do not have enough coins to do this!"))
+                }
+            } else {
+                client.deleteItem(621, maximumTickets)
+                client.addUnlocks(0, client.checkUnlockPaid(0).toString(), "1")
+                NpcReply(lines = arrayOf("Thank you for the ship tickets.", "You may enter freely into my dungeon."))
+            }
+        client.checkItemUpdate()
+        return reply
     }
 }

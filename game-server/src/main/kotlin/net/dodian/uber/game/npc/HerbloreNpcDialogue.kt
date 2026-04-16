@@ -66,7 +66,10 @@ internal object HerbloreNpcDialogue {
             }
         }
         if (client.herbOptions.isEmpty()) {
-            client.showNPCChat(npcId, DialogueEmote.LAUGH1.id, arrayOf("You got no herbs for me to clean!"))
+            DialogueService.start(client) {
+                npcChat(npcId, DialogueEmote.LAUGH1, "You got no herbs for me to clean!")
+                finish()
+            }
             return
         }
         client.setHerbOptions()
@@ -83,7 +86,10 @@ internal object HerbloreNpcDialogue {
             }
         }
         if (client.herbOptions.isEmpty()) {
-            client.showNPCChat(npcId, DialogueEmote.LAUGH1.id, arrayOf("You got no herbs for me to make into unfinish potions!"))
+            DialogueService.start(client) {
+                npcChat(npcId, DialogueEmote.LAUGH1, "You got no herbs for me to make into unfinish potions!")
+                finish()
+            }
             return
         }
         client.setHerbOptions()
@@ -92,7 +98,10 @@ internal object HerbloreNpcDialogue {
     @JvmStatic
     fun showBatchResultAndContinue(client: Client, npcId: Int, firstLine: String, secondLine: String) {
         if (client.herbOptions.isEmpty()) {
-            client.showNPCChat(npcId, DialogueEmote.ALMOST_CRYING.id, arrayOf(firstLine, secondLine))
+            DialogueService.start(client) {
+                npcChat(npcId, DialogueEmote.ALMOST_CRYING, firstLine, secondLine)
+                finish()
+            }
             return
         }
         DialogueService.start(client) {

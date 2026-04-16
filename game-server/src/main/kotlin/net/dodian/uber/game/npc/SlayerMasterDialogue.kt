@@ -36,7 +36,10 @@ internal object SlayerMasterDialogue {
     @JvmStatic
     fun assignTask(client: Client, npcId: Int) {
         val reply = assignTaskReply(client, npcId) ?: return
-        client.showNPCChat(npcId, reply.emote.id, reply.lines)
+        DialogueService.start(client) {
+            npcChat(npcId, reply.emote, *reply.lines)
+            finish()
+        }
     }
 
     @JvmStatic
@@ -58,7 +61,10 @@ internal object SlayerMasterDialogue {
         } else {
             arrayOf("You currently have no task.", "Speak to me again to get a new one!")
         }
-        client.showNPCChat(slayerMaster, DialogueEmote.DEFAULT.id, lines)
+        DialogueService.start(client) {
+            npcChat(slayerMaster, DialogueEmote.DEFAULT, *lines)
+            finish()
+        }
     }
 
     @JvmStatic

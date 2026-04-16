@@ -6,6 +6,7 @@ import net.dodian.uber.game.model.entity.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.skill.agility.runtime.AgilityPassageOverlayService
 import net.dodian.uber.game.skill.agility.runtime.AgilityTraversalProfiles
 import net.dodian.uber.game.skill.agility.runtime.AgilityTraversalService
 import net.dodian.uber.game.skill.runtime.SkillActionContext
@@ -46,6 +47,11 @@ class Agility(private val c: Client) {
         ContentTiming.runRepeatingMs(delayMs) {
             action()
         }
+    }
+
+    private fun queueAgilityWalk(deltaX: Int, deltaY: Int, durationMs: Long) {
+        AgilityPassageOverlayService.grantForDelta(c, deltaX, deltaY, durationMs)
+        c.AddToWalkCords(deltaX, deltaY, durationMs)
     }
 
     private fun isBusy(): Boolean = c.isMovementLocked
@@ -255,7 +261,7 @@ class Agility(private val c: Client) {
             c.setMovementLocked(true)
             val distance = 3549 - c.position.y
             c.setAgilityEmote(1501, 1501)
-            c.AddToWalkCords(0, distance, distance * -1L * 600L)
+            queueAgilityWalk(0, distance, distance * -1L * 600L)
             runLater(distance * -1 * 600) {
                 c.requestWeaponAnims()
                 giveEndExperience(400)
@@ -275,19 +281,19 @@ class Agility(private val c: Client) {
         c.setMovementLocked(true)
         val time = 7200
         if (c.position.y == 3547 || c.position.y == 3545) {
-            c.AddToWalkCords(1, 0, time.toLong())
+            queueAgilityWalk(1, 0, time.toLong())
             var stage = 0
             runRepeating(600) {
                 stage++
                 when {
                     stage == 1 -> {
-                        c.AddToWalkCords(0, if (c.position.y == 3547) -1 else 1, time.toLong())
+                        queueAgilityWalk(0, if (c.position.y == 3547) -1 else 1, time.toLong())
                         stage++
                         true
                     }
                     stage > 3 -> {
                         c.walkAnim = 762
-                        c.AddToWalkCords(-10, 0, time.toLong())
+                        queueAgilityWalk(-10, 0, time.toLong())
                         runLater(time) {
                             if (c.disconnected) {
                                 return@runLater
@@ -304,7 +310,7 @@ class Agility(private val c: Client) {
             }
         } else if (c.position.x == 2551 && c.position.y == 3546) {
             c.walkAnim = 762
-            c.AddToWalkCords(-10, 0, time.toLong())
+            queueAgilityWalk(-10, 0, time.toLong())
             runLater(time) {
                 c.requestWeaponAnims()
                 giveEndExperience(600)
@@ -345,7 +351,7 @@ class Agility(private val c: Client) {
         c.setMovementLocked(true)
         c.walkAnim = 756
         val time = 2400
-        c.AddToWalkCords(-4, 0, time.toLong())
+        queueAgilityWalk(-4, 0, time.toLong())
         runLater(time) {
             c.requestWeaponAnims()
             giveEndExperience(350)
@@ -443,7 +449,7 @@ class Agility(private val c: Client) {
                 val distance = 13
                 c.performAnimation(746, 0)
                 c.walkAnim = 747
-                c.AddToWalkCords(0, distance, (distance * 600).toLong())
+                queueAgilityWalk(0, distance, (distance * 600).toLong())
                 var part = 0
                 runRepeating(600) {
                     part++
@@ -473,7 +479,7 @@ class Agility(private val c: Client) {
             c.setMovementLocked(true)
             val distance = 3958 - c.position.y
             c.walkAnim = 1501
-            c.AddToWalkCords(0, distance, distance * 600L)
+            queueAgilityWalk(0, distance, distance * 600L)
             runLater(distance * 600) {
                 c.requestWeaponAnims()
                 giveEndExperience(500)
@@ -495,7 +501,7 @@ class Agility(private val c: Client) {
             c.setMovementLocked(true)
             c.setFocus(2996, 3960)
             c.walkAnim = 769
-            c.AddToWalkCords(-1, 0, 4200L)
+            queueAgilityWalk(-1, 0, 4200L)
             var parts = 0
             runRepeating(600) {
                 parts++
@@ -524,19 +530,19 @@ class Agility(private val c: Client) {
         val time = 5600
         c.setMovementLocked(true)
         if (c.position.y == 3944 || c.position.y == 3946) {
-            c.AddToWalkCords(1, 0, time.toLong())
+            queueAgilityWalk(1, 0, time.toLong())
             var stage = 0
             runRepeating(600) {
                 stage++
                 when {
                     stage == 1 -> {
-                        c.AddToWalkCords(0, if (c.position.y == 3944) 1 else -1, time.toLong())
+                        queueAgilityWalk(0, if (c.position.y == 3944) 1 else -1, time.toLong())
                         stage++
                         true
                     }
                     stage > 3 -> {
                         c.walkAnim = 762
-                        c.AddToWalkCords(-8, 0, time.toLong())
+                        queueAgilityWalk(-8, 0, time.toLong())
                         runLater(time) {
                             if (c.disconnected) {
                                 return@runLater
@@ -553,7 +559,7 @@ class Agility(private val c: Client) {
             }
         } else if (c.position.x == 3002 && c.position.y == 3945) {
             c.walkAnim = 762
-            c.AddToWalkCords(-8, 0, time.toLong())
+            queueAgilityWalk(-8, 0, time.toLong())
             runLater(time) {
                 c.requestWeaponAnims()
                 giveEndExperience(650)
@@ -573,7 +579,7 @@ class Agility(private val c: Client) {
             }
             c.setMovementLocked(true)
             c.walkAnim = 737
-            c.AddToWalkCords(0, -4, 2400L)
+            queueAgilityWalk(0, -4, 2400L)
             runLater(2400) {
                 c.requestWeaponAnims()
                 if (c.agilitySessionStage == 4) {
@@ -606,7 +612,7 @@ class Agility(private val c: Client) {
             } else {
                 0
             }
-        c.AddToWalkCords(
+        queueAgilityWalk(
             if (c.position.x == 2597) 1 else if (c.position.x == 2600) -1 else 0,
             if (c.position.y == 9488) 1 else if (c.position.y == 9495) -1 else 0,
             time.toLong(),
@@ -615,7 +621,7 @@ class Agility(private val c: Client) {
         runRepeating(if (time > 0) 600 else 0) {
             stage++
             if (time == 1200 && stage < 2) {
-                c.AddToWalkCords(0, 0, time.toLong())
+                queueAgilityWalk(0, 0, time.toLong())
                 stage++
                 return@runRepeating true
             }
@@ -635,7 +641,7 @@ class Agility(private val c: Client) {
                 } else {
                     0
                 }
-            c.AddToWalkCords(0, distance, duration.toLong())
+            queueAgilityWalk(0, distance, duration.toLong())
             runLater(duration) {
                 if (c.disconnected) {
                     return@runLater
@@ -668,7 +674,7 @@ class Agility(private val c: Client) {
         c.setMovementLocked(true)
         c.walkAnim = if (distance == 8) 756 else 754
         val time = 5400
-        c.AddToWalkCords(0, distance, time.toLong())
+        queueAgilityWalk(0, distance, time.toLong())
         runLater(time) {
             c.requestWeaponAnims()
             c.setMovementLocked(false)
@@ -692,7 +698,7 @@ class Agility(private val c: Client) {
         c.ReplaceObject(3305, 9376, 6452, -3, 0)
         c.ReplaceObject(3305, 9375, 6451, -1, 0)
         val time = 600
-        c.AddToWalkCords(distance, 0, time.toLong())
+        queueAgilityWalk(distance, 0, time.toLong())
         runLater(time) {
             c.ReplaceObject(3305, 9376, 6452, 0, 0)
             c.ReplaceObject(3305, 9375, 6451, 0, 0)

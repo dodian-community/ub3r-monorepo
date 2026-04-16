@@ -8,6 +8,7 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.api.content.ContentTiming
 import net.dodian.uber.game.engine.systems.skills.ProgressionService
+import net.dodian.uber.game.skill.agility.runtime.AgilityPassageOverlayService
 import net.dodian.uber.game.skill.runtime.action.SkillingRandomEventService
 import net.dodian.uber.game.engine.systems.world.npc.NpcSpawnLocator
 import net.dodian.uber.game.engine.util.Misc
@@ -32,6 +33,11 @@ class AgilityWerewolf(private val c: Client) {
         ContentTiming.runRepeatingMs(delayMs) {
             action()
         }
+    }
+
+    private fun queueAgilityWalk(deltaX: Int, deltaY: Int, durationMs: Long) {
+        AgilityPassageOverlayService.grantForDelta(c, deltaX, deltaY, durationMs)
+        c.AddToWalkCords(deltaX, deltaY, durationMs)
     }
 
     private fun requireAgilityLevel(level: Int): Boolean {
@@ -201,7 +207,7 @@ class AgilityWerewolf(private val c: Client) {
             val npc = NpcSpawnLocator.werewolfCourseNpc(2)
             npc?.text = "You smell good!!"
             c.walkAnim = 746
-            c.AddToWalkCords(0, 6, 3600)
+            queueAgilityWalk(0, 6, 3600)
             var part = 0
             runRepeating(600) {
                 if (c.disconnected) {
@@ -238,7 +244,7 @@ class AgilityWerewolf(private val c: Client) {
             val npc = NpcSpawnLocator.werewolfCourseNpc(3)
             npc?.text = "You fetch good... Now bleed!"
             c.walkAnim = 737
-            c.AddToWalkCords(-3, 0, 1800)
+            queueAgilityWalk(-3, 0, 1800)
             runLater(1800) {
                 if (c.disconnected) {
                     return@runLater
