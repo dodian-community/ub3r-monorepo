@@ -55,12 +55,14 @@ import net.dodian.uber.game.engine.systems.action.DuelCountdownState;
 import net.dodian.uber.game.engine.systems.animation.PlayerAnimationService;
 import net.dodian.uber.game.engine.systems.combat.CombatStartService;
 import net.dodian.uber.game.engine.systems.interaction.PlayerInteractionGuardService;
+import net.dodian.uber.game.engine.systems.interaction.items.ItemDispatcher;
 import net.dodian.uber.game.engine.systems.interaction.InteractionAnchorState;
 import net.dodian.uber.game.engine.lifecycle.PlayerDeferredLifecycleService;
 import net.dodian.uber.game.engine.util.Misc;
 import net.dodian.utilities.MD5;
 import net.dodian.utilities.Utils;
 import net.dodian.uber.game.engine.systems.skills.ProgressionService;
+import net.dodian.uber.game.skill.agility.AgilityTicketExchangeService;
 
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -1855,7 +1857,7 @@ public class Client extends Player implements Runnable {
             return;
         }
         if (wearID == 4155) { //Enchanted gem
-            net.dodian.uber.game.skill.slayer.Slayer.sendCurrentTask(this);
+            ItemDispatcher.tryHandle(this, 1, wearID, slot, interFace);
             return;
         }
         if (duelConfirmed && !duelFight)
@@ -4402,25 +4404,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void spendTickets() {
-        send(new RemoveInterfaces());
-        int slot = -1;
-        for (int s = 0; s < playerItems.length; s++) {
-            if ((playerItems[s] - 1) == 2996) {
-                slot = s;
-                break;
-            }
-        }
-        if (slot == -1) {
-            send(new SendMessage("You have no agility tickets!"));
-        } else if (playerItemsN[slot] < 10) {
-            send(new SendMessage("You must hand in at least 10 tickets at once"));
-        } else {
-            int amount = playerItemsN[slot];
-            ProgressionService.addXp(this, amount * 700, Skill.AGILITY);
-            send(new SendMessage("You exchange your " + amount + " agility tickets"));
-            deleteItem(2996, playerItemsN[slot]);
-            checkItemUpdate();
-        }
+        AgilityTicketExchangeService.spendTickets(this);
     }
 
     public PrayerManager getPrayerManager() {
@@ -4815,9 +4799,15 @@ public class Client extends Player implements Runnable {
     }
 
     public int totalLevel() {
-        return Skill.enabledSkills()
-                .mapToInt(skill -> Skills.getLevelForExperience(getExperience(skill)))
-                .sum() + (int) Skill.disabledSkills().count();
+        int total = 0;
+        for (Skill skill : Skill.values()) {
+            if (skill.isEnabled()) {
+                total += Skills.getLevelForExperience(getExperience(skill));
+            } else {
+                total++;
+            }
+        }
+        return total;
     }
 
     public boolean doingTeleport() {

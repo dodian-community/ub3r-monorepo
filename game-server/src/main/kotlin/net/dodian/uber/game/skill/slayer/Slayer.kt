@@ -7,7 +7,9 @@ import net.dodian.uber.game.ui.QuestTabEntry
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
+import net.dodian.uber.game.api.plugin.skills.ItemClickOption
 import net.dodian.uber.game.api.plugin.skills.bindItemContentClick
+import net.dodian.uber.game.api.plugin.skills.bindItemContentClicks
 import net.dodian.uber.game.api.plugin.skills.skillPlugin
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
 
@@ -161,20 +163,12 @@ object SlayerMaskItems : ItemContent {
 object SlayerSkillPlugin : SkillPlugin {
     override val definition =
         skillPlugin(name = "Slayer", skill = Skill.SLAYER) {
-            bindItemContentClick(
-                preset = PolicyPreset.DIALOGUE,
-                option = 1,
-                content = SlayerGemItems,
-            )
-            bindItemContentClick(
-                preset = PolicyPreset.DIALOGUE,
-                option = 2,
-                content = SlayerGemItems,
-            )
-            bindItemContentClick(
-                preset = PolicyPreset.DIALOGUE,
-                option = 3,
-                content = SlayerGemItems,
+            bindItemContentClicks(
+                PolicyPreset.DIALOGUE,
+                SlayerGemItems,
+                ItemClickOption.FIRST,
+                ItemClickOption.SECOND,
+                ItemClickOption.THIRD,
             )
             bindItemContentClick(
                 preset = PolicyPreset.DIALOGUE,

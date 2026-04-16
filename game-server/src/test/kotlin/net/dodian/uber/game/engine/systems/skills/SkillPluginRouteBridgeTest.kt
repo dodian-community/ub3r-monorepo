@@ -5,7 +5,9 @@ import net.dodian.uber.game.objects.ObjectContent
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.api.plugin.PluginRegistry
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
+import net.dodian.uber.game.api.plugin.skills.ItemClickOption
 import net.dodian.uber.game.api.plugin.skills.bindItemContentClick
+import net.dodian.uber.game.api.plugin.skills.bindItemContentClicks
 import net.dodian.uber.game.api.plugin.skills.bindObjectContentMagic
 import net.dodian.uber.game.api.plugin.skills.bindObjectContentUseItem
 import net.dodian.uber.game.api.plugin.skills.skillPlugin
@@ -41,6 +43,25 @@ class SkillPluginRouteBridgeTest {
         assertEquals(PolicyPreset.PRODUCTION, binding.preset)
         assertEquals(1, binding.option)
         assertEquals(setOf(100, 101), binding.itemIds.toSet())
+    }
+
+    @Test
+    fun `bind item content clicks emits one binding per option`() {
+        val plugin =
+            skillPlugin(name = "BridgeItemMulti", skill = Skill.HERBLORE) {
+                bindItemContentClicks(
+                    preset = PolicyPreset.PRODUCTION,
+                    content =
+                        object : ItemContent {
+                            override val itemIds: IntArray = intArrayOf(200)
+                        },
+                    ItemClickOption.FIRST,
+                    ItemClickOption.THIRD,
+                )
+            }
+
+        assertEquals(2, plugin.itemBindings.size)
+        assertEquals(setOf(1, 3), plugin.itemBindings.map { it.option }.toSet())
     }
 
     @Test
