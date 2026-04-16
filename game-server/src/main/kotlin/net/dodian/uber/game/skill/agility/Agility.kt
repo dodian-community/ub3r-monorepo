@@ -6,6 +6,7 @@ import net.dodian.uber.game.model.entity.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.skill.agility.runtime.AgilityTraversalProfiles
 import net.dodian.uber.game.skill.agility.runtime.AgilityTraversalService
 import net.dodian.uber.game.skill.runtime.SkillActionContext
 import net.dodian.uber.game.skill.runtime.SkillTraversalMovement
@@ -186,23 +187,38 @@ class Agility(private val c: Client) {
         }
     }
 
-    fun GnomePipe() {
+    fun GnomePipe(
+        context: SkillActionContext = defaultActionContext(GnomeCourseObjectComponents.PIPE_ENTRY_ONE),
+    ): Boolean {
         val npc = NpcSpawnLocator.gnomeCourseNpc(5)
         if (isBusy()) {
-            return
+            return false
         }
-        c.resetWalkingQueue()
-        c.setMovementLocked(true)
-        npc?.text = "Pipe it down...You are nothing special!"
-        c.walkAnim = 746
-        c.AddToWalkCords(0, 7, 4200)
-        var part = 0
-        runRepeating(600) {
-            part++
-            when {
-                part > 0 && isMovementSettled() -> {
+        if ((c.position.x != 2484 && c.position.x != 2487) || c.position.y != 3430) {
+            return false
+        }
+
+        val profile = AgilityTraversalProfiles.profileForObjectId(context.objectId) ?: return false
+        val plan =
+            SkillTraversalPlan(
+                name = "agility.gnome.pipe",
+                movement =
+                    SkillTraversalMovement(
+                        deltaX = profile.deltaX,
+                        deltaY = profile.deltaY,
+                        durationMs = profile.durationMs,
+                        movementAnimationId = profile.movementAnimationId,
+                    ),
+                onStart = {
+                    npc?.text = "Pipe it down...You are nothing special!"
+                    profile.startWalkAnimationId?.let { walkAnim ->
+                        c.walkAnim = walkAnim
+                        c.updateFlags.setRequired(UpdateFlag.APPEARANCE, true)
+                    }
+                },
+                onComplete = {
                     c.requestWeaponAnims()
-                    c.performAnimation(748, 0)
+                    profile.completionAnimationId?.let { c.performAnimation(it, 0) }
                     c.updateFlags.setRequired(UpdateFlag.APPEARANCE, true)
                     if (c.agilitySessionStage == 6) {
                         c.addItem(2996, 1 + Misc.random(c.getLevel(Skill.AGILITY) / 11))
@@ -213,23 +229,16 @@ class Agility(private val c: Client) {
                     } else {
                         giveEndExperience(250)
                     }
-                    c.setMovementLocked(false)
-                    false
-                }
-                part == 1 -> {
-                    c.walkAnim = 747
-                    c.updateFlags.setRequired(UpdateFlag.APPEARANCE, true)
-                    true
-                }
-                else -> true
-            }
-        }
-    }
-
-    private fun isMovementSettled(): Boolean {
-        return c.primaryDirection == -1 &&
-            c.secondaryDirection == -1 &&
-            c.wQueueReadPtr == c.wQueueWritePtr
+                },
+                passageEdges = {
+                    AgilityTraversalService.straightPathEdges(
+                        start = c.position.copy(),
+                        deltaX = profile.deltaX,
+                        deltaY = profile.deltaY,
+                    )
+                },
+            )
+        return AgilityTraversalService.execute(context, plan)
     }
 
     fun BarbRope() {
@@ -737,14 +746,28 @@ object GnomeCourseObjectBindings : FirstClickDslObjectContent(
             if (client.position.x != 2484 || client.position.y != 3430 || client.distanceToPoint(position.x, position.y) >= 2) {
                 return@objectAction false
             }
-            Agility(client).GnomePipe()
+            Agility(client).GnomePipe(
+                SkillActionContext(
+                    player = client,
+                    objectId = GnomeCourseObjectComponents.PIPE_ENTRY_ONE,
+                    option = 1,
+                    objectPosition = position,
+                ),
+            )
             true
         }
         objectAction(GnomeCourseObjectComponents.PIPE_ENTRY_TWO) { client, _, position, _ ->
             if (client.position.x != 2487 || client.position.y != 3430 || client.distanceToPoint(position.x, position.y) >= 2) {
                 return@objectAction false
             }
-            Agility(client).GnomePipe()
+            Agility(client).GnomePipe(
+                SkillActionContext(
+                    player = client,
+                    objectId = GnomeCourseObjectComponents.PIPE_ENTRY_TWO,
+                    option = 1,
+                    objectPosition = position,
+                ),
+            )
             true
         }
     },
@@ -952,7 +975,15 @@ object AgilitySkillPlugin : SkillPlugin {
                     objectId in GnomeCourseObjectComponents.TREE_BRANCH_DOWN -> Agility(client).GnomeTreebranch2()
                     objectId == GnomeCourseObjectComponents.NET_TWO -> Agility(client).GnomeNet2()
                     objectId == GnomeCourseObjectComponents.PIPE_ENTRY_ONE ||
-                        objectId == GnomeCourseObjectComponents.PIPE_ENTRY_TWO -> Agility(client).GnomePipe()
+                        objectId == GnomeCourseObjectComponents.PIPE_ENTRY_TWO ->
+                        Agility(client).GnomePipe(
+                            SkillActionContext(
+                                player = client,
+                                objectId = objectId,
+                                option = 1,
+                                objectPosition = position,
+                            ),
+                        )
 
                     objectId == BarbarianCourseObjectComponents.ROPE_SWING -> Agility(client).BarbRope()
                     objectId == BarbarianCourseObjectComponents.LOG_BALANCE -> Agility(client).BarbLog()

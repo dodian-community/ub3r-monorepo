@@ -10,6 +10,10 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.persistence.audit.ItemLog
 
 internal object HerbloreNpcDialogue {
+    private data class NpcReply(
+        val emote: DialogueEmote = DialogueEmote.DEFAULT,
+        val lines: Array<String>,
+    )
     private val grimyHerbs: IntArray = HerbloreData.herbDefinitions.map { it.grimyId }.toIntArray()
     private val cleanHerbs: IntArray = HerbloreData.herbDefinitions.map { it.cleanId }.toIntArray()
     private val unfinishedPotions: IntArray = HerbloreData.herbDefinitions.map { it.unfinishedPotionId }.toIntArray()
@@ -24,20 +28,24 @@ internal object HerbloreNpcDialogue {
             options(
                 title = "What should we decant it into?",
                 DialogueOption("Four dose") {
-                    action { c -> decantPotions(c, npcId, 4) }
-                    finish(closeInterfaces = false)
+                    val reply = decantPotions(client, 4)
+                    npcChat(npcId, reply.emote, *reply.lines)
+                    finish()
                 },
                 DialogueOption("Three dose") {
-                    action { c -> decantPotions(c, npcId, 3) }
-                    finish(closeInterfaces = false)
+                    val reply = decantPotions(client, 3)
+                    npcChat(npcId, reply.emote, *reply.lines)
+                    finish()
                 },
                 DialogueOption("Two dose") {
-                    action { c -> decantPotions(c, npcId, 2) }
-                    finish(closeInterfaces = false)
+                    val reply = decantPotions(client, 2)
+                    npcChat(npcId, reply.emote, *reply.lines)
+                    finish()
                 },
                 DialogueOption("One dose") {
-                    action { c -> decantPotions(c, npcId, 1) }
-                    finish(closeInterfaces = false)
+                    val reply = decantPotions(client, 1)
+                    npcChat(npcId, reply.emote, *reply.lines)
+                    finish()
                 },
                 DialogueOption("Nevermind") {
                     playerChat(DialogueEmote.ANGRY1, "Nevermind, I do not need anything.")
@@ -89,12 +97,13 @@ internal object HerbloreNpcDialogue {
         }
         DialogueService.start(client) {
             npcChat(npcId, DialogueEmote.ALMOST_CRYING, firstLine, secondLine)
-            action { c -> c.setHerbOptions() }
-            finish(closeInterfaces = false)
+            finishThen(closeInterfaces = false) { c ->
+                c.setHerbOptions()
+            }
         }
     }
 
-    private fun decantPotions(client: Client, npcId: Int, dose: Int) {
+    private fun decantPotions(client: Client, dose: Int): NpcReply {
         val potionAmount = LongArray(pot4Dose.size)
         val vialAmount = LongArray(pot4Dose.size)
 
@@ -173,6 +182,6 @@ internal object HerbloreNpcDialogue {
         }
 
         client.checkItemUpdate()
-        client.showNPCChat(npcId, DialogueEmote.DEFAULT.id, arrayOf("Enjoy your decanted potions ${client.playerName}"))
+        return NpcReply(lines = arrayOf("Enjoy your decanted potions ${client.playerName}"))
     }
 }

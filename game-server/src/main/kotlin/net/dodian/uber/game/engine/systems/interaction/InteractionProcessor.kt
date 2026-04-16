@@ -6,6 +6,7 @@ import net.dodian.cache.objects.GameObjectDef
 import net.dodian.uber.game.combat.getAttackStyle
 import net.dodian.uber.game.engine.systems.interaction.objects.ObjectContentRegistry
 import net.dodian.uber.game.engine.systems.interaction.objects.ObjectInteractionService
+import net.dodian.uber.game.engine.systems.interaction.npcs.BankerApproachFallbackService
 import net.dodian.uber.game.engine.systems.interaction.npcs.NpcContentDispatcher
 import net.dodian.uber.game.engine.systems.interaction.items.ItemOnNpcContentService
 import net.dodian.uber.game.engine.event.GameEventBus
@@ -89,6 +90,9 @@ object InteractionProcessor {
         val legendsGuardFrontLane = isLegendsGuardFrontLaneInteraction(player, npc, intent.option)
         val routeStart = System.nanoTime()
         if (!legendsGuardFrontLane && !player.goodDistanceEntity(npc, range)) {
+            if (BankerApproachFallbackService.shouldAttemptFallback(player, npc, intent.option)) {
+                BankerApproachFallbackService.tryRouteCustomerSide(player, npc)
+            }
             return InteractionExecutionResult.WAITING
         }
         if (npc.position.withinDistance(player.position, 0)) {
