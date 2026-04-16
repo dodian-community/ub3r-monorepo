@@ -50,7 +50,7 @@ object AgilityTraversalService {
         }
 
         ContentTiming.runLaterMs(movement.durationMs) {
-            if (player.disconnected || (plan.guard.lockMovement && !player.UsingAgility)) {
+            if (player.disconnected || (plan.guard.lockMovement && !player.isMovementLocked)) {
                 finish(context, plan, completed = false)
                 return@runLaterMs
             }

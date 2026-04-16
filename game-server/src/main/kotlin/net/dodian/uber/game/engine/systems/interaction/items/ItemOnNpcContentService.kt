@@ -3,6 +3,7 @@ package net.dodian.uber.game.engine.systems.interaction.items
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.model.entity.player.PlayerPotatoState
 import net.dodian.uber.game.skill.Skillcape
 import net.dodian.uber.game.netty.listener.out.SendMessage
 
@@ -13,11 +14,7 @@ object ItemOnNpcContentService {
         client.faceNpc(npcIndex)
 
         if (itemId == 5733) {
-            client.playerPotato.clear()
-            client.playerPotato.add(0, 2)
-            client.playerPotato.add(1, npcIndex)
-            client.playerPotato.add(2, npcId)
-            client.playerPotato.add(3, 1)
+            client.playerPotatoState = PlayerPotatoState(2, npcIndex, npcId, 1)
             client.showPlayerOption(
                 arrayOf(
                     "What do you wish to do?",

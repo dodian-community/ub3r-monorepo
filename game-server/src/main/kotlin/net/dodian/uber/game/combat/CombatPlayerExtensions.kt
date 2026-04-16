@@ -55,7 +55,8 @@ fun Client.checkSlayerTask(npcId: Int): Boolean {
     val slayExceptions = (slayerTask == null)
             || (slayerTask == net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.MUMMY && getPositionName(position) == Player.positions.KEYDUNG)
 
-    if (!slayExceptions && slayerTask?.slayerOnly == true && (slayerTask.ordinal != slayerData[1] || slayerData[3] <= 0)) {
+    val state = slayerTaskState
+    if (!slayExceptions && slayerTask?.slayerOnly == true && (slayerTask.ordinal != state.taskOrdinal || state.remainingAmount <= 0)) {
         send(SendMessage("You need a slayer task to kill this monster."))
         resetAttack()
         return false

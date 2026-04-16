@@ -38,7 +38,7 @@ object Prayer {
     @JvmStatic
     fun altarBones(client: Client, itemId: Int): Boolean {
         val bone = Bones.getBone(itemId)
-        if (bone == null || !client.playerHasItem(itemId) || client.randomed) {
+        if (bone == null || !client.playerHasItem(itemId) || client.skillingEventState.isRandomEventOpen) {
             client.resetAction()
             return false
         }
@@ -108,7 +108,7 @@ private class AltarObjectContent : ObjectContent {
         if (objectId != 409) {
             return false
         }
-        if (Bones.getBone(itemId) == null || !client.playerHasItem(itemId) || client.randomed) {
+        if (Bones.getBone(itemId) == null || !client.playerHasItem(itemId) || client.skillingEventState.isRandomEventOpen) {
             client.resetAction()
             return false
         }

@@ -2,6 +2,7 @@ package net.dodian.uber.game.skill.prayer
 
 import net.dodian.uber.game.skill.runtime.action.SkillActionRequest
 import net.dodian.uber.game.skill.runtime.action.SkillActionState
+import net.dodian.uber.game.skill.runtime.action.ActionStopReason
 
 data class PrayerOfferingRequest(
     val boneItemId: Int,
@@ -13,6 +14,10 @@ data class PrayerOfferingState(
     val boneItemId: Int,
     val altarX: Int,
     val altarY: Int,
+    override val active: Boolean = true,
+    override val startedCycle: Long = 0L,
+    override val stopReason: ActionStopReason? = null,
+    override val targetRef: String? = null,
 ) : SkillActionState
 
 object PrayerData {

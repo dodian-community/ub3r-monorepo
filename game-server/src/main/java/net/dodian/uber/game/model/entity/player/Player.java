@@ -349,6 +349,32 @@ public abstract class Player extends Entity {
         progressState.ensureSlayerDataSize();
     }
 
+    public SlayerTaskState getSlayerTaskState() {
+        ensureSlayerDataSize();
+        ArrayList<Integer> data = getSlayerData();
+        return new SlayerTaskState(
+            data.get(0),
+            data.get(1),
+            data.get(2),
+            data.get(3),
+            data.get(4),
+            data.get(5),
+            data.get(6)
+        );
+    }
+
+    public void setSlayerTaskState(SlayerTaskState state) {
+        ensureSlayerDataSize();
+        ArrayList<Integer> data = getSlayerData();
+        data.set(0, state.getMasterNpcId());
+        data.set(1, state.getTaskOrdinal());
+        data.set(2, state.getAssignmentAmount());
+        data.set(3, state.getRemainingAmount());
+        data.set(4, state.getStreak());
+        data.set(5, state.getPoints());
+        data.set(6, state.getBlockedTaskOrdinal());
+    }
+
     public void setTravel(String input) {
         progressState.setTravel(input);
     }
@@ -1059,6 +1085,125 @@ public abstract class Player extends Entity {
         interactionState.clearPyramidPlunderState();
     }
 
+    public AgilitySessionState getAgilitySessionState() {
+        AgilitySessionState state = interactionState.getAgilitySessionState();
+        if (state == null) {
+            state = new AgilitySessionState(agilityCourseStage, GameCycleClock.currentCycle());
+            interactionState.setAgilitySessionState(state);
+        }
+        return state;
+    }
+
+    public void setAgilitySessionState(AgilitySessionState state) {
+        interactionState.setAgilitySessionState(state);
+        agilityCourseStage = state != null ? state.getCourseStage() : 0;
+    }
+
+    public int getAgilitySessionStage() {
+        return getAgilitySessionState().getCourseStage();
+    }
+
+    public void setAgilitySessionStage(int stage) {
+        AgilitySessionState current = getAgilitySessionState();
+        setAgilitySessionState(current.withCourseStage(stage, GameCycleClock.currentCycle()));
+    }
+
+    public void clearAgilitySessionState() {
+        interactionState.clearAgilitySessionState();
+        agilityCourseStage = 0;
+    }
+
+    public MovementLockState getMovementLockState() {
+        MovementLockState state = interactionState.getMovementLockState();
+        if (state == null && UsingAgility) {
+            state = new MovementLockState("legacy", GameCycleClock.currentCycle());
+            interactionState.setMovementLockState(state);
+        }
+        return state;
+    }
+
+    public boolean isMovementLocked() {
+        return getMovementLockState() != null;
+    }
+
+    public void setMovementLockState(MovementLockState state) {
+        interactionState.setMovementLockState(state);
+        UsingAgility = state != null;
+    }
+
+    public void setMovementLocked(boolean locked) {
+        setMovementLockState(locked ? new MovementLockState("compat", GameCycleClock.currentCycle()) : null);
+    }
+
+    public void clearMovementLockState() {
+        setMovementLockState(null);
+    }
+
+    public SkillingEventState getSkillingEventState() {
+        SkillingEventState state = interactionState.getSkillingEventState();
+        if (state == null) {
+            int randomSkillId = this instanceof Client ? ((Client) this).random_skill : -1;
+            state = new SkillingEventState(randomed, randomSkillId, chestEvent, chestEventOccur);
+            interactionState.setSkillingEventState(state);
+        }
+        return state;
+    }
+
+    public void setSkillingEventState(SkillingEventState state) {
+        interactionState.setSkillingEventState(state);
+        randomed = state.isRandomEventOpen();
+        if (this instanceof Client) {
+            ((Client) this).random_skill = state.getRandomSkillId();
+        }
+        chestEvent = state.getChestEventCount();
+        chestEventOccur = state.isChestEventPendingMove();
+    }
+
+    public PlayerPotatoState getPlayerPotatoState() {
+        PlayerPotatoState state = interactionState.getPlayerPotatoState();
+        if (state != null) {
+            return state;
+        }
+        if (playerPotato.size() >= 4) {
+            state = new PlayerPotatoState(playerPotato.get(0), playerPotato.get(1), playerPotato.get(2), playerPotato.get(3));
+            interactionState.setPlayerPotatoState(state);
+            return state;
+        }
+        return null;
+    }
+
+    public void setPlayerPotatoState(PlayerPotatoState state) {
+        interactionState.setPlayerPotatoState(state);
+        playerPotato.clear();
+        if (state != null) {
+            playerPotato.add(state.getFlowType());
+            playerPotato.add(state.getTargetSlot());
+            playerPotato.add(state.getTargetIdentifier());
+            playerPotato.add(state.getStage());
+        }
+    }
+
+    public void clearPlayerPotatoState() {
+        interactionState.clearPlayerPotatoState();
+        playerPotato.clear();
+    }
+
+    public String getActiveSkillSessionKey() {
+        return interactionState.getActiveSkillSessionKey();
+    }
+
+    public long getActiveSkillSessionStartedCycle() {
+        return interactionState.getActiveSkillSessionStartedCycle();
+    }
+
+    public void setActiveSkillSession(String key, long startedCycle) {
+        interactionState.setActiveSkillSession(key, startedCycle);
+    }
+
+    public void clearActiveSkillSession() {
+        interactionState.clearActiveSkillSession();
+    }
+
     public QueueTaskHandle getActiveActionHandle() {
         return interactionState.getActiveActionHandle();
     }
@@ -1298,16 +1443,18 @@ public abstract class Player extends Entity {
         return progressState.isSongUnlocked(songId);
     }
     public boolean blackMaskEffect(int npcId) {
-        String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : Objects.requireNonNull(net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forOrdinal(getSlayerData().get(1))).getTextRepresentation();
+        SlayerTaskState state = getSlayerTaskState();
+        String taskName = state.getMasterNpcId() == -1 || state.getRemainingAmount() <= 0 ? "" : Objects.requireNonNull(net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forOrdinal(state.getTaskOrdinal())).getTextRepresentation();
         net.dodian.uber.game.skill.slayer.SlayerTaskDefinition slayerTask = net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forNpc(npcId);
-        boolean onTask = slayerTask != null && slayerTask.getTextRepresentation().equals(taskName) && getSlayerData().get(3) > 0;
+        boolean onTask = slayerTask != null && slayerTask.getTextRepresentation().equals(taskName) && state.getRemainingAmount() > 0;
         int itemId = getEquipment()[Equipment.Slot.HEAD.getId()];
         return (itemId == 8921 || itemId == 11864) && onTask;
     }
     public boolean blackMaskImbueEffect(int npcId) {
-        String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : Objects.requireNonNull(net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forOrdinal(getSlayerData().get(1))).getTextRepresentation();
+        SlayerTaskState state = getSlayerTaskState();
+        String taskName = state.getMasterNpcId() == -1 || state.getRemainingAmount() <= 0 ? "" : Objects.requireNonNull(net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forOrdinal(state.getTaskOrdinal())).getTextRepresentation();
         net.dodian.uber.game.skill.slayer.SlayerTaskDefinition slayerTask = net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forNpc(npcId);
-        boolean onTask = slayerTask != null && slayerTask.getTextRepresentation().equals(taskName) && getSlayerData().get(3) > 0;
+        boolean onTask = slayerTask != null && slayerTask.getTextRepresentation().equals(taskName) && state.getRemainingAmount() > 0;
         String headName = ((Client) this).getItemName(getEquipment()[Equipment.Slot.HEAD.getId()]).toLowerCase();
         return (headName.contains("black mask (i)") || headName.contains("slayer helmet (i)")) && onTask;
     }

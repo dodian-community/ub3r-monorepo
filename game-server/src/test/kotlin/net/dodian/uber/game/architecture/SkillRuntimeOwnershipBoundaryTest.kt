@@ -92,4 +92,54 @@ class SkillRuntimeOwnershipBoundaryTest {
             "Runtime API naming/signature drift detected:\n${missing.joinToString("\n")}",
         )
     }
+
+    @Test
+    fun `skill modules avoid direct legacy player flags and counters`() {
+        val forbiddenPatterns = listOf(
+            ".UsingAgility" to Regex("""\.UsingAgility\b"""),
+            ".agilityCourseStage" to Regex("""\.agilityCourseStage\b"""),
+            ".slayerData[" to Regex("""\.slayerData\s*\["""),
+            ".playerPotato" to Regex("""\.playerPotato\b"""),
+            ".chestEvent" to Regex("""\.chestEvent\b"""),
+            ".chestEventOccur" to Regex("""\.chestEventOccur\b"""),
+            ".randomed" to Regex("""\.randomed\b"""),
+            ".random_skill" to Regex("""\.random_skill\b"""),
+        )
+
+        val violations = Files.walk(skillsRoot).use { paths ->
+            paths.iterator().asSequence()
+                .filter { Files.isRegularFile(it) }
+                .filter { it.extension == "kt" || it.extension == "java" }
+                .flatMap { file ->
+                    val content = Files.readString(file)
+                    forbiddenPatterns
+                        .filter { (_, pattern) -> pattern.containsMatchIn(content) }
+                        .map { (token, _) -> "${file}: references forbidden legacy token `$token`" }
+                        .asSequence()
+                }
+                .toList()
+        }
+
+        assertTrue(
+            violations.isEmpty(),
+            "Skill modules must use typed runtime state adapters, not direct legacy player fields.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `skill dsl exposes session lifecycle helpers`() {
+        val dslPath = kotlinSourceRoot.resolve("net/dodian/uber/game/api/plugin/skills/SkillPluginDsl.kt")
+        val source = Files.readString(dslPath)
+
+        val missing = buildList {
+            if (!source.contains("fun startSession(")) add("startSession")
+            if (!source.contains("fun requireSession(")) add("requireSession")
+            if (!source.contains("fun endSession(")) add("endSession")
+        }
+
+        assertTrue(
+            missing.isEmpty(),
+            "SkillPlugin DSL missing required lifecycle helper(s): ${missing.joinToString(", ")}",
+        )
+    }
 }

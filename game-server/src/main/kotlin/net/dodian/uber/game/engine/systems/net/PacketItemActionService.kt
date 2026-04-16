@@ -6,6 +6,7 @@ import net.dodian.uber.game.engine.util.Misc
 import net.dodian.uber.game.events.item.ItemClickEvent
 import net.dodian.uber.game.events.item.ItemOnPlayerEvent
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.model.entity.player.PlayerPotatoState
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.engine.systems.interaction.items.ItemDispatcher
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
@@ -104,11 +105,7 @@ object PacketItemActionService {
         GameEventBus.post(ItemOnPlayerEvent(client, target, itemId, crackerSlot))
 
         if (itemId == 5733) { // hot-potato mini-game setup
-            client.playerPotato.clear()
-            client.playerPotato.add(0, 1)
-            client.playerPotato.add(1, playerSlot)
-            client.playerPotato.add(2, target.dbId)
-            client.playerPotato.add(3, 1)
+            client.playerPotatoState = PlayerPotatoState(1, playerSlot, target.dbId, 1)
             return
         }
 

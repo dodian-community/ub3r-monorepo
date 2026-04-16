@@ -2,6 +2,7 @@ package net.dodian.uber.game.skill.crafting
 
 import net.dodian.uber.game.skill.runtime.action.SkillActionRequest
 import net.dodian.uber.game.skill.runtime.action.SkillActionState
+import net.dodian.uber.game.skill.runtime.action.ActionStopReason
 
 data class CraftingRequest(
     val mode: CraftingMode,
@@ -25,6 +26,10 @@ data class CraftingState(
     val remaining: Int = 0,
     val requiredLevel: Int = 0,
     val experience: Int = 0,
+    override val active: Boolean = true,
+    override val startedCycle: Long = 0L,
+    override val stopReason: ActionStopReason? = null,
+    override val targetRef: String? = null,
 ) : SkillActionState
 
 data class GoldJewelryRequest(

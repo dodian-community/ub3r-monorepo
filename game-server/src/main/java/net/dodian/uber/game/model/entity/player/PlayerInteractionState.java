@@ -60,6 +60,12 @@ final class PlayerInteractionState {
     private volatile RunecraftingState runecraftingState;
     private volatile InteractionAnchorState interactionAnchorState;
     private volatile PyramidPlunderPlayerState pyramidPlunderState;
+    private volatile MovementLockState movementLockState;
+    private volatile AgilitySessionState agilitySessionState;
+    private volatile SkillingEventState skillingEventState;
+    private volatile PlayerPotatoState playerPotatoState;
+    private volatile String activeSkillSessionKey;
+    private volatile long activeSkillSessionStartedCycle = 0L;
     private final ConcurrentHashMap<String, Long> throttleUntilCycles = new ConcurrentHashMap<>();
 
     InteractionIntent getPendingInteraction() {
@@ -270,6 +276,68 @@ final class PlayerInteractionState {
         pyramidPlunderState = null;
     }
 
+    MovementLockState getMovementLockState() {
+        return movementLockState;
+    }
+
+    void setMovementLockState(MovementLockState movementLockState) {
+        this.movementLockState = movementLockState;
+    }
+
+    void clearMovementLockState() {
+        movementLockState = null;
+    }
+
+    AgilitySessionState getAgilitySessionState() {
+        return agilitySessionState;
+    }
+
+    void setAgilitySessionState(AgilitySessionState agilitySessionState) {
+        this.agilitySessionState = agilitySessionState;
+    }
+
+    void clearAgilitySessionState() {
+        agilitySessionState = null;
+    }
+
+    SkillingEventState getSkillingEventState() {
+        return skillingEventState;
+    }
+
+    void setSkillingEventState(SkillingEventState skillingEventState) {
+        this.skillingEventState = skillingEventState;
+    }
+
+    PlayerPotatoState getPlayerPotatoState() {
+        return playerPotatoState;
+    }
+
+    void setPlayerPotatoState(PlayerPotatoState playerPotatoState) {
+        this.playerPotatoState = playerPotatoState;
+    }
+
+    void clearPlayerPotatoState() {
+        playerPotatoState = null;
+    }
+
+    String getActiveSkillSessionKey() {
+        return activeSkillSessionKey;
+    }
+
+    void setActiveSkillSession(String key, long startedCycle) {
+        activeSkillSessionKey = key;
+        activeSkillSessionStartedCycle = startedCycle;
+    }
+
+    long getActiveSkillSessionStartedCycle() {
+        return activeSkillSessionStartedCycle;
+    }
+
+    void clearActiveSkillSession() {
+        activeSkillSessionKey = null;
+        activeSkillSessionStartedCycle = 0L;
+    }
+
     QueueTaskHandle getActiveActionHandle() {
         return activeActionHandle;
     }
@@ -455,6 +523,7 @@ final class PlayerInteractionState {
     void terminatePlayerTasks() {
         cancelActiveAction();
         clearActiveActionState();
+        clearActiveSkillSession();
         if (playerTaskSet != null) {
             playerTaskSet.terminateTasks();
             playerTaskSet = null;

@@ -22,15 +22,6 @@ Players have reported their character appearance resetting to default (or turnin
 
 ---
 
-## 3. Command & Debug Audit
-The rapid development phase left behind many "shortcut" commands that are dangerous for a live environment.
 
-*   **Task:** Remove or restrict (to `ADMIN` only) commands that:
-    *   Spawn items without logging (`::item`).
-    *   Teleport players without checking Wildy status (`::xteleto`).
-    *   Modify player levels instantly.
-*   **Benefit:** Hardens the server against administrative abuse and accidental world corruption.
-
----
 
 **Goal:** Polish the visual experience and secure the world for the first wave of beta testers.

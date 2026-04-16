@@ -2,6 +2,7 @@ package net.dodian.uber.game.skill.fletching
 
 import net.dodian.uber.game.skill.runtime.action.SkillActionRequest
 import net.dodian.uber.game.skill.runtime.action.SkillActionState
+import net.dodian.uber.game.skill.runtime.action.ActionStopReason
 
 data class FletchingLogDefinition(
     val logItemId: Int,
@@ -43,6 +44,10 @@ data class FletchingState(
     val productId: Int = -1,
     val experience: Int = 0,
     val remaining: Int = 0,
+    override val active: Boolean = true,
+    override val startedCycle: Long = 0L,
+    override val stopReason: ActionStopReason? = null,
+    override val targetRef: String? = null,
 ) : SkillActionState {
     val isActive: Boolean
         get() = productId > 0 && remaining > 0

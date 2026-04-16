@@ -5,13 +5,18 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.api.plugin.skills.ResourceSkillContent
 import net.dodian.uber.game.api.plugin.skills.resourceSkillContent
+import net.dodian.uber.game.skill.runtime.action.ActionStopReason
+import net.dodian.uber.game.skill.runtime.action.SkillActionState
 
 data class MiningState(
     val rockObjectId: Int,
     val rockPosition: Position,
-    val startedCycle: Long,
+    override val startedCycle: Long,
     val resourcesGathered: Int,
-)
+    override val active: Boolean = true,
+    override val stopReason: ActionStopReason? = null,
+    override val targetRef: String? = null,
+) : SkillActionState
 
 enum class RockCategory {
     STANDARD,

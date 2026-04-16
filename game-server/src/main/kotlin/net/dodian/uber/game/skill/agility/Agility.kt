@@ -47,7 +47,7 @@ class Agility(private val c: Client) {
         }
     }
 
-    private fun isBusy(): Boolean = c.UsingAgility
+    private fun isBusy(): Boolean = c.isMovementLocked
 
     private fun scheduleVerticalMove(
         destination: Position,
@@ -63,7 +63,7 @@ class Agility(private val c: Client) {
         ) {
             if (c.disconnected) {
                 c.clearVerticalTransition()
-                c.UsingAgility = false
+                c.setMovementLocked(false)
                 return@scheduleGameThread
             }
             c.finishVerticalTransition(token, destination)
@@ -91,7 +91,7 @@ class Agility(private val c: Client) {
                 passageEdges = { AgilityTraversalService.straightPathEdges(start = c.position.copy(), deltaX = 0, deltaY = -7) },
                 onComplete = {
                     giveEndExperience(280)
-                    c.agilityCourseStage = if (c.agilityCourseStage >= 0) 1 else c.agilityCourseStage
+                    c.agilitySessionStage = if (c.agilitySessionStage >= 0) 1 else c.agilitySessionStage
                 },
             )
         return AgilityTraversalService.execute(context, plan)
@@ -105,13 +105,13 @@ class Agility(private val c: Client) {
         if ((c.position.x < 2471 && c.position.x > 2476) || c.position.y != 3426) {
             return
         }
-        c.UsingAgility = true
+        c.setMovementLocked(true)
         npc?.text = "My mom is faster than you!"
         c.performAnimation(828, 0)
         scheduleVerticalMove(Position(2473, 3424, 1)) {
             giveEndExperience(150)
-            c.agilityCourseStage = if (c.agilityCourseStage >= 1) 2 else c.agilityCourseStage
-            c.UsingAgility = false
+            c.agilitySessionStage = if (c.agilitySessionStage >= 1) 2 else c.agilitySessionStage
+            c.setMovementLocked(false)
         }
     }
 
@@ -120,14 +120,14 @@ class Agility(private val c: Client) {
         if (isBusy()) {
             return
         }
-        c.UsingAgility = true
+        c.setMovementLocked(true)
         npc?.text = "Haha you suck at this simple obstacle!"
         c.performAnimation(828, 0)
-        c.agilityCourseStage = if (c.agilityCourseStage >= 2) 3 else c.agilityCourseStage
+        c.agilitySessionStage = if (c.agilitySessionStage >= 2) 3 else c.agilitySessionStage
         scheduleVerticalMove(Position(2473, 3420, 2)) {
             giveEndExperience(50)
-            c.agilityCourseStage = if (c.agilityCourseStage >= 2) 3 else c.agilityCourseStage
-            c.UsingAgility = false
+            c.agilitySessionStage = if (c.agilitySessionStage >= 2) 3 else c.agilitySessionStage
+            c.setMovementLocked(false)
         }
     }
 
@@ -145,7 +145,7 @@ class Agility(private val c: Client) {
                 onStart = { npc?.text = "I do not know why you bother. HAHA!" },
                 onComplete = {
                     giveEndExperience(250)
-                    c.agilityCourseStage = if (c.agilityCourseStage >= 3) 4 else c.agilityCourseStage
+                    c.agilitySessionStage = if (c.agilitySessionStage >= 3) 4 else c.agilitySessionStage
                 },
             )
         return AgilityTraversalService.execute(context, plan)
@@ -156,13 +156,13 @@ class Agility(private val c: Client) {
         if (isBusy()) {
             return
         }
-        c.UsingAgility = true
+        c.setMovementLocked(true)
         npc?.text = "To darn easy."
         c.performAnimation(828, 0)
         scheduleVerticalMove(Position(2485, 3421, 0)) {
             giveEndExperience(50)
-            c.agilityCourseStage = if (c.agilityCourseStage >= 4) 5 else c.agilityCourseStage
-            c.UsingAgility = false
+            c.agilitySessionStage = if (c.agilitySessionStage >= 4) 5 else c.agilitySessionStage
+            c.setMovementLocked(false)
         }
     }
 
@@ -174,15 +174,15 @@ class Agility(private val c: Client) {
         if ((c.position.x < 2483 && c.position.x > 2488) || c.position.y != 3425) {
             return
         }
-        c.UsingAgility = true
+        c.setMovementLocked(true)
         npc?.text = "net profit of zero effort."
         c.performAnimation(828, 0)
         c.walkBlock = System.currentTimeMillis() + 600
         runLater(600) {
             c.teleportTo(c.position.x, c.position.y + 2, 0)
             giveEndExperience(150)
-            c.agilityCourseStage = if (c.agilityCourseStage >= 5) 6 else c.agilityCourseStage
-            c.UsingAgility = false
+            c.agilitySessionStage = if (c.agilitySessionStage >= 5) 6 else c.agilitySessionStage
+            c.setMovementLocked(false)
         }
     }
 
@@ -192,7 +192,7 @@ class Agility(private val c: Client) {
             return
         }
         c.resetWalkingQueue()
-        c.UsingAgility = true
+        c.setMovementLocked(true)
         npc?.text = "Pipe it down...You are nothing special!"
         c.walkAnim = 746
         c.AddToWalkCords(0, 7, 4200)
@@ -204,16 +204,16 @@ class Agility(private val c: Client) {
                     c.requestWeaponAnims()
                     c.performAnimation(748, 0)
                     c.updateFlags.setRequired(UpdateFlag.APPEARANCE, true)
-                    if (c.agilityCourseStage == 6) {
+                    if (c.agilitySessionStage == 6) {
                         c.addItem(2996, 1 + Misc.random(c.getLevel(Skill.AGILITY) / 11))
                         c.checkItemUpdate()
-                        c.agilityCourseStage = 0
+                        c.agilitySessionStage = 0
                         c.sendMessage("You finished a gnome lap!")
                         giveEndExperience(1050)
                     } else {
                         giveEndExperience(250)
                     }
-                    c.UsingAgility = false
+                    c.setMovementLocked(false)
                     false
                 }
                 part == 1 -> {
@@ -243,15 +243,15 @@ class Agility(private val c: Client) {
             return
         }
         if (c.position.y == 3554 && c.position.x >= 2550 && c.position.x <= 2552) {
-            c.UsingAgility = true
+            c.setMovementLocked(true)
             val distance = 3549 - c.position.y
             c.setAgilityEmote(1501, 1501)
             c.AddToWalkCords(0, distance, distance * -1L * 600L)
             runLater(distance * -1 * 600) {
                 c.requestWeaponAnims()
                 giveEndExperience(400)
-                c.agilityCourseStage = if (c.agilityCourseStage >= 0) 1 else c.agilityCourseStage
-                c.UsingAgility = false
+                c.agilitySessionStage = if (c.agilitySessionStage >= 0) 1 else c.agilitySessionStage
+                c.setMovementLocked(false)
             }
         }
     }
@@ -263,7 +263,7 @@ class Agility(private val c: Client) {
         if (!requireAgilityLevel(40)) {
             return
         }
-        c.UsingAgility = true
+        c.setMovementLocked(true)
         val time = 7200
         if (c.position.y == 3547 || c.position.y == 3545) {
             c.AddToWalkCords(1, 0, time.toLong())
@@ -285,8 +285,8 @@ class Agility(private val c: Client) {
                             }
                             c.requestWeaponAnims()
                             giveEndExperience(600)
-                            c.agilityCourseStage = if (c.agilityCourseStage >= 1) 2 else c.agilityCourseStage
-                            c.UsingAgility = false
+                            c.agilitySessionStage = if (c.agilitySessionStage >= 1) 2 else c.agilitySessionStage
+                            c.setMovementLocked(false)
                         }
                         false
                     }
@@ -299,8 +299,8 @@ class Agility(private val c: Client) {
             runLater(time) {
                 c.requestWeaponAnims()
                 giveEndExperience(600)
-                c.agilityCourseStage = if (c.agilityCourseStage >= 1) 2 else c.agilityCourseStage
-                c.UsingAgility = false
+                c.agilitySessionStage = if (c.agilitySessionStage >= 1) 2 else c.agilitySessionStage
+                c.setMovementLocked(false)
             }
         }
     }
@@ -315,14 +315,14 @@ class Agility(private val c: Client) {
         if (!requireAgilityLevel(40)) {
             return
         }
-        c.UsingAgility = true
+        c.setMovementLocked(true)
         c.performAnimation(828, 0)
         c.walkBlock = System.currentTimeMillis() + 600
         runLater(600) {
             c.teleportTo(c.position.x - 2, c.position.y, 1)
             giveEndExperience(250)
-            c.agilityCourseStage = if (c.agilityCourseStage >= 2) 3 else c.agilityCourseStage
-            c.UsingAgility = false
+            c.agilitySessionStage = if (c.agilitySessionStage >= 2) 3 else c.agilitySessionStage
+            c.setMovementLocked(false)
         }
     }
 
@@ -333,15 +333,15 @@ class Agility(private val c: Client) {
         if (!requireAgilityLevel(40)) {
             return
         }
-        c.UsingAgility = true
+        c.setMovementLocked(true)
         c.walkAnim = 756
         val time = 2400
         c.AddToWalkCords(-4, 0, time.toLong())
         runLater(time) {
             c.requestWeaponAnims()
             giveEndExperience(350)
-            c.agilityCourseStage = if (c.agilityCourseStage >= 3) 4 else c.agilityCourseStage
-            c.UsingAgility = false
+            c.agilitySessionStage = if (c.agilitySessionStage >= 3) 4 else c.agilitySessionStage
+            c.setMovementLocked(false)
         }
     }
 
@@ -361,14 +361,14 @@ class Agility(private val c: Client) {
         if (!requireAgilityLevel(40)) {
             return
         }
-        c.UsingAgility = true
+        c.setMovementLocked(true)
         c.runAnim = 840
         c.AddToRunCords(2, 0, 1200)
         runLater(600) {
             c.requestWeaponAnims()
             giveEndExperience(100)
-            c.agilityCourseStage = if (c.agilityCourseStage >= 4) 5 else c.agilityCourseStage
-            c.UsingAgility = false
+            c.agilitySessionStage = if (c.agilitySessionStage >= 4) 5 else c.agilitySessionStage
+            c.setMovementLocked(false)
         }
     }
 
@@ -382,14 +382,14 @@ class Agility(private val c: Client) {
         if (!requireAgilityLevel(40)) {
             return
         }
-        c.UsingAgility = true
+        c.setMovementLocked(true)
         c.runAnim = 840
         c.AddToRunCords(2, 0, 1200)
         runLater(600) {
             c.requestWeaponAnims()
             giveEndExperience(100)
-            c.agilityCourseStage = if (c.agilityCourseStage >= 5) 6 else c.agilityCourseStage
-            c.UsingAgility = false
+            c.agilitySessionStage = if (c.agilitySessionStage >= 5) 6 else c.agilitySessionStage
+            c.setMovementLocked(false)
         }
     }
 
@@ -403,21 +403,21 @@ class Agility(private val c: Client) {
         if (!requireAgilityLevel(40)) {
             return
         }
-        c.UsingAgility = true
+        c.setMovementLocked(true)
         c.runAnim = 840
         c.AddToRunCords(2, 0, 1200)
         runLater(600) {
             c.requestWeaponAnims()
-            if (c.agilityCourseStage == 6) {
+            if (c.agilitySessionStage == 6) {
                 c.addItem(2996, 2 + Misc.random(c.getLevel(Skill.AGILITY) / 22))
                 c.checkItemUpdate()
                 giveEndExperience(1300)
                 c.sendMessage("You finished a barbarian lap!")
-                c.agilityCourseStage = 0
+                c.agilitySessionStage = 0
             } else {
                 giveEndExperience(100)
             }
-            c.UsingAgility = false
+            c.setMovementLocked(false)
         }
     }
 
@@ -430,7 +430,7 @@ class Agility(private val c: Client) {
                 return
             }
             if (c.position.x == 3004 && c.position.y == 3937) {
-                c.UsingAgility = true
+                c.setMovementLocked(true)
                 val distance = 13
                 c.performAnimation(746, 0)
                 c.walkAnim = 747
@@ -442,8 +442,8 @@ class Agility(private val c: Client) {
                         c.requestWeaponAnims()
                         c.performAnimation(748, 1)
                         giveEndExperience(1000)
-                        c.agilityCourseStage = if (c.agilityCourseStage >= 0) 1 else c.agilityCourseStage
-                        c.UsingAgility = false
+                        c.agilitySessionStage = if (c.agilitySessionStage >= 0) 1 else c.agilitySessionStage
+                        c.setMovementLocked(false)
                         false
                     } else {
                         true
@@ -461,15 +461,15 @@ class Agility(private val c: Client) {
             return
         }
         if (c.position.y == 3953 && c.position.x in 3003..3006) {
-            c.UsingAgility = true
+            c.setMovementLocked(true)
             val distance = 3958 - c.position.y
             c.walkAnim = 1501
             c.AddToWalkCords(0, distance, distance * 600L)
             runLater(distance * 600) {
                 c.requestWeaponAnims()
                 giveEndExperience(500)
-                c.agilityCourseStage = if (c.agilityCourseStage >= 1) 2 else c.agilityCourseStage
-                c.UsingAgility = false
+                c.agilitySessionStage = if (c.agilitySessionStage >= 1) 2 else c.agilitySessionStage
+                c.setMovementLocked(false)
             }
         }
     }
@@ -483,7 +483,7 @@ class Agility(private val c: Client) {
             if (!requireAgilityLevel(70)) {
                 return
             }
-            c.UsingAgility = true
+            c.setMovementLocked(true)
             c.setFocus(2996, 3960)
             c.walkAnim = 769
             c.AddToWalkCords(-1, 0, 4200L)
@@ -501,8 +501,8 @@ class Agility(private val c: Client) {
                         c.walkBlock = System.currentTimeMillis() + 600
                         c.transport(Position(c.position.x - 1, c.position.y, 0))
                         giveEndExperience(650)
-                        c.agilityCourseStage = if (c.agilityCourseStage >= 2) 3 else c.agilityCourseStage
-                        c.UsingAgility = false
+                        c.agilitySessionStage = if (c.agilitySessionStage >= 2) 3 else c.agilitySessionStage
+                        c.setMovementLocked(false)
                         false
                     }
                     else -> true
@@ -513,7 +513,7 @@ class Agility(private val c: Client) {
 
     fun WildyLog() {
         val time = 5600
-        c.UsingAgility = true
+        c.setMovementLocked(true)
         if (c.position.y == 3944 || c.position.y == 3946) {
             c.AddToWalkCords(1, 0, time.toLong())
             var stage = 0
@@ -534,8 +534,8 @@ class Agility(private val c: Client) {
                             }
                             c.requestWeaponAnims()
                             giveEndExperience(650)
-                            c.agilityCourseStage = if (c.agilityCourseStage >= 3) 4 else c.agilityCourseStage
-                            c.UsingAgility = false
+                            c.agilitySessionStage = if (c.agilitySessionStage >= 3) 4 else c.agilitySessionStage
+                            c.setMovementLocked(false)
                         }
                         false
                     }
@@ -548,8 +548,8 @@ class Agility(private val c: Client) {
             runLater(time) {
                 c.requestWeaponAnims()
                 giveEndExperience(650)
-                c.agilityCourseStage = if (c.agilityCourseStage >= 3) 4 else c.agilityCourseStage
-                c.UsingAgility = false
+                c.agilitySessionStage = if (c.agilitySessionStage >= 3) 4 else c.agilitySessionStage
+                c.setMovementLocked(false)
             }
         }
     }
@@ -562,21 +562,21 @@ class Agility(private val c: Client) {
             if (!requireAgilityLevel(70)) {
                 return
             }
-            c.UsingAgility = true
+            c.setMovementLocked(true)
             c.walkAnim = 737
             c.AddToWalkCords(0, -4, 2400L)
             runLater(2400) {
                 c.requestWeaponAnims()
-                if (c.agilityCourseStage == 4) {
+                if (c.agilitySessionStage == 4) {
                     c.addItem(2996, 3 + Misc.random(c.getLevel(Skill.AGILITY) / 33))
                     c.checkItemUpdate()
                     c.sendMessage("You finished a wilderness lap!")
                     giveEndExperience(2700)
-                    c.agilityCourseStage = 0
+                    c.agilitySessionStage = 0
                 } else {
                     giveEndExperience(750)
                 }
-                c.UsingAgility = false
+                c.setMovementLocked(false)
             }
         }
     }
@@ -611,7 +611,7 @@ class Agility(private val c: Client) {
                 return@runRepeating true
             }
             c.walkAnim = 744
-            c.UsingAgility = true
+            c.setMovementLocked(true)
             val distance =
                 when (c.position.y) {
                     9488 -> 6
@@ -633,7 +633,7 @@ class Agility(private val c: Client) {
                 }
                 c.requestWeaponAnims()
                 c.performAnimation(743, 0)
-                c.UsingAgility = false
+                c.setMovementLocked(false)
             }
             false
         }
@@ -656,13 +656,13 @@ class Agility(private val c: Client) {
         if (distance == 0) {
             return
         }
-        c.UsingAgility = true
+        c.setMovementLocked(true)
         c.walkAnim = if (distance == 8) 756 else 754
         val time = 5400
         c.AddToWalkCords(0, distance, time.toLong())
         runLater(time) {
             c.requestWeaponAnims()
-            c.UsingAgility = false
+            c.setMovementLocked(false)
         }
     }
 
@@ -679,7 +679,7 @@ class Agility(private val c: Client) {
         if (distance == 0) {
             return
         }
-        c.UsingAgility = true
+        c.setMovementLocked(true)
         c.ReplaceObject(3305, 9376, 6452, -3, 0)
         c.ReplaceObject(3305, 9375, 6451, -1, 0)
         val time = 600
@@ -687,7 +687,7 @@ class Agility(private val c: Client) {
         runLater(time) {
             c.ReplaceObject(3305, 9376, 6452, 0, 0)
             c.ReplaceObject(3305, 9375, 6451, 0, 0)
-            c.UsingAgility = false
+            c.setMovementLocked(false)
         }
     }
 }

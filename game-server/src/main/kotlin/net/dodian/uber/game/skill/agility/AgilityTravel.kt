@@ -31,7 +31,7 @@ class AgilityTravel(private val c: Client) {
     }
 
     fun sophanem(pos: Int) {
-        if (c.UsingAgility) {
+        if (c.isMovementLocked) {
             return
         }
         if (c.position.x != 3286 && c.position.x != 3287) {
@@ -45,7 +45,7 @@ class AgilityTravel(private val c: Client) {
         val extraStep = y == 0
         c.send(RemoveInterfaces())
         c.faceNpc(-1)
-        c.UsingAgility = true
+        c.setMovementLocked(true)
         c.clearTabs()
         c.AddToWalkCords(x, y, 600 + (600L * 35))
         startRide(if (extraStep) -1 else 0, {
@@ -115,7 +115,7 @@ class AgilityTravel(private val c: Client) {
     }
 
     fun pollnivneach(pos: Int) {
-        if (c.UsingAgility) {
+        if (c.isMovementLocked) {
             return
         }
         if (c.position.x < 3347 && c.position.x > 3349 && c.position.y != 3002 && c.position.y != 3003) {
@@ -130,7 +130,7 @@ class AgilityTravel(private val c: Client) {
         val extraStep = c.position.x == 3347 && c.position.y == 3002
         c.send(RemoveInterfaces())
         c.faceNpc(-1)
-        c.UsingAgility = true
+        c.setMovementLocked(true)
         c.clearTabs()
         c.AddToWalkCords(x, y, 600 + (600L * 35))
         startRide(if (extraStep) -1 else 0, {
@@ -223,7 +223,7 @@ class AgilityTravel(private val c: Client) {
     }
 
     fun nardah(pos: Int) {
-        if (c.UsingAgility) {
+        if (c.isMovementLocked) {
             return
         }
         if (c.position.y != 2918 && c.position.x != 3401) {
@@ -237,7 +237,7 @@ class AgilityTravel(private val c: Client) {
         val extraStep = x == 1
         c.send(RemoveInterfaces())
         c.faceNpc(-1)
-        c.UsingAgility = true
+        c.setMovementLocked(true)
         c.clearTabs()
         c.AddToWalkCords(x, y, 600 + (600L * 35))
         startRide(if (extraStep) -1 else 0, {
@@ -316,7 +316,7 @@ class AgilityTravel(private val c: Client) {
     }
 
     fun bedabinCamp(pos: Int) {
-        if (c.UsingAgility) {
+        if (c.isMovementLocked) {
             return
         }
         if (c.position.y != 3044 && c.position.y != 3046) {
@@ -329,7 +329,7 @@ class AgilityTravel(private val c: Client) {
         }
         c.send(RemoveInterfaces())
         c.faceNpc(-1)
-        c.UsingAgility = true
+        c.setMovementLocked(true)
         c.clearTabs()
         c.AddToWalkCords(x, y, 600 + (600L * 35L))
         var count = 0
@@ -404,7 +404,7 @@ class AgilityTravel(private val c: Client) {
     private fun landed(c: Client) {
         c.requestWeaponAnims()
         c.send(RemoveInterfaces())
-        c.UsingAgility = false
+        c.setMovementLocked(false)
         c.resetTabs()
     }
 }

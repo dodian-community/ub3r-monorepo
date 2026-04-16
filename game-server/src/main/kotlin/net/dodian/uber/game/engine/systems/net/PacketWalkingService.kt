@@ -54,7 +54,7 @@ object PacketWalkingService {
         if (player.antique) {
             player.antique = false
         }
-        player.playerPotato.clear()
+        player.clearPlayerPotatoState()
         with(player.farming) {
             player.updateCompost()
             player.updateFarmPatch()
@@ -159,8 +159,8 @@ object PacketWalkingService {
             ),
         )
 
-        if (player.chestEventOccur && request.opcode != 98) {
-            player.chestEventOccur = false
+        if (player.skillingEventState.isChestEventPendingMove && request.opcode != 98) {
+            player.skillingEventState = player.skillingEventState.withChestEventPendingMove(false)
         }
         player.convoId = -1
         if (DialogueService.hasBlockingDialogue(player)) {

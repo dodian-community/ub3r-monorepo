@@ -47,17 +47,15 @@ internal object SlayerMasterDialogue {
             return
         }
 
-        if (client.slayerData[3] > 0) {
+        val current = client.slayerTaskState
+        if (current.remainingAmount > 0) {
             client.showNPCChat(npcId, DialogueEmote.DEFAULT.id, arrayOf("You already have a task!"))
             return
         }
 
         val task = tasks[Misc.random(tasks.size - 1)]
         val amount = task.assignedAmountRange.value
-        client.slayerData[0] = npcId
-        client.slayerData[1] = task.ordinal
-        client.slayerData[2] = amount
-        client.slayerData[3] = amount
+        client.slayerTaskState = current.withAssignment(npcId, task.ordinal, amount, amount)
         client.showNPCChat(
             npcId,
             DialogueEmote.DEFAULT.id,
@@ -71,18 +69,19 @@ internal object SlayerMasterDialogue {
 
     @JvmStatic
     fun showCurrentTask(client: Client) {
-        val slayerMaster = client.slayerData[0]
+        val state = client.slayerTaskState
+        val slayerMaster = state.masterNpcId
         if (slayerMaster == -1) {
             client.sendMessage("You have yet to get a task. Talk to a slayer master!")
             return
         }
 
-        val checkTask = SlayerTaskDefinition.forOrdinal(client.slayerData[1])
-        val lines = if (checkTask != null && client.slayerData[3] > 0) {
+        val checkTask = SlayerTaskDefinition.forOrdinal(state.taskOrdinal)
+        val lines = if (checkTask != null && state.remainingAmount > 0) {
             arrayOf(
                 "You're currently assigned to ${checkTask.textRepresentation};",
-                "you have ${client.slayerData[3]} more to go.",
-                "Your current streak is ${client.slayerData[4]}.",
+                "you have ${state.remainingAmount} more to go.",
+                "Your current streak is ${state.streak}.",
             )
         } else {
             arrayOf("You currently have no task.", "Speak to me again to get a new one!")
@@ -92,7 +91,7 @@ internal object SlayerMasterDialogue {
 
     @JvmStatic
     fun showResetCountPrompt(client: Client) {
-        val checkTask = SlayerTaskDefinition.forOrdinal(client.slayerData[1])
+        val checkTask = SlayerTaskDefinition.forOrdinal(client.slayerTaskState.taskOrdinal)
         val title = if (checkTask != null) {
             "Reset count for ${checkTask.textRepresentation}"
         } else {
@@ -225,7 +224,7 @@ internal object SlayerMasterDialogue {
 
         client.deleteItem(995, cost)
         client.checkItemUpdate()
-        client.slayerData[3] = 0
+        client.slayerTaskState = client.slayerTaskState.withRemainingAmount(0)
         client.showNPCChat(npcId, DialogueEmote.DEFAULT.id, arrayOf("I have now canceled your ${taskName.lowercase()} task!"))
     }
 
@@ -248,7 +247,7 @@ internal object SlayerMasterDialogue {
     }
 
     private fun resetCurrentTaskCount(client: Client) {
-        val checkTask = SlayerTaskDefinition.forOrdinal(client.slayerData[1]) ?: return
+        val checkTask = SlayerTaskDefinition.forOrdinal(client.slayerTaskState.taskOrdinal) ?: return
         for (npcId in checkTask.npcId) {
             val npcName = Server.npcManager.getName(npcId)
             for (slot in 0 until client.monsterName.size) {
@@ -261,7 +260,7 @@ internal object SlayerMasterDialogue {
     }
 
     private fun cancelTaskCost(client: Client): Int {
-        return when (client.slayerData[0]) {
+        return when (client.slayerTaskState.masterNpcId) {
             403 -> 250_000
             405 -> 500_000
             else -> 100_000
@@ -269,9 +268,10 @@ internal object SlayerMasterDialogue {
     }
 
     private fun currentTaskName(client: Client): String {
-        if (client.slayerData[0] == -1 || client.slayerData[3] <= 0) {
+        val state = client.slayerTaskState
+        if (state.masterNpcId == -1 || state.remainingAmount <= 0) {
             return ""
         }
-        return SlayerTaskDefinition.forOrdinal(client.slayerData[1])?.textRepresentation ?: ""
+        return SlayerTaskDefinition.forOrdinal(state.taskOrdinal)?.textRepresentation ?: ""
     }
 }

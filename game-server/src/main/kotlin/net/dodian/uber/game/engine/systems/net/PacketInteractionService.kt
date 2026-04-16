@@ -64,8 +64,8 @@ object PacketInteractionService {
         if (client.randomed || client.UsingAgility) {
             return
         }
-        if (client.playerPotato.isNotEmpty()) {
-            client.playerPotato.clear()
+        if (client.playerPotatoState != null) {
+            client.clearPlayerPotatoState()
         }
         if (option in 1..4) {
             LegendsGuildGateService.primeGuardApproach(client, npc)
