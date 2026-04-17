@@ -249,7 +249,7 @@ private class ChestObjectContent : ObjectContent {
                 client.sendMessage("This chest is empty!")
                 true
             }
-            20873, 20885, 11729, 11730, 11731, 11732, 11733, 11734 -> {
+            20885, 11729, 11730, 11731, 11732, 11733, 11734 -> {
                 Thieving.attempt(client, objectId, position)
                 true
             }

@@ -17,4 +17,11 @@ class BankerModuleTest {
         val found = Banker.entries.filter { it.npcId in setOf(394, 395, 7677) && (it.x to it.y) in expected }
         assertEquals(expected.size, found.size)
     }
+
+    @Test
+    fun `banker module exposes all banker npc ids`() {
+        assertTrue(Banker.npcIds.contains(394))
+        assertTrue(Banker.npcIds.contains(395))
+        assertTrue(Banker.npcIds.contains(7677))
+    }
 }

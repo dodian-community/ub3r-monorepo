@@ -15,11 +15,15 @@ class HighRiskInboundListenerContractTest {
             Files.readString(Path.of("src/main/java/net/dodian/uber/game/netty/listener/in/DuelRequestListener.java"))
 
         assertTrue(tradeSource.contains("PacketInteractionRequestService.handleLegacyTradeRequest(client, targetSlot, other)"))
+        assertTrue(tradeSource.contains("if (buf.readableBytes() < 2)"))
         assertFalse(tradeSource.contains("client.tradeReq("))
         assertFalse(tradeSource.contains("client.duelReq("))
         assertFalse(tradeSource.contains("client.openTrade("))
 
         assertTrue(duelSource.contains("PacketInteractionRequestService.handleDuelRequest(client, pid, other)"))
+        assertTrue(duelSource.contains("if (size <= 0 || size > 8 || buf.readableBytes() < size)"))
+        assertFalse(duelSource.contains("new byte[size]"))
+        assertFalse(duelSource.contains("Utils.HexToInt("))
         assertFalse(duelSource.contains("client.duelReq("))
         assertFalse(duelSource.contains("client.openTrade("))
     }

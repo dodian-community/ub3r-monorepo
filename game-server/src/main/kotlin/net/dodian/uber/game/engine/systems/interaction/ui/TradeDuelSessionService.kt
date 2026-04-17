@@ -51,6 +51,17 @@ object TradeDuelSessionService {
     }
 
     @JvmStatic
+    fun closeOnLogout(client: Client) {
+        if (client.inTrade) {
+            closeOpenTrade(client)
+            return
+        }
+        if (client.inDuel && !client.duelFight) {
+            closeOpenDuel(client)
+        }
+    }
+
+    @JvmStatic
     fun confirmTradeStageOne(client: Client, other: Client): Boolean {
         if (!client.inTrade || client.tradeConfirmed) {
             return true

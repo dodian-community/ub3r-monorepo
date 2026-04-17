@@ -6,7 +6,6 @@ import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
 import net.dodian.uber.game.engine.systems.net.PacketInteractionRequestService;
-import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,9 +23,18 @@ public class DuelRequestListener implements PacketListener {
     public void handle(Client client, GamePacket packet) {
         ByteBuf buf = packet.payload();
         int size = packet.size();
-        byte[] data = new byte[size];
-        buf.readBytes(data);
-        int pid = Utils.HexToInt(data, 0, size) / 1000;
+        if (size <= 0 || size > 8 || buf.readableBytes() < size) {
+            return;
+        }
+        int temp = 0;
+        int multiplier = 1000;
+        for (int idx = 0; idx < size; idx++) {
+            temp += buf.readUnsignedByte() * multiplier;
+            if (multiplier > 1) {
+                multiplier /= 1000;
+            }
+        }
+        int pid = temp / 1000;
 
         Client other = client.getClient(pid);
         if (!client.validClient(pid) || client.getSlot() == pid) {

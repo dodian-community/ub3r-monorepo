@@ -10,7 +10,7 @@ object CombatPreemptionPolicy {
         if (!CombatRuntimeService.hasActiveCombat(player)) {
             return
         }
-        CombatRuntimeService.cancel(player, mappedReason)
+        CombatCommandService.cancelEngagement(player, mappedReason)
     }
 
     private fun mapCancelReason(reason: PlayerActionCancelReason): CombatCancellationReason? =

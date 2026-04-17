@@ -1,13 +1,18 @@
 package net.dodian.uber.game.engine.systems.combat
 
+import net.dodian.uber.game.Server
+import net.dodian.uber.game.combat.attackTarget
+import net.dodian.uber.game.engine.systems.follow.FollowRouting
+import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.engine.systems.follow.FollowRouting
-import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
-import net.dodian.uber.game.combat.attackTarget
+import org.slf4j.LoggerFactory
 
 object CombatRuntimeService {
+    private val logger = LoggerFactory.getLogger(CombatRuntimeService::class.java)
+    private val combatTelemetryEnabled: Boolean by lazy { java.lang.Boolean.getBoolean("combat.telemetry.enabled") }
+
     @JvmStatic
     fun process(
         player: Client,
@@ -29,45 +34,33 @@ object CombatRuntimeService {
             return
         }
 
-        val target = player.target ?: run {
+        var engagement = player.combatEngagementState ?: run {
+            CombatCommandService.syncLegacyState(player)
+            return
+        }
+        val target = resolveTarget(player, engagement) ?: run {
             cancel(player, CombatCancellationReason.TARGET_INVALID)
             return
         }
-        if (!isValidTarget(target)) {
-            cancel(player, CombatCancellationReason.TARGET_INVALID)
-            return
-        }
+        var cooldown = CombatStartService.restoreCooldownState(player, cycleNow)
 
-        var state = player.combatTargetState
-        if (state == null) {
-            cancel(player, CombatCancellationReason.TARGET_INVALID)
-            return
-        }
-        if (state.targetType != target.type || state.targetSlot != target.slot) {
-            state =
-                state.copy(
-                    targetType = target.type,
-                    targetSlot = target.slot,
-                    startedCycle = cycleNow,
-                    nextAttackCycle = cycleNow,
-                    lastInRangeConfirmationCycle = cycleNow,
-                    initialSwingConsumed = false,
-                    lastFollowTargetX = target.position.x,
-                    lastFollowTargetY = target.position.y,
-                    lastFollowTargetDeltaX = targetDeltaX(target),
-                    lastFollowTargetDeltaY = targetDeltaY(target),
-                )
-            player.combatTargetState = state
-        }
-
-        val policy = CombatStartService.policyFor(player, state.intent)
+        val policy = CombatStartService.policyFor(player, engagement.intent)
         if (!player.goodDistanceEntity(target, policy.attackDistance)) {
-            followTarget(player, target, state, cycleNow)
+            if (combatTelemetryEnabled) {
+                logger.info(
+                    "combat.telemetry phase=target_selection player={} reason=out_of_range targetType={} targetSlot={} attackDistance={}",
+                    player.playerName,
+                    target.type,
+                    target.slot,
+                    policy.attackDistance,
+                )
+            }
+            followTarget(player, target, engagement, cycleNow)
             return
         }
 
         player.resetWalkingQueue()
-        if (cycleNow < state.nextAttackCycle) {
+        if (cycleNow < cooldown.nextAttackCycle) {
             return
         }
         if (!CombatStartService.canPerformAttackTick(player)) {
@@ -76,26 +69,35 @@ object CombatRuntimeService {
 
         val attackResult = player.attackTarget()
         if (attackResult == null) {
-            if (player.target == null || player.combatTargetState == null) {
-                return
+            if (combatTelemetryEnabled) {
+                logger.info(
+                    "combat.telemetry phase=attack_resolution player={} reason=attack_result_null targetType={} targetSlot={} hasEngagement={} hasCooldown={}",
+                    player.playerName,
+                    target.type,
+                    target.slot,
+                    player.combatEngagementState != null,
+                    player.combatCooldownState != null,
+                )
             }
             return
         }
 
         val nextDelay = maxOf(attackResult.nextDelayTicks, 1)
-        player.combatTimer = nextDelay
         player.lastCombat = 16
-        player.combatTargetState =
-            (player.combatTargetState ?: state).copy(
-                lastAttackCycle = cycleNow,
-                nextAttackCycle = cycleNow + nextDelay,
-                lastInRangeConfirmationCycle = cycleNow,
-                autoFollowEnabled = true,
-                lastFollowTargetX = target.position.x,
-                lastFollowTargetY = target.position.y,
-                lastFollowTargetDeltaX = targetDeltaX(target),
-                lastFollowTargetDeltaY = targetDeltaY(target),
+        CombatCommandService.refreshAttackCadence(player, cycleNow, nextDelay, target)
+        engagement = player.combatEngagementState ?: engagement
+        cooldown = player.combatCooldownState ?: cooldown
+        if (combatTelemetryEnabled) {
+            logger.info(
+                "combat.telemetry phase=attack_resolution player={} targetType={} targetSlot={} nextAttackCycle={} lastAttackCycle={} initialSwingConsumed={}",
+                player.playerName,
+                engagement.targetType,
+                engagement.targetSlot,
+                cooldown.nextAttackCycle,
+                cooldown.lastAttackCycle,
+                cooldown.initialSwingConsumed,
             )
+        }
     }
 
     @JvmStatic
@@ -103,9 +105,19 @@ object CombatRuntimeService {
         player: Client,
         reason: CombatCancellationReason,
     ) {
-        player.combatCancellationReason = reason
+        if (combatTelemetryEnabled) {
+            logger.info(
+                "combat.telemetry phase=cancel player={} reason={} targetType={} targetSlot={} hasEngagement={} hasCooldown={}",
+                player.playerName,
+                reason,
+                player.combatEngagementState?.targetType,
+                player.combatEngagementState?.targetSlot,
+                player.combatEngagementState != null,
+                player.combatCooldownState != null,
+            )
+        }
         player.resetWalkingQueue()
-        player.resetAttack()
+        CombatCommandService.resetCombatFully(player, reason)
     }
 
     @JvmStatic
@@ -125,22 +137,19 @@ object CombatRuntimeService {
         npc: Npc,
         reason: CombatCancellationReason = CombatCancellationReason.TARGET_INVALID,
     ) {
-        val state = player.combatTargetState
+        val engagement = player.combatEngagementState
         val targetingNpc =
             player.target === npc ||
-                (state != null && state.targetType == Entity.Type.NPC && state.targetSlot == npc.slot)
+                (engagement != null && engagement.targetType == Entity.Type.NPC && engagement.targetSlot == npc.slot)
         if (!targetingNpc) {
             return
         }
-        player.combatCancellationReason = reason
         player.resetWalkingQueue()
-        player.faceTarget(-1)
-        player.resetAttack()
+        CombatCommandService.resetCombatFully(player, reason)
     }
 
     @JvmStatic
-    fun hasActiveCombat(player: Client): Boolean =
-        player.target != null || player.combatTargetState != null
+    fun hasActiveCombat(player: Client): Boolean = player.combatEngagementState != null
 
     @JvmStatic
     fun isTargetingNpc(
@@ -151,8 +160,26 @@ object CombatRuntimeService {
         if (target === npc) {
             return true
         }
-        val state = player.combatTargetState ?: return false
-        return state.targetType == Entity.Type.NPC && state.targetSlot == npc.slot
+        val engagement = player.combatEngagementState ?: return false
+        return engagement.targetType == Entity.Type.NPC && engagement.targetSlot == npc.slot
+    }
+
+    private fun resolveTarget(
+        player: Client,
+        engagement: CombatEngagementState,
+    ): Entity? {
+        val target =
+            when (engagement.targetType) {
+                Entity.Type.PLAYER -> resolveCombatTargetPlayer(engagement.targetSlot)
+                Entity.Type.NPC -> Server.npcManager.getNpc(engagement.targetSlot)
+            }
+        if (target == null || !isValidTarget(target)) {
+            return null
+        }
+        if (player.target !== target) {
+            player.target = target
+        }
+        return target
     }
 
     private fun isValidTarget(target: Entity): Boolean =
@@ -165,17 +192,17 @@ object CombatRuntimeService {
     private fun followTarget(
         player: Client,
         target: Entity,
-        state: CombatTargetState,
+        engagement: CombatEngagementState,
         cycleNow: Long,
     ) {
         val refreshed =
-            state.lastFollowCycle != cycleNow &&
-                (state.lastFollowTargetX != target.position.x ||
-                    state.lastFollowTargetY != target.position.y ||
+            engagement.lastFollowCycle != cycleNow &&
+                (engagement.lastFollowTargetX != target.position.x ||
+                    engagement.lastFollowTargetY != target.position.y ||
                     player.wQueueReadPtr == player.wQueueWritePtr)
 
-        if (!state.autoFollowEnabled) {
-            cancel(player, CombatCancellationReason.OUT_OF_RANGE)
+        if (!engagement.autoFollowEnabled) {
+            CombatCommandService.cancelEngagement(player, CombatCancellationReason.OUT_OF_RANGE)
             return
         }
 
@@ -186,7 +213,7 @@ object CombatRuntimeService {
                 targetY = target.position.y,
                 targetSize = target.getSize(),
                 z = player.position.z,
-                preferredDestination = preferredCombatDestination(target, state),
+                preferredDestination = preferredCombatDestination(target, engagement),
                 running = true,
             )
         }
@@ -195,33 +222,22 @@ object CombatRuntimeService {
         } else {
             player.facePlayer(target.slot)
         }
-        player.combatTargetState =
-            state.copy(
-                lastFollowCycle = cycleNow,
-                lastFollowTargetX = target.position.x,
-                lastFollowTargetY = target.position.y,
-                lastFollowTargetDeltaX = targetDeltaX(target),
-                lastFollowTargetDeltaY = targetDeltaY(target),
-            )
+        CombatCommandService.refreshFollowState(player, target, cycleNow)
     }
 
-    private fun preferredCombatDestination(target: Entity, state: CombatTargetState): Pair<Int, Int>? {
+    private fun preferredCombatDestination(target: Entity, engagement: CombatEngagementState): Pair<Int, Int>? {
         if (target !is Client) {
             return null
         }
         var deltaX = target.lastWalkDeltaX.coerceIn(-1, 1)
         var deltaY = target.lastWalkDeltaY.coerceIn(-1, 1)
         if (deltaX == 0 && deltaY == 0) {
-            deltaX = state.lastFollowTargetDeltaX.coerceIn(-1, 1)
-            deltaY = state.lastFollowTargetDeltaY.coerceIn(-1, 1)
+            deltaX = engagement.lastFollowTargetDeltaX.coerceIn(-1, 1)
+            deltaY = engagement.lastFollowTargetDeltaY.coerceIn(-1, 1)
         }
         if (deltaX == 0 && deltaY == 0) {
             return null
         }
         return (target.position.x - deltaX) to (target.position.y - deltaY)
     }
-
-    private fun targetDeltaX(target: Entity): Int = if (target is Client) target.lastWalkDeltaX.coerceIn(-1, 1) else 0
-
-    private fun targetDeltaY(target: Entity): Int = if (target is Client) target.lastWalkDeltaY.coerceIn(-1, 1) else 0
 }

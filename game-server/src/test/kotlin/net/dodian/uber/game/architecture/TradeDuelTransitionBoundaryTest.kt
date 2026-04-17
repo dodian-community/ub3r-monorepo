@@ -43,6 +43,8 @@ class TradeDuelTransitionBoundaryTest {
             Files.readString(Path.of("src/main/kotlin/net/dodian/uber/game/engine/systems/net/PacketWalkingService.kt"))
         val closeSource =
             Files.readString(Path.of("src/main/kotlin/net/dodian/uber/game/engine/systems/net/PacketInterfaceCloseService.kt"))
+        val clientSource =
+            Files.readString(Path.of("src/main/java/net/dodian/uber/game/model/entity/player/Client.java"))
 
         assertTrue(walkingSource.contains("TradeDuelSessionService.closeOpenTrade(player)"))
         assertTrue(walkingSource.contains("TradeDuelSessionService.closeOpenDuel(player)"))
@@ -53,5 +55,7 @@ class TradeDuelTransitionBoundaryTest {
         assertTrue(closeSource.contains("TradeDuelSessionService.closeOpenDuel(client)"))
         assertFalse(closeSource.contains("client.declineTrade()"))
         assertFalse(closeSource.contains("client.declineDuel()"))
+
+        assertTrue(clientSource.contains("TradeDuelSessionService.closeOnLogout(this)"))
     }
 }

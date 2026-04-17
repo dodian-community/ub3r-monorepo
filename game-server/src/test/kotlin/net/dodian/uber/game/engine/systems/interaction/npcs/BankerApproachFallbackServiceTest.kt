@@ -10,6 +10,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -49,6 +50,16 @@ class BankerApproachFallbackServiceTest {
 
         assertEquals(2616, destX)
         assertEquals(3094, destY)
+    }
+
+    @Test
+    fun `banker fallback can still trigger while player has queued movement`() {
+        val client = clientAt(slot = 22, x = 2612, y = 3094, z = 0)
+        val banker = Npc(301, 394, Position(2615, 3094, 0), 6)
+        client.newWalkCmdSteps = 2
+
+        assertTrue(BankerApproachFallbackService.shouldAttemptFallback(client, banker, option = 1))
+        assertFalse(BankerApproachFallbackService.shouldAttemptFallback(client, banker, option = 5))
     }
 
     private fun clientAt(slot: Int, x: Int, y: Int, z: Int): Client {

@@ -57,6 +57,7 @@ import net.dodian.uber.game.engine.systems.combat.CombatStartService;
 import net.dodian.uber.game.engine.systems.interaction.PlayerInteractionGuardService;
 import net.dodian.uber.game.engine.systems.interaction.items.ItemDispatcher;
 import net.dodian.uber.game.engine.systems.interaction.InteractionAnchorState;
+import net.dodian.uber.game.engine.systems.interaction.ui.TradeDuelSessionService;
 import net.dodian.uber.game.engine.lifecycle.PlayerDeferredLifecycleService;
 import net.dodian.uber.game.engine.util.Misc;
 import net.dodian.utilities.MD5;
@@ -1047,9 +1048,8 @@ public class Client extends Player implements Runnable {
                     c.refreshFriends();
                 }
             }
-            if (inTrade) declineTrade();
-            else if (inDuel && !duelFight) declineDuel();
-            else if (duel_with > 0 && validClient(duel_with) && inDuel && duelFight) {
+            TradeDuelSessionService.closeOnLogout(this);
+            if (duel_with > 0 && validClient(duel_with) && inDuel && duelFight) {
                 Client p = getClient(duel_with);
                 p.duelWin = true;
                 p.DuelVictory();
@@ -4081,7 +4081,6 @@ public class Client extends Player implements Runnable {
     public void resetAttack() {
         //rerequestAnim();
         magicId = -1;
-        target = null;
         CombatStartService.clearCombatTarget(this);
     }
 

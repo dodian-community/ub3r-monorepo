@@ -5,6 +5,7 @@ import net.dodian.cache.objects.GameObjectData
 import net.dodian.cache.objects.GameObjectDef
 import net.dodian.uber.game.combat.getAttackStyle
 import net.dodian.uber.game.engine.systems.interaction.objects.ObjectContentRegistry
+import net.dodian.uber.game.engine.systems.interaction.objects.ObjectClickLoggingService
 import net.dodian.uber.game.engine.systems.interaction.objects.ObjectInteractionService
 import net.dodian.uber.game.engine.systems.interaction.npcs.BankerApproachFallbackService
 import net.dodian.uber.game.engine.systems.interaction.npcs.NpcContentDispatcher
@@ -14,10 +15,14 @@ import net.dodian.uber.game.events.item.ItemOnNpcEvent
 import net.dodian.uber.game.events.magic.MagicOnNpcEvent
 import net.dodian.uber.game.events.magic.MagicOnPlayerEvent
 import net.dodian.uber.game.model.Position
+import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.model.objects.GlobalObject
 import net.dodian.uber.game.model.objects.WorldObject
+import net.dodian.uber.game.engine.systems.combat.AttackStartDedupeService
+import net.dodian.uber.game.engine.systems.combat.AttackStartDedupeService.Decision
+import net.dodian.uber.game.engine.systems.combat.CombatCommandService
 import net.dodian.uber.game.engine.systems.combat.CombatIntent
 import net.dodian.uber.game.engine.systems.combat.CombatStartService
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancellationService
@@ -36,6 +41,7 @@ import java.util.IdentityHashMap
 object InteractionProcessor {
     private val logger = LoggerFactory.getLogger(InteractionProcessor::class.java)
     private val settledSinceCycle = IdentityHashMap<InteractionIntent, Long>()
+    private val objectDistanceRejectLogged = IdentityHashMap<InteractionIntent, Boolean>()
 
     @JvmStatic
     fun process(player: Client): InteractionExecutionResult {
@@ -173,6 +179,22 @@ object InteractionProcessor {
                 resolveDistanceMode(policy.distanceRule),
             ) == null
         ) {
+            if (objectDistanceRejectLogged.putIfAbsent(intent, true) == null) {
+                ObjectClickLoggingService.log(
+                    context =
+                        ObjectInteractionContext.click(
+                            client = player,
+                            option = intent.option,
+                            objectId = intent.objectId,
+                            position = targetPosition,
+                            obj = routeSnapshot.objectData,
+                            packetOpcode = intent.opcode,
+                        ),
+                    resolution = null,
+                    handled = false,
+                    handlerSource = "InteractionProcessor.distance_reject",
+                )
+            }
             skillObjectBinding?.let {
                 SkillPolicyMetrics.record(it.preset, SkillPolicyRoute.OBJECT, SkillPolicyResult.POLICY_REJECT)
             }
@@ -676,7 +698,7 @@ object InteractionProcessor {
         }
 
         player.activeInteraction = ActiveInteraction(intent, player.lastProcessedCycle)
-        CombatStartService.startPlayerAttack(player, victim, CombatIntent.ATTACK_PLAYER)
+        CombatCommandService.requestAttack(player, victim, CombatIntent.ATTACK_PLAYER)
         clear(player)
         slowLogIfNeeded(
             player,
@@ -735,8 +757,17 @@ object InteractionProcessor {
         if (timing.handled) {
             return timing
         }
-        CombatStartService.beginAttackNow(player, npc, CombatIntent.ATTACK_NPC)
+        CombatCommandService.requestAttack(player, npc, CombatIntent.ATTACK_NPC)
         return timing
+    }
+
+    private fun refreshCombatTargetFacing(player: Client, target: Entity) {
+        player.target = target
+        if (target is net.dodian.uber.game.model.entity.npc.Npc) {
+            player.faceNpc(target.slot)
+        } else {
+            player.facePlayer(target.slot)
+        }
     }
 
     private fun settleNpcInteractionMovement(player: Client) {
@@ -746,7 +777,10 @@ object InteractionProcessor {
     }
 
     private fun clear(player: Client) {
-        player.pendingInteraction?.let { settledSinceCycle.remove(it) }
+        player.pendingInteraction?.let {
+            settledSinceCycle.remove(it)
+            objectDistanceRejectLogged.remove(it)
+        }
         player.pendingInteraction = null
         player.activeInteraction = null
         player.interactionEarliestCycle = 0

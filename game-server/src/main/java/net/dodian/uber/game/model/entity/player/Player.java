@@ -42,6 +42,8 @@ import net.dodian.uber.game.engine.systems.interaction.StaticObjectOverrides;
 import net.dodian.uber.game.engine.systems.interaction.InteractionAnchorState;
 import net.dodian.uber.game.engine.systems.interaction.InteractionIntent;
 import net.dodian.uber.game.engine.systems.combat.CombatCancellationReason;
+import net.dodian.uber.game.engine.systems.combat.CombatCooldownState;
+import net.dodian.uber.game.engine.systems.combat.CombatEngagementState;
 import net.dodian.uber.game.engine.systems.combat.CombatTargetState;
 import net.dodian.uber.game.engine.lifecycle.DeathTaskState;
 import net.dodian.uber.game.skill.smithing.ActiveSmithingSelection;
@@ -1270,6 +1272,42 @@ public abstract class Player extends Entity {
 
     public void clearCombatTargetState() {
         interactionState.clearCombatTargetState();
+    }
+
+    public CombatEngagementState getCombatEngagementState() {
+        return interactionState.getCombatEngagementState();
+    }
+
+    public void setCombatEngagementState(CombatEngagementState combatEngagementState) {
+        interactionState.setCombatEngagementState(combatEngagementState);
+    }
+
+    public void clearCombatEngagementState() {
+        interactionState.clearCombatEngagementState();
+    }
+
+    public CombatCooldownState getCombatCooldownState() {
+        return interactionState.getCombatCooldownState();
+    }
+
+    public void setCombatCooldownState(CombatCooldownState combatCooldownState) {
+        interactionState.setCombatCooldownState(combatCooldownState);
+    }
+
+    public void clearCombatCooldownState() {
+        interactionState.clearCombatCooldownState();
+    }
+
+    public AttackStartDedupeState getAttackStartDedupeState() {
+        return interactionState.getAttackStartDedupeState();
+    }
+
+    public void setAttackStartDedupeState(AttackStartDedupeState state) {
+        interactionState.setAttackStartDedupeState(state);
+    }
+
+    public void clearAttackStartDedupeState() {
+        interactionState.clearAttackStartDedupeState();
     }
 
     public CombatCancellationReason getCombatCancellationReason() {
