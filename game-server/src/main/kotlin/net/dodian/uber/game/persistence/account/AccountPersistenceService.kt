@@ -17,6 +17,7 @@ import net.dodian.uber.game.persistence.repository.DbAsyncRepository
 import net.dodian.uber.game.persistence.repository.DbResult
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.engine.loop.GameThreadTaskQueue
+import net.dodian.uber.game.engine.tasking.PlayerScopedCoroutineService
 import org.slf4j.LoggerFactory
 import net.dodian.uber.game.persistence.db.DbTables
 
@@ -108,7 +109,11 @@ object AccountPersistenceService {
         if (dbId < 1) {
             return
         }
-        scope.launch {
+        PlayerScopedCoroutineService.launch(
+            player = client,
+            jobKey = "refund-check",
+            scope = scope,
+        ) {
             val hasUnclaimedResult =
                 DbAsyncRepository.suspendReadConnection(dispatcher) { conn ->
                     conn.prepareStatement(
