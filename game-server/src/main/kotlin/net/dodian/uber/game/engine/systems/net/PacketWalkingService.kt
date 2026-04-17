@@ -13,6 +13,7 @@ import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancellationService
 import net.dodian.uber.game.engine.systems.follow.FollowService
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
+import net.dodian.uber.game.engine.systems.interaction.ui.TradeDuelSessionService
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicLong
 
@@ -42,9 +43,9 @@ object PacketWalkingService {
 
         if (request.opcode == 164 || request.opcode == 248) {
             if (player.inTrade) {
-                player.declineTrade()
+                TradeDuelSessionService.closeOpenTrade(player)
             } else if (player.inDuel && !player.duelFight) {
-                player.declineDuel()
+                TradeDuelSessionService.closeOpenDuel(player)
             }
         }
 

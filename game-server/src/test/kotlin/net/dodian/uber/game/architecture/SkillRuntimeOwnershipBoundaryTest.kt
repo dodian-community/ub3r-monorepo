@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test
 class SkillRuntimeOwnershipBoundaryTest {
     private val kotlinSourceRoot: Path = Paths.get("src/main/kotlin")
     private val skillsRoot: Path = Paths.get("src/main/kotlin/net/dodian/uber/game/skill")
+    private val skillRoutingRoot: Path = Paths.get("src/main/kotlin/net/dodian/uber/game/engine/systems/skills")
     private val retiredServiceFile: Path =
         Paths.get("src/main/kotlin/net/dodian/uber/game/systems/action/SkillingActionService.kt")
 
@@ -102,27 +103,32 @@ class SkillRuntimeOwnershipBoundaryTest {
             ".playerPotato" to Regex("""\.playerPotato\b"""),
             ".chestEvent" to Regex("""\.chestEvent\b"""),
             ".chestEventOccur" to Regex("""\.chestEventOccur\b"""),
+            ".canPreformAction" to Regex("""\.canPreformAction\b"""),
             ".randomed" to Regex("""\.randomed\b"""),
             ".random_skill" to Regex("""\.random_skill\b"""),
         )
 
-        val violations = Files.walk(skillsRoot).use { paths ->
-            paths.iterator().asSequence()
-                .filter { Files.isRegularFile(it) }
-                .filter { it.extension == "kt" || it.extension == "java" }
-                .flatMap { file ->
-                    val content = Files.readString(file)
-                    forbiddenPatterns
-                        .filter { (_, pattern) -> pattern.containsMatchIn(content) }
-                        .map { (token, _) -> "${file}: references forbidden legacy token `$token`" }
-                        .asSequence()
+        val roots = listOf(skillsRoot, skillRoutingRoot)
+        val violations =
+            roots.flatMap { root ->
+                Files.walk(root).use { paths ->
+                    paths.iterator().asSequence()
+                        .filter { Files.isRegularFile(it) }
+                        .filter { it.extension == "kt" || it.extension == "java" }
+                        .flatMap { file ->
+                            val content = Files.readString(file)
+                            forbiddenPatterns
+                                .filter { (_, pattern) -> pattern.containsMatchIn(content) }
+                                .map { (token, _) -> "${file}: references forbidden legacy token `$token`" }
+                                .asSequence()
+                        }
+                        .toList()
                 }
-                .toList()
-        }
+            }
 
         assertTrue(
             violations.isEmpty(),
-            "Skill modules must use typed runtime state adapters, not direct legacy player fields.\n${violations.joinToString("\n")}",
+            "Skill modules/routes must use typed runtime state adapters, not direct legacy player fields.\n${violations.joinToString("\n")}",
         )
     }
 

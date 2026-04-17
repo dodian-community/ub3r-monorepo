@@ -71,7 +71,6 @@ object Thieving {
                 return@runLaterMs
             }
             ProgressionService.addXp(player, data.receivedExperience, Skill.THIEVING)
-            player.canPreformAction = false
             if (data.item.size > 1) {
                 val rollChance = (Math.random() * 100).toInt()
                 for (i in data.item.indices) {

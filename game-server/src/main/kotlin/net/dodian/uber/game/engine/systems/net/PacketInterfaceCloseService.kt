@@ -3,6 +3,7 @@ package net.dodian.uber.game.engine.systems.net
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService
+import net.dodian.uber.game.engine.systems.interaction.ui.TradeDuelSessionService
 
 /**
  * Kotlin service for the miscellaneous interface-close packet (opcode 130).
@@ -51,8 +52,7 @@ object PacketInterfaceCloseService {
             ) {
                 return
             }
-            client.declineDuel()
-            client.checkItemUpdate()
+            TradeDuelSessionService.closeOpenDuel(client)
         }
         if (client.inTrade) {
             val other = client.getClient(client.trade_reqId)
@@ -61,12 +61,10 @@ object PacketInterfaceCloseService {
             ) {
                 return
             }
-            client.declineTrade()
-            client.checkItemUpdate()
+            TradeDuelSessionService.closeOpenTrade(client)
         }
         if (client.currentSkill >= 0) {
             client.currentSkill = -1 // Close skill menu interface
         }
     }
 }
-
