@@ -37,6 +37,7 @@ class GameTask internal constructor(
     internal var invoked = false
     private var nextStep: TaskStep? = null
     private val returnValues = HashMap<TaskRequestKey<*>, Any?>()
+    private val metadata = HashMap<String, String>()
     private var terminateAction: (GameTask.() -> Unit)? = null
 
     override val context: CoroutineContext = EmptyCoroutineContext
@@ -72,9 +73,16 @@ class GameTask internal constructor(
         }
         nextStep = null
         returnValues.clear()
+        metadata.clear()
         terminateAction?.invoke(this)
         control.markCompleted()
     }
+
+    fun setMetadata(key: String, value: String) {
+        metadata[key] = value
+    }
+
+    fun metadataSnapshot(): Map<String, String> = metadata.toMap()
 
     fun onTerminate(block: GameTask.() -> Unit) {
         terminateAction = block
