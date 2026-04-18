@@ -8,6 +8,24 @@ import java.nio.file.Paths
 
 class InteractionListenersBoundaryTest {
     @Test
+    fun `object npc and examine listeners enforce packet reject reason enum and strict bounds`() {
+        val objectSource = Files.readString(
+            Paths.get("src/main/java/net/dodian/uber/game/netty/listener/in/ObjectInteractionListener.java"),
+        )
+        val npcSource = Files.readString(
+            Paths.get("src/main/java/net/dodian/uber/game/netty/listener/in/NpcInteractionListener.java"),
+        )
+        val examineSource = Files.readString(
+            Paths.get("src/main/java/net/dodian/uber/game/netty/listener/in/ExamineListener.java"),
+        )
+
+        assertTrue(objectSource.contains("PacketRejectReason.SHORT_PAYLOAD"))
+        assertTrue(npcSource.contains("PacketRejectReason.SHORT_PAYLOAD"))
+        assertTrue(examineSource.contains("PacketRejectReason.SHORT_PAYLOAD"))
+        assertTrue(examineSource.contains("readableBytes() >"))
+    }
+
+    @Test
     fun `attack player listener delegates interaction scheduling to kotlin service`() {
         val source = Files.readString(
             Paths.get("src/main/java/net/dodian/uber/game/netty/listener/in/AttackPlayerListener.java"),
@@ -238,4 +256,3 @@ class InteractionListenersBoundaryTest {
         error("Method body end not found for: $signature")
     }
 }
-
