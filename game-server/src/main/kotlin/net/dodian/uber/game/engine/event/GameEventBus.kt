@@ -5,6 +5,7 @@ package net.dodian.uber.game.engine.event
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import net.dodian.uber.game.engine.event.bootstrap.CoreEventBusBootstrap
+import net.dodian.uber.game.engine.metrics.EventDispatchTelemetry
 import net.dodian.uber.game.events.GameEvent
 import net.dodian.uber.game.events.skilling.SkillActionCompleteEvent
 import net.dodian.uber.game.events.skilling.SkillActionInterruptEvent
@@ -22,25 +23,35 @@ object GameEventBus {
     private val returnableListeners =
         ConcurrentHashMap<Class<out GameEvent>, CopyOnWriteArrayList<ReturnableEventListener<out GameEvent, out Any>>>()
     private val filters = ConcurrentHashMap<Class<out GameEvent>, CopyOnWriteArrayList<EventFilter<out GameEvent>>>()
+    private val listenerFingerprints = ConcurrentHashMap.newKeySet<String>()
+    private val returnableFingerprints = ConcurrentHashMap.newKeySet<String>()
 
     @Volatile
     private var bootstrapped = false
 
     @JvmStatic
     fun bootstrap() {
-        if (bootstrapped) {
-            return
+        synchronized(this) {
+            val alreadyBootstrapped = bootstrapped
+            EventDispatchTelemetry.recordBootstrapInvocation(alreadyBootstrapped, CoreEventBusBootstrap.bootstrapCount())
+            if (alreadyBootstrapped) {
+                return
+            }
+            CoreEventBusBootstrap.bootstrap()
+            bootstrapped = true
         }
-        CoreEventBusBootstrap.bootstrap()
-        bootstrapped = true
     }
 
     @JvmStatic
     fun <E : GameEvent> post(event: E) {
+        if (!hasSubscribers(event.javaClass)) {
+            EventDispatchTelemetry.recordMissingSubscriber(event.javaClass.simpleName)
+        }
         try {
             processListeners(event, listeners[event.javaClass])
             processReturnable(event, returnableListeners[event.javaClass])
         } catch (exception: RuntimeException) {
+            EventDispatchTelemetry.recordDispatchException(event.javaClass.simpleName)
             logger.error(
                 "Event bus dispatch failed for {} tags={}",
                 event.javaClass.name,
@@ -53,10 +64,14 @@ object GameEventBus {
     @JvmStatic
     fun <E : GameEvent> postWithResult(event: E): Boolean {
         var handled = false
+        if (!hasSubscribers(event.javaClass)) {
+            EventDispatchTelemetry.recordMissingSubscriber(event.javaClass.simpleName)
+        }
         try {
             handled = processListeners(event, listeners[event.javaClass]) || handled
             handled = processReturnable(event, returnableListeners[event.javaClass]) || handled
         } catch (exception: RuntimeException) {
+            EventDispatchTelemetry.recordDispatchException(event.javaClass.simpleName)
             logger.error(
                 "Event bus dispatch failed for {} tags={}",
                 event.javaClass.name,
@@ -70,6 +85,9 @@ object GameEventBus {
     @JvmStatic
     fun <E : GameEvent, T> postAndReturn(event: E): List<T> {
         val results = ArrayList<T>()
+        if (!hasSubscribers(event.javaClass)) {
+            EventDispatchTelemetry.recordMissingSubscriber(event.javaClass.simpleName)
+        }
         try {
             if (!passesFilters(event)) {
                 return emptyList()
@@ -83,6 +101,7 @@ object GameEventBus {
                 }
             }
         } catch (exception: RuntimeException) {
+            EventDispatchTelemetry.recordDispatchException(event.javaClass.simpleName)
             logger.error(
                 "Event bus return dispatch failed for {} tags={}",
                 event.javaClass.name,
@@ -103,6 +122,11 @@ object GameEventBus {
 
     @JvmStatic
     fun <E : GameEvent> on(clazz: Class<E>, listener: EventListener<E>) {
+        val fingerprint = "listener:${clazz.name}:${System.identityHashCode(listener)}"
+        if (!listenerFingerprints.add(fingerprint)) {
+            EventDispatchTelemetry.recordDuplicateListenerRegistration(clazz.simpleName)
+            return
+        }
         listeners.computeIfAbsent(clazz) { CopyOnWriteArrayList() }.add(listener)
     }
 
@@ -126,6 +150,11 @@ object GameEventBus {
 
     @JvmStatic
     fun <E : GameEvent, T> onReturnable(clazz: Class<E>, listener: ReturnableEventListener<E, T>) {
+        val fingerprint = "returnable:${clazz.name}:${System.identityHashCode(listener)}"
+        if (!returnableFingerprints.add(fingerprint)) {
+            EventDispatchTelemetry.recordDuplicateReturnableRegistration(clazz.simpleName)
+            return
+        }
         returnableListeners.computeIfAbsent(clazz) { CopyOnWriteArrayList() }.add(listener as ReturnableEventListener<out GameEvent, out Any>)
     }
 
@@ -158,6 +187,8 @@ object GameEventBus {
         listeners.clear()
         returnableListeners.clear()
         filters.clear()
+        listenerFingerprints.clear()
+        returnableFingerprints.clear()
         bootstrapped = false
     }
 
@@ -203,6 +234,15 @@ object GameEventBus {
 
     private fun <E : GameEvent> passesFilters(event: E): Boolean {
         return filters[event.javaClass]?.all { (it as EventFilter<E>).test(event) } ?: true
+    }
+
+    private fun hasSubscribers(clazz: Class<out GameEvent>): Boolean {
+        val standard = listeners[clazz]
+        if (standard != null && standard.isNotEmpty()) {
+            return true
+        }
+        val returnable = returnableListeners[clazz]
+        return returnable != null && returnable.isNotEmpty()
     }
 
     private fun eventMetadataTags(event: GameEvent): Map<String, String> =

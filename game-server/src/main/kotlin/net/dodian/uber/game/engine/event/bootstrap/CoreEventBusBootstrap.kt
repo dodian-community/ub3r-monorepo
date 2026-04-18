@@ -5,6 +5,14 @@ import net.dodian.uber.game.api.plugin.ContentModuleIndex
 object CoreEventBusBootstrap {
     @JvmStatic
     fun bootstrap() {
-        ContentModuleIndex.eventBootstraps.forEach { bootstrap: () -> Unit -> bootstrap() }
+        val bootstraps = ContentModuleIndex.eventBootstraps
+        for (bootstrap in bootstraps) {
+            bootstrap()
+        }
+    }
+
+    @JvmStatic
+    fun bootstrapCount(): Int {
+        return ContentModuleIndex.eventBootstraps.size
     }
 }
