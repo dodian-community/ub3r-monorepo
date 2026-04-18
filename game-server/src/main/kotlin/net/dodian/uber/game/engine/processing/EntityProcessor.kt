@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.engine.config.runtimePhaseWarnMs
 import net.dodian.uber.game.engine.loop.GameCycleClock
+import net.dodian.uber.game.engine.loop.GameThreadContext
 import net.dodian.uber.game.engine.loop.GameLoopService
 import net.dodian.uber.game.engine.loop.GameThreadTaskQueue
 import net.dodian.uber.game.engine.sync.util.IntHashSet
@@ -36,6 +37,7 @@ class EntityProcessor : Runnable {
     private val activeNpcSlots = IntHashSet(256)
 
     override fun run() {
+        GameThreadContext.bindCurrentThread()
         GameCycleClock.advance()
         val now = System.currentTimeMillis()
         GameThreadTaskQueue.drain()

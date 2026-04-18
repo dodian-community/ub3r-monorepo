@@ -53,4 +53,17 @@ class NonBlockingRuntimeBoundaryTest {
             "Runtime-sensitive code must not block or run direct JDBC.\n${violations.joinToString("\n")}",
         )
     }
+
+    @Test
+    fun `synchronous persistence entry points enforce not game thread guard`() {
+        val playerSaveSource =
+            Files.readString(Path.of("src/main/kotlin/net/dodian/uber/game/persistence/player/PlayerSaveService.kt"))
+        val accountSource =
+            Files.readString(Path.of("src/main/kotlin/net/dodian/uber/game/persistence/account/AccountPersistenceService.kt"))
+
+        assertTrue(playerSaveSource.contains("TickThreadBlockingGuard.requireNotGameThread(\"PlayerSaveService.saveSynchronously\")"))
+        assertTrue(playerSaveSource.contains("TickThreadBlockingGuard.requireNotGameThread(\"PlayerSaveService.shutdownAndDrain\")"))
+        assertTrue(accountSource.contains("TickThreadBlockingGuard.requireNotGameThread(\"AccountPersistenceService.saveSynchronously\")"))
+        assertTrue(accountSource.contains("TickThreadBlockingGuard.requireNotGameThread(\"AccountPersistenceService.shutdownAndDrain\")"))
+    }
 }
