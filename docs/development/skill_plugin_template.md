@@ -117,6 +117,16 @@ Prefer these while migrating old skills or when a content object is still shared
 
 ## Conventions
 
+### 0. Mandatory module contract
+
+Each plugin-owned skill module should expose:
+
+- `<Skill>Data.kt` with route ids/constants and policy defaults (for example `object <Skill>RouteIds`)
+- `<Skill>Actions.kt` with stable action identifiers (for example `object <Skill>ActionIds`)
+- `<Skill>.kt` with `object <Skill>SkillPlugin : SkillPlugin` as the route ownership entrypoint
+
+Do not scatter route id arrays and action id strings across multiple files.
+
 ### 1. Keep exported surface small and plugin-owned
 
 Expose only:

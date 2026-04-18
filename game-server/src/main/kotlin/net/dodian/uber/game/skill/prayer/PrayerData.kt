@@ -32,3 +32,16 @@ object PrayerData {
         return ALTAR_BASE_MULTIPLIER + extra
     }
 }
+
+object PrayerRouteIds {
+    const val MAIN_ALTAR_OBJECT_ID: Int = 409
+    @JvmField
+    val ALTAR_OBJECT_IDS: IntArray = intArrayOf(MAIN_ALTAR_OBJECT_ID, 20377)
+
+    @JvmField
+    val BONE_ITEM_IDS: IntArray = Bones.values().map { it.getItemId() }.toIntArray()
+}
+
+object PrayerActionIds {
+    const val ALTAR_BONES: String = "altar_bones"
+}
