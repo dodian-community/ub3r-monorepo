@@ -1,5 +1,7 @@
 package net.dodian.uber.game.engine.metrics
 
+import net.dodian.uber.game.engine.systems.net.PacketRejectReason
+
 object PacketRejectTelemetry {
     @JvmStatic
     fun record(opcode: Int, reason: String) {
@@ -8,5 +10,10 @@ object PacketRejectTelemetry {
         OperationalTelemetry.incrementCounter("packet.reject.opcode.$safeOpcode")
         OperationalTelemetry.incrementCounter("packet.reject.reason.$reason")
         OperationalTelemetry.incrementCounter("packet.reject.opcode.$safeOpcode.reason.$reason")
+    }
+
+    @JvmStatic
+    fun record(opcode: Int, reason: PacketRejectReason) {
+        record(opcode, reason.wire)
     }
 }
