@@ -6,6 +6,14 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import net.dodian.uber.game.engine.event.bootstrap.CoreEventBusBootstrap
 import net.dodian.uber.game.events.GameEvent
+import net.dodian.uber.game.events.skilling.SkillActionCompleteEvent
+import net.dodian.uber.game.events.skilling.SkillActionInterruptEvent
+import net.dodian.uber.game.events.skilling.SkillActionStartEvent
+import net.dodian.uber.game.events.skilling.SkillProgressAppliedEvent
+import net.dodian.uber.game.events.skilling.SkillingActionCycleEvent
+import net.dodian.uber.game.events.skilling.SkillingActionStartedEvent
+import net.dodian.uber.game.events.skilling.SkillingActionStoppedEvent
+import net.dodian.uber.game.events.skilling.SkillingActionSucceededEvent
 import org.slf4j.LoggerFactory
 
 object GameEventBus {
@@ -33,7 +41,12 @@ object GameEventBus {
             processListeners(event, listeners[event.javaClass])
             processReturnable(event, returnableListeners[event.javaClass])
         } catch (exception: RuntimeException) {
-            logger.error("Event bus dispatch failed for {}", event.javaClass.name, exception)
+            logger.error(
+                "Event bus dispatch failed for {} tags={}",
+                event.javaClass.name,
+                eventMetadataTags(event),
+                exception,
+            )
         }
     }
 
@@ -44,7 +57,12 @@ object GameEventBus {
             handled = processListeners(event, listeners[event.javaClass]) || handled
             handled = processReturnable(event, returnableListeners[event.javaClass]) || handled
         } catch (exception: RuntimeException) {
-            logger.error("Event bus dispatch failed for {}", event.javaClass.name, exception)
+            logger.error(
+                "Event bus dispatch failed for {} tags={}",
+                event.javaClass.name,
+                eventMetadataTags(event),
+                exception,
+            )
         }
         return handled
     }
@@ -65,7 +83,12 @@ object GameEventBus {
                 }
             }
         } catch (exception: RuntimeException) {
-            logger.error("Event bus return dispatch failed for {}", event.javaClass.name, exception)
+            logger.error(
+                "Event bus return dispatch failed for {} tags={}",
+                event.javaClass.name,
+                eventMetadataTags(event),
+                exception,
+            )
         }
         return results
     }
@@ -181,4 +204,17 @@ object GameEventBus {
     private fun <E : GameEvent> passesFilters(event: E): Boolean {
         return filters[event.javaClass]?.all { (it as EventFilter<E>).test(event) } ?: true
     }
+
+    private fun eventMetadataTags(event: GameEvent): Map<String, String> =
+        when (event) {
+            is SkillActionStartEvent -> mapOf("client" to event.client.playerName, "actionName" to event.actionName)
+            is SkillActionInterruptEvent -> mapOf("client" to event.client.playerName, "actionName" to event.actionName, "reason" to event.reason.name)
+            is SkillActionCompleteEvent -> mapOf("client" to event.client.playerName, "actionName" to event.actionName)
+            is SkillProgressAppliedEvent -> mapOf("client" to event.client.playerName, "skill" to event.skill.name, "mode" to event.mode.name)
+            is SkillingActionStartedEvent -> mapOf("client" to event.client.playerName, "actionName" to event.actionName)
+            is SkillingActionCycleEvent -> mapOf("client" to event.client.playerName, "actionName" to event.actionName)
+            is SkillingActionSucceededEvent -> mapOf("client" to event.client.playerName, "actionName" to event.actionName)
+            is SkillingActionStoppedEvent -> mapOf("client" to event.client.playerName, "actionName" to event.actionName, "reason" to event.reason.name)
+            else -> emptyMap()
+        }
 }

@@ -146,6 +146,34 @@ class EventContractCoverageTest {
         assertTrue(failures.isEmpty(), failures.joinToString("\n"))
     }
 
+    @Test
+    fun `skill event catalog enumerates canonical skilling events with event suffix and payload fields`() {
+        val catalogSource =
+            Files.readString(
+                Paths.get("src/main/kotlin/net/dodian/uber/game/events/skilling/SkillEventCatalog.kt"),
+            )
+        val eventsSource =
+            Files.readString(
+                Paths.get("src/main/kotlin/net/dodian/uber/game/events/skilling/SkillEvents.kt"),
+            )
+
+        assertTrue(catalogSource.contains("object SkillEventCatalog"))
+        assertTrue(catalogSource.contains("val events: Set<KClass<out GameEvent>>"))
+        assertTrue(catalogSource.contains("SkillActionStartEvent::class"))
+        assertTrue(catalogSource.contains("SkillingActionStartedEvent::class"))
+
+        val skillEventClassNames =
+            Regex("""data class\s+([A-Za-z0-9_]+)\s*\(""")
+                .findAll(eventsSource)
+                .map { it.groupValues[1] }
+                .toList()
+        assertTrue(skillEventClassNames.isNotEmpty())
+        assertTrue(skillEventClassNames.all { it.endsWith("Event") })
+
+        assertTrue(eventsSource.contains("val client: Client"))
+        assertTrue(eventsSource.contains("val actionName: String"))
+    }
+
     private fun eventDefinitionNames(): List<String> {
         val names = mutableListOf<String>()
         Files.walk(eventsRoot).use { paths ->
