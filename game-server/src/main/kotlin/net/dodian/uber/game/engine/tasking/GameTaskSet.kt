@@ -2,6 +2,7 @@ package net.dodian.uber.game.engine.tasking
 
 import java.util.ArrayDeque
 import kotlin.coroutines.createCoroutine
+import net.dodian.uber.game.engine.metrics.TaskLifecycleTelemetry
 
 abstract class GameTaskSet<OWNER : Any>(
     protected val owner: OWNER,
@@ -17,7 +18,8 @@ abstract class GameTaskSet<OWNER : Any>(
     ): TaskHandle {
         val control = TaskControl()
         val task = GameTask(owner, priority, control)
-        control.bindCancelAction { task.terminate() }
+        TaskLifecycleTelemetry.recordScheduled()
+        control.bindCancelAction { reason -> task.terminate(reason) }
         task.coroutine = block.createCoroutine(receiver = task, completion = task)
 
         if (priority == TaskPriority.STRONG) {
@@ -25,6 +27,8 @@ abstract class GameTaskSet<OWNER : Any>(
         }
 
         queue.addLast(task)
+        task.markPending()
+        TaskLifecycleTelemetry.recordQueuePressure(owner::class.simpleName ?: "unknown", queue.size)
         return TaskHandle(control)
     }
 
@@ -34,7 +38,7 @@ abstract class GameTaskSet<OWNER : Any>(
     }
 
     fun terminateTasks() {
-        queue.forEach { it.terminate() }
+        queue.forEach { it.terminate("owner_terminated") }
         cleanupFinished()
     }
 
@@ -50,7 +54,7 @@ abstract class GameTaskSet<OWNER : Any>(
     private fun cancelWeakerTasks() {
         queue.forEach { task ->
             if (task.priority != TaskPriority.STRONG) {
-                task.terminate()
+                task.terminate("priority_preempted")
             }
         }
         cleanupFinished()

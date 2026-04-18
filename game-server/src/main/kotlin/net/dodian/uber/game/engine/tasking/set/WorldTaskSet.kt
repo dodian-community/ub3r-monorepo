@@ -9,6 +9,7 @@ class WorldTaskSet : GameTaskSet<Any>(WORLD_OWNER) {
         val iterator = queue.iterator()
         while (iterator.hasNext()) {
             val task = iterator.next()
+            task.markActive()
             if (!task.invoked) {
                 task.invoked = true
                 task.coroutine.resume(Unit)

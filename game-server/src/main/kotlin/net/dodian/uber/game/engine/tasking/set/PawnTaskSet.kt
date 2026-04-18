@@ -15,6 +15,7 @@ class PawnTaskSet<OWNER : Any>(
             if (task.priority == TaskPriority.STANDARD && isStandardBlocked(owner)) {
                 return
             }
+            task.markActive()
             if (!task.invoked) {
                 task.invoked = true
                 task.coroutine.resume(Unit)

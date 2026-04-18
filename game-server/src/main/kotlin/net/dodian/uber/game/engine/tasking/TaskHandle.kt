@@ -10,18 +10,18 @@ internal class TaskControl {
         private set
 
     @Volatile
-    private var cancelAction: (() -> Unit)? = null
+    private var cancelAction: ((String) -> Unit)? = null
 
-    fun bindCancelAction(action: () -> Unit) {
+    fun bindCancelAction(action: (String) -> Unit) {
         cancelAction = action
     }
 
-    fun cancel() {
+    fun cancel(reason: String = "manual") {
         if (cancelled) {
             return
         }
         cancelled = true
-        cancelAction?.invoke()
+        cancelAction?.invoke(reason)
     }
 
     fun markCompleted() {
@@ -32,8 +32,8 @@ internal class TaskControl {
 class TaskHandle internal constructor(
     private val control: TaskControl,
 ) {
-    fun cancel() {
-        control.cancel()
+    fun cancel(reason: String = "manual") {
+        control.cancel(reason)
     }
 
     fun isCancelled(): Boolean = control.cancelled

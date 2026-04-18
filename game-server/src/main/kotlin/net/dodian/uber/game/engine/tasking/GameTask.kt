@@ -7,6 +7,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.CancellationException
 import net.dodian.uber.game.engine.loop.GameCycleClock
+import net.dodian.uber.game.engine.metrics.TaskLifecycleTelemetry
 import net.dodian.uber.game.engine.tasking.suspension.PredicateCondition
 import net.dodian.uber.game.engine.tasking.suspension.TaskStep
 import net.dodian.uber.game.engine.tasking.suspension.WaitCondition
@@ -39,16 +40,22 @@ class GameTask internal constructor(
     private val returnValues = HashMap<TaskRequestKey<*>, Any?>()
     private val metadata = HashMap<String, String>()
     private var terminateAction: (GameTask.() -> Unit)? = null
+    @Volatile
+    var lifecycleState: TaskLifecycleState = TaskLifecycleState.SCHEDULED
+        private set
 
     override val context: CoroutineContext = EmptyCoroutineContext
 
     override fun resumeWith(result: Result<Unit>) {
         nextStep = null
+        lifecycleState = TaskLifecycleState.COMPLETED
         control.markCompleted()
+        TaskLifecycleTelemetry.recordCompleted()
         result.exceptionOrNull()?.let { exception ->
             if (exception is CancellationException) {
                 return
             }
+            TaskLifecycleTelemetry.recordFailure(exception)
             logger.error("Game task failed", exception)
         }
     }
@@ -67,7 +74,7 @@ class GameTask internal constructor(
 
     internal fun isFinished(): Boolean = control.completed || control.cancelled
 
-    fun terminate() {
+    fun terminate(reason: String = "cancelled") {
         if (control.completed) {
             return
         }
@@ -75,7 +82,9 @@ class GameTask internal constructor(
         returnValues.clear()
         metadata.clear()
         terminateAction?.invoke(this)
+        lifecycleState = TaskLifecycleState.CANCELLED
         control.markCompleted()
+        TaskLifecycleTelemetry.recordCancelled(reason)
     }
 
     fun setMetadata(key: String, value: String) {
@@ -83,6 +92,19 @@ class GameTask internal constructor(
     }
 
     fun metadataSnapshot(): Map<String, String> = metadata.toMap()
+
+    internal fun markPending() {
+        lifecycleState = TaskLifecycleState.PENDING
+        TaskLifecycleTelemetry.recordPending()
+    }
+
+    internal fun markActive() {
+        if (lifecycleState == TaskLifecycleState.ACTIVE) {
+            return
+        }
+        lifecycleState = TaskLifecycleState.ACTIVE
+        TaskLifecycleTelemetry.recordActive()
+    }
 
     fun onTerminate(block: GameTask.() -> Unit) {
         terminateAction = block
