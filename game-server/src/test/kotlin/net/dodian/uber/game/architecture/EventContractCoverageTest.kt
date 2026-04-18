@@ -3,6 +3,8 @@ package net.dodian.uber.game.architecture
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import net.dodian.uber.game.events.EventContractCatalog
+import net.dodian.uber.game.events.EventContractCatalog.Contract
 import kotlin.io.path.extension
 import kotlin.streams.toList
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -32,69 +34,8 @@ class EventContractCoverageTest {
         }
     }
 
-    private enum class Contract {
-        STRICT,
-        PRODUCER_ONLY,
-        RESERVED_DEFINITION_ONLY,
-    }
-
-    private val strictEvents = setOf(
-        "CommandEvent",
-        "DialogueContinueEvent",
-        "ItemDropEvent",
-        "ItemExamineEvent",
-        "NpcExamineEvent",
-        "ObjectExamineEvent",
-    )
-
-    private val producerOnlyEvents = setOf(
-        "ButtonClickEvent",
-        "DialogueOptionEvent",
-        "ItemClickEvent",
-        "ItemOnItemEvent",
-        "ItemOnNpcEvent",
-        "ItemOnObjectEvent",
-        "ItemOnPlayerEvent",
-        "ItemPickupEvent",
-        "LevelUpEvent",
-        "MagicOnNpcEvent",
-        "MagicOnObjectEvent",
-        "MagicOnPlayerEvent",
-        "NpcClickEvent",
-        "NpcDeathEvent",
-        "NpcDropEvent",
-        "ObjectClickEvent",
-        "PlayerAttackEvent",
-        "PlayerDeathEvent",
-        "PlayerLoginEvent",
-        "PlayerLogoutEvent",
-        "SkillActionCompleteEvent",
-        "SkillActionInterruptEvent",
-        "SkillActionStartEvent",
-        "SkillProgressAppliedEvent",
-        "SkillingActionCycleEvent",
-        "SkillingActionStartedEvent",
-        "SkillingActionStoppedEvent",
-        "SkillingActionSucceededEvent",
-        "TradeCancelEvent",
-        "TradeCompleteEvent",
-        "TradeRequestEvent",
-        "ChatMessageEvent",
-        "PrivateMessageEvent",
-        "WalkEvent",
-        "WorldTickEvent",
-    )
-
-    private val reservedDefinitionOnlyEvents = setOf(
-        "PlayerTickEvent",
-    )
-
-    private val contracts: Map<String, Contract> by lazy {
-        buildMap {
-            strictEvents.forEach { put(it, Contract.STRICT) }
-            producerOnlyEvents.forEach { put(it, Contract.PRODUCER_ONLY) }
-            reservedDefinitionOnlyEvents.forEach { put(it, Contract.RESERVED_DEFINITION_ONLY) }
-        }
+    private val contracts: Map<String, net.dodian.uber.game.events.EventContract> by lazy {
+        EventContractCatalog.contractsByEventSimpleName
     }
 
     @Test
@@ -118,11 +59,11 @@ class EventContractCoverageTest {
     fun `event contract semantics hold`() {
         val failures = mutableListOf<String>()
 
-        contracts.forEach { (eventName, contract) ->
+        contracts.forEach { (eventName, eventContract) ->
             val producer = hasProducer(eventName)
             val subscriber = hasSubscriber(eventName)
 
-            when (contract) {
+            when (eventContract.kind) {
                 Contract.STRICT -> {
                     if (!producer || !subscriber) {
                         failures += "$eventName requires both producer and subscriber"
@@ -172,6 +113,18 @@ class EventContractCoverageTest {
 
         assertTrue(eventsSource.contains("val client: Client"))
         assertTrue(eventsSource.contains("val actionName: String"))
+    }
+
+    @Test
+    fun `event contract catalog declares payload requirements for skill actions`() {
+        val startContract = EventContractCatalog.contractsByEventSimpleName["SkillActionStartEvent"]
+        val cycleContract = EventContractCatalog.contractsByEventSimpleName["SkillingActionCycleEvent"]
+        assertTrue(startContract != null)
+        assertTrue(cycleContract != null)
+        assertTrue(startContract!!.requiredPayloadKeys.contains("client"))
+        assertTrue(startContract.requiredPayloadKeys.contains("actionName"))
+        assertTrue(cycleContract!!.requiredPayloadKeys.contains("client"))
+        assertTrue(cycleContract.requiredPayloadKeys.contains("actionName"))
     }
 
     private fun eventDefinitionNames(): List<String> {
