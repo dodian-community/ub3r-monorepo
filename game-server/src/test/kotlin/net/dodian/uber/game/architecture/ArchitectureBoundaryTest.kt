@@ -1306,4 +1306,85 @@ class ArchitectureBoundaryTest {
             "Kotlin-first content boundary violated by Java content files.\n${violations.joinToString("\n")}",
         )
     }
+
+    @Test
+    fun `content namespaces avoid direct engine internals in favor of api content facade`() {
+        val contentRoots = listOf(
+            "/net/dodian/uber/game/skill/",
+            "/net/dodian/uber/game/objects/",
+            "/net/dodian/uber/game/npc/",
+            "/net/dodian/uber/game/item/",
+            "/net/dodian/uber/game/activity/",
+            "/net/dodian/uber/game/ui/",
+            "/net/dodian/uber/game/command/",
+        )
+        val forbiddenImports = listOf(
+            "import net.dodian.uber.game.engine.event.GameEventBus",
+            "import net.dodian.uber.game.engine.systems.action.PlayerActionCancellationService",
+            "import net.dodian.uber.game.engine.systems.action.ProductionActionService",
+            "import net.dodian.uber.game.engine.systems.interaction.ObjectInteractionDistance",
+        )
+        val violations = sourceFiles
+            .filter { it.extension == "kt" }
+            .filter { file ->
+                val normalized = file.invariantSeparatorsPathString
+                contentRoots.any { normalized.contains(it) }
+            }
+            .flatMap { file ->
+                Files.readAllLines(file).mapIndexedNotNull { idx, line ->
+                    val trimmed = line.trim()
+                    if (!trimmed.startsWith("import ")) return@mapIndexedNotNull null
+                    if (!forbiddenImports.any { trimmed == it }) return@mapIndexedNotNull null
+                    "${file}:${idx + 1} -> $trimmed"
+                }
+            }
+
+        assertTrue(
+            violations.isEmpty(),
+            "Content modules must route via api.content/api.plugin facades.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `content namespaces enforce repo plus async db usage boundary`() {
+        val contentRoots = listOf(
+            "/net/dodian/uber/game/skill/",
+            "/net/dodian/uber/game/objects/",
+            "/net/dodian/uber/game/npc/",
+            "/net/dodian/uber/game/item/",
+            "/net/dodian/uber/game/activity/",
+            "/net/dodian/uber/game/ui/",
+            "/net/dodian/uber/game/command/",
+        )
+        val temporaryAllowlist = setOf(
+            "src/main/kotlin/net/dodian/uber/game/activity/casino/SlotMachine.kt",
+            "src/main/kotlin/net/dodian/uber/game/item/ItemManager.kt",
+        )
+        val forbiddenDbPatterns = listOf("executeQuery(", "executeUpdate(", "createStatement(", "import java.sql")
+        val violations = sourceFiles
+            .filter { it.extension == "kt" || it.extension == "java" }
+            .filter { file ->
+                val normalized = file.invariantSeparatorsPathString
+                contentRoots.any { normalized.contains(it) }
+            }
+            .filterNot { file ->
+                val normalized = file.invariantSeparatorsPathString
+                temporaryAllowlist.any { normalized.endsWith(it) }
+            }
+            .flatMap { file ->
+                Files.readAllLines(file).mapIndexedNotNull { idx, line ->
+                    val trimmed = line.trim()
+                    if (trimmed.startsWith("//") || trimmed.startsWith("/*") || trimmed.startsWith("*")) {
+                        return@mapIndexedNotNull null
+                    }
+                    if (!forbiddenDbPatterns.any { trimmed.contains(it) }) return@mapIndexedNotNull null
+                    "${file}:${idx + 1} -> $trimmed"
+                }
+            }
+
+        assertTrue(
+            violations.isEmpty(),
+            "Content modules must use repository + async DB facades (temporary allowlist is explicit).\n${violations.joinToString("\n")}",
+        )
+    }
 }

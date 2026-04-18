@@ -1,13 +1,12 @@
 package net.dodian.uber.game.engine.systems.net
 
 import net.dodian.uber.game.Constants
-import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.engine.util.Misc
-import net.dodian.uber.game.events.item.ItemClickEvent
 import net.dodian.uber.game.events.item.ItemOnPlayerEvent
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.PlayerPotatoState
 import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.api.content.ContentEvents
 import net.dodian.uber.game.engine.systems.interaction.items.ItemDispatcher
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 
@@ -64,7 +63,7 @@ object PacketItemActionService {
 
     /**
      * Processes a first-click item action (opcode 122) after slot validation.
-     * Enforces duel-rules guards and dispatches via GameEventBus / ItemDispatcher.
+     * Enforces duel-rules guards and dispatches via ItemDispatcher.
      */
     @JvmStatic
     fun handleFirstClickItem(client: Client, id: Int, slot: Int, interfaceId: Int) {
@@ -80,10 +79,6 @@ object PacketItemActionService {
                 client.send(SendMessage("This item cannot be used in a duel!"))
                 return
             }
-        }
-        if (GameEventBus.postWithResult(ItemClickEvent(client, item, slot, interfaceId))) {
-            client.checkItemUpdate()
-            return
         }
         if (ItemDispatcher.tryHandle(client, 1, item, slot, interfaceId)) {
             client.checkItemUpdate()
@@ -102,7 +97,7 @@ object PacketItemActionService {
         else null
         if (target == null || !client.playerHasItem(itemId)) return
         if (client.randomed || client.UsingAgility) return
-        GameEventBus.post(ItemOnPlayerEvent(client, target, itemId, crackerSlot))
+        ContentEvents.post(ItemOnPlayerEvent(client, target, itemId, crackerSlot))
 
         if (itemId == 5733) { // hot-potato mini-game setup
             client.playerPotatoState = PlayerPotatoState(1, playerSlot, target.dbId, 1)

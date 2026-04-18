@@ -1,6 +1,6 @@
 package net.dodian.uber.game.skill.runtime.action
 
-import net.dodian.uber.game.engine.event.GameEventBus
+import net.dodian.uber.game.api.content.ContentEvents
 import net.dodian.uber.game.events.skilling.SkillActionInterruptEvent
 import net.dodian.uber.game.events.skilling.SkillingActionStoppedEvent
 import net.dodian.uber.game.model.entity.player.Client
@@ -12,13 +12,13 @@ object SkillingInterruptService {
 
     @JvmStatic
     fun postStopped(player: Client, actionName: String, reason: PlayerActionCancelReason?) {
-        GameEventBus.post(
+        ContentEvents.post(
             SkillingActionStoppedEvent(
                 client = player,
                 actionName = actionName,
                 reason = stopReason(reason),
             ),
         )
-        GameEventBus.post(SkillActionInterruptEvent(player, actionName, stopReason(reason)))
+        ContentEvents.post(SkillActionInterruptEvent(player, actionName, stopReason(reason)))
     }
 }

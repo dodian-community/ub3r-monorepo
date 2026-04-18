@@ -25,6 +25,7 @@ object EventContractCatalog {
         "ButtonClickEvent",
         "DialogueOptionEvent",
         "ItemClickEvent",
+        "ItemOptionClickEvent",
         "ItemOnItemEvent",
         "ItemOnNpcEvent",
         "ItemOnObjectEvent",

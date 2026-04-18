@@ -83,6 +83,30 @@ object Ground {
         }
     }
 
+    @JvmStatic
+    fun tryClaimPickup(client: Client?, item: GroundItem?): Boolean {
+        if (client == null || item == null) {
+            return false
+        }
+        synchronized(item) {
+            if (!isTracked(item) || item.isTaken() || !canPickup(client, item)) {
+                return false
+            }
+            item.setTaken(true)
+            return true
+        }
+    }
+
+    @JvmStatic
+    fun releaseClaim(item: GroundItem?) {
+        if (item == null) {
+            return
+        }
+        synchronized(item) {
+            item.setTaken(false)
+        }
+    }
+
     private fun findGroundItem(
         list: CopyOnWriteArrayList<GroundItem>,
         client: Client?,
@@ -147,4 +171,3 @@ object Ground {
         addItem(GroundItem(n.position, id, amount, c.slot, n.id))
     }
 }
-

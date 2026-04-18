@@ -35,6 +35,8 @@ import net.dodian.uber.game.engine.systems.skills.SkillPolicyResult
 import net.dodian.uber.game.engine.systems.skills.SkillPolicyRoute
 import net.dodian.uber.game.engine.util.Misc
 import net.dodian.uber.game.engine.config.runtimePhaseWarnMs
+import net.dodian.uber.game.engine.state.InteractionSessionStateAdapter
+import net.dodian.uber.game.engine.state.TeleportIntentStateAdapter
 import org.slf4j.LoggerFactory
 import java.util.IdentityHashMap
 
@@ -46,8 +48,8 @@ object InteractionProcessor {
     @JvmStatic
     fun process(player: Client): InteractionExecutionResult {
         return try {
-            val intent = player.pendingInteraction ?: return InteractionExecutionResult.CANCELLED
-            if (player.didTeleport() || player.disconnected || !player.isActive || !player.validClient) {
+            val intent = InteractionSessionStateAdapter.pending(player) ?: return InteractionExecutionResult.CANCELLED
+            if (TeleportIntentStateAdapter.didTeleport(player) || player.disconnected || !player.isActive || !player.validClient) {
                 clear(player)
                 return InteractionExecutionResult.CANCELLED
             }
@@ -73,7 +75,7 @@ object InteractionProcessor {
                 "Interaction processing failed slot={} name={} intent={}",
                 player.slot,
                 player.playerName,
-                player.pendingInteraction?.javaClass?.simpleName ?: "none",
+                InteractionSessionStateAdapter.pending(player)?.javaClass?.simpleName ?: "none",
                 throwable,
             )
             clear(player)
@@ -152,7 +154,7 @@ object InteractionProcessor {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
-        if (player.pendingInteraction !== intent) {
+        if (!InteractionSessionStateAdapter.isPending(player, intent)) {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
@@ -331,7 +333,7 @@ object InteractionProcessor {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
-        if (player.pendingInteraction !== intent) {
+        if (!InteractionSessionStateAdapter.isPending(player, intent)) {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
@@ -450,7 +452,7 @@ object InteractionProcessor {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
-        if (player.pendingInteraction !== intent) {
+        if (!InteractionSessionStateAdapter.isPending(player, intent)) {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
@@ -567,7 +569,7 @@ object InteractionProcessor {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
-        if (player.pendingInteraction !== intent) {
+        if (!InteractionSessionStateAdapter.isPending(player, intent)) {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
@@ -618,7 +620,7 @@ object InteractionProcessor {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
-        if (player.pendingInteraction !== intent) {
+        if (!InteractionSessionStateAdapter.isPending(player, intent)) {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
@@ -661,7 +663,7 @@ object InteractionProcessor {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
-        if (player.pendingInteraction !== intent) {
+        if (!InteractionSessionStateAdapter.isPending(player, intent)) {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
@@ -704,7 +706,7 @@ object InteractionProcessor {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
-        if (player.pendingInteraction !== intent) {
+        if (!InteractionSessionStateAdapter.isPending(player, intent)) {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
@@ -789,12 +791,11 @@ object InteractionProcessor {
     }
 
     private fun clear(player: Client) {
-        player.pendingInteraction?.let {
+        InteractionSessionStateAdapter.pending(player)?.let {
             settledSinceCycle.remove(it)
             objectDistanceRejectLogged.remove(it)
         }
-        player.pendingInteraction = null
-        player.activeInteraction = null
+        InteractionSessionStateAdapter.clear(player)
         player.interactionEarliestCycle = 0
         player.interactionTaskHandle = null
     }

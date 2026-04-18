@@ -154,6 +154,9 @@ class EventContractCoverageTest {
             if ((content.contains("GameEventBus.post(") ||
                     content.contains("GameEventBus.postWithResult(") ||
                     content.contains("GameEventBus.postAndReturn(") ||
+                    content.contains("ContentEvents.post(") ||
+                    content.contains("ContentEvents.postWithResult(") ||
+                    content.contains("ContentEvents.postAndReturn(") ||
                     content.contains("new $eventName(")) &&
                 eventPattern.containsMatchIn(content)
             ) {

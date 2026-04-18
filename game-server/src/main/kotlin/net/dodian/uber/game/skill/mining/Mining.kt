@@ -15,9 +15,9 @@ import net.dodian.uber.game.skill.runtime.action.SkillingRandomEventService
 import net.dodian.uber.game.skill.runtime.action.CycleSignal
 import net.dodian.uber.game.skill.runtime.action.gatheringAction
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.api.content.ContentActions
+import net.dodian.uber.game.api.content.ContentEvents
 import net.dodian.uber.game.api.content.ContentTiming
 import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
@@ -98,7 +98,7 @@ object Mining {
                 resourcesGathered = 0,
             )
 
-        GameEventBus.post(MiningStartedEvent(client, rock, position.copy(), pickaxe))
+        ContentEvents.post(MiningStartedEvent(client, rock, position.copy(), pickaxe))
 
         val actionRequirements =
             RequirementBuilder().apply {
@@ -251,7 +251,7 @@ object Mining {
 
         val updatedState = state.copy(resourcesGathered = state.resourcesGathered + 1)
         client.miningState = updatedState
-        GameEventBus.post(MiningSuccessEvent(client, rock, rock.oreItemId, rock.experience, client.position.copy()))
+        ContentEvents.post(MiningSuccessEvent(client, rock, rock.oreItemId, rock.experience, client.position.copy()))
 
         if (updatedState.resourcesGathered >= rock.restThreshold && Misc.chance(20) == 1) {
             client.sendMessage("You take a rest after gathering ${updatedState.resourcesGathered} resources.")
@@ -306,7 +306,7 @@ object Mining {
         client.clearMiningState()
 
         if (state != null) {
-            GameEventBus.post(MiningStoppedEvent(client, rock, position, reason))
+            ContentEvents.post(MiningStoppedEvent(client, rock, position, reason))
         }
         return false
     }

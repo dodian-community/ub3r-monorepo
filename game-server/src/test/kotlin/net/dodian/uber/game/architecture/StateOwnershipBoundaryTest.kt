@@ -13,6 +13,9 @@ class StateOwnershipBoundaryTest {
         assertTrue(source.contains("SESSION_PACKET_QUEUE"))
         assertTrue(source.contains("INTERACTION_SESSION"))
         assertTrue(source.contains("TASK_ACTION_STATE"))
+        assertTrue(source.contains("GATHERING_SESSION"))
+        assertTrue(source.contains("GROUND_ITEM_INTENT"))
+        assertTrue(source.contains("TELEPORT_INTENT"))
         assertTrue(source.contains("ownershipByDomain"))
     }
 

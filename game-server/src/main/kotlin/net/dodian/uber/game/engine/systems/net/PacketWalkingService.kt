@@ -14,6 +14,8 @@ import net.dodian.uber.game.engine.systems.action.PlayerActionCancellationServic
 import net.dodian.uber.game.engine.systems.follow.FollowService
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.engine.systems.interaction.ui.TradeDuelSessionService
+import net.dodian.uber.game.engine.state.GroundItemIntentStateAdapter
+import net.dodian.uber.game.engine.state.TeleportIntentStateAdapter
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicLong
 
@@ -33,7 +35,7 @@ object PacketWalkingService {
         ) {
             return
         }
-        if (player.doingTeleport() || PyramidPlunder.isLooting(player)) {
+        if (TeleportIntentStateAdapter.isTeleporting(player) || PyramidPlunder.isLooting(player)) {
             return
         }
         if (player.isVerticalTransitionActive) {
@@ -74,9 +76,8 @@ object PacketWalkingService {
             player.checkInv = false
             player.resetItems(3214)
         }
-        if (player.pickupWanted) {
-            player.pickupWanted = false
-            player.attemptGround = null
+        if (GroundItemIntentStateAdapter.wantsPickup(player)) {
+            GroundItemIntentStateAdapter.clearPickup(player)
             PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(player)
         }
 

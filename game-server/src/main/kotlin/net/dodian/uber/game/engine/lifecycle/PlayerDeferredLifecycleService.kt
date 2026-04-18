@@ -4,6 +4,7 @@ import java.util.Collections
 import java.util.WeakHashMap
 import java.util.function.BooleanSupplier
 import net.dodian.uber.game.engine.event.GameEventScheduler
+import net.dodian.uber.game.engine.state.GroundItemIntentStateAdapter
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.GroundItem
 import net.dodian.uber.game.persistence.player.PlayerSaveReason
@@ -64,11 +65,11 @@ object PlayerDeferredLifecycleService {
                 intervalTicks = 1,
                 action =
                     BooleanSupplier {
-                        if (player.disconnected || !player.pickupWanted) {
+                        if (player.disconnected || !GroundItemIntentStateAdapter.wantsPickup(player)) {
                             state.pickupWatchTask = null
                             return@BooleanSupplier false
                         }
-                        val attempt = player.attemptGround ?: run {
+                        val attempt = GroundItemIntentStateAdapter.target(player) ?: run {
                             state.pickupWatchTask = null
                             return@BooleanSupplier false
                         }
@@ -77,7 +78,7 @@ object PlayerDeferredLifecycleService {
                             player.position.z == attempt.z
                         ) {
                             player.pickUpItem(attempt.x, attempt.y)
-                            if (!player.pickupWanted) {
+                            if (!GroundItemIntentStateAdapter.wantsPickup(player)) {
                                 state.pickupWatchTask = null
                                 return@BooleanSupplier false
                             }

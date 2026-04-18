@@ -1579,13 +1579,6 @@ public class Client extends Player implements Runnable {
             return;
         }
 
-        if (!Ground.isTracked(target) || target.isTaken() || !Ground.canPickup(this, target)) {
-            attemptGround = null;
-            pickupWanted = false;
-            PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(this);
-            return;
-        }
-
         if (!hasSpace() && Server.itemManager.isStackable(target.id) && !playerHasItem(target.id)) {
             send(new SendMessage("Your inventory is full!"));
             attemptGround = null;
@@ -1602,11 +1595,21 @@ public class Client extends Player implements Runnable {
             return;
         }
 
-        if (addItem(target.id, target.amount)) {
+        if (!Ground.tryClaimPickup(this, target)) {
+            attemptGround = null;
+            pickupWanted = false;
+            PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(this);
+            return;
+        }
+
+        boolean added = addItem(target.id, target.amount);
+        if (added) {
             GameEventBus.post(new ItemPickupEvent(this, target, getPosition().copy()));
             Ground.deleteItem(target);
             ItemLog.playerPickup(this, target.npc ? target.npcId : target.playerId, target.id, target.amount, getPosition().copy(), target.npc);
             checkItemUpdate();
+        } else {
+            Ground.releaseClaim(target);
         }
         attemptGround = null;
         pickupWanted = false;
