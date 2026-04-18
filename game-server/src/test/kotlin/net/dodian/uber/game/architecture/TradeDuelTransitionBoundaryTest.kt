@@ -25,6 +25,8 @@ class TradeDuelTransitionBoundaryTest {
     fun `trade and duel ui route handlers delegate state transitions to runtime service`() {
         val tradeSource = Files.readString(Path.of("src/main/kotlin/net/dodian/uber/game/ui/TradeInterface.kt"))
         val duelSource = Files.readString(Path.of("src/main/kotlin/net/dodian/uber/game/ui/DuelInterface.kt"))
+        val sessionSource = Files.readString(Path.of("src/main/kotlin/net/dodian/uber/game/engine/systems/interaction/ui/TradeDuelSessionService.kt"))
+        val machineSource = Files.readString(Path.of("src/main/kotlin/net/dodian/uber/game/engine/systems/interaction/ui/TradeDuelStateMachine.kt"))
 
         assertTrue(tradeSource.contains("TradeDuelSessionService.confirmTradeStageOne("))
         assertTrue(tradeSource.contains("TradeDuelSessionService.confirmTradeStageTwo("))
@@ -35,6 +37,15 @@ class TradeDuelTransitionBoundaryTest {
         assertTrue(duelSource.contains("TradeDuelSessionService.confirmDuelStageTwo("))
         assertFalse(duelSource.contains("client.duelConfirmed ="))
         assertFalse(duelSource.contains("client.duelConfirmed2 ="))
+
+        assertTrue(sessionSource.contains("TradeDuelStateMachine.advanceTradeStageOne("))
+        assertTrue(sessionSource.contains("TradeDuelStateMachine.advanceTradeStageTwo("))
+        assertTrue(sessionSource.contains("TradeDuelStateMachine.advanceDuelStageOne("))
+        assertTrue(sessionSource.contains("TradeDuelStateMachine.advanceDuelStageTwo("))
+        assertTrue(machineSource.contains("fun advanceTradeStageOne(client: Client, other: Client): Boolean"))
+        assertTrue(machineSource.contains("fun advanceTradeStageTwo(client: Client, other: Client): Boolean"))
+        assertTrue(machineSource.contains("fun advanceDuelStageOne(client: Client, other: Client): Boolean"))
+        assertTrue(machineSource.contains("fun advanceDuelStageTwo(client: Client, other: Client): Boolean"))
     }
 
     @Test
