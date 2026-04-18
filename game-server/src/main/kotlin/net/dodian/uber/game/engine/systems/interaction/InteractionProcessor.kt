@@ -45,27 +45,39 @@ object InteractionProcessor {
 
     @JvmStatic
     fun process(player: Client): InteractionExecutionResult {
-        val intent = player.pendingInteraction ?: return InteractionExecutionResult.CANCELLED
-        if (player.didTeleport() || player.disconnected || !player.isActive || !player.validClient) {
-            clear(player)
-            return InteractionExecutionResult.CANCELLED
-        }
-        if (PlayerRegistry.cycle < player.interactionEarliestCycle) {
-            return InteractionExecutionResult.WAITING
-        }
-        return when (intent) {
-            is NpcInteractionIntent -> processNpcInteraction(player, intent)
-            is ObjectClickIntent -> processObjectClick(player, intent)
-            is ItemOnObjectIntent -> processItemOnObject(player, intent)
-            is MagicOnObjectIntent -> processMagicOnObject(player, intent)
-            is ItemOnNpcIntent -> processItemOnNpc(player, intent)
-            is MagicOnNpcIntent -> processMagicOnNpc(player, intent)
-            is MagicOnPlayerIntent -> processMagicOnPlayer(player, intent)
-            is AttackPlayerIntent -> processAttackPlayer(player, intent)
-            else -> {
+        return try {
+            val intent = player.pendingInteraction ?: return InteractionExecutionResult.CANCELLED
+            if (player.didTeleport() || player.disconnected || !player.isActive || !player.validClient) {
                 clear(player)
-                InteractionExecutionResult.CANCELLED
+                return InteractionExecutionResult.CANCELLED
             }
+            if (PlayerRegistry.cycle < player.interactionEarliestCycle) {
+                return InteractionExecutionResult.WAITING
+            }
+            when (intent) {
+                is NpcInteractionIntent -> processNpcInteraction(player, intent)
+                is ObjectClickIntent -> processObjectClick(player, intent)
+                is ItemOnObjectIntent -> processItemOnObject(player, intent)
+                is MagicOnObjectIntent -> processMagicOnObject(player, intent)
+                is ItemOnNpcIntent -> processItemOnNpc(player, intent)
+                is MagicOnNpcIntent -> processMagicOnNpc(player, intent)
+                is MagicOnPlayerIntent -> processMagicOnPlayer(player, intent)
+                is AttackPlayerIntent -> processAttackPlayer(player, intent)
+                else -> {
+                    clear(player)
+                    InteractionExecutionResult.CANCELLED
+                }
+            }
+        } catch (throwable: Throwable) {
+            logger.error(
+                "Interaction processing failed slot={} name={} intent={}",
+                player.slot,
+                player.playerName,
+                player.pendingInteraction?.javaClass?.simpleName ?: "none",
+                throwable,
+            )
+            clear(player)
+            InteractionExecutionResult.CANCELLED
         }
     }
 
