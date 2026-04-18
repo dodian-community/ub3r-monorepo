@@ -37,6 +37,8 @@ import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
 import net.dodian.uber.game.engine.net.InboundPacketMailbox;
 import net.dodian.uber.game.engine.net.OutboundSessionQueue;
 import net.dodian.uber.game.engine.processing.EntityProcessor;
+import net.dodian.uber.game.engine.metrics.PacketErrorTelemetry;
+import net.dodian.uber.game.engine.metrics.PacketRejectTelemetry;
 import net.dodian.uber.game.skill.crafting.Tanning;
 import net.dodian.uber.game.engine.systems.dialogue.DialogueOptionService;
 import net.dodian.uber.game.ui.dialogue.DialogueDisplayService;
@@ -59,6 +61,7 @@ import net.dodian.uber.game.engine.systems.interaction.items.ItemDispatcher;
 import net.dodian.uber.game.engine.systems.interaction.InteractionAnchorState;
 import net.dodian.uber.game.engine.systems.interaction.ui.TradeDuelSessionService;
 import net.dodian.uber.game.engine.lifecycle.PlayerDeferredLifecycleService;
+import net.dodian.uber.game.engine.systems.net.PacketRejectReason;
 import net.dodian.uber.game.engine.util.Misc;
 import net.dodian.utilities.MD5;
 import net.dodian.utilities.Utils;
@@ -685,6 +688,17 @@ public class Client extends Player implements Runnable {
             try {
                 dispatchQueuedPacket(packet);
             } catch (Exception ex) {
+                PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.LISTENER_EXCEPTION);
+                PacketErrorTelemetry.recordListenerException(packet.opcode(), getPlayerName(), getSlot(), packet.size(), ex);
+                logger.error(
+                        "Inbound listener exception player={} slot={} opcode={} size={} recent={}",
+                        getPlayerName(),
+                        getSlot(),
+                        packet.opcode(),
+                        packet.size(),
+                        describeRecentInboundPackets(),
+                        ex
+                );
                 disconnected = true;
                 println_debug("Error processing opcode " + packet.opcode() + " for " + getPlayerName() + ": " + ex.getMessage());
                 break;

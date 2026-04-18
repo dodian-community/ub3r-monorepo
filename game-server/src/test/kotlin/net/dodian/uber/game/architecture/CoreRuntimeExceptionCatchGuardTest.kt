@@ -34,6 +34,20 @@ class CoreRuntimeExceptionCatchGuardTest {
         )
     }
 
+    @Test
+    fun `queued packet catch path records listener exception telemetry with player context`() {
+        val source = Files.readString(Path.of("src/main/java/net/dodian/uber/game/model/entity/player/Client.java"))
+        val telemetry = Files.readString(Path.of("src/main/kotlin/net/dodian/uber/game/engine/metrics/PacketErrorTelemetry.kt"))
+
+        assertTrue(source.contains("PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.LISTENER_EXCEPTION)"))
+        assertTrue(source.contains("PacketErrorTelemetry.recordListenerException("))
+        assertTrue(source.contains("describeRecentInboundPackets()"))
+        assertTrue(source.contains("player={} slot={} opcode={} size={} recent={}"))
+        assertTrue(telemetry.contains("packet.listener.exception.total"))
+        assertTrue(telemetry.contains("packet.listener.exception.opcode."))
+        assertTrue(telemetry.contains("packet.listener.exception.player."))
+    }
+
     private fun coreRuntimeTargets(): List<Path> =
         listOf(
             Path.of("src/main/kotlin/net/dodian/uber/game/engine"),

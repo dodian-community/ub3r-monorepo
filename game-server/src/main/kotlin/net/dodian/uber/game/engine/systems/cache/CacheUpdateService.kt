@@ -3,11 +3,10 @@ package net.dodian.uber.game.engine.systems.cache
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
 import org.slf4j.LoggerFactory
 import java.io.BufferedInputStream
-import java.io.BufferedReader
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.io.InputStreamReader
+import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.file.Files
@@ -50,7 +49,7 @@ class CacheUpdateService(
             } else {
                 logger.info("Cache is up to date (version {})", currentVersion)
             }
-        } catch (e: Exception) {
+        } catch (e: RuntimeException) {
             logger.error("Failed to update cache", e)
         }
     }
@@ -73,7 +72,7 @@ class CacheUpdateService(
         if (!versionFile.exists()) return 0.0
         return try {
             versionFile.readText().trim().toDouble()
-        } catch (e: Exception) {
+        } catch (e: NumberFormatException) {
             0.0
         }
     }
@@ -92,7 +91,7 @@ class CacheUpdateService(
                 // version.txt missing but maybe cache.zip exists?
                 if (checkCacheZipExists()) 1.0 else 0.0
             }
-        } catch (e: Exception) {
+        } catch (e: RuntimeException) {
             if (checkCacheZipExists()) 1.0 else 0.0
         }
     }
@@ -105,7 +104,7 @@ class CacheUpdateService(
             connection.addRequestProperty("User-Agent", "Mozilla/4.76")
             connection.connectTimeout = 5000
             connection.responseCode == HttpURLConnection.HTTP_OK
-        } catch (e: Exception) {
+        } catch (e: IOException) {
             false
         }
     }
