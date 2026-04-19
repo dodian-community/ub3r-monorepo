@@ -9,8 +9,8 @@ import net.dodian.uber.game.netty.codec.ValueType;
 
 public class RemoveGroundItem implements OutgoingPacket {
 
-    private GameItem item;
-    private Position position;
+    private final GameItem item;
+    private final Position position;
 
     public RemoveGroundItem(GameItem item, Position position) {
         this.item = item;

@@ -5,6 +5,7 @@ import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
+import net.dodian.uber.game.engine.systems.net.PacketSocialService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,9 +20,9 @@ public class AddFriendListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
         long friend = buf.readLong(); // big-endian QWord
         logger.debug("AddFriendListener: {} adds {}", client.getPlayerName(), friend);
-        client.addFriend(friend);
+        PacketSocialService.handleAddFriend(client, friend);
     }
 }

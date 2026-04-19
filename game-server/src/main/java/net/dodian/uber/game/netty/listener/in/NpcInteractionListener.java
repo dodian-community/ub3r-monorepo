@@ -2,34 +2,29 @@ package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.combat.PlayerAttackCombatKt;
-import net.dodian.uber.game.content.npcs.spawns.NpcContentDispatcher;
-import net.dodian.uber.game.model.WalkToTask;
-import net.dodian.uber.game.model.entity.npc.Npc;
+import net.dodian.uber.game.engine.metrics.PacketRejectTelemetry;
+import net.dodian.uber.game.engine.systems.net.PacketRejectReason;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.model.entity.player.PlayerHandler;
-import net.dodian.uber.game.netty.codec.ByteMessage;
+import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
-import net.dodian.uber.game.netty.listener.out.SendMessage;
-import net.dodian.uber.game.runtime.interaction.NpcInteractionIntent;
-import net.dodian.uber.game.runtime.interaction.task.InteractionTaskScheduler;
-import net.dodian.uber.game.runtime.interaction.task.NpcInteractionTask;
+import net.dodian.uber.game.engine.systems.net.PacketInteractionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Consolidated Netty handler for npc interaction opcodes:
- * 155 (click1), 17 (click2), 21 (click3), 18 (click4), 72 (attack).
+ * 155 (click1), 17 (click2), 21 (click3), 18 (click4), 72 (attack), 230 (legacy click2 compat).
  */
 @PacketHandler(opcode = 155)
 public class NpcInteractionListener implements PacketListener {
 
     private static final Logger logger = LoggerFactory.getLogger(NpcInteractionListener.class);
+    private static final boolean COMPAT_OPCODE_230_ENABLED = readFlag("npc.click.compat230.enabled", true);
 
     static {
         NpcInteractionListener listener = new NpcInteractionListener();
@@ -37,12 +32,13 @@ public class NpcInteractionListener implements PacketListener {
         PacketListenerManager.register(17, listener);
         PacketListenerManager.register(21, listener);
         PacketListenerManager.register(18, listener);
+        PacketListenerManager.register(230, listener);
         PacketListenerManager.register(72, listener);
     }
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        switch (packet.getOpcode()) {
+        switch (packet.opcode()) {
             case 155:
                 handleNpcClick1(client, packet);
                 return;
@@ -55,262 +51,159 @@ public class NpcInteractionListener implements PacketListener {
             case 18:
                 handleNpcClick4(client, packet);
                 return;
+            case 230:
+                handleNpcClick2LegacyCompat(client, packet);
+                return;
             case 72:
                 handleNpcAttack(client, packet);
                 return;
             default:
-                logger.warn("NpcInteractionListener got unexpected opcode={} for player={}", packet.getOpcode(), client.getPlayerName());
+                logger.warn("NpcInteractionListener got unexpected opcode={} for player={}", packet.opcode(), client.getPlayerName());
         }
     }
 
     private void handleNpcClick1(Client client, GamePacket packet) {
-        ByteMessage message = ByteMessage.wrap(packet.getPayload());
-        int npcIndex = message.getShort(true, ByteOrder.LITTLE, ValueType.NORMAL);
-        Npc tempNpc = Server.npcManager.getNpc(npcIndex);
-        if (tempNpc == null) {
+        ByteBuf payload = packet.payload();
+        if (payload.readableBytes() < 2) {
+            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.SHORT_PAYLOAD);
             return;
         }
-
-        int npcId = tempNpc.getId();
-        WalkToTask task = new WalkToTask(WalkToTask.Action.NPC_FIRST_CLICK, npcId, tempNpc.getPosition());
-        client.setWalkToTask(task);
-
-        if (client.randomed || client.UsingAgility) {
+        if (payload.readableBytes() > 2) {
+            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.MALFORMED_PAYLOAD);
             return;
         }
-        if (!client.playerPotato.isEmpty()) {
-            client.playerPotato.clear();
-        }
-
-        // OpenRune-style: tick-owned routing. The game thread will execute when in range.
-        NpcInteractionIntent intent = new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 1);
-        InteractionTaskScheduler.schedule(client, intent, new NpcInteractionTask(client, intent));
-    }
-
-    private void performNpcClick1(Client client, Npc tempNpc) {
-        if (!tempNpc.isAlive()) {
-            client.send(new SendMessage("That monster has been killed!"));
+        int npcIndex = ByteBufReader.readShortUnsigned(payload, ByteOrder.LITTLE, ValueType.NORMAL);
+        if (!isKnownNpcIndex(npcIndex)) {
+            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.UNKNOWN_NPC);
             return;
         }
-
-        int npcId = tempNpc.getId();
-        client.resetAction();
-        client.faceNpc(tempNpc.getSlot());
-        client.skillX = tempNpc.getPosition().getX();
-        client.setSkillY(tempNpc.getPosition().getY());
-
-        client.startFishing(npcId, 1);
-
-        if (NpcContentDispatcher.tryHandleClick(client, 1, tempNpc)) {
-            return;
-        }
-        logger.debug("Unhandled NPC first-click fallback npcId={} player={}", npcId, client.getPlayerName());
+        PacketInteractionService.handleNpcClick(client, packet.opcode(), 1, npcIndex);
     }
 
     private void handleNpcClick2(Client client, GamePacket packet) {
-        ByteBuf payload = packet.getPayload();
-        int npcIndex = readSignedWordBigEndianA(payload);
-        Npc tempNpc = Server.npcManager.getNpc(npcIndex);
-        if (tempNpc == null) {
+        ByteBuf payload = packet.payload();
+        if (payload.readableBytes() < 2) {
+            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.SHORT_PAYLOAD);
             return;
         }
-
-        if (logger.isTraceEnabled()) {
-            logger.trace("Npc click2 opcode={} npcIndex={} npcId={} player={}", packet.getOpcode(), npcIndex, tempNpc.getId(), client.getPlayerName());
-        }
-
-        int npcId = tempNpc.getId();
-        WalkToTask task = new WalkToTask(WalkToTask.Action.NPC_SECOND_CLICK, npcId, tempNpc.getPosition());
-        client.setWalkToTask(task);
-
-        if (client.randomed || client.UsingAgility) {
+        if (payload.readableBytes() > 2) {
+            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.MALFORMED_PAYLOAD);
             return;
         }
-        if (!client.playerPotato.isEmpty()) {
-            client.playerPotato.clear();
-        }
-
-        NpcInteractionIntent intent = new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 2);
-        InteractionTaskScheduler.schedule(client, intent, new NpcInteractionTask(client, intent));
-    }
-
-    private void performNpcClick2(Client client, Npc tempNpc) {
-        if (!tempNpc.isAlive()) {
-            client.send(new SendMessage("That monster has been killed!"));
+        int npcIndex = ByteBufReader.readShortUnsigned(payload, ByteOrder.LITTLE, ValueType.ADD);
+        if (!isKnownNpcIndex(npcIndex)) {
+            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.UNKNOWN_NPC);
             return;
         }
-
-        int npcId = tempNpc.getId();
-        client.resetAction();
-        client.faceNpc(tempNpc.getSlot());
-        client.skillX = tempNpc.getPosition().getX();
-        client.setSkillY(tempNpc.getPosition().getY());
-        client.startFishing(npcId, 2);
-
-        if (NpcContentDispatcher.tryHandleClick(client, 2, tempNpc)) {
-            return;
-        }
-
-        logger.debug("Unhandled NPC second-click fallback npcId={} player={}", npcId, client.getPlayerName());
+        PacketInteractionService.handleNpcClick(client, packet.opcode(), 2, npcIndex);
     }
 
     private void handleNpcClick3(Client client, GamePacket packet) {
-        ByteBuf payload = packet.getPayload();
-        int npcIndex = readSignedWord(payload);
-        Npc tempNpc = Server.npcManager.getNpc(npcIndex);
-        if (tempNpc == null) {
+        ByteBuf payload = packet.payload();
+        if (payload.readableBytes() < 2) {
+            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.SHORT_PAYLOAD);
             return;
         }
-
-        if (logger.isTraceEnabled()) {
-            logger.trace("Npc click3 opcode={} npcIndex={} npcId={} player={}", packet.getOpcode(), npcIndex, tempNpc.getId(), client.getPlayerName());
-        }
-
-        int npcId = tempNpc.getId();
-        WalkToTask task = new WalkToTask(WalkToTask.Action.NPC_THIRD_CLICK, npcId, tempNpc.getPosition());
-        client.setWalkToTask(task);
-
-        if (client.randomed || client.UsingAgility) {
+        if (payload.readableBytes() > 2) {
+            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.MALFORMED_PAYLOAD);
             return;
         }
-        if (!client.playerPotato.isEmpty()) {
-            client.playerPotato.clear();
-        }
-
-        NpcInteractionIntent intent = new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 3);
-        InteractionTaskScheduler.schedule(client, intent, new NpcInteractionTask(client, intent));
-    }
-
-    private void performNpcClick3(Client client, Npc tempNpc) {
-        if (client.isBusy()) {
+        int npcIndex = ByteBufReader.readShortUnsigned(payload, ByteOrder.BIG, ValueType.NORMAL);
+        if (!isKnownNpcIndex(npcIndex)) {
+            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.UNKNOWN_NPC);
             return;
         }
-
-        int npcId = tempNpc.getId();
-        client.resetAction();
-        client.faceNpc(tempNpc.getSlot());
-        client.skillX = tempNpc.getPosition().getX();
-        client.setSkillY(tempNpc.getPosition().getY());
-
-        if (NpcContentDispatcher.tryHandleClick(client, 3, tempNpc)) {
-            return;
-        }
-
-        logger.debug("Unhandled NPC third-click fallback npcId={} player={}", npcId, client.getPlayerName());
+        PacketInteractionService.handleNpcClick(client, packet.opcode(), 3, npcIndex);
     }
 
     private void handleNpcClick4(Client client, GamePacket packet) {
-        ByteBuf payload = packet.getPayload();
-        int npcIndex = readSignedWordBigEndian(payload);
-        Npc tempNpc = Server.npcManager.getNpc(npcIndex);
-        if (tempNpc == null) {
+        ByteBuf payload = packet.payload();
+        if (payload.readableBytes() < 2) {
+            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.SHORT_PAYLOAD);
             return;
         }
-
-        if (logger.isTraceEnabled()) {
-            logger.trace("Npc click4 opcode={} npcIndex={} npcId={} player={}", packet.getOpcode(), npcIndex, tempNpc.getId(), client.getPlayerName());
-        }
-
-        int npcId = tempNpc.getId();
-        WalkToTask task = new WalkToTask(WalkToTask.Action.NPC_FOURTH_CLICK, npcId, tempNpc.getPosition());
-        client.setWalkToTask(task);
-
-        if (client.randomed || client.UsingAgility) {
+        if (payload.readableBytes() > 2) {
+            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.MALFORMED_PAYLOAD);
             return;
         }
-        if (!client.playerPotato.isEmpty()) {
-            client.playerPotato.clear();
+        int npcIndex = ByteBufReader.readShortUnsigned(payload, ByteOrder.LITTLE, ValueType.NORMAL);
+        if (!isKnownNpcIndex(npcIndex)) {
+            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.UNKNOWN_NPC);
+            return;
         }
-
-        NpcInteractionIntent intent = new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 4);
-        InteractionTaskScheduler.schedule(client, intent, new NpcInteractionTask(client, intent));
+        PacketInteractionService.handleNpcClick(client, packet.opcode(), 4, npcIndex);
     }
 
-    private void performNpcClick4(Client client, Npc tempNpc) {
-        if (client.isBusy()) {
+    private void handleNpcClick2LegacyCompat(Client client, GamePacket packet) {
+        if (!COMPAT_OPCODE_230_ENABLED) {
+            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.OPCODE_DISABLED);
             return;
         }
-
-        int npcId = tempNpc.getId();
-        client.skillX = tempNpc.getPosition().getX();
-        client.setSkillY(tempNpc.getPosition().getY());
-
-        if (NpcContentDispatcher.tryHandleClick(client, 4, tempNpc)) {
+        ByteBuf payload = packet.payload();
+        if (payload.readableBytes() < 2) {
+            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.SHORT_PAYLOAD);
             return;
         }
-
-        logger.debug("Unhandled NPC fourth-click fallback npcId={} player={}", npcId, client.getPlayerName());
+        if (payload.readableBytes() > 2) {
+            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.MALFORMED_PAYLOAD);
+            return;
+        }
+        int npcIndex = decodeCompat230NpcIndex(payload);
+        if (!isKnownNpcIndex(npcIndex)) {
+            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.UNKNOWN_NPC);
+            return;
+        }
+        PacketInteractionService.handleNpcClick(client, packet.opcode(), 2, npcIndex);
     }
 
     private void handleNpcAttack(Client client, GamePacket packet) {
-        ByteBuf payload = packet.getPayload();
-        int npcIndex = readUnsignedWordA(payload);
-
-        logger.debug("Npc attack opcode={} npcIndex={} player={}", packet.getOpcode(), npcIndex, client.getPlayerName());
-        if (client.magicId >= 0) {
-            client.magicId = -1;
+        ByteBuf payload = packet.payload();
+        if (payload.readableBytes() < 2) {
+            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.SHORT_PAYLOAD);
+            return;
         }
-        if (client.deathStage >= 1) {
+        if (payload.readableBytes() > 2) {
+            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.MALFORMED_PAYLOAD);
+            return;
+        }
+        int npcIndex = ByteBufReader.readShortUnsigned(payload, ByteOrder.BIG, ValueType.ADD);
+        if (!isKnownNpcIndex(npcIndex)) {
+            PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.UNKNOWN_NPC);
             return;
         }
 
-        Npc npc = Server.npcManager.getNpc(npcIndex);
-        if (npc == null) {
-            return;
-        }
-        if (client.randomed || client.UsingAgility) {
-            return;
-        }
-        if (NpcContentDispatcher.tryHandleAttack(client, npc)) {
-            return;
-        }
-
-        boolean rangedAttack = PlayerAttackCombatKt.getAttackStyle(client) != 0;
-        if ((rangedAttack && client.goodDistanceEntity(npc, 5)) || client.goodDistanceEntity(npc, 1)) {
-            client.resetWalkingQueue();
-            client.startAttack(npc);
-            return;
-        }
-
-        WalkToTask task = new WalkToTask(WalkToTask.Action.ATTACK_NPC, npcIndex, npc.getPosition());
-        client.setWalkToTask(task);
-        NpcInteractionIntent intent = new NpcInteractionIntent(packet.getOpcode(), PlayerHandler.cycle, npcIndex, 5);
-        InteractionTaskScheduler.schedule(client, intent, new NpcInteractionTask(client, intent));
+        logger.debug("Npc attack opcode={} npcIndex={} player={}", packet.opcode(), npcIndex, client.getPlayerName());
+        PacketInteractionService.handleNpcAttack(client, packet.opcode(), npcIndex);
     }
 
-    private static int readSignedWordBigEndianA(ByteBuf buf) {
-        int low = (buf.readUnsignedByte() - 128) & 0xFF;
-        int high = buf.readUnsignedByte();
-        int value = (high << 8) | low;
-        if (value > 32767) {
-            value -= 65536;
+    private int decodeCompat230NpcIndex(ByteBuf payload) {
+        ByteBuf addOrder = payload.duplicate();
+        int addIndex = ByteBufReader.readShortUnsigned(addOrder, ByteOrder.LITTLE, ValueType.ADD);
+        if (Server.npcManager.getNpcMap().containsKey(addIndex)) {
+            return addIndex;
         }
-        return value;
+        ByteBuf normalOrder = payload.duplicate();
+        int normalIndex = ByteBufReader.readShortUnsigned(normalOrder, ByteOrder.LITTLE, ValueType.NORMAL);
+        if (Server.npcManager.getNpcMap().containsKey(normalIndex)) {
+            return normalIndex;
+        }
+        return addIndex;
     }
 
-    private static int readSignedWord(ByteBuf buf) {
-        int high = buf.readUnsignedByte();
-        int low = buf.readUnsignedByte();
-        int value = (high << 8) | low;
-        if (value > 32767) {
-            value -= 65536;
+    private static boolean readFlag(String property, boolean defaultValue) {
+        String prop = System.getProperty(property);
+        if (prop != null && !prop.trim().isEmpty()) {
+            return "true".equalsIgnoreCase(prop.trim());
         }
-        return value;
+        String envKey = property.toUpperCase().replace('.', '_');
+        String env = System.getenv(envKey);
+        if (env != null && !env.trim().isEmpty()) {
+            return "true".equalsIgnoreCase(env.trim());
+        }
+        return defaultValue;
     }
 
-    private static int readSignedWordBigEndian(ByteBuf buf) {
-        int low = buf.readUnsignedByte();
-        int high = buf.readUnsignedByte();
-        int value = (high << 8) | low;
-        if (value > 32767) {
-            value -= 65536;
-        }
-        return value;
-    }
-
-    private static int readUnsignedWordA(ByteBuf buf) {
-        int high = buf.readUnsignedByte();
-        int low = (buf.readUnsignedByte() - 128) & 0xFF;
-        return (high << 8) | low;
+    private static boolean isKnownNpcIndex(int npcIndex) {
+        return npcIndex >= 0 && Server.npcManager != null && Server.npcManager.getNpcMap().containsKey(npcIndex);
     }
 }

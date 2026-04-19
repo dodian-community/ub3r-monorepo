@@ -1,21 +1,24 @@
 package net.dodian.uber.game.persistence.player
 
 import java.time.Duration
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.locks.LockSupport
 import kotlin.system.measureTimeMillis
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
+import net.dodian.uber.game.engine.loop.TickThreadBlockingGuard
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.persistence.account.AccountPersistenceService
-import net.dodian.uber.game.persistence.PlayerSaveReason
-import net.dodian.uber.game.persistence.PlayerSaveSnapshot
+import net.dodian.uber.game.persistence.player.PlayerSaveReason
+import net.dodian.uber.game.persistence.player.PlayerSaveSnapshot
 import org.slf4j.LoggerFactory
 
 object PlayerSaveService {
@@ -30,7 +33,7 @@ object PlayerSaveService {
     private val oldestQueuedAt = AtomicLong(0)
     private val lastWriteDurationMs = AtomicLong(0)
     private val totalRetries = AtomicLong(0)
-    private val repository = PlayerSaveRepository()
+    private val repository = PlayerSaveSqlRepository()
 
     @Volatile
     private var worker: Job? = null
@@ -77,6 +80,7 @@ object PlayerSaveService {
         updateProgress: Boolean,
         finalSave: Boolean,
     ) {
+        TickThreadBlockingGuard.requireNotGameThread("PlayerSaveService.saveSynchronously")
         val dirtyMask =
             if (finalSave || updateProgress) PlayerSaveSegment.ALL_MASK else client.saveDirtyMask
         if (dirtyMask == 0 && !finalSave) {
@@ -101,17 +105,24 @@ object PlayerSaveService {
 
     @JvmStatic
     fun shutdownAndDrain(timeout: Duration) {
+        TickThreadBlockingGuard.requireNotGameThread("PlayerSaveService.shutdownAndDrain")
         shuttingDown.set(true)
         val deadline = System.nanoTime() + timeout.toNanos()
         while (System.nanoTime() < deadline) {
             if (pending.isEmpty() && activeDbId.get() == -1) {
                 break
             }
-            Thread.sleep(25L)
+            LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(25L))
         }
 
-        runBlocking {
-            worker?.cancel()
+        val remainingNanos = (deadline - System.nanoTime()).coerceAtLeast(1L)
+        val remainingMillis = TimeUnit.NANOSECONDS.toMillis(remainingNanos).coerceAtLeast(1L)
+        val currentWorker = worker
+        if (currentWorker != null) {
+            val latch = CountDownLatch(1)
+            currentWorker.invokeOnCompletion { latch.countDown() }
+            currentWorker.cancel()
+            latch.await(remainingMillis, TimeUnit.MILLISECONDS)
         }
     }
 

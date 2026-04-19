@@ -1,16 +1,17 @@
 package net.dodian.uber.game.netty.listener.out;
 
-import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.listener.OutgoingPacket;
 import net.dodian.uber.game.netty.codec.*;
 
 public class SetSmithing implements OutgoingPacket {
 
-    private int writeFrame;
+    private final int writeFrame;
+    private final int[][] smithingItems;
 
-    public SetSmithing(int writeFrame) {
+    public SetSmithing(int writeFrame, int[][] smithingItems) {
         this.writeFrame = writeFrame;
+        this.smithingItems = smithingItems;
     }
 
     @Override
@@ -21,11 +22,11 @@ public class SetSmithing implements OutgoingPacket {
         message.putInt(writeFrame);
 
         // Write item count as short (2 bytes) - matches client's incoming.readShort()
-        message.putShort(Constants.SmithingItems.length);
+        message.putShort(smithingItems.length);
 
-        for (int i = 0; i < Constants.SmithingItems.length; i++) {
-            int itemId = Constants.SmithingItems[i][0] + 1;
-            int amount = Constants.SmithingItems[i][1];
+        for (int i = 0; i < smithingItems.length; i++) {
+            int itemId = smithingItems[i][0] + 1;
+            int amount = smithingItems[i][1];
 
             // Amount as int (4 bytes) - matches client's incoming.readInt()
             message.putInt(amount);

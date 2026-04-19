@@ -1,0 +1,18 @@
+package net.dodian.uber.game.engine.loop
+
+enum class GamePhase {
+    LOGIN_INGRESS,
+    INBOUND_PACKETS,
+    WORLD_DB_INPUT_BUILD,
+    WORLD_DB_RESULT_READ,
+    WORLD_DB_APPLY,
+    PLUNDER_DOOR,
+    NPC_MAIN,
+    PLAYER_MAIN,
+    WORLD_TASKS,
+    GROUND_ITEMS,
+    SHOPS,
+    MOVEMENT_FINALIZE,
+    OUTBOUND_SYNC,
+    HOUSEKEEPING,
+}

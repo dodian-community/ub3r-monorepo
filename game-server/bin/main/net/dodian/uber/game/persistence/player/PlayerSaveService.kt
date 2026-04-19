@@ -1,0 +1,278 @@
+package net.dodian.uber.game.persistence.player
+
+import java.time.Duration
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.locks.LockSupport
+import kotlin.system.measureTimeMillis
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
+import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.persistence.account.AccountPersistenceService
+import net.dodian.uber.game.persistence.player.PlayerSaveReason
+import net.dodian.uber.game.persistence.player.PlayerSaveSnapshot
+import org.slf4j.LoggerFactory
+
+object PlayerSaveService {
+    private val logger = LoggerFactory.getLogger(PlayerSaveService::class.java)
+    private val sequence = AtomicLong(0)
+    private val started = AtomicBoolean(false)
+    private val shuttingDown = AtomicBoolean(false)
+    private val pending = ConcurrentHashMap<Int, PlayerSaveRequest>()
+    private val pendingFinalSaves = ConcurrentHashMap.newKeySet<Int>()
+    private val activeDbId = AtomicInteger(-1)
+    private val activeFinalDbId = AtomicInteger(-1)
+    private val oldestQueuedAt = AtomicLong(0)
+    private val lastWriteDurationMs = AtomicLong(0)
+    private val totalRetries = AtomicLong(0)
+    private val repository = PlayerSaveSqlRepository()
+
+    @Volatile
+    private var worker: Job? = null
+
+    @JvmStatic
+    fun requestSave(
+        client: Client,
+        reason: PlayerSaveReason,
+        updateProgress: Boolean,
+        finalSave: Boolean,
+    ) {
+        if (client.dbId < 1) {
+            return
+        }
+        val dirtyMask =
+            when {
+                finalSave || updateProgress -> PlayerSaveSegment.ALL_MASK
+                client.saveDirtyMask == 0 -> 0
+                else -> client.saveDirtyMask
+            }
+        if (dirtyMask == 0 && !finalSave) {
+            return
+        }
+
+        val seq = sequence.incrementAndGet()
+        val envelope = PlayerSaveEnvelope.fromClient(client, seq, reason, updateProgress, finalSave, dirtyMask)
+        val shadowSnapshot =
+            if (SAVE_SHADOW_ENABLED) {
+                PlayerSaveSnapshot.fromClient(client, seq, reason, updateProgress, finalSave)
+            } else {
+                null
+            }
+
+        queue(PlayerSaveRequest(envelope = envelope, shadowSnapshot = shadowSnapshot))
+        if (!finalSave) {
+            client.clearSaveDirtyMask(dirtyMask)
+        }
+    }
+
+    @JvmStatic
+    fun saveSynchronously(
+        client: Client,
+        reason: PlayerSaveReason,
+        updateProgress: Boolean,
+        finalSave: Boolean,
+    ) {
+        val dirtyMask =
+            if (finalSave || updateProgress) PlayerSaveSegment.ALL_MASK else client.saveDirtyMask
+        if (dirtyMask == 0 && !finalSave) {
+            return
+        }
+        val envelope =
+            PlayerSaveEnvelope.fromClient(
+                client = client,
+                sequence = sequence.incrementAndGet(),
+                reason = reason,
+                updateProgress = updateProgress,
+                finalSave = finalSave,
+                dirtyMask = dirtyMask,
+            )
+        repository.saveEnvelope(envelope)
+        client.clearAllSaveDirty()
+    }
+
+    @JvmStatic
+    fun isFinalSavePending(dbId: Int): Boolean =
+        pendingFinalSaves.contains(dbId) || activeFinalDbId.get() == dbId
+
+    @JvmStatic
+    fun shutdownAndDrain(timeout: Duration) {
+        shuttingDown.set(true)
+        val deadline = System.nanoTime() + timeout.toNanos()
+        while (System.nanoTime() < deadline) {
+            if (pending.isEmpty() && activeDbId.get() == -1) {
+                break
+            }
+            LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(25L))
+        }
+
+        val remainingNanos = (deadline - System.nanoTime()).coerceAtLeast(1L)
+        val remainingMillis = TimeUnit.NANOSECONDS.toMillis(remainingNanos).coerceAtLeast(1L)
+        val currentWorker = worker
+        if (currentWorker != null) {
+            val latch = CountDownLatch(1)
+            currentWorker.invokeOnCompletion { latch.countDown() }
+            currentWorker.cancel()
+            latch.await(remainingMillis, TimeUnit.MILLISECONDS)
+        }
+    }
+
+    @JvmStatic
+    fun getQueueDepth(): Int = pending.size
+
+    @JvmStatic
+    fun getOldestQueuedAgeMs(): Long {
+        val queuedAt = oldestQueuedAt.get()
+        if (queuedAt == 0L || pending.isEmpty()) {
+            return 0L
+        }
+        return System.currentTimeMillis() - queuedAt
+    }
+
+    @JvmStatic
+    fun getRetryCount(): Long = totalRetries.get()
+
+    @JvmStatic
+    fun getLastWriteDurationMs(): Long = lastWriteDurationMs.get()
+
+    private fun queue(request: PlayerSaveRequest) {
+        if (shuttingDown.get() && !request.envelope.finalSave) {
+            return
+        }
+        ensureStarted()
+        val dbId = request.envelope.dbId
+        val chosen =
+            pending.compute(dbId) { _, existing ->
+                if (existing == null) {
+                    request
+                } else if (existing.envelope.finalSave && !request.envelope.finalSave) {
+                    // Never allow a periodic save to overwrite a queued final save.
+                    existing
+                } else if (!existing.envelope.finalSave && request.envelope.finalSave) {
+                    request
+                } else {
+                    if (request.envelope.sequence >= existing.envelope.sequence) request else existing
+                }
+            } ?: request
+        if (chosen.envelope.finalSave) {
+            pendingFinalSaves += dbId
+        } else {
+            pendingFinalSaves.remove(dbId)
+        }
+        oldestQueuedAt.compareAndSet(0L, System.currentTimeMillis())
+    }
+
+    private fun ensureStarted() {
+        if (!started.compareAndSet(false, true)) {
+            return
+        }
+        worker =
+            AccountPersistenceService.scope.launch {
+                while (isActive) {
+                    drainOnce()
+                    delay(SAVE_BATCH_DELAY_MS)
+                }
+            }
+    }
+
+    private suspend fun drainOnce() {
+        while (true) {
+            val next = nextPendingRequest() ?: break
+            val dbId = next.envelope.dbId
+            activeDbId.set(dbId)
+            activeFinalDbId.set(if (next.envelope.finalSave) dbId else -1)
+            try {
+                handleRequest(next)
+            } finally {
+                activeDbId.set(-1)
+                activeFinalDbId.set(-1)
+                val stillFinalQueued = pending[dbId]?.envelope?.finalSave == true
+                if (!stillFinalQueued) {
+                    pendingFinalSaves.remove(dbId)
+                }
+                if (pending.isEmpty()) {
+                    oldestQueuedAt.set(0L)
+                }
+            }
+        }
+    }
+
+    private fun nextPendingRequest(): PlayerSaveRequest? {
+        val next = pending.entries.minByOrNull { it.value.envelope.sequence } ?: return null
+        val removed = pending.remove(next.key, next.value)
+        if (!removed) {
+            return null
+        }
+        return next.value
+    }
+
+    private suspend fun handleRequest(request: PlayerSaveRequest) {
+        var backoffMs = SAVE_RETRY_BASE_MS.coerceAtLeast(50L)
+        while (AccountPersistenceService.scope.isActive) {
+            val elapsed =
+                withTimeoutOrNull(SAVE_REQUEST_TIMEOUT_MS) {
+                    measureTimeMillis {
+                        val snapshot = repository.buildSnapshot(request.envelope)
+                        if (request.envelope.finalSave || request.envelope.updateProgress) {
+                            request.shadowSnapshot?.let { shadow -> compareShadow(shadow, snapshot) }
+                        }
+                        repository.saveEnvelope(request.envelope)
+                    }
+                }
+
+            if (elapsed != null) {
+                lastWriteDurationMs.set(elapsed)
+                return
+            }
+
+            request.attempts++
+            totalRetries.incrementAndGet()
+            if (!request.envelope.finalSave && request.attempts >= SAVE_BURST_ATTEMPTS.coerceAtLeast(1)) {
+                logger.error(
+                    "Save failed after {} attempts for {} (dbId={})",
+                    request.attempts,
+                    request.envelope.playerName,
+                    request.envelope.dbId,
+                )
+                return
+            }
+
+            logger.warn(
+                "Retrying save attempt {} for {} (dbId={})",
+                request.attempts,
+                request.envelope.playerName,
+                request.envelope.dbId,
+            )
+            delay(timeMillis = backoffMs)
+            backoffMs = (backoffMs * 2).coerceAtMost(SAVE_RETRY_MAX_MS)
+        }
+    }
+
+    private fun compareShadow(oldSnapshot: PlayerSaveSnapshot, newSnapshot: PlayerSaveSnapshot) {
+        val same =
+            oldSnapshot.statsUpdateSql == newSnapshot.statsUpdateSql &&
+                oldSnapshot.statsProgressInsertSql == newSnapshot.statsProgressInsertSql &&
+                oldSnapshot.characterUpdateSql == newSnapshot.characterUpdateSql
+        if (!same) {
+            logger.warn(
+                "Player save shadow mismatch for {} (dbId={}, reason={})",
+                newSnapshot.playerName,
+                newSnapshot.dbId,
+                newSnapshot.reason,
+            )
+        }
+    }
+
+    private const val SAVE_BURST_ATTEMPTS = 8
+    private const val SAVE_RETRY_BASE_MS = 250L
+    private const val SAVE_RETRY_MAX_MS = 5000L
+    private const val SAVE_BATCH_DELAY_MS = 100L
+    private const val SAVE_REQUEST_TIMEOUT_MS = 5000L
+    private const val SAVE_SHADOW_ENABLED = false
+}

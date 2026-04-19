@@ -7,7 +7,7 @@ import net.dodian.uber.game.netty.codec.ValueType;
 
 public class SendSideTab implements OutgoingPacket {
 
-    private int tabId;
+    private final int tabId;
 
     public SendSideTab(int tabId) {
         this.tabId = tabId;

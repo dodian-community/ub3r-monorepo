@@ -2,16 +2,16 @@ package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
-import net.dodian.utilities.Utils;
+import net.dodian.uber.game.engine.systems.net.PacketInteractionRequestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Netty port of DuelRequest (opcode 153).
+ * Decodes pid, then delegates all logic to PacketInteractionRequestService.
  */
 public class DuelRequestListener implements PacketListener {
 
@@ -21,26 +21,26 @@ public class DuelRequestListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.getPayload();
-        int size = packet.getSize();
-        byte[] data = new byte[size];
-        buf.readBytes(data);
-        int pid = Utils.HexToInt(data, 0, size) / 1000;
+        ByteBuf buf = packet.payload();
+        int size = packet.size();
+        if (size <= 0 || size > 8 || buf.readableBytes() < size) {
+            return;
+        }
+        int temp = 0;
+        int multiplier = 1000;
+        for (int idx = 0; idx < size; idx++) {
+            temp += buf.readUnsignedByte() * multiplier;
+            if (multiplier > 1) {
+                multiplier /= 1000;
+            }
+        }
+        int pid = temp / 1000;
 
         Client other = client.getClient(pid);
         if (!client.validClient(pid) || client.getSlot() == pid) {
             return;
         }
-        if (client.inWildy() || other.inWildy()) {
-            client.send(new SendMessage("You cant duel in the wilderness!"));
-            return;
-        }
-        if (client.isBusy() || other.isBusy()) {
-            client.send(new SendMessage(client.isBusy() ? "You are currently busy" : other.getPlayerName() + " is currently busy!"));
-            return;
-        }
-
         logger.debug("{} sent duel request to {} (slot {})", client.getPlayerName(), other.getPlayerName(), pid);
-        client.duelReq(pid);
+        PacketInteractionRequestService.handleDuelRequest(client, pid, other);
     }
 }

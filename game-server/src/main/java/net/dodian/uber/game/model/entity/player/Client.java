@@ -1,95 +1,115 @@
 package net.dodian.uber.game.model.entity.player;
-
-
-
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
-import net.dodian.uber.game.event.Event;
-import net.dodian.uber.game.event.EventManager;
+import net.dodian.uber.game.engine.event.GameEventBus;
+import net.dodian.uber.game.engine.event.GameEventScheduler;
+import net.dodian.uber.game.events.player.PlayerLogoutEvent;
+import net.dodian.uber.game.events.item.ItemPickupEvent;
+import net.dodian.uber.game.events.trade.TradeCancelEvent;
+import net.dodian.uber.game.events.trade.TradeCompleteEvent;
+import net.dodian.uber.game.events.trade.TradeRequestEvent;
 import net.dodian.uber.game.model.Position;
-import net.dodian.uber.game.model.ShopHandler;
-import net.dodian.uber.game.model.UpdateFlag;
+import net.dodian.uber.game.shop.ShopCatalog;
+import net.dodian.uber.game.shop.ShopManager;
+import net.dodian.uber.game.shop.ShopRulesService;
+import net.dodian.uber.game.model.entity.UpdateFlag;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.npc.Npc;
-import net.dodian.uber.game.model.entity.npc.NpcDrop;
 import net.dodian.uber.game.model.item.*;
-import net.dodian.uber.game.model.object.DoorHandler;
-import net.dodian.uber.game.model.object.RS2Object;
-import net.dodian.uber.game.model.player.content.Skillcape;
+import net.dodian.uber.game.model.objects.DoorRegistry;
+import net.dodian.uber.game.model.objects.WorldObject;
+import net.dodian.uber.game.skill.Skillcape;
+import net.dodian.uber.game.ui.bank.PlayerBankService;
 import net.dodian.uber.game.netty.listener.OutgoingPacket;
-import net.dodian.uber.game.model.player.quests.QuestSend;
-import net.dodian.uber.game.model.player.skills.agility.Agility;
+import net.dodian.uber.game.ui.QuestTabEntry;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
-import net.dodian.uber.game.model.player.skills.agility.DesertCarpet;
-import net.dodian.uber.game.model.player.skills.fletching.Fletching;
-import net.dodian.uber.game.model.player.skills.prayer.Prayer;
-import net.dodian.uber.game.model.player.skills.prayer.Prayers;
-import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
-import net.dodian.uber.game.persistence.CommandDbService;
+import net.dodian.uber.game.skill.prayer.PrayerManager;
+import net.dodian.uber.game.skill.farming.Farming;
+import net.dodian.uber.game.skill.farming.FarmingState;
+import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry;
+import net.dodian.uber.game.persistence.admin.CommandDbService;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
-import net.dodian.uber.game.persistence.PlayerSaveReason;
+import net.dodian.uber.game.persistence.player.RefundRecord;
+import net.dodian.uber.game.persistence.player.RefundRepository;
+import net.dodian.uber.game.persistence.player.PlayerSaveReason;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
-import net.dodian.uber.game.skills.mining.MiningService;
-import net.dodian.uber.game.content.dialogue.legacy.LegacyDialogueOptionService;
-import net.dodian.uber.game.content.dialogue.legacy.LegacyDialogueService;
+import net.dodian.uber.game.engine.net.InboundPacketMailbox;
+import net.dodian.uber.game.engine.net.OutboundSessionQueue;
+import net.dodian.uber.game.engine.processing.EntityProcessor;
+import net.dodian.uber.game.engine.metrics.PacketErrorTelemetry;
+import net.dodian.uber.game.engine.metrics.PacketRejectTelemetry;
+import net.dodian.uber.game.skill.crafting.Tanning;
+import net.dodian.uber.game.engine.systems.dialogue.DialogueOptionService;
+import net.dodian.uber.game.ui.dialogue.DialogueDisplayService;
+import net.dodian.uber.game.engine.systems.dialogue.DialogueService;
 import net.dodian.uber.game.netty.listener.out.*;
-import net.dodian.uber.game.party.Balloons;
-import net.dodian.uber.game.party.RewardItem;
-import net.dodian.uber.game.security.*;
-import net.dodian.utilities.*;
+import net.dodian.uber.game.activity.partyroom.PartyRoomRewardItem;
+import net.dodian.uber.game.persistence.audit.*;
+import net.dodian.uber.game.engine.systems.action.PlayerActionCancellationService;
+import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason;
+import net.dodian.uber.game.engine.systems.action.PlayerActionType;
+import net.dodian.uber.game.engine.systems.action.TeleportActionService;
+import net.dodian.uber.game.engine.systems.action.TravelDecision;
+import net.dodian.uber.game.engine.systems.action.TravelRouteService;
+import net.dodian.uber.game.engine.systems.action.DuelCountdownService;
+import net.dodian.uber.game.engine.systems.action.DuelCountdownState;
+import net.dodian.uber.game.engine.systems.animation.PlayerAnimationService;
+import net.dodian.uber.game.engine.systems.combat.CombatStartService;
+import net.dodian.uber.game.engine.systems.interaction.PlayerInteractionGuardService;
+import net.dodian.uber.game.engine.systems.interaction.items.ItemDispatcher;
+import net.dodian.uber.game.engine.systems.interaction.InteractionAnchorState;
+import net.dodian.uber.game.engine.systems.interaction.ui.TradeDuelSessionService;
+import net.dodian.uber.game.engine.lifecycle.PlayerDeferredLifecycleService;
+import net.dodian.uber.game.engine.systems.net.PacketRejectReason;
+import net.dodian.uber.game.engine.util.Misc;
+import net.dodian.utilities.MD5;
+import net.dodian.utilities.Utils;
+import net.dodian.uber.game.engine.systems.skills.ProgressionService;
+import net.dodian.uber.game.skill.agility.AgilityTicketExchangeService;
 
-import java.io.IOException;
-import java.nio.channels.SocketChannel;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.Statement;
-import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.io.BufferedWriter;
 import io.netty.channel.Channel;
 
-import java.io.File;
-import java.io.FileWriter;
 /* Kotlin imports */
-import static net.dodian.uber.game.combat.ClientExtensionsKt.getRangedStr;
-import static net.dodian.uber.game.combat.PlayerAttackCombatKt.attackTarget;
-import net.dodian.uber.game.skills.*;
+import net.dodian.uber.game.engine.systems.world.item.Ground;
+import static net.dodian.uber.game.combat.CombatPlayerExtensionsKt.getRangedStr;
 import static net.dodian.uber.game.model.player.skills.Skill.*;
-import static net.dodian.utilities.DatabaseKt.getDbConnection;
-import static net.dodian.utilities.DotEnvKt.*;
+import static net.dodian.uber.game.engine.config.DotEnvKt.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-
 public class Client extends Player implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(Client.class);
     private static final int MAX_PENDING_INBOUND_PACKETS = 200;
+    private static final int RECENT_INBOUND_TRACE_SIZE = 10;
 
     public Channel channel;
-    private final java.util.Queue<net.dodian.uber.game.netty.game.GamePacket> pendingInboundPackets = new java.util.concurrent.ConcurrentLinkedQueue<>();
-    private final java.util.concurrent.atomic.AtomicInteger pendingInboundPacketCount = new java.util.concurrent.atomic.AtomicInteger();
+    private final InboundPacketMailbox inboundPacketMailbox = new InboundPacketMailbox(MAX_PENDING_INBOUND_PACKETS);
+    private final OutboundSessionQueue outboundSessionQueue = new OutboundSessionQueue();
+    private final java.util.concurrent.atomic.AtomicBoolean inboundReadyQueued = new java.util.concurrent.atomic.AtomicBoolean();
+    private final int[] recentInboundOpcodes = new int[RECENT_INBOUND_TRACE_SIZE];
+    private final int[] recentInboundSizes = new int[RECENT_INBOUND_TRACE_SIZE];
+    private final int[] recentInboundCycles = new int[RECENT_INBOUND_TRACE_SIZE];
+    private int recentInboundWriteIndex = 0;
+    private int recentInboundCount = 0;
 
     public Farming farming = new Farming();
-    public FarmingJson farmingJson = new FarmingJson();
-    public Fletching fletching = new Fletching();
+    public FarmingState farmingJson = new FarmingState();
     public boolean immune = false, loadingDone = false, reloadHp = false;
     public boolean canPreformAction = true;
     public long lastDropTime = 0; //used for limiting drops per 600ms and logging out delayd 
     public boolean isLoggingOut = false; //new flag 
     long lastBar = 0;
     public long lastSave, lastProgressSave;
-    public long lastClickAltar = 0;
     public Entity target = null;
     int otherdbId = -1;
     public int convoId = -1, nextDiag = -1, npcFace = 591;
     public boolean pLoaded = false;
-    public int maxQuests = QuestSend.values().length;
+    public int maxQuests = QuestTabEntry.values().length;
     public int[] quests = new int[maxQuests];
     public int[] playerBonus = new int[12];
-    private Map<Integer, String> uiTextCache = new HashMap<>();
+    private final Map<Integer, String> uiTextCache = new HashMap<>();
     private int lastWildLevelSent = -1;
     private String lastTopBarText = null;
     private int currentWalkableInterface = -1;
@@ -111,12 +131,6 @@ public class Client extends Player implements Runnable {
     public Date today = checkCalendarDate(now, 0);
     public long mutedTill;
     public long rightNow = now.getTime();
-    public boolean woodcutting = false;
-    public boolean stringing = false;
-    public boolean filling = false;
-    public int fillingObj = -1;
-    public int boneItem = -1;
-    public int cuttingIndex = -1;
     public int resourcesGathered = 0;
     public long lastDoor = 0;
     public long session_start = 0;
@@ -127,16 +141,9 @@ public class Client extends Player implements Runnable {
     public boolean tradeLocked = false;
     public boolean officialClient = true;
     public String[] UUID = null;
-    /*
-     * Danno: Last row all disabled. As none have effect.
-     */
-    public int[] duelButtons = {26069, 26070, 26071, 30136, 2158, 26065 /* 26072, 26073, 26074, 26066, 26076 */};
-    public String[] duelNames = {"No Ranged", "No Melee", "No Magic", "No Gear Change", "Fun Weapons", "No Deflect Damage",
-            "No Drinks", "No Food", "No prayer", "No Movement", "Obstacles"};
-    /*
-     * Danno: Last row all disabled. As none have effect.
-     */
-    public boolean[] duelRule = {false, false, false, false, false, true, true, true, true, true, true};
+    public String[] duelNames = {"No Ranged", "No Melee", "No Magic", "No Sp. Atk", "Fun Weapons", "No Forfeit",
+            "No Drinks", "No Food", "No Prayer", "No Movement", "Obstacles"};
+    public boolean[] duelRule = {false, false, false, false, false, false, false, false, false, false, false};
 
     /*
      * Danno: Testing for armor restriction rules.
@@ -146,6 +153,7 @@ public class Client extends Player implements Runnable {
     private final int[] trueSlots = {0, 1, 2, 13, 3, 4, 5, 7, 12, 10, 9};
     private final int[] falseSlots = {0, 1, 2, 4, 5, 6, -1, 7, -1, 10, 9, -1, 9, 3};
     private final int[] stakeConfigId = new int[23];
+    private final int[] duelRuleConfigIds = {11, 12, 13, 22, 15, 16, 17, 18, 19, 20, 21};
     public int[] duelLine = {6698, 6699, 6697, 7817, 669, 6696, 6701, 6702, 6703, 6704, 6731};
     public boolean duelRequested = false, inDuel = false, duelConfirmed = false, duelConfirmed2 = false,
             duelFight = false;
@@ -156,36 +164,15 @@ public class Client extends Player implements Runnable {
     public CopyOnWriteArrayList<GameItem> offeredItems = new CopyOnWriteArrayList<>();
     public CopyOnWriteArrayList<GameItem> otherOfferedItems = new CopyOnWriteArrayList<>();
     public boolean adding = false;
-    public ArrayList<RS2Object> objects = new ArrayList<>();
+    public ArrayList<WorldObject> objects = new ArrayList<>();
     public long lastButton = 0;
-    public int cookAmount = 0, cookIndex = 0, enterAmountId = 0;
-    public boolean cooking = false;
-    // Dodian: fishing
-    int fishIndex;
-    boolean fishing = false;
+    public int enterAmountId = 0;
     // Dodian: teleports
-    private int tX = 0, tY = 0, tStage = 0, tH = 0, tEmote = 0;
-    // Dodian: crafting
-    boolean crafting = false;
-    int cItem = -1;
-    int cAmount = 0;
-    int cLevel = 1;
-    int cExp = 0;
+    private int tH = 0;
     public int cSelected = -1, cIndex = -1;
     public String dMsg = "";
 
-    public boolean spinning = false;
     public int dialogInterface = 2459;
-    public boolean fletchings = false;
-    public int fletchId = -1, fletchAmount = -1, fletchLog = -1, fletchExp = 0;
-    /* Set make one skill action! */
-    public int skillActionCount = 0, skillActionTimer = -1, prayerAction = -1;
-    public ArrayList<Integer> playerSkillAction = new ArrayList<>(); //playerSkillAction 0 = skillId, 1 = item Made, 2 = amount, 3 = item one, 4 = item two, 5 = xp, 6 = tickTimer
-    public String skillMessage = "";
-    public boolean smelting = false;
-    public int smelt_id, smeltCount, smeltExperience;
-
-    public boolean shafting = false;
     public int random_skill = -1;
     public String[] otherGroups = new String[10];
     public int autocast_spellIndex = -1, magicId = -1;
@@ -206,7 +193,13 @@ public class Client extends Player implements Runnable {
     public int[] ancientButton = {51133, 51185, 51091, 24018, 51159, 51211, 51111, 51069, 51146, 51198, 51102, 51058, 51172, 51224, 51122, 51080};
     public String properName = "";
     public int actionButtonId = 0;
+    public int skillX = 0, skillY = 0;
+    public int stairs = 0, stairDistance = 0;
     public boolean validLogin = false;
+
+    public void openTan() {
+        Tanning.open(this);
+    }
 
     /**
      * Replaces an object in the game world.
@@ -239,24 +232,9 @@ public class Client extends Player implements Runnable {
      * Refreshes a skill's level and experience on the client.
      * @param skill The skill to refresh
      */
+    @Deprecated
     public void refreshSkill(Skill skill) {
-        int baseLevel = Skills.getLevelForExperience(getExperience(skill));
-        int level = baseLevel;
-        if (skill == Skill.HITPOINTS) {
-            level = getCurrentHealth();
-        } else if (skill == Skill.PRAYER) {
-            level = getCurrentPrayer();
-        } else if (boostedLevel[skill.getId()] != 0) {
-            level += boostedLevel[skill.getId()];
-        }
-
-        setSkillLevel(skill, level, getExperience(skill));
-        setLevel(level, skill);
-
-        int maxLevel = baseLevel;
-
-        // Send the skill update packet (level, maxLevel, experience)
-        send(new RefreshSkill(skill, level, maxLevel, getExperience(skill)));
+        ProgressionService.refresh(this, skill);
     }
 
     public void sendCachedString(String text, int lineId) {
@@ -336,7 +314,7 @@ public class Client extends Player implements Runnable {
     }
 
     public int getbattleTimer(int weapon) {
-        String wep = GetItemName(weapon).toLowerCase();
+        String wep = getItemName(weapon).toLowerCase();
         //2952 aka wolfbane to strong as 3 tick weapon!
         int wepPlainTick = 4; //Default tick for many weapons
         if (wep.contains("dart") || wep.contains("knife")) {
@@ -381,8 +359,8 @@ public class Client extends Player implements Runnable {
     }
 
     public void animation(int id, Position pos) {
-        for (int i = 0; i < PlayerHandler.players.length; i++) {
-            Player p = PlayerHandler.players[i];
+        for (int i = 0; i < PlayerRegistry.players.length; i++) {
+            Player p = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[i];
             if (p != null) {
                 Client person = (Client) p;
                 if (person.distanceToPoint(pos.getX(), pos.getY()) <= 60 && pos.getZ() == getPosition().getZ())
@@ -397,8 +375,8 @@ public class Client extends Player implements Runnable {
 
     public void stillgfx(int id, Position pos, int height, boolean showAll) {
         if (showAll) {
-            for (int i = 0; i < PlayerHandler.players.length; i++) {
-                Player p = PlayerHandler.players[i];
+            for (int i = 0; i < PlayerRegistry.players.length; i++) {
+                Player p = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[i];
                 if (p != null) {
                     Client person = (Client) p;
                     if (person.distanceToPoint(pos.getX(), pos.getY()) <= 60 && getPosition().getZ() == pos.getZ())
@@ -488,7 +466,7 @@ public class Client extends Player implements Runnable {
             }
             return;
         }
-        PlayerHandler.forEachActivePlayer(viewer -> {
+        PlayerRegistry.forEachActivePlayer(viewer -> {
             if (canViewProjectile(viewer, source, false)) {
                 consumer.accept(viewer);
             }
@@ -507,18 +485,11 @@ public class Client extends Player implements Runnable {
     }
 
     public void println_debug(String str) {
-        if (!getClientPacketTraceEnabled() && !getClientUiTraceEnabled()) {
-            return;
-        }
         logger.debug("[client-{}-{}] {}", getSlot(), getPlayerName(), str);
     }
 
     public void print_debug(String str) {
-        // TODO: Is this method necessary? I commented out the implementation of it and will just redirect it to the println variant.
         println_debug(str);
-
-        // String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-        // System.out.print("[" + timestamp + "] [client-" + getSlot() + "-" + getPlayerName() + "]: " + str);
     }
 
     public void println(String str) {
@@ -526,23 +497,31 @@ public class Client extends Player implements Runnable {
     }
 
     public void rerequestAnim() {
-        requestAnim(-1, 0);
+        PlayerAnimationService.requestResetClear(this);
     }
 
-    public void sendFrame200(int MainFrame, int SubFrame) {
-        send(new SendFrame200(MainFrame, SubFrame));
+    public void sendMessage(String text) {
+        send(new SendMessage(text));
     }
 
-    public void sendFrame164(int Frame) {
-        send(new SendFrame164(Frame));
+    public void sendString(String text, int lineId) {
+        send(new SendString(text, lineId));
     }
 
-    public void sendFrame246(int MainFrame, int SubFrame, int SubFrame2) {
-        send(new SendFrame246(MainFrame, SubFrame, SubFrame2));
+    public void sendInterfaceAnimation(int MainFrame, int SubFrame) {
+        send(new SendInterfaceAnimation(MainFrame, SubFrame));
+    }
+
+    public void sendChatboxInterface(int Frame) {
+        send(new SendChatboxInterface(Frame));
+    }
+
+    public void sendInterfaceModel(int MainFrame, int SubFrame, int SubFrame2) {
+        send(new SendInterfaceModel(MainFrame, SubFrame, SubFrame2));
     }
 
     public void sendQuestSomething(int id) {
-        send(new SendQuestSomething(id));
+        send(new SetScrollPosition(id));
     }
 
     public void clearQuestInterface() {
@@ -550,10 +529,14 @@ public class Client extends Player implements Runnable {
             send(new SendString("", j));
     }
 
-    public void showInterface(int interfaceid) {
+    public void openInterface(int interfaceid) {
         resetAction();
-        // Delegates to the new packet implementation while preserving the old method signature.
         send(new ShowInterface(interfaceid));
+    }
+
+    public void closeInterfaces() {
+        send(new RemoveInterfaces());
+        clearWalkableInterface();
     }
 
     public int ancients = 1;
@@ -574,6 +557,18 @@ public class Client extends Player implements Runnable {
     public int XremoveSlot = 0;
     public int XinterfaceID = 0;
     public int XremoveID = 0;
+    public int currentBankTab = 0;
+    public int previousBankTab = 0;
+    public int lastButtonActionIndex = -1;
+    public boolean bankSearchActive = false;
+    public boolean bankSearchPendingInput = false;
+    public String bankSearchQuery = "";
+    public int[] bankSlotTabs = null;
+    public int[][] bankContainerSlotMap = null;
+    public int[][] bankStyleViewSlotMap = null;
+    public ArrayList<Integer> bankStyleViewIds = new ArrayList<>();
+    public ArrayList<Integer> bankStyleViewAmounts = new ArrayList<>();
+    public String bankStyleViewTitle = "";
 
     /**
      * Best-effort tracking of the currently opened "main" interface (via {@link ShowInterface}).
@@ -582,24 +577,22 @@ public class Client extends Player implements Runnable {
      */
     public int activeInterfaceId = -1;
 
-    public int stairs = 0;
-    public int stairDistance = 1;
-    public int stairDistanceAdd = 0;
-    public int[] smithing = {0, 0, 0, -1, -1, 0};
-
-    public int skillX = -1;
-    public int skillY = -1;
-
+    private long verticalTransitionSequence = 0L;
+    private long activeVerticalTransitionToken = 0L;
+    private long verticalTransitionUntilMillis = 0L;
     public int WanneBank = 0;
     public int WanneShop = 0;
     public int WanneThieve = 0;
 
 
-    // Legacy Stream fields removed - using pure Netty now
+    // Stream cipher fields removed; Netty owns packet I/O now.
    // public ISAACCipher inStreamDecryption = null, outStreamDecryption = null;
 
-    public int timeOutCounter = 0; // to detect timeouts on the connection to the client
+    public final java.util.concurrent.atomic.AtomicInteger timeOutCounter = new java.util.concurrent.atomic.AtomicInteger(); // to detect timeouts on the connection to the client
     public int returnCode = 2; // Tells the client if the login was successfull
+    private volatile long lastInboundKeepAliveAtMillis = System.currentTimeMillis();
+    private volatile long lastIdlePlayerSyncSentAtMillis = 0L;
+    private volatile String lastDisconnectReason = "unknown";
 
 
 
@@ -610,9 +603,24 @@ public class Client extends Player implements Runnable {
 
     }
 
+    public record InboundProcessResult(int processedPackets, int walkPacketsProcessed, int mousePacketsProcessed,
+                                       int walkPacketsReplaced, int mousePacketsReplaced, int fifoPacketsDropped) {
+    }
+
+    public record OutboundFlushStats(int flushedMessages, int flushedBytes) {
+
+        public static OutboundFlushStats empty() {
+                return new OutboundFlushStats(0, 0);
+            }
+        }
+
     @Override
     public void destruct() {
+        PlayerDeferredLifecycleService.cancelAll(this);
+        clearVerticalTravelState();
         releaseQueuedInboundPackets();
+        releaseQueuedOutboundPackets();
+        clearInboundReadyFlag();
         cancelFarmDebugTask();
 
         // Transport-specific shutdown
@@ -623,13 +631,14 @@ public class Client extends Player implements Runnable {
         isLoggingOut = false;
 
         if (saveNeeded && !tradeSuccessful) {
+            GameEventBus.post(new PlayerLogoutEvent(this, PlayerSaveReason.DISCONNECT));
             saveStats(PlayerSaveReason.DISCONNECT, true, true);
         }
 
         // Release references
         
         channel = null;
-        // Legacy Stream cleanup removed - using pure Netty now
+        // Stream cipher cleanup is no longer needed with Netty-owned I/O.
        // inStreamDecryption = null;
        // outStreamDecryption = null;
 
@@ -646,89 +655,234 @@ public class Client extends Player implements Runnable {
         if (packet == null || disconnected) {
             return false;
         }
-        int queued = pendingInboundPacketCount.incrementAndGet();
-        if (queued > MAX_PENDING_INBOUND_PACKETS) {
-            pendingInboundPacketCount.decrementAndGet();
+        InboundPacketMailbox.EnqueueResult result = inboundPacketMailbox.enqueue(packet);
+        if (!result.accepted()) {
             return false;
         }
-        pendingInboundPackets.add(packet);
+        markInboundReadyIfNeeded();
         return true;
     }
 
-    public int processQueuedPackets(int maxPacketsPerTick) {
+    public InboundProcessResult processQueuedPackets(int maxPacketsPerTick) {
         if (maxPacketsPerTick <= 0 || disconnected) {
-            return 0;
+            InboundPacketMailbox.MailboxCounters counters = inboundPacketMailbox.snapshotAndResetCounters();
+            return new InboundProcessResult(0, 0, 0, counters.walkReplaced(), counters.mouseReplaced(), counters.fifoDropped());
         }
 
         int processedCount = 0;
+        int walkProcessed = 0;
+        int mouseProcessed = 0;
         for (int processed = 0; processed < maxPacketsPerTick; processed++) {
-            net.dodian.uber.game.netty.game.GamePacket packet = pendingInboundPackets.poll();
-            if (packet == null) {
+            InboundPacketMailbox.PollResult next = inboundPacketMailbox.pollNext();
+            if (next == null) {
                 break;
             }
-            pendingInboundPacketCount.decrementAndGet();
+            net.dodian.uber.game.netty.game.GamePacket packet = next.packet();
             processedCount++;
+            if (next.family() == InboundPacketMailbox.Family.WALK) {
+                walkProcessed++;
+            } else if (next.family() == InboundPacketMailbox.Family.MOUSE) {
+                mouseProcessed++;
+            }
 
             try {
                 dispatchQueuedPacket(packet);
             } catch (Exception ex) {
+                PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.LISTENER_EXCEPTION);
+                PacketErrorTelemetry.recordListenerException(packet.opcode(), getPlayerName(), getSlot(), packet.size(), ex);
+                logger.error(
+                        "Inbound listener exception player={} slot={} opcode={} size={} recent={}",
+                        getPlayerName(),
+                        getSlot(),
+                        packet.opcode(),
+                        packet.size(),
+                        describeRecentInboundPackets(),
+                        ex
+                );
                 disconnected = true;
-                println_debug("Error processing opcode " + packet.getOpcode() + " for " + getPlayerName() + ": " + ex.getMessage());
+                println_debug("Error processing opcode " + packet.opcode() + " for " + getPlayerName() + ": " + ex.getMessage());
                 break;
             } finally {
-                if (packet.getPayload() != null && packet.getPayload().refCnt() > 0) {
-                    packet.getPayload().release();
+                if (packet.payload() != null && packet.payload().refCnt() > 0) {
+                    packet.payload().release();
                 }
             }
         }
-        return processedCount;
+        InboundPacketMailbox.MailboxCounters counters = inboundPacketMailbox.snapshotAndResetCounters();
+        return new InboundProcessResult(
+                processedCount,
+                walkProcessed,
+                mouseProcessed,
+                counters.walkReplaced(),
+                counters.mouseReplaced(),
+                counters.fifoDropped()
+        );
     }
 
     private void dispatchQueuedPacket(net.dodian.uber.game.netty.game.GamePacket packet) throws Exception {
+        recordInboundPacket(packet);
         net.dodian.uber.game.netty.listener.PacketListener listener =
-                net.dodian.uber.game.netty.listener.PacketListenerManager.get(packet.getOpcode());
+                net.dodian.uber.game.netty.listener.PacketListenerManager.get(packet.opcode());
         if (listener != null) {
-            boolean sample = net.dodian.uber.game.runtime.metrics.InboundOpcodeProfiler.shouldSample();
-            if (sample || getInboundOpcodeProfilingEnabled()) {
+            boolean sample = net.dodian.uber.game.engine.metrics.InboundOpcodeProfiler.shouldSample();
+            if (logger.isDebugEnabled() && isNpcTraceOpcode(packet.opcode())) {
+                logger.debug(
+                        "Inbound npc-trace opcode={} size={} preview={} recent={} player={}",
+                        packet.opcode(),
+                        packet.size(),
+                        previewInboundPayload(packet, 4),
+                        describeRecentInboundPackets(),
+                        getPlayerName()
+                );
+            }
+            if (sample) {
                 long startNs = System.nanoTime();
                 listener.handle(this, packet);
                 long elapsedNs = System.nanoTime() - startNs;
-                if (sample) {
-                    net.dodian.uber.game.runtime.metrics.InboundOpcodeProfiler.record(this, packet, listener, elapsedNs);
-                }
-                if (getInboundOpcodeProfilingEnabled()) {
-                    long elapsedMs = elapsedNs / 1_000_000L;
-                    if (elapsedMs >= getInboundOpcodeProfilingWarnMs()) {
-                        println_debug(
-                                "Slow inbound opcode " + packet.getOpcode() +
-                                        " size=" + packet.getSize() +
-                                        " player=" + getPlayerName() +
-                                        " listener=" + listener.getClass().getSimpleName() +
-                                        " took=" + elapsedMs + "ms"
-                        );
-                    }
-                }
+                net.dodian.uber.game.engine.metrics.InboundOpcodeProfiler.record(this, packet, listener, elapsedNs);
             } else {
                 listener.handle(this, packet);
             }
+        } else {
+            logger.warn(
+                    "Unhandled inbound opcode={} size={} player={}",
+                    packet.opcode(),
+                    packet.size(),
+                    getPlayerName()
+            );
         }
+    }
+
+    private boolean isNpcTraceOpcode(int opcode) {
+        return opcode == 155 || opcode == 17 || opcode == 21 || opcode == 18 || opcode == 72;
+    }
+
+    private void recordInboundPacket(net.dodian.uber.game.netty.game.GamePacket packet) {
+        int slot = recentInboundWriteIndex;
+        recentInboundOpcodes[slot] = packet.opcode();
+        recentInboundSizes[slot] = packet.size();
+        recentInboundCycles[slot] = PlayerRegistry.cycle;
+        recentInboundWriteIndex = (recentInboundWriteIndex + 1) % RECENT_INBOUND_TRACE_SIZE;
+        if (recentInboundCount < RECENT_INBOUND_TRACE_SIZE) {
+            recentInboundCount++;
+        }
+    }
+
+    public String describeRecentInboundPackets() {
+        if (recentInboundCount <= 0) {
+            return "[]";
+        }
+        StringBuilder builder = new StringBuilder("[");
+        for (int i = 0; i < recentInboundCount; i++) {
+            if (i > 0) {
+                builder.append(", ");
+            }
+            int index = (recentInboundWriteIndex - recentInboundCount + i + RECENT_INBOUND_TRACE_SIZE) % RECENT_INBOUND_TRACE_SIZE;
+            builder.append(recentInboundCycles[index])
+                    .append(':')
+                    .append(recentInboundOpcodes[index])
+                    .append('/')
+                    .append(recentInboundSizes[index]);
+        }
+        return builder.append(']').toString();
+    }
+
+    public String previewInboundPayload(net.dodian.uber.game.netty.game.GamePacket packet, int maxBytes) {
+        if (packet == null || packet.payload() == null || packet.size() <= 0 || maxBytes <= 0) {
+            return "[]";
+        }
+        io.netty.buffer.ByteBuf payload = packet.payload();
+        int start = payload.readerIndex();
+        int count = Math.min(maxBytes, payload.readableBytes());
+        StringBuilder builder = new StringBuilder("[");
+        for (int i = 0; i < count; i++) {
+            if (i > 0) {
+                builder.append(' ');
+            }
+            int value = payload.getUnsignedByte(start + i);
+            if (value < 0x10) {
+                builder.append('0');
+            }
+            builder.append(Integer.toHexString(value).toUpperCase());
+        }
+        if (payload.readableBytes() > count) {
+            builder.append(" ...");
+        }
+        return builder.append(']').toString();
     }
 
     private void releaseQueuedInboundPackets() {
-        for (;;) {
-            net.dodian.uber.game.netty.game.GamePacket packet = pendingInboundPackets.poll();
-            if (packet == null) {
-                pendingInboundPacketCount.set(0);
-                break;
-            }
-            if (packet.getPayload() != null && packet.getPayload().refCnt() > 0) {
-                packet.getPayload().release();
-            }
-        }
+        inboundPacketMailbox.clear(this::releaseInboundPacket);
+    }
+
+    private void releaseQueuedOutboundPackets() {
+        outboundSessionQueue.releaseAll();
+        outboundDirty = false;
     }
 
     public int getPendingInboundPacketCount() {
-        return pendingInboundPacketCount.get();
+        return inboundPacketMailbox.pendingCount();
+    }
+
+    public void clearInboundReadyFlag() {
+        inboundReadyQueued.set(false);
+    }
+
+    public void markInboundReadyIfNeeded() {
+        if (inboundReadyQueued.compareAndSet(false, true)) {
+            EntityProcessor.enqueueInboundReady(this);
+        }
+    }
+
+    public void resetTimeOutCounter() {
+        lastInboundKeepAliveAtMillis = System.currentTimeMillis();
+        timeOutCounter.set(0);
+    }
+
+    public void incrementTimeOutCounter() {
+        timeOutCounter.incrementAndGet();
+    }
+
+    public void noteIdlePlayerSyncSent() {
+        lastIdlePlayerSyncSentAtMillis = System.currentTimeMillis();
+    }
+
+    public long getLastInboundKeepAliveAtMillis() {
+        return lastInboundKeepAliveAtMillis;
+    }
+
+    public long getLastIdlePlayerSyncSentAtMillis() {
+        return lastIdlePlayerSyncSentAtMillis;
+    }
+
+    public String getLastDisconnectReason() {
+        return lastDisconnectReason;
+    }
+
+    public void noteDisconnectReason(String reason) {
+        if (reason != null && !reason.isEmpty()) {
+            lastDisconnectReason = reason;
+        }
+    }
+
+    public String connectionHealthSummary() {
+        long now = System.currentTimeMillis();
+        long inboundAge = lastInboundKeepAliveAtMillis <= 0L ? -1L : Math.max(0L, now - lastInboundKeepAliveAtMillis);
+        long idleSyncAge = lastIdlePlayerSyncSentAtMillis <= 0L ? -1L : Math.max(0L, now - lastIdlePlayerSyncSentAtMillis);
+        return "reason=" + lastDisconnectReason
+                + " timeoutCounter=" + timeOutCounter.get()
+                + " idleSyncAgeMs=" + idleSyncAge
+                + " inboundKeepAliveAgeMs=" + inboundAge;
+    }
+
+    private boolean shouldQueueOutbound() {
+        return isActive && loaded && !disconnected;
+    }
+
+    private void releaseInboundPacket(net.dodian.uber.game.netty.game.GamePacket packet) {
+        if (packet != null && packet.payload() != null && packet.payload().refCnt() > 0) {
+            packet.payload().release();
+        }
     }
 
     public void send(net.dodian.uber.game.netty.codec.ByteMessage message) {
@@ -736,24 +890,29 @@ public class Client extends Player implements Runnable {
             message.release();
             return;
         }
-
-        outboundDirty = true;
-        if ("GameTickScheduler".equals(Thread.currentThread().getName())) {
-            channel.write(message);
-        } else {
-            channel.writeAndFlush(message);
+        if (shouldQueueOutbound()) {
+            outboundSessionQueue.enqueue(message);
+            outboundDirty = true;
+            return;
         }
+        channel.writeAndFlush(message);
     }
 
-    public void flushOutbound() {
+    public OutboundFlushStats flushOutbound() {
         if (disconnected || channel == null || !channel.isActive()) {
-            return;
+            return OutboundFlushStats.empty();
         }
         if (!outboundDirty) {
-            return;
+            return OutboundFlushStats.empty();
+        }
+        OutboundSessionQueue.DrainResult drain = outboundSessionQueue.drainTo(channel);
+        if (drain.messageCount() <= 0) {
+            outboundDirty = !outboundSessionQueue.isEmpty();
+            return OutboundFlushStats.empty();
         }
         channel.flush();
-        outboundDirty = false;
+        outboundDirty = !outboundSessionQueue.isEmpty();
+        return new OutboundFlushStats(drain.messageCount(), drain.byteCount());
     }
 
     public int getPlayerUpdateCapacity() {
@@ -780,24 +939,34 @@ public class Client extends Player implements Runnable {
         if (this.disconnected || this.channel == null || !this.channel.isActive()) {
             return; // Client is shutting down or not ready; skip sending packet
         }
+        int previousInterfaceId = activeInterfaceId;
         Integer openedInterfaceId = null;
         String openedVia = null;
+        String closedVia = null;
 
         if (packet instanceof ShowInterface) {
-            openedInterfaceId = ((ShowInterface) packet).getInterfaceId();
+            openedInterfaceId = ((ShowInterface) packet).interfaceId();
             openedVia = "ShowInterface";
         } else if (packet instanceof InventoryInterface) {
-            openedInterfaceId = ((InventoryInterface) packet).getInterfaceId();
+            openedInterfaceId = ((InventoryInterface) packet).interfaceId();
             openedVia = "InventoryInterface";
-        } else if (packet instanceof SendFrame164) {
-            openedInterfaceId = ((SendFrame164) packet).getFrame();
+        } else if (packet instanceof SendChatboxInterface) {
+            openedInterfaceId = ((SendChatboxInterface) packet).frame();
             openedVia = "Frame164";
         } else if (packet instanceof RemoveInterfaces) {
+            closedVia = "RemoveInterfaces";
             activeInterfaceId = -1;
         }
 
         if (openedInterfaceId != null) {
             activeInterfaceId = openedInterfaceId;
+        }
+
+        if (closedVia != null && previousInterfaceId != -1) {
+            ConsoleAuditLog.interfaceClose(this, previousInterfaceId, closedVia);
+        }
+        if (openedInterfaceId != null && openedInterfaceId != previousInterfaceId) {
+            ConsoleAuditLog.interfaceOpen(this, openedInterfaceId, openedVia);
         }
 
         packet.send(this);
@@ -815,9 +984,9 @@ public class Client extends Player implements Runnable {
         send(new SetSidebarInterface(menuId, form));
     }
 
+    @Deprecated
     public void setSkillLevel(Skill skill, int currentLevel, int XP) {
-        send(new SendString(String.valueOf(Math.max(currentLevel, 0)), skill.getCurrentComponent()));
-        send(new SendString(String.valueOf(Math.max(Skills.getLevelForExperience(XP), 1)), skill.getLevelComponent()));
+        ProgressionService.setSkillLevel(this, skill, currentLevel, XP);
     }
 
 
@@ -835,15 +1004,19 @@ public class Client extends Player implements Runnable {
             return;
         }
         isLoggingOut = true;
+        PlayerActionCancellationService.cancel(this, PlayerActionCancelReason.LOGOUT, false, false, false, true);
         if (!saveNeeded || !validClient || UsingAgility) {
             if (UsingAgility) {
                 xLog = true; // Existing logic for agility delay
+                PlayerDeferredLifecycleService.scheduleXLogExpiry(this, walkBlock);
             }
             isLoggingOut = false;
             return;
         }
 
+        PlayerDeferredLifecycleService.cancelAll(this);
         // Save player data before disconnecting
+        GameEventBus.post(new PlayerLogoutEvent(this, PlayerSaveReason.LOGOUT));
         saveStats(PlayerSaveReason.LOGOUT, true, true);
 
         // Send the logout packet
@@ -869,10 +1042,10 @@ public class Client extends Player implements Runnable {
         if (logout) {
             saveNeeded = false;
             /* Remove player from list! */
-            PlayerHandler.playersOnline.remove(longName);
-            PlayerHandler.allOnline.remove(longName);
+            PlayerRegistry.playersOnline.remove(longName);
+            PlayerRegistry.allOnline.remove(longName);
             println_debug(getPlayerName() + " has logged out correctly!");
-        /*for (Player p : PlayerHandler.players) {
+        /*for (Player p : PlayerRegistry.players) {
             if (p != null && !p.disconnected && p.dbId > 0) {
                 if (p.getDamage().containsKey(getSlot())) {
                     p.getDamage().put(getSlot(), 0);
@@ -884,14 +1057,13 @@ public class Client extends Player implements Runnable {
                 int minutes = (int) (elapsed / 60000);
                 Server.login.sendSession(dbId, officialClient ? 1 : 1337, minutes, connectedFrom, start, System.currentTimeMillis());
             }
-            for (Client c : PlayerHandler.playersOnline.values()) {
+            for (Client c : PlayerRegistry.playersOnline.values()) {
                 if (c.hasFriend(longName)) {
                     c.refreshFriends();
                 }
             }
-            if (inTrade) declineTrade();
-            else if (inDuel && !duelFight) declineDuel();
-            else if (duel_with > 0 && validClient(duel_with) && inDuel && duelFight) {
+            TradeDuelSessionService.closeOnLogout(this);
+            if (duel_with > 0 && validClient(duel_with) && inDuel && duelFight) {
                 Client p = getClient(duel_with);
                 p.duelWin = true;
                 p.DuelVictory();
@@ -928,7 +1100,7 @@ public class Client extends Player implements Runnable {
             return;
         }
         boolean bankChanged = false;
-        int id = GetNotedItem(itemID);
+        int id = getNotedItem(itemID);
         if (amount == -2) { //draw all from bank!
             if (!takeAsNote && !Server.itemManager.isStackable(itemID))
                 amount = freeSlots() == 0 ? 1 : Math.min(bankItemsN[fromSlot], freeSlots());
@@ -1045,76 +1217,9 @@ public class Client extends Player implements Runnable {
         return slot;
     }
 
+    @Deprecated
     public boolean giveExperience(int amount, Skill skill) {
-        if (amount < 1)
-            return false;
-        /*if (randomed) {
-            send(new SendMessage("You must answer the genie before you can gain experience!"));
-            return false;
-        }*/ //Due to combat bug, I decided to remove this code. Might need a revisit if we wish to keep!
-        amount = amount * getGameMultiplierGlobalXp();
-        int oldXP = getExperience(skill),
-                newXP = Math.min(getExperience(skill) + amount, 200000000);
-        int oldLevel = Skills.getLevelForExperience(oldXP), newLevel = Skills.getLevelForExperience(newXP);
-        amount = oldXP < 200000000 && newXP == 200000000 ? 200000000 - oldXP : newXP == 200000000 ? 0 : amount;
-        addExperience(amount, skill);
-        markSaveDirty(PlayerSaveSegment.STATS.getMask());
-        int animation = -1;
-        if (newLevel - oldLevel > 0) {
-            animation = 199;
-            if (newLevel == 99) {
-                animation = 623;
-                publicyell(getPlayerName() + " has just reached the max level for " + skill.getName() + "!");
-            } else if (newLevel > 90)
-                publicyell(getPlayerName() + "'s " + skill.getName() + " level is now " + newLevel + "!");
-            send(new SendMessage("Congratulations, you just advanced " + (skill == Skill.ATTACK || skill == Skill.AGILITY ? "an" : "a") + " " + skill.getName() + " level."));
-        }
-        if (oldXP < 50000000 && newXP >= 50000000) { // 50 million announcement!
-            animation = 623;
-            publicyell(getPlayerName() + "'s " + skill.getName() + " has just reached 50 million experience!");
-        }
-        if (oldXP < 75000000 && newXP >= 75000000) { // 75 million announcement!
-            animation = 623;
-            publicyell(getPlayerName() + "'s " + skill.getName() + " has just reached 75 million experience!");
-        }
-        if (oldXP < 100000000 && newXP >= 100000000) { // 100 million announcement!
-            animation = 623;
-            publicyell(getPlayerName() + "'s " + skill.getName() + " has just reached 100 million experience!");
-        }
-        if (oldXP < 125000000 && newXP >= 125000000) { // 100 million announcement!
-            animation = 623;
-            publicyell(getPlayerName() + "'s " + skill.getName() + " has just reached 125 million experience!");
-        }
-        if (oldXP < 150000000 && newXP >= 150000000) { // 150 million announcement!
-            animation = 623;
-            publicyell(getPlayerName() + "'s " + skill.getName() + " has just reached 150 million experience!");
-        }
-        if (oldXP < 175000000 && newXP >= 175000000) { // 150 million announcement!
-            animation = 623;
-            publicyell(getPlayerName() + "'s " + skill.getName() + " has just reached 175 million experience!");
-        }
-        if (oldXP < 200000000 && newXP == 200000000) { // 200 million announcement!
-            animation = 623;
-            publicyell(getPlayerName() + "'s " + skill.getName() + " has just reached the maximum experience!");
-        }
-    /*double chance = (double)newXp / 1000000; //1 xp = 0.000001, 0.0001 %
-    double roll = Math.random() * 1;
-    if(getGameWorldId() > 1)
-    	send(new SendMessage("XP gained: "+ newXp +", your chance is " + chance * 100 + "% and you rolled a " + roll * 100));
-    if(roll <= chance && getGameWorldId() > 1) //Test world 2 or higher for this to trigger!
-    	Balloons.triggerBalloonEvent(this);*/
-        setLevel(Skills.getLevelForExperience(getExperience(skill)), skill);
-        refreshSkill(skill);
-        if (skill == Skill.FIREMAKING)
-            updateBonus(11);
-        if (skill == Skill.HITPOINTS && newLevel > maxHealth)
-            maxHealth = newLevel;
-        else if (skill == Skill.PRAYER && newLevel > maxPrayer)
-            maxPrayer = newLevel;
-        if (animation != -1)
-            animation(animation, getPosition());
-        getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-        return true;
+        return ProgressionService.addXp(this, amount, skill);
     }
 
     public void bankItem(int itemID, int fromSlot, int amount) {
@@ -1126,7 +1231,8 @@ public class Client extends Player implements Runnable {
             return;
         }
         boolean bankChanged = false;
-        int id = GetUnnotedItem(itemID);
+        ensureBankTabState();
+        int id = getUnnotedItem(itemID);
         if (id == 0) {
             if (playerItems[fromSlot] <= 0) {
                 return;
@@ -1154,6 +1260,7 @@ public class Client extends Player implements Runnable {
                         }
                     }
                     bankItems[toBankSlot] = itemID + 1; //To continue on comment above..Dodian thing :D
+                    bankSlotTabs[toBankSlot] = currentBankTab > 0 && currentBankTab < 10 && !bankSearchActive ? currentBankTab : 0;
                     bankChanged = true;
                     if (playerItemsN[fromSlot] < amount) {
                         amount = playerItemsN[fromSlot];
@@ -1210,6 +1317,7 @@ public class Client extends Player implements Runnable {
                         }
                         if (itemExists) {
                             bankItems[toBankSlot] = playerItems[firstPossibleSlot];
+                            bankSlotTabs[toBankSlot] = currentBankTab > 0 && currentBankTab < 10 && !bankSearchActive ? currentBankTab : 0;
                             bankItemsN[toBankSlot] += 1;
                             bankChanged = true;
                             deleteItem((playerItems[firstPossibleSlot] - 1), firstPossibleSlot, 1);
@@ -1252,7 +1360,7 @@ public class Client extends Player implements Runnable {
                 int toBankSlot = 0;
                 boolean alreadyInBank = false;
                 for (int i = 0; i < bankSize(); i++) {
-                    if (bankItems[i] == GetUnnotedItem(playerItems[fromSlot] - 1) + 1) {
+                    if (bankItems[i] == getUnnotedItem(playerItems[fromSlot] - 1) + 1) {
                         if (playerItemsN[fromSlot] < amount) {
                             amount = playerItemsN[fromSlot];
                         }
@@ -1269,6 +1377,7 @@ public class Client extends Player implements Runnable {
                         }
                     }
                     bankItems[toBankSlot] = id + 1;
+                    bankSlotTabs[toBankSlot] = currentBankTab > 0 && currentBankTab < 10 && !bankSearchActive ? currentBankTab : 0;
                     bankChanged = true;
                     if (playerItemsN[fromSlot] < amount) {
                         amount = playerItemsN[fromSlot];
@@ -1323,6 +1432,7 @@ public class Client extends Player implements Runnable {
                         }
                         if (itemExists) {
                             bankItems[toBankSlot] = (playerItems[firstPossibleSlot] - 1);
+                            bankSlotTabs[toBankSlot] = currentBankTab > 0 && currentBankTab < 10 && !bankSearchActive ? currentBankTab : 0;
                             bankItemsN[toBankSlot] += 1;
                             bankChanged = true;
                             deleteItem((playerItems[firstPossibleSlot] - 1), firstPossibleSlot, 1);
@@ -1398,6 +1508,14 @@ public class Client extends Player implements Runnable {
         send(new SendBankItems(id, amt));
     }
 
+    public void openBankStyleView(ArrayList<Integer> id, ArrayList<Integer> amt, String title) {
+        PlayerBankService.openBankStyleView(this, id, amt, title);
+    }
+
+    public void clearBankStyleView() {
+        PlayerBankService.clearBankStyleView(this);
+    }
+
     public void sendBank(int interfaceId, ArrayList<GameItem> bank) {
         send(new ViewOtherPlayerBank(interfaceId, bank));
     }
@@ -1413,15 +1531,7 @@ public class Client extends Player implements Runnable {
             markSaveDirty(PlayerSaveSegment.INVENTORY.getMask());
             resetItems(moveWindow);
         }
-        if (moveWindow == 5382 && from >= 0 && to >= 0 && from < bankSize() && to < bankSize()) {
-            int tempI = bankItems[from];
-            int tempN = bankItemsN[from];
-            bankItems[from] = bankItems[to];
-            bankItemsN[from] = bankItemsN[to];
-            bankItems[to] = tempI;
-            bankItemsN[to] = tempN;
-            markSaveDirty(PlayerSaveSegment.BANK.getMask());
-            resetBank();
+        if (PlayerBankService.moveBankItems(this, from, to, moveWindow)) {
         }
     }
 
@@ -1453,22 +1563,19 @@ public class Client extends Player implements Runnable {
             dropAllItems();
             attemptGround = null;
             pickupWanted = false;
+            PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(this);
             return;
         }
         GroundItem target = attemptGround;
         if (target == null) {
+            PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(this);
             return;
         }
 
         if (target.x != x || target.y != y || target.z != getPosition().getZ()) {
             attemptGround = null;
             pickupWanted = false;
-            return;
-        }
-
-        if (!Ground.isTracked(target) || target.isTaken() || !Ground.canPickup(this, target)) {
-            attemptGround = null;
-            pickupWanted = false;
+            PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(this);
             return;
         }
 
@@ -1476,6 +1583,7 @@ public class Client extends Player implements Runnable {
             send(new SendMessage("Your inventory is full!"));
             attemptGround = null;
             pickupWanted = false;
+            PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(this);
             return;
         }
 
@@ -1483,65 +1591,140 @@ public class Client extends Player implements Runnable {
             send(new SendMessage("You must be a premium member to use this item"));
             attemptGround = null;
             pickupWanted = false;
+            PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(this);
             return;
         }
 
-        if (addItem(target.id, target.amount)) {
+        if (!Ground.tryClaimPickup(this, target)) {
+            attemptGround = null;
+            pickupWanted = false;
+            PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(this);
+            return;
+        }
+
+        boolean added = addItem(target.id, target.amount);
+        if (added) {
+            GameEventBus.post(new ItemPickupEvent(this, target, getPosition().copy()));
             Ground.deleteItem(target);
             ItemLog.playerPickup(this, target.npc ? target.npcId : target.playerId, target.id, target.amount, getPosition().copy(), target.npc);
             checkItemUpdate();
+        } else {
+            Ground.releaseClaim(target);
         }
         attemptGround = null;
         pickupWanted = false;
+        PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(this);
     }
 
     public void openUpBank() {
-        if (!Server.banking) {
-            send(new SendMessage("Banking have been disabled!"));
-            return;
-        }
-        resetAction(true);
-        send(new SendString(takeAsNote ? "No Note" : "Note", 5389));
-        send(new SendString("Bank All", 5391));
-        send(new SendString("Bank of " + getPlayerName(), 5383));
-        IsBanking = true;
-        checkBankInterface = false;
-        checkItemUpdate();
+        PlayerBankService.openUpBank(this);
+    }
+
+    public void openUpBankRouted() {
+        WanneBank = 0;
+        WanneShop = -1;
+        openUpBank();
     }
 
     public void openUpShop(int ShopID) {
+        String blockMessage = PlayerInteractionGuardService.blockingInteractionMessage(this);
+        if (blockMessage != null && !PlayerInteractionGuardService.canOpenShop(this)) {
+            send(new SendMessage(blockMessage));
+            return;
+        }
         if (!Server.shopping) {
             send(new SendMessage("Shopping have been disabled!"));
             return;
         }
-        if (ShopID == 20 || ShopID == 34) {
-            if (!premium) {
-                send(new SendMessage("You need to be a premium member to access this shop."));
-                return;
-            }
+        if (ShopID < 0 || ShopID >= ShopManager.MaxShops || ShopCatalog.find(ShopID) == null) {
+            send(new SendMessage("This shop is currently unavailable."));
+            return;
+        }
+        String accessDeniedMessage = ShopRulesService.accessDeniedMessage(this, ShopID);
+        if (accessDeniedMessage != null) {
+            send(new SendMessage(accessDeniedMessage));
+            return;
         }
         MyShopID = ShopID;
         checkItemUpdate();
-        send(new SendString(ShopHandler.ShopName[ShopID], 3901));
+        send(new SendString(ShopManager.ShopName[ShopID], 3901));
         send(new InventoryInterface(3824, 3822));
     }
 
-    public void checkItemUpdate() { //Checking bank etc..
-        if (isShopping()) {
-            resetShop(MyShopID);
-            resetItems(3823);
-        } else if (IsBanking || checkBankInterface) {
-            resetBank();
-            resetItems(5064);
-            send(new InventoryInterface(5292, 5063));
-        } else if (isPartyInterface) {
-            Balloons.displayItems(this);
-            resetItems(5064);
-            send(new InventoryInterface(2156, 5063));
-        } else if (inTrade || inDuel) {
-            resetItems(3322);
+    public void openUpShopRouted(int shopId) {
+        WanneShop = 0;
+        openUpShop(shopId);
+    }
+
+    public void startNpcDialogue(int dialogueId, int npcId) {
+        String blockMessage = PlayerInteractionGuardService.blockingInteractionMessage(this);
+        if (blockMessage != null && !PlayerInteractionGuardService.canStartDialogue(this)) {
+            send(new SendMessage(blockMessage));
+            return;
         }
-        resetItems(3214); //Default reset!
+        NpcWanneTalk = 0;
+        DialogueService.startDialogueId(this, dialogueId, npcId);
+    }
+
+    public void setTeleportStage(int stage) {
+        // Compatibility no-op retained for untouched callers during teleport cutover.
+    }
+
+    public int getTeleportHeight() {
+        return tH;
+    }
+
+    public void checkItemUpdate() { //Checking bank etc..
+        PlayerBankService.checkItemUpdate(this);
+    }
+
+    public void applyBankSearch(String query) {
+        PlayerBankService.applyBankSearch(this, query);
+    }
+
+    public void ensureBankTabState() {
+        PlayerBankService.ensureBankTabState(this);
+    }
+
+    public void sendBankContainers() {
+        PlayerBankService.sendBankContainers(this);
+    }
+
+    public void sendBankStyleViewContainers() {
+        PlayerBankService.sendBankStyleViewContainers(this);
+    }
+
+    public int resolveBankSlot(int interfaceId, int containerSlot) {
+        return PlayerBankService.resolveBankSlot(this, interfaceId, containerSlot);
+    }
+
+    public int resolveBankItemId(int interfaceId, int containerSlot, int fallbackItemId) {
+        return PlayerBankService.resolveBankItemId(this, interfaceId, containerSlot, fallbackItemId);
+    }
+
+    public void assignBankSlotToTab(int bankSlot, int tab) {
+        PlayerBankService.assignBankSlotToTab(this, bankSlot, tab);
+    }
+
+    public void selectBankTab(int tab) {
+        PlayerBankService.selectBankTab(this, tab);
+    }
+
+    public void collapseBankTab(int tab) {
+        PlayerBankService.collapseBankTab(this, tab);
+    }
+
+    public void clearBankSearch() {
+        PlayerBankService.clearBankSearch(this);
+    }
+
+    public boolean hasBankTabItems(int tab) {
+        return PlayerBankService.hasBankTabItems(this, tab);
+    }
+
+
+    public void refreshBankHeader() {
+        PlayerBankService.refreshBankHeader(this);
     }
 
     public boolean addItem(int item, int amount) {
@@ -1626,7 +1809,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void deleteItem(int id, int amount) {
-        deleteItem(id, GetItemSlot(id), amount);
+        deleteItem(id, getItemSlot(id), amount);
     }
 
     public void deleteItem(int id, int slot, int amount) {
@@ -1670,7 +1853,7 @@ public class Client extends Player implements Runnable {
         if (isBusy() || interFace != 3214) {
             return;
         }
-        if (emptyEssencePouch(wearID)) { //Runecrafting Pouches
+        if (net.dodian.uber.game.skill.runecrafting.Runecrafting.emptyPouch(this, wearID)) { //Runecrafting Pouches
             return;
         }
         if (wearID == 5733) { //Potato
@@ -1691,11 +1874,7 @@ public class Client extends Player implements Runnable {
             return;
         }
         if (wearID == 4155) { //Enchanted gem
-            SlayerTask.sendTask(this);
-            return;
-        }
-        if (duelFight && duelRule[3]) {
-            send(new SendMessage("Equipment changing has been disabled in this duel"));
+            ItemDispatcher.tryHandle(this, 1, wearID, slot, interFace);
             return;
         }
         if (duelConfirmed && !duelFight)
@@ -1740,9 +1919,9 @@ public class Client extends Player implements Runnable {
     }
 
     public boolean checkEquip(int id, int slot, int invSlot) {
-        boolean maxCheck = GetItemName(id).contains(("Max cape")) || GetItemName(id).contains(("Max hood"));
+        boolean maxCheck = getItemName(id).contains(("Max cape")) || getItemName(id).contains(("Max hood"));
         if (maxCheck && totalLevel() < Skills.maxTotalLevel()) {
-            send(new SendMessage("You need a total level of " + Skills.maxTotalLevel() + " to equip the " + GetItemName(id).toLowerCase() + "."));
+            send(new SendMessage("You need a total level of " + Skills.maxTotalLevel() + " to equip the " + getItemName(id).toLowerCase() + "."));
             return false;
         }
         int CLAttack = GetCLAttack(id);
@@ -1860,10 +2039,6 @@ public class Client extends Player implements Runnable {
     }
 
     public boolean remove(int slot, boolean force) {
-        if (duelFight && duelRule[3] && !force) {
-            send(new SendMessage("Equipment changing has been disabled in this duel!"));
-            return false;
-        }
         if (duelConfirmed && !force) {
             return false;
         }
@@ -1907,316 +2082,12 @@ public class Client extends Player implements Runnable {
 
     public boolean canAttack = true;
 
-    public void process() {// is being called regularily every 600 ms
-        if (disconnected || isLoggingOut) {
-            return;
-        }
-        int startingHealth = getCurrentHealth();
-        int startingPrayer = getCurrentPrayer();
-        int startingX = getPosition().getX();
-        int startingY = getPosition().getY();
-        int startingZ = getPosition().getZ();
-        /* Combat stuff! */
-        setLastCombat(Math.max(getLastCombat() - 1, 0));
-        setCombatTimer(Math.max(getCombatTimer() - 1, 0));
-        setStunTimer(Math.max(getStunTimer() - 1, 0));
-        setSnareTimer(Math.max(getSnareTimer() - 1, 0));
-        changeEffectTime();
-        if (genieCombatFlag && !isInCombat()) { //Genie random!
-            genieCombatFlag = false;
-            showRandomEvent();
-        }
-        /* Daily stuff */
-        if (dailyLogin == 0)
-            battlestavesData();
-        else dailyLogin--;
-        /* Timers for actions! */
-        actionTimer = actionTimer > 0 ? actionTimer - 1 : 0;
-        getPlunder.reduceTicks();
-        if (getPositionName(getPosition()) == positions.DESERT && !effects.isEmpty() && effects.get(0) == -1)
-            addEffectTime(0, 30 + Misc.random(40)); //18 - 42 seconds!
-        //RegionMusic.handleRegionMusic(this);
-        if (getPositionName(getPosition()) == positions.BRIMHAVEN_DUNGEON) {
-            boolean gotIcon = getEquipment()[Equipment.Slot.NECK.getId()] == 8923 || gotSlayerHelmet(this);
-            if (iconTimer > 0 && !gotIcon) iconTimer--;
-            else if (iconTimer == 0 && !gotIcon) { //Hit with dmg!
-                send(new SendMessage("The strange aura from the dungeon makes you vulnerable!"));
-                int dmg = 5 + Misc.random(15);
-                dealDamage(null, dmg, dmg >= 15 ? Entity.hitType.CRIT : Entity.hitType.STANDARD);
-                iconTimer = 6;
-            } else iconTimer = 6;
-        } else
-            iconTimer = 6;
-        /* Prayer drain*/
-        if (prayers.getDrainRate() > 0.0) {
-            prayers.drainRate += 0.6;
-            if (prayers.drainRate >= prayers.getDrainRate()) {
-                drainPrayer(1);
-                prayers.drainRate = 0.0;
-            }
-        } else prayers.drainRate = 0.0;
-        /* Stat restore + drain */
-        lastRecoverEffect++;
-        if (lastRecoverEffect % 25 == 0) {
-            lastRecover--;
-            if (lastRecover == 0) {
-                lastRecoverEffect = 0;
-                lastRecover = 4;
+    public long getLastEffectsPeriodicDirtyAtMs() {
+        return lastEffectsPeriodicDirtyAtMs;
+    }
 
-                Skill.enabledSkills().forEach(skill -> {
-                    boolean changed = false;
-                    switch (skill) {
-                        case HITPOINTS:
-                            if (getCurrentHealth() < getMaxHealth())
-                            {
-                                heal(1); //Not sure if we should remove 1 to max health!
-                                changed = true;
-                            }
-                            break;
-                        case PRAYER: //Do not restore prayer!
-                            break;
-                        default:
-                            int before = boostedLevel[skill.getId()];
-                            if (before > 0)
-                                boostedLevel[skill.getId()]--;
-                            else if (before != 0)
-                                boostedLevel[skill.getId()]++;
-                            changed = boostedLevel[skill.getId()] != before;
-                            break;
-                    }
-                    if (changed) {
-                        refreshSkill(skill);
-                        markSaveDirty(PlayerSaveSegment.STATS.getMask());
-                    }
-                });
-            }
-        }
-        if (reloadHp) {
-            heal(getMaxHealth());
-            setCurrentPrayer(getMaxPrayer());
-            pray(0);
-        }
-        // RubberCheck();
-        long now = System.currentTimeMillis();
-        if (now >= walkBlock && xLog) {
-            UsingAgility = false;
-            disconnected = true;
-        }
-        if (pickupWanted && attemptGround != null && getPosition().getX() == attemptGround.x && getPosition().getY() == attemptGround.y && getPosition().getZ() == attemptGround.z) {
-            pickUpItem(attemptGround.x, attemptGround.y);
-        }
-        if (inTrade && tradeResetNeeded) {
-            Client o = getClient(trade_reqId);
-            if (o.tradeResetNeeded) {
-                resetTrade();
-                o.resetTrade();
-            }
-        }
-        if (tStage > 0) {
-            tStage++;
-            if (tStage == 2) { //Setup animation for teleport
-                requestAnim(tEmote, 0);
-                if (ancients == 1) gfx0(392); //Gfx for ancient start instant
-            } else if (tStage == 4 && ancients != 1) { //2 tick gfx for normal spellbook!
-                callGfxMask(308, 100);
-            } else if (tStage == 5) { //4 tick before teleporting!
-                transport(new Position(tX, tY, tH));
-                requestAnim(715, 0);
-                getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-                tStage = 0;
-                GetBonus(true);
-                UsingAgility = false;
-            }
-        }
-        if (now - lastSave >= 60_000) { // Save every minute except for skills!
-            saveStats(PlayerSaveReason.PERIODIC, false, false);
-            lastSave = now;
-        }
-        if (now - lastProgressSave >= 3_600_000) { // Update skill progress every hour
-            saveStats(PlayerSaveReason.PERIODIC_PROGRESS, false, true);
-            lastProgressSave = now;
-        }
-        // check stairs
-        if (stairs > 0) {
-            if (GoodDistance(skillX, skillY, getPosition().getX(), getPosition().getY(), stairDistance)) {
-                stairs(stairs, getPosition().getX(), getPosition().getY());
-            }
-        }
-        // check banking
-        if (WanneBank > 0) {
-            if (GoodDistance(skillX, skillY, getPosition().getX(), getPosition().getY(), WanneBank)) {
-                openUpBank();
-                WanneBank = 0;
-            }
-        }
-        if (WanneShop > 0) {
-            if (GoodDistance(skillX, skillY, getPosition().getX(), getPosition().getY(), 1)) {
-                openUpShop(WanneShop);
-                WanneShop = 0;
-            }
-        }
-        // Attacking in wilderness
-        if (attackingPlayer && deathStage == 0) {
-            attackTarget(this);
-        }
-        // Attacking an NPC
-        else if (attackingNpc && deathStage == 0) {
-            attackTarget(this);
-        }
-        // If killed apply dead
-        if (deathStage == 0 && getCurrentHealth() < 1) {
-            resetAttack();
-            if (target instanceof Npc) {
-                Npc npc = Server.npcManager.getNpc(target.getSlot());
-                npc.removeEnemy(this);
-            } else {
-                Client p = getClient(duel_with);
-                if (duel_with > 0 && validClient(duel_with) && inDuel && duelFight) {
-                    p.duelWin = true;
-                    p.DuelVictory();
-                }
-            }
-            requestAnim(836, 5);
-            setCurrentHealth(0);
-            deathStage++;
-            deathTimer = System.currentTimeMillis();
-            prayers.reset();
-            send(new SendMessage("Oh dear you have died!"));
-        } else if (deathStage == 1 && now - deathTimer >= 1800) {
-            transport(new Position(2604 + Misc.random(6), 3101 + Misc.random(3), tH));
-            deathStage = 0;
-            deathTimer = 0;
-            setCombatTimer(0);
-            setLastCombat(0);
-            /* Effect reset! */
-            for (int i = 0; i < effects.size(); i++)
-                addEffectTime(i, i == 0 || effects.get(i) == -1 ? -1 : 0);
-            /* Stats check! */
-            for (int i = 0; i < boostedLevel.length; i++) {
-                if (i == 3)
-                    heal(Skills.getLevelForExperience(getExperience(Skill.HITPOINTS)));
-                else if (i == 5)
-                    setCurrentPrayer(Skills.getLevelForExperience(getExperience(Skill.PRAYER)));
-                else
-                    boostedLevel[i] = 0;
-                refreshSkill(Skill.getSkill(i));
-            }
-            /* Death in other content! */
-            if (inWildy())
-                died();
-            if (skullIcon >= 0) skullIcon = -1;
-            /* Item check !*/
-            GetBonus(true);
-            requestWeaponAnims();
-            getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-        }
-        if (smithing[4] > 0) {
-            if (GoodDistance(skillX, skillY, getPosition().getX(), getPosition().getY(), 1)) {
-                smithing();
-            }
-        }
-        if (smelting && now - lastAction >= 1800) {
-            lastAction = now;
-            smelt(smelt_id);
-        } else if (goldCrafting && now - lastAction >= 1800) {
-            lastAction = now;
-            goldCraft();
-        } else if (shafting && now - lastAction >= 1800) {
-            lastAction = now;
-            shaft();
-        } else if (fletchings && now - lastAction >= 1800) {
-            lastAction = now;
-            fletching.fletchBow(this);
-        } else if (skillActionTimer > -1) {
-            if (skillActionTimer-- < 1) skillActionYield();
-        } else if (boneItem > 0 && prayerAction > -1) {
-            if (prayerAction-- < 1) Prayer.altarBones(this, boneItem);
-        } else if (filling) {
-            lastAction = now;
-            fill();
-        } else if (spinning && now - lastAction >= getSpinSpeed()) {
-            lastAction = now;
-            spin();
-        } else if (crafting && now - lastAction >= 1800) {
-            lastAction = now;
-            craft();
-        } else if (fishing && now - lastAction >= getFishingSpeed()) {
-            lastAction = now;
-            fish();
-        } else if (fishing && now - lastFishAction <= 0) { //Reapply animation every 3 tick!
-            boolean harpoon = getLevel(FISHING) >= 61 && (getEquipment()[Equipment.Slot.WEAPON.getId()] == 21028 || playerHasItem(21028));
-            if (fishIndex >= 0 && (playerHasItem(Utils.fishTool[fishIndex]) || harpoon)) {
-                requestAnim(Utils.fishAnim[fishIndex], 0);
-                lastFishAction = System.currentTimeMillis() + 1800;
-            } else {
-                resetAction();
-                send(new SendMessage("You need a " + GetItemName(Utils.fishTool[fishIndex]).toLowerCase() + " to fish here."));
-            }
-        } else if (woodcutting && now - lastAction >= getWoodcuttingSpeed()) {
-            lastAction = now;
-            woodcutting(cuttingIndex);
-        } else if (woodcutting && now - lastAxeAction <= 0) { //Reapply animation every 3 tick!
-            int checkAxe = findAxe();
-            if (checkAxe >= 0) {
-                requestAnim(getWoodcuttingEmote(Utils.axes[checkAxe]), 0);
-                lastAxeAction = System.currentTimeMillis() + 1800;
-            } else {
-                resetAction();
-                send(new SendMessage("You need an axe in which you got the required woodcutting level for."));
-            }
-        } else if (cooking && now - lastAction >= 1800) {
-            lastAction = now;
-            cook();
-        }
-        // Npc Talking
-        if (NpcWanneTalk == 2) { // Bank Booth
-            if (GoodDistance2(getPosition().getX(), getPosition().getY(), skillX, skillY, 1)) {
-                NpcDialogue = 1;
-                NpcTalkTo = 494;
-                NpcWanneTalk = 0;
-            }
-        } else if (NpcWanneTalk > 0) {
-            if (GoodDistance2(getPosition().getX(), getPosition().getY(), skillX, skillY, 2))
-                if (NpcWanneTalk == 804) {
-                    openTan();
-                    NpcWanneTalk = 0;
-                } else {
-                    NpcDialogue = NpcWanneTalk;
-                    NpcTalkTo = GetNPCID(skillX, skillY);
-                    NpcWanneTalk = 0;
-                }
-        }
-        if (NpcDialogue > 0 && !NpcDialogueSend) {
-            UpdateNPCChat();
-        }
-        /* Handle logout shiez */
-        timeOutCounter++;
-        if (isKicked) //Kicked muhahah!
-            disconnected = true;
-        else if (Server.updateRunning && now - Server.updateStartTime > (Server.updateSeconds * 1000L))
-            logout();
-
-        if (startingHealth != getCurrentHealth() || startingPrayer != getCurrentPrayer()) {
-            markSaveDirty(PlayerSaveSegment.STATS.getMask() | PlayerSaveSegment.EFFECTS.getMask() | PlayerSaveSegment.META.getMask());
-        }
-        if (startingX != getPosition().getX() || startingY != getPosition().getY() || startingZ != getPosition().getZ()) {
-            markSaveDirty(PlayerSaveSegment.POSITION.getMask());
-        }
-        // Effects timers tick every cycle; do not dirty-save every tick. Persist effects periodically while active
-        // and always on final save/logout.
-        if (!effects.isEmpty()) {
-            boolean hasActiveEffect = false;
-            for (int i = 0; i < effects.size(); i++) {
-                if (effects.get(i) != null && effects.get(i) > 0) {
-                    hasActiveEffect = true;
-                    break;
-                }
-            }
-            if (hasActiveEffect && now - lastEffectsPeriodicDirtyAtMs >= 10_000L) {
-                markSaveDirty(PlayerSaveSegment.EFFECTS.getMask());
-                lastEffectsPeriodicDirtyAtMs = now;
-            }
-        }
+    public void setLastEffectsPeriodicDirtyAtMs(long atMillis) {
+        lastEffectsPeriodicDirtyAtMs = atMillis;
     }
 
 
@@ -2239,693 +2110,8 @@ public class Client extends Player implements Runnable {
 
     public int currentSkill = -1;
 
-    private void clearSkillGuideInterface() {
-        // Clear the skill name
-        send(new SendString("", 8716));
-        
-        // Clear all potential tab name slots (8720-8799)
-        for (int i = 8720; i < 8800; i++) {
-            send(new SendString("", i));
-        }
-        
-        // Clear any other related components
-        send(new SendString("", 8846)); // Main tab title
-        send(new SendString("", 8823)); // First sub-tab
-        send(new SendString("", 8824)); // Second sub-tab
-        send(new SendString("", 8827)); // Third sub-tab
-    }
-    
-    public void showSkillMenu(int skillID, int child) {
-        if (currentSkill != skillID) {
-            send(new RemoveInterfaces());
-        }
-        if (isBusy()) {
-            send(new SendMessage("You are currently too busy to open the skill menu!"));
-            return;
-        }
-        
-        // Clear all tab slots first
-        for (int i = 0; i < 80; i++) {
-            send(new SendString("", 8720 + i));
-        }
-
-        // Clear the interface first
-        clearSkillGuideInterface();
-
-        // Set the skill name
-        Skill skill = getSkill(skillID);
-        if (skill == null) {
-            return;
-        }
-        String skillName = skill.getName();
-        skillName = skillName.substring(0, 1).toUpperCase() + skillName.substring(1);
-        send(new SendString(skillName, 8716));
-        int slot = 8720;
-        if (skillID < 23) {
-            changeInterfaceStatus(15307, false);
-            changeInterfaceStatus(15304, false);
-            changeInterfaceStatus(15294, false);
-            changeInterfaceStatus(8863, false);
-            changeInterfaceStatus(8860, false);
-            changeInterfaceStatus(8850, false);
-            changeInterfaceStatus(8841, false);
-            changeInterfaceStatus(8838, false);
-            changeInterfaceStatus(8828, false);
-            changeInterfaceStatus(8825, true);
-            changeInterfaceStatus(8813, true);
-            send(new SendString("", 8849));
-        }
-        if (skillID == ATTACK.getId()) {
-            send(new SendString("Attack", 8846));
-            send(new SendString("Defence", 8823));
-            send(new SendString("Range", 8824));
-            send(new SendString("Magic", 8827));
-            String prem = " @red@(Premium only)";
-            slot = 8760;
-            String[] s = {"Abyssal Whip", "Bronze", "Iron", "Steel", "Elemental battlestaff", "Mithril", "Adamant", "Rune", "Wolfbane", "Keris", "Unholy book", "Unholy blessing", "Granite longsword", "Obsidian weapon", "Dragon", "Verac's flail", "Torag's hammers",
-                    "Skillcape" + prem};
-            String[] s1 = {"1", "1", "1", "10", "20", "20", "30", "40", "40", "40", "45", "45", "50", "55", "60", "70", "70", "99"};
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            int[] items = {4151, 1291, 1293, 1295, 1395, 1299, 1301, 1303, 2952, 10581, 3842, 20223, 21646, 6523, 1305, 4755, 4747, 9747};
-            setMenuItems(items);
-        } else if (skillID == DEFENCE.getId()) {
-            send(new SendString("Attack", 8846));
-            send(new SendString("Defence", 8823));
-            send(new SendString("Range", 8824));
-            send(new SendString("Magic", 8827));
-            String prem = " @red@(Premium only)";
-            slot = 8760;
-            String[] s = {"Skeletal", "Bronze", "Iron", "Steel", "Mithril", "Splitbark", "Adamant", "Rune", "Ancient blessing", "Granite", "Obsidian", "Dragon", "Barrows", "Crystal shield (with 60 agility)", "Dragonfire shield",
-                    "Skillcape" + prem};
-            String[] s1 = {"1", "1", "1", "10", "20", "20", "30", "40", "45", "50", "55", "60", "70", "70", "75", "99"};
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            int[] items = {6139, 1117, 1115, 1119, 1121, 3387, 1123, 1127, 20235, 10564, 21301, 3140, 4749, 4224, 11284, 9753};
-            setMenuItems(items);
-        } else if (skillID == STRENGTH.getId()) {
-            send(new SendString("Strength", 8846));
-            changeInterfaceStatus(8825, false);
-            changeInterfaceStatus(8813, false);
-            slot = 8760;
-            String prem = " @red@(Premium only)";
-            String[] s = {"Unholy book", "Unholy blessing", "War blessing", "Granite maul", "Obsidian maul", "Dharok's greataxe", "Guthan's warspear", "Skillcape" + prem};
-            String[] s1 = {"45", "45", "45", "50", "55", "70", "70", "99"};
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            int[] items = {3842, 20223, 20232, 4153, 6528, 4718, 4726, 9750};
-            setMenuItems(items);
-        } else if (skillID == HITPOINTS.getId()) {
-            send(new SendString("Hitpoints", 8846));
-            changeInterfaceStatus(8825, false);
-            changeInterfaceStatus(8813, false);
-            slot = 8760;
-            String prem = " @red@(Premium only)";
-            String[] s = {"Shrimps (3 health)", "Chicken (3 health)", "Meat (3 health)", "Bread (5 health)", "Thin snail (7 health)", "Trout (8 health)", "Salmon (10 health)", "Lobster (12 health)", "Swordfish (14 health)", "Monkfish (16 health)" + prem, "Shark (20 health)",
-                    "Sea Turtle (22 health)" + prem, "Manta Ray (24 health)" + prem};
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
-            int[] items = {315, 2140, 2142, 2309, 3369, 333, 329, 379, 373, 7946, 385, 397, 391};
-            setMenuItems(items);
-        } else if (skillID == RANGED.getId()) {
-            changeInterfaceStatus(8825, false);
-            send(new SendString("Bows", 8846));
-            send(new SendString("Armour", 8823));
-            send(new SendString("Misc", 8824));
-            String prem = " @red@(Premium only)";
-            slot = 8760;
-            String[] s = new String[0];
-            String[] s1 = new String[0];
-            if (child == 0) {
-                s = new String[]{"Oak bow", "Willow bow", "Maple bow", "Yew bow", "Magic bow", "Crystal bow", "Karil's crossbow", "Seercull"/*, "Twisted bow"*/};
-                s1 = new String[]{"1", "20", "30", "40", "50", "65", "70", "75"/*, "85"*/};
-            } else if (child == 1) {
-                s = new String[]{"Leather", "Green dragonhide body (with 40 defence)", "Green dragonhide chaps",
-                        "Green dragonhide vambraces", "Book of balance", "Peaceful blessing", "Honourable blessing", "Blue dragonhide body (with 40 defence)", "Blue dragonhide chaps",
-                        "Blue dragonhide vambraces", "Red dragonhide body (with 40 defence)", "Red dragonhide chaps",
-                        "Red dragonhide vambraces", "Black dragonhide body (with 40 defence)", "Black dragonhide chaps",
-                        "Black dragonhide vambraces", "Karil (with 70 defence)", "Spined"};
-                s1 = new String[]{"1", "40", "40", "40", "45", "45", "45", "50", "50", "50", "60", "60", "60", "70", "70", "70", "70", "75"};
-            } else if (child == 2) {
-                s = new String[]{"Bronze arrow", "Iron arrow", "Steel arrow", "Mithril arrow", "Adamant arrow", "Rune arrow", "Dragon arrow", "Skillcape" + prem};
-                s1 = new String[]{"1", "1", "10", "20", "30", "40", "60", "99"};
-            }
-            for (String value : s) {
-                send(new SendString(value, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            if (child == 0)
-                setMenuItems(new int[]{843, 849, 853, 857, 861, 4212, 4734, 6724/*, 20997*/});
-            else if (child == 1)
-                setMenuItems(new int[]{1129, 1135, 1099, 1065, 3844, 20226, 20229, 2499, 2493, 2487, 2501, 2495, 2489, 2503, 2497, 2491, 4736, 6133});
-            else if (child == 2)
-                setMenuItems(new int[]{882, 884, 886, 888, 890, 892, 11212, 9756});
-        } else if (skillID == PRAYER.getId()) {
-            send(new SendString("Prayer", 8846));
-            changeInterfaceStatus(8825, false);
-            changeInterfaceStatus(8813, false);
-            slot = 8760;
-            String prem = " @red@(Premium only)";
-            String[] s = {"Thick Skin", "Burst of Strength", "Clarity of Thought", "Sharp Eye", "Mystic Will",
-                    "Rock Skin", "Superhuman Strength", "Improved Reflexes", "Hawk Eye", "Mystic Lore", "Wolfbane",
-                    "Steel Skin", "Ultimate Strength", "Incredible Reflexes", "Eagle Eye", "Mystic Might",
-                    "Protect from Magic", "Protect from Missiles", "Protect from Melee", "Chivalry", "Piety", "Skillcape" + prem};
-            String[] s1 = {"5", "5", "5", "10", "10", "20", "20", "20", "25", "25", "25",
-                    "40", "40", "40", "45", "45", "55", "55", "55", "70", "80", "99"};
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            int[] items = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 2952, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 9759};
-            setMenuItems(items);
-        } else if (skillID == MAGIC.getId()) {
-            changeInterfaceStatus(8825, false);
-            send(new SendString("Spells", 8846));
-            send(new SendString("Armor", 8823));
-            send(new SendString("Misc", 8824));
-            String prem = " @red@(Premium only)";
-            slot = 8760;
-            String[] s = new String[0];
-            String[] s1 = new String[0];
-            if (child == 0) {
-                s = new String[]{"High Alch", "Smoke Rush", "Enchant Sapphire", "Shadow Rush", "Blood Rush", "Enchant Emerald", "Ice Rush", "Smoke Burst", "Superheat", "Enchant Ruby", "Shadow Burst", "Enchant Diamond", "Blood Burst", "Enchant Dragonstone", "Ice Burst", "Smoke Blitz", "Shadow Blitz", "Blood Blitz", "Ice Blitz", "Smoke Barrage", "Enchant Onyx", "Shadow Barrage", "Blood Barrage", "Ice Barrage"};
-                s1 = new String[]{"1", "1", "7", "10", "20", "27", "30", "40", "43", "49", "50", "57", "60", "68", "70", "74", "76", "80", "82", "86", "87", "88", "92", "94"};
-            } else if (child == 1) {
-                s = new String[]{"Blue Mystic", "White Mystic", "Splitbark (with 20 defence)", "Black Mystic", "Holy book", "Holy blessing", "Infinity", "Ahrim (with 70 defence)"};
-                s1 = new String[]{"1", "20", "20", "35", "45", "45", "50", "70"};
-            } else if (child == 2) {
-                s = new String[]{"Battlestaff", "Elemental battlestaff", "Zamorak staff", "Saradomin staff", "Guthix staff", "Ancient staff", "Obsidian staff", "Master wand", "Ahrim's staff", "Skillcape" + prem};
-                s1 = new String[]{"1", "1", "10", "10", "10", "25", "40", "50", "70", "99"};
-            }
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            if (child == 0)
-                setMenuItems(new int[]{561, 565, 564, 565, 565, 564, 565, 565, 561, 564, 565, 564, 565, 564, 565, 565, 565, 565, 565, 565, 564, 565, 565, 565},
-                        new int[]{1, 1, 10, 1, 1, 10, 1, 1, 1, 10, 1, 10, 1, 10, 1, 1, 1, 1, 1, 1, 10, 1, 1, 1});
-            else if (child == 1)
-                setMenuItems(new int[]{4089, 4109, 3385, 4099, 3840, 20220, 6918, 4708});
-            else if (child == 2)
-                setMenuItems(new int[]{1391, 1395, 2417, 2415, 2416, 4675, 6526, 6914, 4710, 9762});
-        } else if (skillID == THIEVING.getId()) {
-            send(new SendString("Thieving", 8846));
-            changeInterfaceStatus(8825, false);
-            changeInterfaceStatus(8813, false);
-            slot = 8760;
-            String prem = " @red@(Premium only)";
-            String[] s = {"Cage", "Farmer", "Baker stall", "fur stall", "silver stall", "Master Farmer", "Yanille chest", "Spice Stall", "Legends chest" + prem, "Gem Stall" + prem};
-            String[] s1 = {"1", "10", "10", "40", "65", "70", "70", "80", "85", "90"};
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            int[] items = {4443, 3243, 2309, 1739, 2349, 5068, 6759, 199, 6759, 1623};
-            setMenuItems(items);
-        } else if (skillID == RUNECRAFTING.getId()) {
-            send(new SendString("Runecrafting", 8846));
-            changeInterfaceStatus(8825, false);
-            changeInterfaceStatus(8813, false);
-            slot = 8760;
-            String prem = " @red@(Premium only)";
-            String[] s = {"Small pouch", "Nature rune", "Medium pouch", "Large pouch", "Blood rune", "Giant pouch", "Cosmic rune", "Skillcape" + prem};
-            String[] s1 = {"1", "1", "20", "40", "50", "60", "75", "99"};
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            int[] items = {5509, 561, 5510, 5512, 565, 5514, 564, 9765};
-            setMenuItems(items);
-            //crafting == 12
-        } else if (skillID == FISHING.getId()) {
-            send(new SendString("Fishing", 8846));
-            changeInterfaceStatus(8825, false);
-            changeInterfaceStatus(8813, false);
-            slot = 8760;
-            String prem = " @red@(Premium only)";
-            String[] s = {"Shrimps", "Trout", "Salmon", "Lobster", "Swordfish", "Monkfish" + prem, "Dragon harpoon", "Shark",
-                    "Sea Turtle" + prem, "Manta Ray" + prem, ""};
-            String[] s1 = {"1", "20", "30", "40", "50", "60", "61", "70", "85", "95"};
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            int[] items = {317, 335, 331, 377, 371, 7944, 21028, 383, 395, 389};
-            setMenuItems(items);
-        } else if (skillID == COOKING.getId()) {
-            send(new SendString("Cooking", 8846));
-            changeInterfaceStatus(8825, false);
-            changeInterfaceStatus(8813, false);
-            slot = 8760;
-            String prem = " @red@(Premium only)";
-            String[] s = {"Shrimps", "Chicken", "Meat", "Bread", "Thin snail", "Trout", "Salmon", "Lobster", "Swordfish", "Monkfish" + prem, "Shark",
-                    "Sea Turtle" + prem, "Manta Ray" + prem};
-            String[] s1 = {"1", "1", "1", "10", "15", "20", "30", "40", "50", "60", "70", "85", "95"};
-            for (String value : s) {
-                send(new SendString(value, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            int[] items = {315, 2140, 2142, 2309, 3369, 333, 329, 379, 373, 7946, 385, 397, 391};
-            setMenuItems(items);
-        } else if (skillID == CRAFTING.getId()) {
-            changeInterfaceStatus(8827, true);
-            changeInterfaceStatus(8828, true);
-            changeInterfaceStatus(8838, true);
-            changeInterfaceStatus(8841, false);
-            changeInterfaceStatus(8850, false);
-            send(new SendString("Spinning", 8846));
-            send(new SendString("Armor", 8823));
-            send(new SendString("Jewelry", 8824));
-            send(new SendString("Glass", 8827));
-            send(new SendString("Weaponry", 8837));
-            send(new SendString("Other", 8840));
-
-            String prem = " @red@(Premium only)";
-            slot = 8760;
-            String[] s = new String[0];
-            String[] s1 = new String[0];
-            if (child == 0) {
-                s = new String[]{"Ball of wool", "Bow string", "2 tick stringing", "1 tick stringing"};
-                s1 = new String[]{"1", "10", "40", "70"};
-            } else if (child == 1) {
-                s = new String[]{"Leather gloves", "Leather boots", "Leather cowl", "Leather vambraces",
-                        "Leather body", "Leather chaps", "Coif", "Green d'hide vamb", "Green d'hide chaps",
-                        "Green d'hide body", "Blue d'hide vamb", "Blue d'hide chaps", "Blue d'hide body", "Slayer helmet",
-                        "Red d'hide vamb", "Red d'hide chaps", "Red d'hide body", "Black d'hide vamb",
-                        "Black d'hide chaps", "Black d'hide body"};
-                s1 = new String[]{"1", "7", "9", "11", "14", "18", "39", "50", "54", "58", "62", "66", "70", "70", "73",
-                        "76", "79", "82", "85", "88"};
-            } else if (child == 2) {
-                s = new String[]{"Gold ring", "Gold necklace", "Gold bracelet", "Gold amulet", "Cut sapphire",
-                        "Sapphire ring", "Sapphire necklace", "Sapphire bracelet", "Sapphire amulet", "Cut emerald",
-                        "Emerald ring", "Emerald necklace", "Emerald bracelet", "Emerald amulet", "Cut ruby",
-                        "Ruby ring", "Ruby necklace", "Ruby bracelet", "Cut diamond", "Diamond ring", "Ruby amulet",
-                        "Cut dragonstone", "Dragonstone ring", "Diamond necklace", "Diamond bracelet", "Cut onyx",
-                        "Onyx ring", "Diamond amulet", "Dragonstone necklace", "Dragonstone bracelet",
-                        "Dragonstone amulet", "Onyx necklace", "Onyx bracelet", "Onyx amulet"};
-                s1 = new String[]{"5", "6", "7", "8", "20", "20", "22", "23", "24", "27", "27", "29", "30", "31",
-                        "34", "34", "40", "42", "43", "43", "50", "55", "55", "56", "58", "67", "67", "70", "72", "74",
-                        "80", "82", "84", "90"};
-            } else if (child == 3) {
-                s = new String[]{"Vial", "Empty cup", "Fishbowl", "Unpowered orb"};
-                s1 = new String[]{"1", "18", "32", "48"};
-            } else if (child == 4) {
-                s = new String[]{"Water battlestaff", "Earth battlestaff", "Fire battlestaff", "Air battlestaff"};
-                s1 = new String[]{"51", "56", "61", "66"};
-            } else if (child == 5) {
-                s = new String[]{"Crystal key", "Skillcape" + prem};
-                s1 = new String[]{"60", "99"};
-            }
-            for (String value : s) {
-                send(new SendString(value, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            if (child == 0)
-                setMenuItems(new int[]{1759, 1777});
-            else if (child == 1)
-                setMenuItems(new int[]{1059, 1061, 1167, 1063, 1129, 1095, 1169, 1065, 1099, 1135, 2487, 2493, 2499, 11864,
-                        2489, 2495, 2501, 2491, 2497, 2503});
-            else if (child == 2)
-                setMenuItems(new int[]{1635, 1654, 11069, 1692, 1607, 1637, 1656, 11072, 1694, 1605, 1639, 1658,
-                        11076, 1696, 1603, 1641, 1660, 11085, 1601, 1643, 1698, 1615, 1645, 1662, 11092, 6573, 6575,
-                        1700, 1664, 11115, 1702, 6577, 11130, 6581});
-            else if (child == 3)
-                setMenuItems(new int[]{229, 1980, 6667, 567});
-            else if (child == 4)
-                setMenuItems(new int[]{1395, 1399, 1393, 1397});
-            else if (child == 5)
-                setMenuItems(new int[]{989, 9780});
-        } else if (skillID == SMITHING.getId()) {
-            changeInterfaceStatus(8827, true);
-            changeInterfaceStatus(8828, true);
-            changeInterfaceStatus(8838, true);
-            changeInterfaceStatus(8841, true);
-            changeInterfaceStatus(8850, true);
-            send(new SendString("Smelting", 8846));
-            send(new SendString("Bronze", 8823));
-            send(new SendString("Iron", 8824));
-            send(new SendString("Steel", 8827));
-            send(new SendString("Mithril", 8837));
-            send(new SendString("Adamant", 8840));
-            send(new SendString("Runite", 8843));
-            send(new SendString("Special", 8859));
-
-            String prem = " @red@(Premium only)";
-            slot = 8760;
-            String[] s = new String[0];
-            String[] s1 = new String[0];
-            int[] item = new int[0];
-            int[] amt = new int[0];
-            if (child == 0) {
-                s = new String[]{"Bronze bar", "Iron bar (" + (50 + ((getLevel(Skill.SMITHING) + 1) / 4)) + "% success)", "Steel bar (2 coal & 1 iron ore)",
-                        "Gold bar", "Mithril bar (3 coal & 1 mithril ore)", "Adamantite bar (4 coal & 1 adamantite ore)", "Runite bar (6 coal & 1 runite ore)"};
-                s1 = new String[]{"1", "15", "30", "40", "55", "70", "85"};
-            } else if (child > 0 && child <= Constants.smithing_frame.length) {
-                s = new String[Constants.smithing_frame[child - 1].length];
-                s1 = new String[Constants.smithing_frame[child - 1].length];
-                item = new int[Constants.smithing_frame[child - 1].length];
-                amt = new int[Constants.smithing_frame[child - 1].length];
-                for (int i = 0; i < s.length; i++) {
-                    item[i] = Constants.smithing_frame[child - 1][i][0];
-                    amt[i] = Constants.smithing_frame[child - 1][i][1];
-                    s[i] = this.GetItemName(item[i]);
-                    s1[i] = String.valueOf(Constants.smithing_frame[child - 1][i][2]);
-                }
-            } else if (child == Constants.smithing_frame.length + 1) {
-                s = new String[]{"Rockshell armour", "Dragonfire shield", "Skillcape" + prem};
-                s1 = new String[]{"60", "90", "99"};
-            }
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-
-            if (child == 0)
-                setMenuItems(new int[]{2349, 2351, 2353, 2357, 2359, 2361, 2363});
-            else if (child > 0 && child <= Constants.smithing_frame.length)
-                setMenuItems(item, amt);
-            else if (child == Constants.smithing_frame.length + 1)
-                setMenuItems(new int[]{6129, 11284, 9795});
-        } else if (skillID == AGILITY.getId()) {
-            send(new SendString("Agility", 8846));
-            changeInterfaceStatus(8825, false);
-            changeInterfaceStatus(8813, false);
-            slot = 8760;
-            String prem = " @red@(Premium only)";
-            String[] s = {"Gnome Course", "Barbarian Course", "Yanille castle wall", "Crystal Shield", "Werewolf Course", "Taverly dungeon shortcut", "Wilderness course", "Shilo stepping stones ", "Prime boss shortcut", "Skillcape" + prem};
-            String[] s1 = {"1", "40", "50", "60", "60", "70", "70", "75", "85", "99"};
-            for (String value : s) {
-                send(new SendString(value, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            int[] items = {751, 1365, -1, 4224, 4179, 4155, 964, -1, 4155, 9771};
-            setMenuItems(items);
-        } else if (skillID == WOODCUTTING.getId()) {
-            send(new SendString("Axes", 8846));
-            send(new SendString("Logs", 8823));
-            send(new SendString("Misc", 8824));
-            changeInterfaceStatus(8825, false);
-            String prem = " @red@(Premium only)";
-            slot = 8760;
-            String[] s = new String[0];
-            String[] s1 = new String[0];
-            if (child == 0) {
-                s = new String[]{"Bronze Axe", "Iron Axe", "Steel Axe", "Black Axe", "Mithril Axe", "Adamant Axe", "Rune Axe",
-                        "Dragon Axe"};
-                s1 = new String[]{"1", "1", "6", "11", "21", "31", "41", "61"};
-            } else if (child == 1) {
-                s = new String[]{"Logs", "Oak logs", "Willow logs", "Maple logs", "Yew logs", "Magic logs"};
-                s1 = new String[]{"1", "15", "30", "45", "60", "75"};
-            } else if (child == 2) {
-                s = new String[]{"Skillcape" + prem};
-                s1 = new String[]{"99"};
-            }
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            if (child == 0)
-                setMenuItems(new int[]{1351, 1349, 1353, 1361, 1355, 1357, 1359, 6739});
-            else if (child == 1)
-                setMenuItems(new int[]{1511, 1521, 1519, 1517, 1515, 1513});
-            else if (child == 2)
-                setMenuItems(new int[]{9807});
-        } else if (skillID == MINING.getId()) {
-            send(new SendString("Pickaxes", 8846));
-            send(new SendString("Ores", 8823));
-            send(new SendString("Misc", 8824));
-            changeInterfaceStatus(8825, false);
-            String prem = " @red@(Premium only)";
-            slot = 8760;
-            String[] s = new String[0];
-            String[] s1 = new String[0];
-            if (child == 0) {
-                s = new String[]{"Bronze Pickaxe", "Iron Pickaxe", "Steel Pickaxe", "Black Pickaxe", "Mithril Pickaxe", "Adamant Pickaxe",
-                        "Rune Pickaxe", "Dragon Pickaxe"};
-                s1 = new String[]{"1", "1", "6", "11", "21", "31", "41", "61"};
-            } else if (child == 1) {
-                s = new String[]{"Rune essence", "Copper ore", "Tin ore", "Iron ore", "Coal", "Gold ore", "Mithril ore",
-                        "Adamant ore", "Runite ore"};
-                s1 = new String[]{"1", "1", "1", "15", "30", "40", "55", "70", "85"};
-            } else if (child == 2) {
-                s = new String[]{"Skillcape" + prem};
-                s1 = new String[]{"99"};
-            }
-            for (String value : s) {
-                send(new SendString(value, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            if (child == 0)
-                setMenuItems(new int[]{1265, 1267, 1269, 12297, 1273, 1271, 1275, 11920});
-            else if (child == 1)
-                setMenuItems(new int[]{1436, 436, 438, 440, 453, 444, 447, 449, 451});
-            else if (child == 2)
-                setMenuItems(new int[]{9792});
-        } else if (skillID == SLAYER.getId()) {
-            send(new SendString("Master", 8846));
-            send(new SendString("Monsters", 8823));
-            send(new SendString("Misc", 8824));
-            changeInterfaceStatus(8825, false);
-            String prem = " @red@(Premium only)";
-            slot = 8760;
-            String[] s = new String[0];
-            String[] s1 = new String[0];
-            if (child == 0) {
-                s = new String[]{"Mazchna (level 3 combat)", "Vannaka (level 3 combat)", "Duradel (level 50 combat)"};
-                s1 = new String[]{"1", "50", "50"};
-            } else if (child == 1) {
-                s = new String[]{"Crawling hands", "Pyrefiend", "Albino bat", "Death spawn", "Jelly", "Head mourner", "Jungle horrors", "Skeletal hellhound", "Lesser demon", "Bloodvelds", "Greater demon", "Black demon", "Gargoyles", "Cave horrors", "Berserker Spirit", "Aberrant Spectres", "Tzhaar", "Mithril Dragon", "Abyssal demon", "Dagannoth Prime"};
-                s1 = new String[]{"1", "20", "25", "30", "30", "45", "45", "50", "50", "53", "55", "60", "63", "65", "70", "73", "80", "83", "85", "86"};
-            } else if (child == 2) {
-                s = new String[]{"Skillcape" + prem};
-                s1 = new String[]{"99"};
-            }
-            for (String value : s) {
-                send(new SendString(value, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            if (child == 0)
-                setMenuItems(new int[]{4155});
-            else if (child == 1)
-                setMenuItems(new int[]{4133, 4138, -1, -1, 4142, -1, -1, -1, -1, 4141, -1, -1, 4147, 8900, -1, 4144, -1, -1, 4149, -1});
-            else if (child == 2)
-                setMenuItems(new int[]{9786});
-        } else if (skillID == FIREMAKING.getId()) {
-            send(new SendString("Firemaking", 8846));
-            changeInterfaceStatus(8825, false);
-            changeInterfaceStatus(8813, false);
-            changeInterfaceStatus(8825, false);
-            String prem = " @red@(Premium only)";
-            slot = 8760;
-            String[] s;
-            String[] s1;
-            s = new String[]{"Logs", "Oak logs", "Willow logs", "Maple logs", "Yew logs", "Magic logs",
-                    "Skillcape" + prem};
-            s1 = new String[]{"1", "15", "30", "45", "60", "75", "99"};
-            for (String value : s) {
-                send(new SendString(value, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            setMenuItems(new int[]{1511, 1521, 1519, 1517, 1515, 1513, 9804});
-        } else if (skillID == HERBLORE.getId()) {
-            send(new SendString("Potions", 8846));
-            send(new SendString("Herbs", 8823));
-            send(new SendString("Misc", 8824));
-            changeInterfaceStatus(8825, false);
-            String prem = " @red@(Premium only)";
-            slot = 8760;
-            String[] s = new String[0];
-            String[] s1 = new String[0];
-            if (child == 0) {
-                s = new String[]{"Attack Potion \\nGuam leaf & eye of newt", "Strength Potion\\nTarromin & limpwurt root", "Defence Potion\\nRanarr weed & white berries", "Prayer potion\\nRanarr weed & snape grass",
-                        "Super Attack Potion " + prem + "\\nIrit leaf & eye of newt", "Super Strength Potion" + prem + "\\nKwuarm & limpwurt root", "Super Restore Potion" + prem + "\\nSnapdragon & red spiders' eggs", "Super Defence Potion" + prem + "\\nCadantine & white berries",
-                        "Ranging Potion" + prem + "\\nDwarf weed & wine of Zamorak", "Antifire potion" + prem + "\\nTorstol & willow root",
-                        "Super Combat Potion" + prem + "\\nTorstol, Super attack, strength & defence potion", "Overload Potion" + prem + "\\nCoconut, Ranging & Super combat potion"};
-                s1 = new String[]{"3", "14", "25", "38", "46", "55", "60", "65", "75", "79", "88", "93"};
-            } else if (child == 1) {
-                String[][] array = new String[2][Utils.grimy_herbs.length];
-                for (int i = 0; i < array[1].length; i++) {
-                    array[0][i] = GetItemName(Utils.grimy_herbs[i] != 3051 && Utils.grimy_herbs[i] != 3049 ? Utils.grimy_herbs[i] + 50 : Utils.grimy_herbs[i] - 51) + (i > 2 ? " " + prem : "");
-                    array[1][i] = Integer.toString(Utils.grimy_herbs_lvl[i]);
-                }
-                s = array[0];
-                s1 = array[1];
-            } else if (child == 2) {
-                s = new String[]{"Skillcape" + prem};
-                s1 = new String[]{"99"};
-            }
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            if (child == 0)
-                setMenuItems(new int[]{121, 115, 133, 139, 145, 157, 3026, 163, 169, 2454, 12695, 11730});
-            else if (child == 1)
-                setMenuItems(Utils.grimy_herbs);
-            else if (child == 2)
-                setMenuItems(new int[]{9774});
-        } else if (skillID == FLETCHING.getId()) {
-            send(new SendString("Fletching", 8846));
-            changeInterfaceStatus(8825, false);
-            changeInterfaceStatus(8813, false);
-            slot = 8760;
-            String[] s = {"Arrow Shafts", "Oak Shortbow", "Oak Longbow", "Willow Shortbow", "Willow Longbow",
-                    "Maple Shortbow", "Maple Longbow", "Yew Shortbow", "Yew Longbow", "Magic Shortbow", "Magic Longbow"};
-            String[] s1 = {"1", "20", "25", "35", "40", "50", "55", "65", "70", "80", "85"};
-            for (String string : s) {
-                send(new SendString(string, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            int[] items = {52, 54, 56, 60, 58, 64, 62, 68, 66, 72, 70};
-            setMenuItems(items);
-        } else if (skillID == FARMING.getId()) {
-            changeInterfaceStatus(8827, true);
-            changeInterfaceStatus(8828, true);
-            changeInterfaceStatus(8838, true);
-            changeInterfaceStatus(8841, true);
-            send(new SendString("Allotment", 8846));
-            send(new SendString("Flower", 8823));
-            send(new SendString("Bush", 8824));
-            send(new SendString("Herb", 8827));
-            send(new SendString("Tree", 8837));
-            send(new SendString("Fruit tree", 8840));
-            send(new SendString("Misc", 8843));
-            changeInterfaceStatus(8850, false);
-            String prem = " @red@(Premium only)";
-            slot = 8760;
-            String[] s = new String[0];
-            String[] s1 = new String[0];
-            if (child == 0) {
-                s = new String[]{"Potatoes \\nPayment: 3 compost", "Onions \\nPayment: 1 sack of potato", "Cabbage \\nPayment: 1 sack of onion", "Tomatoes \\nPayment: 1 sack of cabbage",
-                        "Sweetcorn \\nPayment: 2 basket of tomato", "Strawberries " + prem + "\\nPayment: 12 sweetcorn",
-                        "Watermelons " + prem + "\\nPayment: 3 basket of strawberries", "Snape grass " + prem + "\\nPayment: 15 watermelon"};
-                s1 = new String[]{"1", "5", "9", "16", "25", "31", "47", "59"};
-            } else if (child == 1) {
-                s = new String[]{"Marigold \\nPayment: 2 compost", "Rosemary \\nPayment: 2 Marigold", "Nasturtium \\nPayment: 2 Rosemary",
-                        "Woad \\nPayment: 2 Nasturtium", "Limpwurt plants \\nPayment: 2 Woad leaf"};
-                s1 = new String[]{"3", "13", "22", "26", "34"};
-            } else if (child == 2) {
-                s = new String[]{"Redberry bushes " + prem + "\\nPayment: 5 super compost", "Dwellberry bushes " + prem + "\\nPayment: 8 redberries", "Jangerberry bushes " + prem + "\\nPayment: 8 dwellberries",
-                        "White berry bushes " + prem + "\\nPayment: 8 jangerberries", "Grape bushes" + prem + "\\nPayment: 8 jangerberries & 8 redberries"};
-                s1 = new String[]{"22", "36", "48", "59", "68"};
-            } else if (child == 3) {
-                s = new String[]{"Guam", "Marrentill", "Tarromin", "Ranarr", "Irit " + prem, "Kwuarm " + prem, "Snapdragon " + prem, "Cadantine " + prem, "Dwarf weed " + prem, "Torstol " + prem};
-                s1 = new String[]{"8", "12", "19", "34", "44", "56", "63", "70", "79", "85"};
-            } else if (child == 4) {
-                s = new String[]{"Acorn trees \\nPayment: 1 basket of Tomatoes & 1 basket of Strawberries", "Willow trees " + prem + "\\nPayment: 3 oak roots", "Maple trees " + prem + "\\nPayment: 3 willow roots",
-                        "Yew trees " + prem + "\\nPayment: 3 maple roots", "Magic trees " + prem + "\\nPayment: 3 yew roots"};
-                s1 = new String[]{"15", "30", "45", "60", "75"};
-            } else if (child == 5) {
-                s = new String[]{"Apple trees \\nPayment: 9 sweetcorn", "Banana trees \\nPayment: 2 basket of apples", "Orange trees \\nPayment: 2 basket of bananas",
-                        "Curry trees \\nPayment: 2 basket of oranges", "Pineapple plants " + prem + "\\nPayment: 10 curry",
-                        "Papaya trees " + prem + "\\nPayment: 10 pineapple", "Palm trees " + prem + "\\nPayment: 10 papaya"};
-                s1 = new String[]{"27", "33", "39", "45", "51", "57", "63"};
-            } else if (child == 6) {
-                s = new String[]{"Skillcape" + prem};
-                s1 = new String[]{"99"};
-            }
-            for (String value : s) {
-                send(new SendString(value, slot++));
-            }
-            slot = 8720;
-            for (String string : s1) {
-                send(new SendString(string, slot++));
-            }
-            if (child == 0)
-                setMenuItems(new int[]{1942, 1957, 1965, 1982, 5986, 5504, 5982, 231});
-            else if (child == 1)
-                setMenuItems(new int[]{6010, 6014, 6012, 1793, 225});
-            else if (child == 2)
-                setMenuItems(new int[]{1951, 2126, 247, 239, 1987});
-            else if (child == 3)
-                setMenuItems(new int[]{199, 201, 203, 207, 209, 213, 3051, 215, 217, 219});
-            else if (child == 4)
-                setMenuItems(new int[]{1521, 1519, 1517, 1515, 1513});
-            else if (child == 5)
-                setMenuItems(new int[]{1955, 1963, 2108, 5970, 2114, 5972, 5974});
-            else if (child == 6)
-                setMenuItems(new int[]{9810});
-        }
-        
-        // Send the quest something packet (configures scrollbar)
-        sendQuestSomething(8717);
-        
-        // Only show the interface if we're switching skills
-        if (currentSkill != skillID) {
-            // Show the main interface (packet 97)
-            send(new ShowInterface(8714));
-        }
-        
-        // Update current skill
-        currentSkill = skillID;
-    }
-
     public static void publicyell(String message) {
-        for (Player p : PlayerHandler.players) {
+        for (Player p : PlayerRegistry.players) {
             if (p == null || !p.isActive) {
                 continue;
             }
@@ -2939,7 +2125,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void yell(String message) {
-        for (Player p : PlayerHandler.players) {
+        for (Player p : PlayerRegistry.players) {
             if (p == null || !p.isActive)
                 continue;
             Client temp = (Client) p;
@@ -2948,7 +2134,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void yellKilled(String message) {
-        for (Player p : PlayerHandler.players) {
+        for (Player p : PlayerRegistry.players) {
             if (p == null || !p.isActive || !(p.inWildy() || p.inEdgeville()))
                 continue;
             Client temp = (Client) p;
@@ -2957,7 +2143,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void yellAreaKilled(String message, String area) {
-        for (Player p : PlayerHandler.players) {
+        for (Player p : PlayerRegistry.players) {
             if (p == null || !p.isActive || !p.getPositionName().contains(area))
                 continue;
             Client temp = (Client) p;
@@ -2965,149 +2151,53 @@ public class Client extends Player implements Runnable {
         }
     }
 
-    public int[] EssenceMineX = {2899, 2912, 2921, 2912, 2922, 2909, 2899, 2909};
-    public int[] EssenceMineY = {4843, 4834, 4846, 4830, 4820, 4830, 4820, 4834};
-
-    /*
-     * [0] North West [1] North East [2] Center [3] South East [4] South West
-     */
-    public int[] EssenceMineRX = {3253, 3105, 2681, 2591};
-    public int[] EssenceMineRY = {3401, 9571, 3325, 3086};
-
-    /*
-     * [0] Varrock [1] Wizard Tower [2] Ardougne [3] Magic Guild
-     */
-    private long stairBlock = 0;
-
-    public void stairs(int stairs, int teleX, int teleY) {
-        if (stairBlock > System.currentTimeMillis()) {
-            resetStairs();
-            if (getClientPacketTraceEnabled()) {
-                logger.debug("{} stair blocked!", getPlayerName());
-            }
-            return;
-        }
-        stairBlock = System.currentTimeMillis() + 1000;
-        if (!IsStair) {
-            IsStair = true;
-            if (stairs == 1) {
-                if (skillX == 2715 && skillY == 3470) {
-                    if (getPosition().getY() < 3470 || getPosition().getX() < 2715) {
-                        // resetStairs();
-                        return;
-                    } else {
-                        transport(new Position(teleX, teleY, 1));
-                        resetStairs();
-                        return;
-                    }
-                }
-            }
-            if (stairs == "legendsUp".hashCode()) {
-                if (skillX == 2732 && skillY == 3377) {
-                    transport(new Position(2732, 3380, 1));
-                    resetStairs();
-                    return;
-                }
-            }
-            if (stairs == "legendsDown".hashCode()) {
-                if (skillX == 2732 && skillY == 3378) {
-                    transport(new Position(2732, 3376, 0));
-                    resetStairs();
-                    return;
-                }
-            }
-            if (stairs == 1) {
-                getPosition().setZ(getPosition().getZ() + 1);
-            } else if (stairs == 2) {
-                getPosition().setZ(getPosition().getZ() - 1);
-            } else if (stairs == 21) {
-                getPosition().setZ(getPosition().getZ() + 1);
-            } else if (stairs == 22) {
-                getPosition().setZ(getPosition().getZ() - 1);
-            } else if (stairs == 69)
-                transport(new Position(teleX, teleY, getPosition().getZ() + 1)); //Unsure what height!
-            if (stairs == 3 || stairs == 5 || stairs == 9) {
-                transport(new Position(getPosition().getX(), getPosition().getY() + 6400, getPosition().getZ()));
-            } else if (stairs == 4 || stairs == 6 || stairs == 10) {
-                transport(new Position(getPosition().getX(), getPosition().getY() - 6400, getPosition().getZ())); //Unsure if this is good!
-            } else if (stairs == 7) {
-                transport(new Position(3104, 9576, getPosition().getZ()));
-            } else if (stairs == 8) {
-                transport(new Position(3105, 3162, getPosition().getZ()));
-            } else if (stairs == 11) {
-                transport(new Position(2856, 9570, getPosition().getZ()));
-            } else if (stairs == 12) {
-                transport(new Position(2857, 3167, getPosition().getZ()));
-            } else if (stairs == 13) {
-                transport(new Position(skillX, skillY, getPosition().getZ() + 3));
-            } else if (stairs == 15) {
-                teleportToY += (6400 - (stairDistance + stairDistanceAdd)); //Shiet system!
-            } else if (stairs == 14) {
-                teleportToY -= (6400 - (stairDistance + stairDistanceAdd)); //Shiet system!
-            } else if (stairs == 16) {
-                transport(new Position(2828, 9772, getPosition().getZ()));
-            } else if (stairs == 17) {
-                transport(new Position(3494, 3465, getPosition().getZ()));
-            } else if (stairs == 18) {
-                transport(new Position(3477, 9845, getPosition().getZ()));
-            } else if (stairs == 19) {
-                transport(new Position(3543, 3463, getPosition().getZ()));
-            } else if (stairs == 20) {
-                transport(new Position(3549, 9865, getPosition().getZ()));
-            } else if (stairs == 21) {
-                teleportToY += (stairDistance + stairDistanceAdd); //Shiet system!
-            } else if (stairs == 69) {
-                teleportToY = stairDistanceAdd;
-                teleportToX = stairDistance;
-            } else if (stairs == 22) {
-                teleportToY -= (stairDistance + stairDistanceAdd);
-            } else if (stairs == 23) {
-                transport(new Position(2480, 5175, getPosition().getZ()));
-            } else if (stairs == 24) {
-                transport(new Position(2862, 9572, getPosition().getZ()));
-            } else if (stairs == 25) {
-                int Essence = Misc.random(EssenceMineRX.length - 1);
-                transport(new Position(EssenceMineRX[Essence], EssenceMineRY[Essence], 0));
-            } else if (stairs == 26) {
-                int Essence = Misc.random(EssenceMineX.length - 1);
-                transport(new Position(EssenceMineX[Essence], EssenceMineY[Essence], 0));
-            } else if (stairs == 27) {
-                transport(new Position(2453, 4468, getPosition().getZ()));
-            } else if (stairs == 28) {
-                transport(new Position(3201, 3169, getPosition().getZ()));
-            }
-            if (stairs == 5 || stairs == 10) {
-                transport(new Position(getPosition().getX() + (stairDistance + stairDistanceAdd), getPosition().getY(), 0));
-            }
-            if (stairs == 6 || stairs == 9) {
-                transport(new Position(getPosition().getX() - (stairDistance - stairDistanceAdd), getPosition().getY(), 0));
-            }
-        }
-        resetStairs();
+    public long beginVerticalTransition(long delayMs) {
+        resetWalkingQueue();
+        long now = System.currentTimeMillis();
+        activeVerticalTransitionToken = ++verticalTransitionSequence;
+        verticalTransitionUntilMillis = now + Math.max(delayMs, 0L);
+        walkBlock = Math.max(walkBlock, verticalTransitionUntilMillis);
+        return activeVerticalTransitionToken;
     }
 
-    public void resetStairs() {
-        stairs = 0;
-        skillX = -1;
-        setSkillY(-1);
-        stairDistance = 1;
-        stairDistanceAdd = 0;
-        resetWalkingQueue();
-        final Client p = this;
-        EventManager.getInstance().registerEvent(new Event(500) {
+    public boolean isVerticalTransitionActive() {
+        return activeVerticalTransitionToken != 0L && verticalTransitionUntilMillis > System.currentTimeMillis();
+    }
 
-            @Override
-            public void execute() {
-                p.resetWalkingQueue();
-                stop();
-            }
+    public void clearVerticalTransition() {
+        activeVerticalTransitionToken = 0L;
+        verticalTransitionUntilMillis = 0L;
+    }
 
-        });
+    public void clearVerticalTravelState() {
+        clearVerticalTransition();
+    }
+
+    public String verticalTransitionDebugSummary() {
+        return "token=" + activeVerticalTransitionToken +
+                ",until=" + verticalTransitionUntilMillis +
+                ",tele=(" + teleportToX + "," + teleportToY + "," + teleportToZ + ")" +
+                ",pos=" + getPosition();
+    }
+
+    public void queueTransport(Position pos) {
+        resetActionTeleport();
+        teleportToX = pos.getX();
+        teleportToY = pos.getY();
+        teleportToZ = pos.getZ();
+    }
+
+    public void finishVerticalTransition(long token, Position destination) {
+        if (activeVerticalTransitionToken != token || disconnected) {
+            return;
+        }
+        queueTransport(destination);
+        clearVerticalTransition();
     }
 
     public boolean usingBow = false;
 
-    public boolean IsItemInBag(int ItemID) {
+    public boolean hasItemInInventory(int ItemID) {
         for (int playerItem : playerItems) {
             if ((playerItem - 1) == ItemID) {
                 return true;
@@ -3116,7 +2206,7 @@ public class Client extends Player implements Runnable {
         return false;
     }
 
-    public boolean AreXItemsInBag(int ItemID, int Amount) {
+    public boolean hasItemsInInventory(int ItemID, int Amount) {
         int ItemCount = 0;
 
         for (int playerItem : playerItems) {
@@ -3130,7 +2220,7 @@ public class Client extends Player implements Runnable {
         return false;
     }
 
-    public int GetItemSlot(int ItemID) {
+    public int getItemSlot(int ItemID) {
         for (int i = 0; i < playerItems.length; i++) {
             if ((playerItems[i] - 1) == ItemID) {
                 return i;
@@ -3146,6 +2236,10 @@ public class Client extends Player implements Runnable {
             }
         }
         return -1;
+    }
+
+    public int getBankItemSlot(int itemId) {
+        return GetBankItemSlot(itemId);
     }
 
     public boolean randomed2;
@@ -3166,7 +2260,7 @@ public class Client extends Player implements Runnable {
 
     public boolean playerHasItem(String name) {
         for (int playerItem : playerItems)
-            if (GetItemName(playerItem - 1).contains(name))
+            if (getItemName(playerItem - 1).contains(name))
                 return true;
         return false;
     }
@@ -3217,7 +2311,7 @@ public class Client extends Player implements Runnable {
 
     public void sendpm(long name, int rights, byte[] chatmessage, int messagesize) {
         // Preserve old signature but route through new outgoing packet implementation.
-        send(new PrivateMessage(name, rights, chatmessage, messagesize, handler.lastchatid++));
+        send(new PrivateMessage(name, rights, chatmessage, messagesize, net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.lastchatid++));
     }
 
     public void loadpm(long name, int world) {
@@ -3266,10 +2360,17 @@ public class Client extends Player implements Runnable {
     }
 
     public String GetNpcName(int NpcID) {
-        return Server.npcManager.getName(NpcID).replaceAll("_", " ");
+        if (Server.npcManager == null) {
+            return "Npc";
+        }
+        String npcName = Server.npcManager.getName(NpcID);
+        if (npcName == null) {
+            return "Npc";
+        }
+        return npcName.replaceAll("_", " ");
     }
 
-    public String GetItemName(int ItemID) {
+    public String getItemName(int ItemID) {
         return Server.itemManager.getName(ItemID);
     }
 
@@ -3281,7 +2382,7 @@ public class Client extends Player implements Runnable {
         return Server.itemManager.getShopBuyValue(ItemID);
     }
 
-    public int GetUnnotedItem(int ItemID) {
+    public int getUnnotedItem(int ItemID) {
         String NotedName = Server.itemManager.getName(ItemID);
         for (Item item : Server.itemManager.items.values()) {
             String checkName = item.getName(), checkDesc = item.getDescription();
@@ -3292,7 +2393,7 @@ public class Client extends Player implements Runnable {
         return 0;
     }
 
-    public int GetNotedItem(int ItemID) {
+    public int getNotedItem(int ItemID) {
         String NotedName = Server.itemManager.getName(ItemID);
         for (Item item : Server.itemManager.items.values()) {
             String checkName = item.getName(), checkDesc = item.getDescription();
@@ -3308,6 +2409,10 @@ public class Client extends Player implements Runnable {
         send(new SendRunEnergy(100));
         invalidateUiText(149);
         send(new SendString("100%", 149));
+    }
+
+    public void updateRunEnergy() {
+        WriteEnergy();
     }
 
     public void ResetBonus() {
@@ -3376,431 +2481,11 @@ public class Client extends Player implements Runnable {
         return false;
     }
 
-    public boolean CheckObjectSkill(int objectID, String name) {
-        /* Do we wish to keep? */
-        if (name.contains("oak"))
-            objectID = 1281;
-        else if (name.contains("willow"))
-            objectID = 1308;
-        else if (name.contains("maple tree"))
-            objectID = 1307;
-        else if (name.contains("yew"))
-            objectID = 1309;
-        else if (name.contains("magic tree"))
-            objectID = 1306;
-        else if (name.equalsIgnoreCase("tree"))
-            objectID = 1276;
-
-        switch (objectID) {
-
-            /*
-             *
-             * WOODCUTTING
-             *
-             */
-            case 1276:
-            case 1277:
-            case 1278:
-            case 1279:
-            case 1280:
-            case 1330:
-            case 1332:
-            case 2409:
-            case 3033:
-            case 3034:
-            case 3035:
-            case 3036:
-            case 3879:
-            case 3881:
-            case 3882:
-            case 3883: // Normal Tree
-            case 1315:
-            case 1316:
-            case 1318:
-            case 1319: // Evergreen
-            case 1282:
-            case 1283:
-            case 1284:
-            case 1285:
-            case 1286:
-            case 1287:
-            case 1289:
-            case 1290:
-            case 1291:
-            case 1365:
-            case 1383:
-            case 1384:
-            case 5902:
-            case 5903:
-            case 5904: // Dead Tree
-                cuttingIndex = 0;
-                return true;
-
-            case 1281:
-            case 3037: // Oak Tree
-                cuttingIndex = 1;
-                return true;
-
-            case 1308:
-            case 5551:
-            case 5552: // Willow Tree
-                cuttingIndex = 2;
-                return true;
-
-            case 1307:
-            case 4674: // Maple Tree
-                cuttingIndex = 3;
-                return true;
-
-            case 1309: // Yew Tree
-            case 1754:
-                cuttingIndex = 4;
-                return true;
-
-            case 1306: // Magic Tree
-            case 1762:
-                cuttingIndex = 5;
-                return true;
-        }
-        cuttingIndex = -1;
-        return false;
-    }
-
-    public int CheckSmithing(int ItemID) {
-        int Type = -1;
-        if (!IsItemInBag(2347)) {
-            send(new SendMessage("You need a " + GetItemName(2347) + " to hammer bars."));
-            return -1;
-        }
-        switch (ItemID) {
-            case 2349: // Bronze Bar
-                Type = 1;
-                break;
-
-            case 2351: // Iron Bar
-                Type = 2;
-                break;
-
-            case 2353: // Steel Bar
-                Type = 3;
-                break;
-
-            case 2359: // Mithril Bar
-                Type = 4;
-                break;
-
-            case 2361: // Adamantite Bar
-                Type = 5;
-                break;
-
-            case 2363: // Runite Bar
-                Type = 6;
-                break;
-        }
-        if (Type == -1)
-            send(new SendMessage("You cannot smith this item."));
-        else
-            smithing[3] = ItemID;
-        return Type;
-    }
-
-    public void OpenSmithingFrame(int Type) { //Not touching smithing interface anymore!!!
-        int Type2 = Type - 1;
-        int Length = 22;
-        // Sending amount of bars + make text green if lvl is highenough
-        send(new SendString("", 1132)); // Wire
-        send(new SendString("", 1096));
-        send(new SendString("", 11459)); // Lantern
-        send(new SendString("", 11461));
-        send(new SendString("", 1135)); // Studs
-        send(new SendString("", 1134));
-        String bar, color, color2, name = "";
-        if (Type == 1) {
-            name = "Bronze ";
-        } else if (Type == 2) {
-            name = "Iron ";
-        } else if (Type == 3) {
-            name = "Steel ";
-        } else if (Type == 4) {
-            name = "Mithril ";
-        } else if (Type == 5) {
-            name = "Adamant ";
-        } else if (Type == 6) {
-            name = "Rune ";
-        }
-        for (int i = 0; i < Length; i++) {
-            bar = "bar";
-            color = "@red@";
-            if (Constants.smithing_frame[Type2][i][3] > 1) {
-                bar = bar + "s";
-            }
-            int Type3 = Type2;
-
-            if (Type2 >= 3) {
-                Type3 = (Type2 + 2);
-            }
-            if (AreXItemsInBag((2349 + (Type3 * 2)), Constants.smithing_frame[Type2][i][3])) {
-                color = "@gre@";
-            }
-            send(new SendString(color + Constants.smithing_frame[Type2][i][3] + bar,
-                    Constants.smithing_frame[Type2][i][4]));
-            String linux_hack = GetItemName(Constants.smithing_frame[Type2][i][0]);
-            int index = GetItemName(Constants.smithing_frame[Type2][i][0]).indexOf(name);
-            if (index > 0) {
-                linux_hack = linux_hack.substring(index + 1);
-                send(new SendString(linux_hack, Constants.smithing_frame[Type2][i][5]));
-            }
-        }
-        Constants.SmithingItems[0][0] = Constants.smithing_frame[Type2][0][0]; // Dagger
-        Constants.SmithingItems[0][1] = Constants.smithing_frame[Type2][0][1];
-        Constants.SmithingItems[1][0] = Constants.smithing_frame[Type2][4][0]; // Sword
-        Constants.SmithingItems[1][1] = Constants.smithing_frame[Type2][4][1];
-        Constants.SmithingItems[2][0] = Constants.smithing_frame[Type2][8][0]; // Scimitar
-        Constants.SmithingItems[2][1] = Constants.smithing_frame[Type2][8][1];
-        Constants.SmithingItems[3][0] = Constants.smithing_frame[Type2][9][0]; // Long
-        // Sword
-        Constants.SmithingItems[3][1] = Constants.smithing_frame[Type2][9][1];
-        Constants.SmithingItems[4][0] = Constants.smithing_frame[Type2][18][0]; // 2
-        // hand
-        // sword
-        Constants.SmithingItems[4][1] = Constants.smithing_frame[Type2][18][1];
-        send(new SetSmithing(1119));
-        Constants.SmithingItems[0][0] = Constants.smithing_frame[Type2][1][0]; // Axe
-        Constants.SmithingItems[0][1] = Constants.smithing_frame[Type2][1][1];
-        Constants.SmithingItems[1][0] = Constants.smithing_frame[Type2][2][0]; // Mace
-        Constants.SmithingItems[1][1] = Constants.smithing_frame[Type2][2][1];
-        Constants.SmithingItems[2][0] = Constants.smithing_frame[Type2][13][0]; // Warhammer
-        Constants.SmithingItems[2][1] = Constants.smithing_frame[Type2][13][1];
-        Constants.SmithingItems[3][0] = Constants.smithing_frame[Type2][14][0]; // Battle
-        // axe
-        Constants.SmithingItems[3][1] = Constants.smithing_frame[Type2][14][1];
-        Constants.SmithingItems[4][0] = Constants.smithing_frame[Type2][17][0]; // Claws
-        Constants.SmithingItems[4][1] = Constants.smithing_frame[Type2][17][1];
-        send(new SetSmithing(1120));
-        Constants.SmithingItems[0][0] = Constants.smithing_frame[Type2][15][0]; // Chain
-        // body
-        Constants.SmithingItems[0][1] = Constants.smithing_frame[Type2][15][1];
-        Constants.SmithingItems[1][0] = Constants.smithing_frame[Type2][20][0]; // Plate
-        // legs
-        Constants.SmithingItems[1][1] = Constants.smithing_frame[Type2][20][1];
-        Constants.SmithingItems[2][0] = Constants.smithing_frame[Type2][19][0]; // Plate
-        // skirt
-        Constants.SmithingItems[2][1] = Constants.smithing_frame[Type2][19][1];
-        Constants.SmithingItems[3][0] = Constants.smithing_frame[Type2][21][0]; // Plate
-        // body
-        Constants.SmithingItems[3][1] = Constants.smithing_frame[Type2][21][1];
-        color2 = "@bla@";
-        if (Type != -1 && Type <= 3) { //Second stuff!
-            if (getLevel(Skill.SMITHING) >= Constants.smithing_frame[Type2][Length][2]) {
-                color2 = "@whi@";
-            }
-            Constants.SmithingItems[4][0] = Constants.smithing_frame[Type2][Length][0]; // Lantern
-            Constants.SmithingItems[4][1] = Constants.smithing_frame[Type2][Length][1];
-            send(new SendString(color2 + GetItemName(Constants.smithing_frame[Type2][Length][0]).replace(name, ""), 11461));
-        } else {
-            Constants.SmithingItems[4][0] = -1; // Second stuff for smithing!
-            Constants.SmithingItems[4][1] = 0;
-        }
-        send(new SetSmithing(1121));
-        Constants.SmithingItems[0][0] = Constants.smithing_frame[Type2][3][0]; // Medium
-        Constants.SmithingItems[0][1] = Constants.smithing_frame[Type2][3][1];
-        Constants.SmithingItems[1][0] = Constants.smithing_frame[Type2][10][0]; // Full
-        // Helm
-        Constants.SmithingItems[1][1] = Constants.smithing_frame[Type2][10][1];
-        Constants.SmithingItems[2][0] = Constants.smithing_frame[Type2][12][0]; // Square
-        Constants.SmithingItems[2][1] = Constants.smithing_frame[Type2][12][1];
-        Constants.SmithingItems[3][0] = Constants.smithing_frame[Type2][16][0]; // Kite
-        Constants.SmithingItems[3][1] = Constants.smithing_frame[Type2][16][1];
-        Constants.SmithingItems[4][0] = Constants.smithing_frame[Type2][6][0]; // Nails
-        Constants.SmithingItems[4][1] = Constants.smithing_frame[Type2][6][1];
-        send(new SetSmithing(1122));
-        Constants.SmithingItems[0][0] = Constants.smithing_frame[Type2][5][0]; // Dart
-        // Tips
-        Constants.SmithingItems[0][1] = Constants.smithing_frame[Type2][5][1];
-        Constants.SmithingItems[1][0] = Constants.smithing_frame[Type2][7][0]; // Arrow
-        // Heads
-        Constants.SmithingItems[1][1] = Constants.smithing_frame[Type2][7][1];
-        Constants.SmithingItems[2][0] = Constants.smithing_frame[Type2][11][0]; // Knives
-        Constants.SmithingItems[2][1] = Constants.smithing_frame[Type2][11][1];
-        Constants.SmithingItems[3][0] = -1; // Wire
-        Constants.SmithingItems[3][1] = 0;
-        for (int i = 0; i < Length; i++) {
-            if (getLevel(Skill.SMITHING) >= Constants.smithing_frame[Type2][i][2]) {
-                color2 = "@whi@";
-            } else
-                color2 = "@bla@";
-            send(new SendString(color2 + GetItemName(Constants.smithing_frame[Type2][i][0]).replace(name, ""), Constants.smithing_frame[Type2][i][5]));
-        }
-        Constants.SmithingItems[4][0] = -1; // Studs
-        Constants.SmithingItems[4][1] = 0;
-        send(new SetSmithing(1123));
-        showInterface(994);
-        smithing[2] = Type;
-    }
-
-    public boolean smithing() {
-        if (isBusy()) {
-            send(new SendMessage("You are currently busy to be smithing!"));
-            return false;
-        }
-        if (IsItemInBag(2347)) {
-            if (!smithCheck(smithing[4])) {
-                IsAnvil = true;
-                resetAction();
-                return false;
-            }
-            int bars = 0;
-            int Length = 22;
-            int barid;
-            int xp = 0;
-            int ItemN = 1;
-
-            if (smithing[2] >= 4) {
-                barid = (2349 + ((smithing[2] + 1) * 2));
-            } else {
-                barid = (2349 + ((smithing[2] - 1) * 2));
-            }
-            if (smithing[2] == 1 || smithing[2] == 2) {
-                Length += 1;
-            } else if (smithing[2] == 3) {
-                Length += 2;
-            }
-            int[] possibleBars = {2349, 2351, 2353, 2359, 2361, 2363};
-            int[] bar_xp = {13, 25, 38, 50, 63, 75};
-            for (int i = 0; i < Constants.smithing_frame.length; i++) {
-                for (int i1 = 0; i1 < Constants.smithing_frame[i].length; i1++) {
-                    for (int i2 = 0; i2 < Constants.smithing_frame[i][i1].length; i2++) {
-                        if (Constants.smithing_frame[i][i1][0] == smithing[4]) {
-                            if (!AreXItemsInBag(possibleBars[i], Constants.smithing_frame[i][i1][3])) {
-                                send(new SendMessage("You are missing bars needed to smith this!"));
-                                IsAnvil = true;
-                                resetAction();
-                                return false;
-                            }
-                            xp = bar_xp[i];
-                        }
-                    }
-                }
-            }
-            for (int i = 0; i < Length; i++) {
-                if (Constants.smithing_frame[(smithing[2] - 1)][i][0] == smithing[4]) {
-                    bars = Constants.smithing_frame[(smithing[2] - 1)][i][3];
-                    if (smithing[1] == 0) {
-                        smithing[1] = Constants.smithing_frame[(smithing[2] - 1)][i][2];
-                    }
-                    ItemN = Constants.smithing_frame[(smithing[2] - 1)][i][1];
-                }
-            }
-            if (getLevel(Skill.SMITHING) >= smithing[1]) {
-                if (AreXItemsInBag(barid, bars)) {
-                    int[] barLevelRequired = {1, 15, 30, 55, 70, 85};
-                    if (System.currentTimeMillis() - lastAction >= 600 && !IsAnvil) {
-                        lastAction = System.currentTimeMillis();
-                        setFocus(skillX, skillY);
-                        send(new SendMessage("You start hammering the bar..."));
-                        requestAnim(0x382, 0);
-                        IsAnvil = true;
-                        int diff = getLevel(Skill.SMITHING) - barLevelRequired[CheckSmithing(smithing[3]) - 1];
-                        smithing[0] = 5 - (diff >= 14 ? 2 : diff >= 7 ? 1 : 0);
-                    }
-                    if (System.currentTimeMillis() - lastAction >= (smithing[0] * 600L) && IsAnvil) {
-                        lastAction = System.currentTimeMillis();
-                        for (int i = 0; i < bars; i++) {
-                            deleteItem(barid, GetItemSlot(barid), playerItemsN[GetItemSlot(barid)]);
-                        }
-                        int experience = xp * bars * 30;
-                        giveExperience(experience, Skill.SMITHING);
-                        addItem(smithing[4], ItemN);
-                        checkItemUpdate();
-                        send(new SendMessage("You smith a " + GetItemName(smithing[4])));
-                        requestAnim(0x382, 0);
-                        triggerRandom(experience);
-                    }
-                } else {
-                    send(new SendMessage(
-                            "You need " + bars + " " + GetItemName(barid) + " to smith a " + GetItemName(smithing[4])));
-                    rerequestAnim();
-                    resetAction();
-                }
-            } else {
-                send(new SendMessage("You need " + smithing[1] + " Smithing to smith a " + GetItemName(smithing[4])));
-                IsAnvil = true;
-                resetAction();
-                return false;
-            }
-        } else {
-            send(new SendMessage("You need a " + GetItemName(2347) + " to hammer bars."));
-            IsAnvil = true;
-            resetAction();
-            return false;
-        }
-        return true;
-    }
-
-    public void resetSM() {
-        smithing[0] = 0;
-        smithing[1] = 0;
-        smithing[2] = 0;
-        smithing[3] = -1;
-        smithing[4] = -1;
-        smithing[5] = 0;
-        IsAnvil = false;
-        skillX = -1;
-        setSkillY(-1);
-        rerequestAnim();
-    }
-
-    public int getWoodcuttingEmote(int item) {
-        switch (item) {
-            case 1351: //bronze
-                return 879;
-            case 1349: //iron
-                return 877;
-            case 1353: //steel
-                return 875;
-            case 1355: // mithril
-                return 871;
-            case 1357: // addy
-                return 869;
-            case 1359: // rune
-                return 867;
-            case 6739: // dragon
-            case 20011: //3rd age
-                return 2846;
-        }
-        return -1;
-    }
-
-    public long getWoodcuttingSpeed() {
-        double axeBonus = findAxe() >= 0 ? Utils.axeBonus[findAxe()] : 0.0;
-        double level = getLevel(Skill.WOODCUTTING) / 256D;
-        double bonus = 1 + axeBonus + level;
-        double timer = Utils.woodcuttingDelays[cuttingIndex];
-        boolean chance = Misc.chance(8) == 1;
-        if (chance && axeBonus > 0.0 && (Utils.axes[findAxe()] == 6739 || Utils.axes[findAxe()] == 20011))
-            timer -= 600;
-        double time = timer / bonus;
-        return (long) time;
-    }
-
-    public long getFishingSpeed() {
-        double level = getLevel(FISHING) / 256D;
-        boolean harpoon = getLevel(FISHING) >= 61 && (getEquipment()[Equipment.Slot.WEAPON.getId()] == 21028 || playerHasItem(21028));
-        double bonus = 1 + level + (harpoon ? 0.2 : 0.0);
-        double timer = Utils.fishTime[fishIndex];
-        boolean chance = Misc.chance(8) == 1;
-        if (chance && harpoon) //Dragon harpoon?!
-            timer -= 600;
-        double time = timer / bonus;
-        return (long) time;
-    }
-
     public void fromTrade(int itemID, int fromSlot, int amount) {
-        if (System.currentTimeMillis() - lastButton < 200 || !canOffer) {
+        if (!net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.TRADE_CONFIRM_STAGE_ONE, 200L) || !canOffer) {
             if(!canOffer)  declineTrade(); //Not sure if we need this here but..Maybe?!
             return;
         }
-        lastButton = System.currentTimeMillis();
         try {
             Client other = getClient(trade_reqId);
             if (!inTrade || !validClient(trade_reqId)) {
@@ -3866,9 +2551,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void tradeItem(int itemID, int fromSlot, int amount) {
-        if (System.currentTimeMillis() - lastButton >= 200) {
-            lastButton = System.currentTimeMillis();
-        } else {
+        if (!net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.TRADE_CONFIRM_STAGE_TWO, 200L)) {
             return;
         }
         if (!Server.itemManager.isStackable(itemID))
@@ -3877,9 +2560,7 @@ public class Client extends Player implements Runnable {
             amount = Math.min(amount, playerItemsN[fromSlot]);
         Client other = getClient(trade_reqId);
         if (!inTrade || !validClient(trade_reqId) || !canOffer) {
-            if (getClientPacketTraceEnabled()) {
-                logger.debug("declining in tradeItem() for {}", getPlayerName());
-            }
+            
             declineTrade();
             return;
         }
@@ -3936,28 +2617,24 @@ public class Client extends Player implements Runnable {
         }
         /* Item Values */
         int original = itemID;
-        int price = (int) Math.floor(GetShopBuyValue(itemID));
-        itemID = GetUnnotedItem(original) > 0 ? GetUnnotedItem(original) : itemID;
+        itemID = getUnnotedItem(original) > 0 ? getUnnotedItem(original) : itemID;
+        int price = ShopRulesService.sellPrice(itemID);
         /* Functions */
         if (!Server.shopping || tradeLocked) {
             send(new SendMessage(tradeLocked ? "You are trade locked!" : "Currently selling stuff to the store has been disabled!"));
             return;
         }
-        if (price < 0 || !Server.itemManager.isTradable(itemID) || ShopHandler.ShopBModifier[MyShopID] > 2) {
-            send(new SendMessage("You cannot sell " + GetItemName(itemID).toLowerCase() + " in this store."));
-            return;
-        }
-        if (ShopHandler.ShopBModifier[MyShopID] == 2 && !ShopHandler.findDefaultItem(MyShopID, itemID)) {
-            send(new SendMessage("Can't sell that item to the store!"));
+        if (price < 0 || !Server.itemManager.isTradable(itemID) || !ShopRulesService.canSellItemToShop(MyShopID, itemID)) {
+            send(new SendMessage("You cannot sell " + getItemName(itemID).toLowerCase() + " in this store."));
             return;
         }
         int slot = -1;
-        for (int i = 0; i < ShopHandler.MaxShopItems; i++) {
-            if (ShopHandler.ShopItems[MyShopID][i] <= 0 && slot == -1)
+        for (int i = 0; i < ShopManager.MaxShopItems; i++) {
+            if (ShopManager.ShopItems[MyShopID][i] <= 0 && slot == -1)
                 slot = i;
-            else if (itemID == ShopHandler.ShopItems[MyShopID][i] - 1) {
+            else if (itemID == ShopManager.ShopItems[MyShopID][i] - 1) {
                 slot = i;
-                i = ShopHandler.MaxShopItems; //Just to stop the loop!
+                i = ShopManager.MaxShopItems; //Just to stop the loop!
             }
         }
         if (slot == -1) { //If we do not have a slot means the store is full!
@@ -3965,10 +2642,11 @@ public class Client extends Player implements Runnable {
             return;
         }
         /* Amount checks */
+        int currency = ShopRulesService.currencyItemId(MyShopID);
         boolean stack = Server.itemManager.isStackable(original);
         amount = Math.min(amount, getInvAmt(original));
-        amount = Math.min(Integer.MAX_VALUE - ShopHandler.ShopItemsN[MyShopID][slot], amount);
-        amount = Integer.MAX_VALUE - getInvAmt(995) < amount * price ? (Integer.MAX_VALUE - getInvAmt(995)) / price : amount;
+        amount = Math.min(Integer.MAX_VALUE - ShopManager.ShopItemsN[MyShopID][slot], amount);
+        amount = Integer.MAX_VALUE - getInvAmt(currency) < amount * price ? (Integer.MAX_VALUE - getInvAmt(currency)) / price : amount;
 
         if (amount > 0) { // Code to check if there is any amount to sell!
             if (!stack) {
@@ -3978,9 +2656,11 @@ public class Client extends Player implements Runnable {
             } else {
                 deleteItem(original, amount);
             }
-            ShopHandler.ShopItems[MyShopID][slot] = itemID + 1;
-            ShopHandler.ShopItemsN[MyShopID][slot] += amount;
-            addItem(995, amount * price);
+            ShopManager.ShopItems[MyShopID][slot] = itemID + 1;
+            ShopManager.ShopItemsN[MyShopID][slot] += amount;
+            int totalPrice = amount * price;
+            addItem(currency, totalPrice);
+            ConsoleAuditLog.shopSell(this, MyShopID, slot, itemID, amount, currency, totalPrice);
         } else
             send(new SendMessage("Could not sell anything!"));
         /* Store update! */
@@ -3989,27 +2669,14 @@ public class Client extends Player implements Runnable {
     }
 
     public int eventShopValues(int slot) {
-        switch (slot) {
-            case 0:
-                return 8000;
-            case 1:
-            case 2:
-                return 12000;
-            case 3:
-            case 4:
-                return 4000;
-            case 5:
-                return 25000;
-            case 6:
-                return 15000;
-        }
-        return 0;
+        int itemId = ShopManager.ShopItems[MyShopID][slot] - 1;
+        return ShopRulesService.buyPrice(MyShopID, itemId, slot);
     }
 
     public void buyItem(int itemID, int fromSlot, int amount) {
-        if (amount > 0 && itemID == (ShopHandler.ShopItems[MyShopID][fromSlot] - 1)) {
+        if (amount > 0 && itemID == (ShopManager.ShopItems[MyShopID][fromSlot] - 1)) {
             boolean stack = Server.itemManager.isStackable(itemID);
-            amount = Math.min(ShopHandler.ShopItemsN[MyShopID][fromSlot], amount);
+            amount = Math.min(ShopManager.ShopItemsN[MyShopID][fromSlot], amount);
             if (canUse(itemID)) {
                 send(new SendMessage("You must be a premium member to buy this item"));
                 send(new SendMessage("Visit Dodian.net to subscribe"));
@@ -4020,15 +2687,15 @@ public class Client extends Player implements Runnable {
                 return;
             }
 
-            int currency = MyShopID == 55 ? 11997 : 995;
-            int TotPrice2 = MyShopID == 55 ? eventShopValues(fromSlot) : (int) Math.floor(GetShopSellValue(itemID));
-            TotPrice2 = MyShopID >= 7 && MyShopID <= 11 ? (int) (TotPrice2 * 1.5) : TotPrice2;
+            int currency = ShopRulesService.currencyItemId(MyShopID);
+            int TotPrice2 = ShopRulesService.buyPrice(MyShopID, itemID, fromSlot);
             int coins = getInvAmt(currency);
             amount = amount * TotPrice2 > coins ? coins / TotPrice2 : amount;
             if (amount == 0) {
-                send(new SendMessage("You don't have enough " + GetItemName(currency).toLowerCase()));
+                send(new SendMessage("You don't have enough " + getItemName(currency).toLowerCase()));
                 return;
             }
+            int purchasedAmount = 0;
             if (!stack) {
                 for (int i = amount; i > 0; i--) {
                     if (freeSlots() == 0) {
@@ -4037,9 +2704,10 @@ public class Client extends Player implements Runnable {
                     }
                     if (addItem(itemID, 1)) {
                         deleteItem(currency, TotPrice2);
-                        ShopHandler.ShopItemsN[MyShopID][fromSlot] -= 1;
-                        if ((fromSlot + 1) > ShopHandler.ShopItemsStandard[MyShopID] && ShopHandler.ShopItemsN[MyShopID][fromSlot] <= 0) {
-                            ShopHandler.resetAnItem(MyShopID, fromSlot);
+                        ShopManager.ShopItemsN[MyShopID][fromSlot] -= 1;
+                        purchasedAmount += 1;
+                        if ((fromSlot + 1) > ShopManager.ShopItemsStandard[MyShopID] && ShopManager.ShopItemsN[MyShopID][fromSlot] <= 0) {
+                            ShopManager.resetAnItem(MyShopID, fromSlot);
                             break;
                         }
                     } else {
@@ -4050,12 +2718,16 @@ public class Client extends Player implements Runnable {
             } else {
                 if (addItem(itemID, amount)) {
                     deleteItem(currency, TotPrice2 * amount);
-                    ShopHandler.ShopItemsN[MyShopID][fromSlot] -= amount;
-                    if ((fromSlot + 1) > ShopHandler.ShopItemsStandard[MyShopID] && ShopHandler.ShopItemsN[MyShopID][fromSlot] <= 0) {
-                        ShopHandler.resetAnItem(MyShopID, fromSlot);
+                    ShopManager.ShopItemsN[MyShopID][fromSlot] -= amount;
+                    purchasedAmount = amount;
+                    if ((fromSlot + 1) > ShopManager.ShopItemsStandard[MyShopID] && ShopManager.ShopItemsN[MyShopID][fromSlot] <= 0) {
+                        ShopManager.resetAnItem(MyShopID, fromSlot);
                     }
                 } else
                     return;
+            }
+            if (purchasedAmount > 0) {
+                ConsoleAuditLog.shopBuy(this, MyShopID, fromSlot, itemID, purchasedAmount, currency, TotPrice2 * purchasedAmount);
             }
             /* Store update! */
             UpdatePlayerShop();
@@ -4065,10 +2737,10 @@ public class Client extends Player implements Runnable {
 
     public void UpdatePlayerShop() {
         for (int i = 1; i < Constants.maxPlayers; i++) {
-            if (PlayerHandler.players[i] != null) {
-                if (PlayerHandler.players[i].isShopping() && PlayerHandler.players[i].MyShopID == MyShopID
+            if (net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[i] != null) {
+                if (net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[i].isShopping() && net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[i].MyShopID == MyShopID
                         && i != getSlot()) {
-                    ((Client) PlayerHandler.players[i]).checkItemUpdate();
+                    ((Client) net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[i]).checkItemUpdate();
                 }
             }
         }
@@ -4076,19 +2748,19 @@ public class Client extends Player implements Runnable {
 
     /* NPC Talking */
     public void UpdateNPCChat() {
-        LegacyDialogueService.updateNpcChat(this);
+        DialogueDisplayService.updateNpcChat(this);
     }
 
     public void showPlayerOption(String[] text) {
-        LegacyDialogueService.showPlayerOption(this, text);
+        DialogueDisplayService.showPlayerOption(this, text);
     }
 
     public void showNPCChat(int npcId, int emote, String[] text) {
-        LegacyDialogueService.showNpcChat(this, npcId, emote, text);
+        DialogueDisplayService.showNpcChat(this, npcId, emote, text);
     }
 
     public void showPlayerChat(String[] text, int emote) {
-        LegacyDialogueService.showPlayerChat(this, text, emote);
+        DialogueDisplayService.showPlayerChat(this, text, emote);
     }
 
     /* Equipment level checking */
@@ -4096,7 +2768,7 @@ public class Client extends Player implements Runnable {
         if (ItemID == -1) {
             return 1;
         }
-        String ItemName = GetItemName(ItemID);
+        String ItemName = getItemName(ItemID);
         String ItemName2 = ItemName.replaceAll("Bronze", "");
 
         ItemName2 = ItemName2.replaceAll("Iron", "");
@@ -4148,10 +2820,10 @@ public class Client extends Player implements Runnable {
 
     public int GetCLDefence(int ItemID) {
         if (ItemID == -1) return 1;
-        String checkName = GetItemName(ItemID).toLowerCase();
+        String checkName = getItemName(ItemID).toLowerCase();
         if (checkName.endsWith("arrow") || checkName.endsWith("hat") || (checkName.endsWith("axe") && !checkName.startsWith("battle")))
             return 1;
-        String ItemName = GetItemName(ItemID);
+        String ItemName = getItemName(ItemID);
         if (ItemName.toLowerCase().contains("beret") || ItemName.toLowerCase().contains("cavalier") || ItemName.toLowerCase().contains("mystic") || checkName.contains("mask") || checkName.contains("partyhat"))
             return 1;
         String ItemName2 = ItemName.replaceAll("Bronze", "");
@@ -4241,7 +2913,7 @@ public class Client extends Player implements Runnable {
 
     public int GetCLMagic(int ItemID) {
         if (ItemID == -1) return 1;
-        String ItemName = GetItemName(ItemID);
+        String ItemName = getItemName(ItemID);
         if (ItemID >= 2415 && ItemID <= 2417)
             return 10;
         if (ItemName.startsWith("White Mystic") || ItemName.startsWith("Splitbark"))
@@ -4265,7 +2937,7 @@ public class Client extends Player implements Runnable {
 
     public int GetCLRanged(int ItemID) {
         if (ItemID == -1) return 1;
-        String ItemName = GetItemName(ItemID);
+        String ItemName = getItemName(ItemID);
         if (ItemName.startsWith("Oak")) {
             return 1;
         }
@@ -4332,18 +3004,11 @@ public class Client extends Player implements Runnable {
 
 
     public void RefreshDuelRules() {
-        /*
-         * Danno: Testing ticks/armour blocks.
-         */
-
-        // "No Ranged", "No Melee", "No Magic",
-        // "No Gear Change", "Fun Weapons", "No Retreat", "No Drinks",
-        // "No Food", "No prayer", "No Movement", "Obstacles" };
         int configValue = 0;
         for (int i = 0; i < duelLine.length; i++) {
             if (duelRule[i]) {
                 send(new SendString(/* "@red@" + */duelNames[i], duelLine[i]));
-                configValue += stakeConfigId[i + 11];
+                configValue += stakeConfigId[duelRuleConfigIds[i]];
             } else {
                 send(new SendString(/* "@gre@" + */duelNames[i], duelLine[i]));
             }
@@ -4390,7 +3055,7 @@ public class Client extends Player implements Runnable {
             resetDuel();
         }
         if (stake) {
-            showInterface(6733);
+            openInterface(6733);
         }
         heal(getMaxHealth());
         getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
@@ -4415,11 +3080,10 @@ public class Client extends Player implements Runnable {
     }
 
     public void stakeItem(int itemID, int fromSlot, int amount) {
-        if (System.currentTimeMillis() - lastButton < 200 || !canOffer) {
+        if (!net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.DUEL_CONFIRM_STAGE_ONE, 200L) || !canOffer) {
             if(!canOffer) declineDuel(); //Not sure if we need this here but..Maybe?!
             return;
         }
-        lastButton = System.currentTimeMillis();
         if (!Server.itemManager.isStackable(itemID))
             amount = Math.min(amount, getInvAmt(itemID));
         else
@@ -4496,9 +3160,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void fromDuel(int itemID, int fromSlot, int amount) {
-        if (System.currentTimeMillis() - lastButton >= 200) {
-            lastButton = System.currentTimeMillis();
-        } else {
+        if (!net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.DUEL_CONFIRM_STAGE_TWO, 200L)) {
             return;
         }
         Client other = getClient(duel_with);
@@ -4605,13 +3267,6 @@ public class Client extends Player implements Runnable {
         }
     }
 
-    public boolean runeCheck() {
-        if (playerHasItem(565))
-            return true;
-        send(new SendMessage("This spell requires 1 blood rune"));
-        return false;
-    }
-
     public void resetPos() {
         transport(new Position(2604 + Misc.random(6), 3101 + Misc.random(3), 0));
     }
@@ -4630,45 +3285,6 @@ public class Client extends Player implements Runnable {
         }
     }
 
-    public void showRandomEvent() {
-        resetAction(true);
-        if (!randomed || !randomed2) {
-            random_skill = Utils.random(20);
-            send(new SendString("Click the @or1@" + Objects.requireNonNull(getSkill(random_skill)).getName() + " @yel@button", 2810));
-            send(new SendString("", 2811));
-            send(new SendString("", 2831));
-            randomed = true;
-            clearTabs();
-            showInterface(2808);
-        }
-    }
-
-    public void triggerRandom(int xp) {
-        if (genieCombatFlag || randomed) { //Cant get a genie if we have it flagged from combat or we already got it open xD
-            return;
-        }
-        xp /= 5;
-        int reduceChance = Math.min(xp < 50 ? xp : xp < 100 ? (xp * 3) / 2 : xp < 200 ? xp * 2 : xp < 400 ? xp * 3 : xp * 4, 3000);
-        reduceChance *= 2 + Misc.random(8);
-        //System.out.println("testing..." + reduceChance + ", " + Math.min(reduceChance, 7000));
-        if (Misc.chance(6500 - Math.min(reduceChance, 6000)) == 1) {
-            if (isInCombat()) { //Fix for slayer or perhaps future random event while combat? 0.0
-                genieCombatFlag = true;
-                send(new SendMessage("You got a genie random! Stop attack for a bit to get it."));
-            } else showRandomEvent();
-            chestEvent = 0;
-        }
-        if (chestEvent >= 50) { //Prevent auto clicking I believe!
-            int chance = Misc.chance(100);
-            int trigger = (chestEvent - 50) * 2;
-            if (trigger >= chance) {
-                chestEventOccur = true;
-                chestEvent = 0;
-                send(new SendMessage("The server randomly detect you standing still for to long! Please move!"));
-            }
-        }
-    }
-
     public void openGenie() {
         if (inDuel || duelFight || IsBanking) {
             send(new SendMessage("Finish what you are doing first!"));
@@ -4678,7 +3294,7 @@ public class Client extends Player implements Runnable {
         send(new SendString("", 2811));
         send(new SendString("", 2831));
         genie = true;
-        showInterface(2808);
+        openInterface(2808);
     }
 
     public void openAntique() {
@@ -4690,7 +3306,7 @@ public class Client extends Player implements Runnable {
         send(new SendString("", 2811));
         send(new SendString("", 2831));
         antique = true;
-        showInterface(2808);
+        openInterface(2808);
     }
 
     public int findItem(int id, int[] items, int[] amounts) {
@@ -4721,673 +3337,29 @@ public class Client extends Player implements Runnable {
         return spaces;
     }
 
-    public void smelt(int id) {
-        requestAnim(0x383, 0);
-        smelting = true;
-        int smelt_barId = -1;
-        ArrayList<Integer> removed = new ArrayList<>();
-        if (smeltCount < 1) {
-            resetAction(true);
-            return;
-        }
-        if (isBusy()) {
-            send(new SendMessage("You are currently busy to be smelting!"));
-            return;
-        }
-        smeltCount--;
-        switch (id) {
-            case 2349: // bronze
-                if (playerHasItem(436) && playerHasItem(438)) {
-                    smelt_barId = 2349;
-                    removed.add(436);
-                    removed.add(438);
-                } else
-                    send(new SendMessage("You need a tin and copper to do this!"));
-                break;
-            case 2351: // iron ore
-                if (getLevel(Skill.SMITHING) < 15) {
-                    send(new SendMessage("You need level 15 smithing to do this!"));
-                    break;
-                }
-                if (playerHasItem(440)) {
-                    int ran = new Range(1, 100).getValue();
-                    int diff = (getLevel(Skill.SMITHING) + 1) / 4;
-                    if (ran <= 50 + diff) {
-                        smelt_barId = 2351;
-                        removed.add(440);
-                    } else {
-                        smelt_barId = 0;
-                        removed.add(440);
-                        send(new SendMessage("You fail to refine the iron"));
-                    }
-                } else
-                    send(new SendMessage("You need a iron ore to do this!"));
-                break;
-            case 2353:
-                if (getLevel(Skill.SMITHING) < 30) {
-                    send(new SendMessage("You need level 30 smithing to do this!"));
-                    break;
-                }
-                if (playerHasItem(440) && playerHasItem(453, 2)) {
-                    smelt_barId = 2353;
-                    removed.add(440);
-                    removed.add(453);
-                    removed.add(453);
-                } else
-                    send(new SendMessage("You need a iron ore and 2 coal to do this!"));
-                break;
-            case 2357:
-                if (getLevel(Skill.SMITHING) < 40) {
-                    send(new SendMessage("You need level 40 smithing to do this!"));
-                    break;
-                }
-                if (playerHasItem(444, 1)) {
-                    smelt_barId = 2357;
-                    removed.add(444);
-                } else
-                    send(new SendMessage("You need a gold ore to do this!"));
-                break;
-            case 2359:
-                if (getLevel(Skill.SMITHING) < 55) {
-                    send(new SendMessage("You need level 55 smithing to do this!"));
-                    break;
-                }
-                if (playerHasItem(447) && playerHasItem(453, 3)) {
-                    smelt_barId = 2359;
-                    removed.add(447);
-                    removed.add(453);
-                    removed.add(453);
-                    removed.add(453);
-                } else
-                    send(new SendMessage("You need a mithril ore and 3 coal to do this!"));
-                break;
-            case 2361:
-                if (getLevel(Skill.SMITHING) < 70) {
-                    send(new SendMessage("You need level 70 smithing to do this!"));
-                    break;
-                }
-                if (playerHasItem(449) && playerHasItem(453, 4)) {
-                    smelt_barId = 2361;
-                    removed.add(449);
-                    removed.add(453);
-                    removed.add(453);
-                    removed.add(453);
-                    removed.add(453);
-                } else
-                    send(new SendMessage("You need a adamantite ore and 4 coal to do this!"));
-                break;
-            case 2363:
-                if (getLevel(Skill.SMITHING) < 85) {
-                    send(new SendMessage("You need level 85 smithing to do this!"));
-                    break;
-                }
-                if (playerHasItem(451) && playerHasItem(453, 6)) {
-                    smelt_barId = 2363;
-                    removed.add(451);
-                    for (int i = 0; i < 6; i++)
-                        removed.add(453);
-                } else
-                    send(new SendMessage("You need a runite ore and 6 coal to do this!"));
-                break;
-            default:
-                println("Unknown smelt: " + id);
-                break;
-        }
-        if (smelt_barId == -1) {
-            resetAction();
-            return;
-        }
-        for (Integer removeId : removed) {
-            deleteItem(removeId, 1);
-        }
-        if (smelt_barId > 0) {
-            addItem(smelt_barId, 1);
-            giveExperience(smeltExperience, Skill.SMITHING);
-            triggerRandom(smeltExperience);
-        }
-        checkItemUpdate();
-    }
-
-    public void superHeat(int id) {
-        resetAction(false);
-        ArrayList<Integer> removed = new ArrayList<>();
-        int smelt_barId = 0;
-        boolean fail = false;
-        switch (id) {
-
-            case 436: // Tin
-            case 438: // Copper
-                if (playerHasItem(436) && playerHasItem(438)) {
-                    smelt_barId = 2349;
-                    removed.add(436);
-                    removed.add(438);
-                } else
-                    send(new SendMessage("You need a tin and copper to do this!"));
-                break;
-            case 440: // iron ore
-                if (playerHasItem(440) && !playerHasItem(453, 2)) {
-                    if (getLevel(Skill.SMITHING) < 15) {
-                        send(new SendMessage("You need level 15 smithing to do this!"));
-                        break;
-                    }
-                    smelt_barId = 2351;
-                    removed.add(440);
-                } else if (playerHasItem(440) && playerHasItem(453, 2)) {
-                    if (getLevel(Skill.SMITHING) < 30) {
-                        send(new SendMessage("You need level 30 smithing to do this!"));
-                        break;
-                    }
-                    smelt_barId = 2353;
-                    removed.add(440);
-                    removed.add(453);
-                    removed.add(453);
-                }
-                break;
-            case 1781: //Soda ash
-            case 401: //Seaweed
-            case 1783: //Bucket of sand
-                smelt_barId = 1775;
-                break;
-            case 444:
-                if (getLevel(Skill.SMITHING) < 40) {
-                    send(new SendMessage("You need level 40 smithing to do this!"));
-                    break;
-                }
-                smelt_barId = 2357;
-                removed.add(444);
-                break;
-            case 447:
-                if (getLevel(Skill.SMITHING) < 55) {
-                    send(new SendMessage("You need level 55 smithing to do this!"));
-                    break;
-                }
-                if (playerHasItem(447) && playerHasItem(453, 3)) {
-                    smelt_barId = 2359;
-                    removed.add(447);
-                    removed.add(453);
-                    removed.add(453);
-                    removed.add(453);
-                } else
-                    send(new SendMessage("You need a mithril ore and 3 coal to do this!"));
-                break;
-            case 449:
-                if (getLevel(Skill.SMITHING) < 70) {
-                    send(new SendMessage("You need level 70 smithing to do this!"));
-                    break;
-                }
-                if (playerHasItem(449) && playerHasItem(453, 4)) {
-                    smelt_barId = 2361;
-                    removed.add(449);
-                    removed.add(453);
-                    removed.add(453);
-                    removed.add(453);
-                    removed.add(453);
-                } else
-                    send(new SendMessage("You need a adamantite ore and 4 coal to do this!"));
-                break;
-            case 451:
-                if (getLevel(Skill.SMITHING) < 85) {
-                    send(new SendMessage("You need level 85 smithing to do this!"));
-                    break;
-                }
-                if (playerHasItem(451) && playerHasItem(453, 6)) {
-                    smelt_barId = 2363;
-                    removed.add(451);
-                    for (int i = 0; i < 6; i++)
-                        removed.add(453);
-                } else
-                    send(new SendMessage("You need a runite ore and 6 coal to do this!"));
-                break;
-            default:
-                fail = true;
-                break;
-        }
-        int xp = 0;
-        for (int i = 0; i < Utils.smelt_bars.length && xp == 0; i++)
-            if (Utils.smelt_bars[i][0] == smelt_barId)
-                xp = Utils.smelt_bars[i][1] * 4;
-        if (fail) {
-            send(new SendMessage("You can only use this spell on ores or glass material!"));
-            callGfxMask(85, 100);
-        } else if (smelt_barId == 1775) {
-            if (!playerHasItem(561, 3)) {
-                send(new SendMessage("Need 3 nature runes to cast this spell on glass material!"));
-                return;
-            }
-            if (!playerHasItem(1783, 1) || (!playerHasItem(1781, 1) && !playerHasItem(401, 1))) {
-                send(new SendMessage("You need atleast 1 bucket of sand along with seaweed or soda ash to cast this!"));
-                return;
-            }
-            lastMagic = System.currentTimeMillis();
-            requestAnim(725, 0);
-            callGfxMask(148, 100);
-            /* Amount of molten glass! */
-            int count = getInvAmt(1783);
-            int ashCount = getInvAmt(1781) + getInvAmt(401);
-            if (count > ashCount) count = ashCount; //Need to know how much count to add!
-            int moltenCount = 0;
-            for (int i = 0; i < count; i++) {
-                deleteItem(1783, 1);
-                deleteItem(playerHasItem(1781, 1) ? 1781 : 401, 1);
-                moltenCount++;
-                if (Misc.chance(100) <= 30) moltenCount++;
-            }
-            deleteRunes(new int[]{561}, new int[]{3});
-            for (int i = 0; i < moltenCount; i++)
-                if (!addItem(smelt_barId, 1)) { //Ground drop!
-                    Ground.addFloorItem(this, smelt_barId, 1);
-                }
-            checkItemUpdate();
-            giveExperience(count * 40, CRAFTING);
-            giveExperience(500, MAGIC);
-        } else if (smelt_barId > 0) {
-            if (!playerHasItem(561, 1)) {
-                send(new SendMessage("You need 1 nature runes to cast this spell!"));
-                return;
-            }
-            lastMagic = System.currentTimeMillis();
-            requestAnim(725, 0);
-            callGfxMask(148, 100);
-            deleteRunes(new int[]{561}, new int[]{1});
-            for (Integer removeId : removed)
-                deleteItem(removeId, 1);
-            addItem(smelt_barId, 1);
-            checkItemUpdate();
-            giveExperience(xp, Skill.SMITHING);
-            giveExperience(500, Skill.MAGIC);
-        }
-        send(new SendSideTab(6));
-    }
-
-    public void runecraft(int rune, int level, int xp) {
-        lastClickAltar = System.currentTimeMillis();
-        if (!contains(1436)) {
-            send(new SendMessage("You do not have any rune essence!"));
-            return;
-        }
-        if (getLevel(Skill.RUNECRAFTING) < level) {
-            send(new SendMessage("You must have " + level + " runecrafting to craft " + GetItemName(rune).toLowerCase()));
-            return;
-        }
-        int count = 0;
-        int extra = 0;
-        for (int c = 0; c < playerItems.length; c++) {
-            if (playerItems[c] == 1437 && playerItemsN[c] > 0) {
-                count++;
-                deleteItem(1436, 1);
-                int chance = (getLevel(Skill.RUNECRAFTING) + 1) / 2;
-                int roll = 1 + Misc.random(99);
-                if (roll <= chance)
-                    extra++;
-            }
-        }
-        send(new SendMessage("You craft " + (count + extra) + " " + GetItemName(rune).toLowerCase() + "s"));
-        addItem(rune, count + extra);
-        checkItemUpdate();
-        giveExperience((xp * count), Skill.RUNECRAFTING);
-        triggerRandom(xp * count);
-    }
-
-    public boolean fillEssencePouch(int pouch) {
-        int slot = pouch == 5509 ? 0 : ((pouch - 5508) / 2);
-        if (slot >= 0 && slot <= 3) {
-            if (getLevel(Skill.RUNECRAFTING) < runePouchesLevel[slot]) {
-                send(new SendMessage("You need level " + runePouchesLevel[slot] + " runecrafting to do this!"));
-                return true;
-            }
-            if (runePouchesAmount[slot] >= runePouchesMaxAmount[slot]) {
-                send(new SendMessage("This pouch is currently full of essence!"));
-                return true;
-            }
-            if (System.currentTimeMillis() - lastClickAltar <= 1200)
-                makeFileExploit();
-            int max = runePouchesMaxAmount[slot] - runePouchesAmount[slot];
-            int amount = Math.min(getInvAmt(1436), max);
-            if (amount > 0) {
-                for (int i = 0; i < amount; i++)
-                    deleteItem(1436, 1);
-                runePouchesAmount[slot] += amount;
-                checkItemUpdate();
-            } else
-                send(new SendMessage("No essence in your inventory!"));
-            return true;
-        }
-        return false;
-    }
-
-    public void makeFileExploit() {
-        File file = new File("./data/checkExploit.txt");
-        try {
-            if (file.createNewFile())
-                if (getClientPacketTraceEnabled()) {
-                    logger.debug("Created new file for exploit check!");
-                }
-            try (FileWriter fw = new FileWriter(file, true);
-                 BufferedWriter bw = new BufferedWriter(fw)) {
-                SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-                Date date = new Date();
-                bw.write(getPlayerName() + " at " + formatter.format(date) + " filled pouch!");
-                bw.newLine();   // add new line, System.lineSeparator()
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public boolean emptyEssencePouch(int pouch) {
-        int slot = pouch == 5509 ? 0 : ((pouch - 5508) / 2);
-        if (slot >= 0 && slot <= 3) {
-            if (getLevel(Skill.RUNECRAFTING) < runePouchesLevel[slot]) {
-                send(new SendMessage("You need level " + runePouchesLevel[slot] + " runecrafting to do this!"));
-                return true;
-            }
-            int amount = freeSlots();
-            if (amount <= 0) {
-                send(new SendMessage("Not enough inventory slot to empty the pouch!"));
-                return true;
-            }
-            amount = Math.min(amount, runePouchesAmount[slot]);
-            if (amount > 0) {
-                for (int i = 0; i < amount; i++)
-                    addItem(1436, 1);
-                runePouchesAmount[slot] -= amount;
-                checkItemUpdate();
-            } else
-                send(new SendMessage("No essence in your pouch!"));
-            return true;
-        }
-        return false;
-    }
-
     public void resetAction(boolean full) {
-        MiningService.stopMiningFromReset(this, full);
-        smelting = false;
-        smelt_id = -1;
-        goldCrafting = false;
-        goldIndex = -1;
-        goldSlot = -1;
-        boneItem = -1;
-        shafting = false;
-        fletchings = false;
-        spinning = false;
-        crafting = false;
-        fishing = false;
-        stringing = false;
-        woodcutting = false;
-        cuttingIndex = -1;
-        resourcesGathered = 0;
-        cooking = false;
-        filling = false;
-        // smithing check
-        if (IsAnvil) {
-            resetSM();
-            send(new RemoveInterfaces());
-        }
-        /* I send shiez for single skill Action */
-        skillActionTimer = -1;
-        skillActionCount = 0;
-        skillMessage = "";
-        if (!playerSkillAction.isEmpty()) playerSkillAction.clear(); //Need to clear if you reset any type of action!
-        /* Prayer action */
-        prayerAction = -1;
-        boneItem = -1;
-        /* dialogue! */
-        NpcWanneTalk = 0;
-        nextDiag = -1;
-        /* Animation shiez?! */
-        if (full) rerequestAnim();
+        PlayerActionCancellationService.cancel(this, PlayerActionCancelReason.MANUAL_RESET, full, false, false, true);
     }
 
     public void resetAction() {
         resetAction(true);
     }
 
-    public void shaft() {
-        if (isBusy()) {
-            send(new SendMessage("You are currently busy to be fletching!"));
-            return;
-        }
-        if (IsCutting || isFiremaking)
-            resetAction();
-        send(new RemoveInterfaces());
-        if (playerHasItem(1511)) {
-            deleteItem(1511, 1);
-            addItem(52, 15);
-            checkItemUpdate();
-            requestAnim(1248, 0);
-            giveExperience(50, Skill.FLETCHING);
-            triggerRandom(50);
-        } else {
-            resetAction();
-        }
-    }
-
-    public void fill() {
-        if (fillingObj == 879 || fillingObj == 873 || fillingObj == 874 || fillingObj == 6232 ||
-                fillingObj == 12279 || fillingObj == 14868 || fillingObj == 20358 || fillingObj == 25929) {
-            boolean canFill = fillStuff(229, 227, 832) || fillStuff(1980, 4458, 832) || fillStuff(1935, 1937, 832) ||
-                    fillStuff(1825, 1823, 832) || fillStuff(1827, 1823, 832) || fillStuff(1829, 1823, 832) ||
-                    fillStuff(1831, 1823, 832) || fillStuff(1925, 1929, 832) || fillStuff(1923, 1921, 832);
-            if (!canFill)
-                resetAction();
-        } else if (fillingObj == 14890) {
-            if (!fillStuff(1925, 1783, 895))
-                resetAction();
-        } else if (fillingObj == 884 || fillingObj == 878 || fillingObj == 6249) {
-            if (!fillStuff(1925, 1929, 832))
-                resetAction();
-        }
-    }
-
-    private boolean fillStuff(int itemId, int fillId, int emote) {
-        if (playerHasItem(itemId)) {
-            deleteItem(itemId, 1);
-            addItem(fillId, 1);
-            checkItemUpdate();
-            requestAnim(emote, 0);
-            return true;
-        }
-        return false;
-    }
-
-    public long getSpinSpeed() {
-        int craftingLevel = getLevel(Skill.CRAFTING);
-        return craftingLevel >= 40 && craftingLevel < 70 ? 1200 : craftingLevel >= 70 ? 600 : 1800;
-    }
-
-    public void spin() {
-        if (playerHasItem(1779)) {
-            deleteItem(1779, 1);
-            addItem(1777, 1);
-            giveExperience(50, Skill.CRAFTING);
-            triggerRandom(50);
-        } else if (playerHasItem(1737)) {
-            deleteItem(1737, 1);
-            addItem(1759, 1);
-            giveExperience(100, Skill.CRAFTING);
-            triggerRandom(100);
-        } else {
-            send(new SendMessage("You do not have anything to spin!"));
-            resetAction(true);
-            return;
-        }
-        checkItemUpdate();
-        lastAction = System.currentTimeMillis();
-    }
-
     public void replaceDoors() {
-        for (int d = 0; d < DoorHandler.doorX.length; d++) {
-            if (DoorHandler.doorX[d] > 0 && DoorHandler.doorHeight[d] == getPosition().getZ()
-                    && Math.abs(DoorHandler.doorX[d] - getPosition().getX()) <= 120
-                    && Math.abs(DoorHandler.doorY[d] - getPosition().getY()) <= 120) {
-                if (distanceToPoint(DoorHandler.doorX[d], DoorHandler.doorY[d]) < 50) {
-                    ReplaceObject(DoorHandler.doorX[d], DoorHandler.doorY[d], DoorHandler.doorId[d], DoorHandler.doorFace[d], 0);
+        for (int d = 0; d < DoorRegistry.doorX.length; d++) {
+            if (DoorRegistry.doorX[d] > 0 && DoorRegistry.doorHeight[d] == getPosition().getZ()
+                    && Math.abs(DoorRegistry.doorX[d] - getPosition().getX()) <= 120
+                    && Math.abs(DoorRegistry.doorY[d] - getPosition().getY()) <= 120) {
+                if (distanceToPoint(DoorRegistry.doorX[d], DoorRegistry.doorY[d]) < 50) {
+                    ReplaceObject(DoorRegistry.doorX[d], DoorRegistry.doorY[d], DoorRegistry.doorId[d], DoorRegistry.doorFace[d], 0);
                 }
             }
         }
     }
 
-    public void openTan() {
-        send(new SendString("Regular Leather", 14777));
-        send(new SendString("50gp", 14785));
-        send(new SendString("", 14781));
-        send(new SendString("", 14789));
-        send(new SendString("", 14778));
-        send(new SendString("", 14786));
-        send(new SendString("", 14782));
-        send(new SendString("", 14790));
-        int[] soon = {14779, 14787, 14783, 14791, 14780, 14788, 14784, 14792};
-        String[] dhide = {"Green", "Red", "Blue", "Black"};
-        String[] cost = {"1,000gp", "5,000gp", "2,000gp", "10,000gp"};
-        int type = 0;
-        for (int i = 0; i < soon.length; i++) {
-            if (type == 0) {
-                send(new SendString(dhide[i / 2], soon[i]));
-                type = 1;
-            } else {
-                send(new SendString(cost[i / 2], soon[i]));
-                type = 0;
-            }
-        }
-        sendFrame246(14769, 250, 1741);
-        sendFrame246(14773, 250, -1);
-        sendFrame246(14771, 250, 1753);
-        sendFrame246(14772, 250, 1751);
-        sendFrame246(14775, 250, 1749);
-        sendFrame246(14776, 250, 1747);
-        showInterface(14670);
-    }
-
-    public void startTan(int amount, int type) {
-        int[] hide = {1739, -1, 1753, 1751, 1749, 1747};
-        int[] leather = {1741, -1, 1745, 2505, 2507, 2509};
-        int[] charge = {50, 0, 1000, 2000, 5000, 10000};
-        if (!playerHasItem(995, charge[type])) {
-            send(new SendMessage("You need atleast " + charge[type] + " coins to do this!"));
-            return;
-        }
-        amount = getInvAmt(995) > amount * charge[type] ? getInvAmt(995) / charge[type] : amount;
-        amount = Math.min(amount, getInvAmt(hide[type]));
-        for (int i = 0; i < amount; i++) {
-            deleteItem(hide[type], 1);
-            deleteItem(995, charge[type]);
-            addItem(leather[type], 1);
-            checkItemUpdate();
-        }
-    }
-
-    public void startCraft(int actionbutton) {
-        send(new RemoveInterfaces());
-        int[] buttons = {33187, 33186, 33185, 33190, 33189, 33188, 33193, 33192, 33191, 33196, 33195, 33194, 33199, 33198,
-                33197, 33202, 33201, 33200, 33205, 33204, 33203};
-        int[] amounts = {1, 5, 10, 1, 5, 10, 1, 5, 10, 1, 5, 10, 1, 5, 10, 1, 5, 10, 1, 5, 10};
-        int[] ids = {1129, 1129, 1129, 1059, 1059, 1059, 1061, 1061, 1061, 1063, 1063, 1063, 1095, 1095, 1095, 1169, 1169,
-                1169, 1167, 1167, 1167};
-        int[] levels = {14, 1, 7, 11, 18, 38, 9};
-        int[] exp = {33, 18, 21, 29, 38, 52, 20};
-        int amount = 0, id = -1;
-        int index = 0;
-        for (int i = 0; i < buttons.length; i++) {
-            if (actionbutton == buttons[i]) {
-                amount = amounts[i];
-                id = ids[i];
-                index = i / 3;
-                break;
-            }
-        }
-        if (getLevel(Skill.CRAFTING) >= levels[index]) {
-            cSelected = 1741;
-            crafting = true;
-            cItem = id;
-            cAmount = amount == 10 ? getInvAmt(cSelected) : amount;
-            cLevel = levels[index];
-            cExp = exp[index] * 8;
-        } else if (id != -1) {
-            send(new SendMessage("You need level " + levels[index] + " crafting to craft a " + GetItemName(id).toLowerCase()));
-            send(new RemoveInterfaces());
-        }
-    }
-
-    public void craft() {
-        if (getLevel(Skill.CRAFTING) < cLevel) {
-            send(new SendMessage("You need " + cLevel + " crafting to make a " + GetItemName(cItem).toLowerCase()));
-            resetAction(true);
-            return;
-        }
-        if (!playerHasItem(1733) || !playerHasItem(1734) || !playerHasItem(cSelected, 1)) {
-            send(new SendMessage(!playerHasItem(1733) ? "You need a needle to craft!" : !playerHasItem(1734) ? "You have run out of thread!" : "You have run out of " + GetItemName(cSelected).toLowerCase() + "!"));
-            resetAction(true);
-            return;
-        }
-        if (cAmount > 0) {
-            requestAnim(1249, 0);
-            deleteItem(cSelected, 1);
-            deleteItem(1734, 1);
-            send(new SendMessage("You crafted a " + GetItemName(cItem).toLowerCase()));
-            addItem(cItem, 1);
-            checkItemUpdate();
-            giveExperience(cExp, Skill.CRAFTING);
-            cAmount--;
-            if (cAmount < 1)
-                resetAction(true);
-            triggerRandom(cExp);
-        } else
-            resetAction(true);
-    }
-
-    public void craftMenu(int i) {
-        send(new SendString("What would you like to make?", 8898));
-        send(new SendString("Vambraces", 8889));
-        send(new SendString("Chaps", 8893));
-        send(new SendString("Body", 8897));
-        sendFrame246(8883, 250, Constants.gloves[i]);
-        sendFrame246(8884, 250, Constants.legs[i]);
-        sendFrame246(8885, 250, Constants.chests[i]);
-        sendFrame164(8880);
-    }
-
-    public void startHideCraft(int b) {
-        int[] buttons = {34185, 34184, 34183, 34182, 34189, 34188, 34187, 34186, 34193, 34192, 34191, 34190};
-        int[] amounts = {1, 5, 10, 27};
-        int index = 0;
-        int index2 = 0;
-        for (int i = 0; i < buttons.length; i++) {
-            if (buttons[i] == b) {
-                index = i % 4;
-                index2 = i / 4;
-                break;
-            }
-        }
-        cSelected = Constants.leathers[cIndex];
-        cAmount = amounts[index] == 27 ? getInvAmt(cSelected) : amounts[index];
-        cExp = Constants.leatherExp[cIndex];
-        int required;
-        if (index2 == 0) {
-            required = Constants.gloveLevels[cIndex];
-            cItem = Constants.gloves[cIndex];
-        } else if (index2 == 1) {
-            required = Constants.legLevels[cIndex];
-            cItem = Constants.legs[cIndex];
-        } else {
-            required = Constants.chestLevels[cIndex];
-            cItem = Constants.chests[cIndex];
-        }
-        if (required != -1 && getLevel(Skill.CRAFTING) >= required) {
-            cExp = cExp * 8;
-            crafting = true;
-            send(new RemoveInterfaces());
-        } else if (required >= 0 && cItem != -1) {
-            send(new SendMessage("You need level " + required + " crafting to craft a " + GetItemName(cItem).toLowerCase()));
-            send(new RemoveInterfaces());
-        } else
-            send(new SendMessage("Can't make this??"));
-    }
-
     public void modYell(String msg) {
-        for (int i = 0; i < PlayerHandler.players.length; i++) {
-            Client p = (Client) PlayerHandler.players[i];
+        for (int i = 0; i < PlayerRegistry.players.length; i++) {
+            Client p = (Client) net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[i];
             if (p != null && !p.disconnected && p.getPosition().getX() > 0 && p.dbId > 0 && p.playerRights > 0) {
                 p.send(new SendMessage(msg));
             }
@@ -5422,221 +3394,9 @@ public class Client extends Player implements Runnable {
         resetAction(false);
         resetWalkingQueue();
         UsingAgility = true;
-        tX = x;
-        tY = y;
         tH = height;
-        tEmote = emote;
-        tStage = 1;
         addEffectTime(0, -1); //If we teleport, reset desert shiez!
-    }
-
-    public void startSmelt(int id) {
-        int[] amounts = {1, 5, 10, 28};
-        int index = 0, index2 = 0;
-        for (int i = 0; i < Utils.buttons_smelting.length; i++) {
-            if (id == Utils.buttons_smelting[i]) {
-                index = i % 4;
-                index2 = i / 4;
-            }
-        }
-        smelt_id = Utils.smelt_bars[index2][0];
-        smeltCount = amounts[index];
-        smeltExperience = Utils.smelt_bars[index2][1] * 4;
-        smelting = true;
-        send(new RemoveInterfaces());
-    }
-
-    public void startFishing(int object, int click) {
-        boolean valid = false;
-        boolean harpoon = getLevel(FISHING) >= 61 && (getEquipment()[Equipment.Slot.WEAPON.getId()] == 21028 || playerHasItem(21028));
-        for (int i = 0; i < Utils.fishSpots.length; i++) {
-            if (Utils.fishSpots[i] == object) {
-                if (click == 1 && (i == 0 || i == 2 || i == 4 || i == 6)) {
-                    valid = true;
-                    fishIndex = i;
-                    break;
-                } else if (click == 2 && (i == 1 || i == 3 || i == 5 || i == 7)) {
-                    valid = true;
-                    fishIndex = i;
-                    break;
-                }
-            }
-        }
-        if (!valid) {
-            resetAction(true);
-            return;
-        }
-        if (!playerHasItem(-1)) {
-            send(new SendMessage("Not enough inventory space."));
-            resetAction(true);
-            return;
-        }
-        if (getLevel(Skill.FISHING) < Utils.fishReq[fishIndex]) {
-            send(new SendMessage("You need level " + Utils.fishReq[fishIndex] + " fishing to fish here."));
-            resetAction(true);
-            return;
-        }
-        if (!playerHasItem(Utils.fishTool[fishIndex]) && !harpoon) {
-            send(new SendMessage("You need a " + GetItemName(Utils.fishTool[fishIndex]).toLowerCase() + " to fish here."));
-            resetAction(true);
-            return;
-        }
-        if ((fishIndex == 4 || fishIndex >= 6) && !premium) {
-            send(new SendMessage("You need to be premium to fish from this spot!"));
-            resetAction(true);
-            return;
-        }
-        if (!playerHasItem(314) && fishIndex == 1) {
-            send(new SendMessage("You do not have any feathers."));
-            resetAction(true);
-            return;
-        }
-        resourcesGathered = 0;
-        lastFishAction = System.currentTimeMillis() + 600;
-        lastAction = System.currentTimeMillis() - 600;
-        fishing = true;
-        requestAnim(Utils.fishAnim[fishIndex], 0);
-        send(new SendMessage("You start fishing..."));
-    }
-
-    public void fish() {
-        boolean harpoon = getLevel(FISHING) >= 61 && (getEquipment()[Equipment.Slot.WEAPON.getId()] == 21028 || playerHasItem(21028));
-        if (!playerHasItem(Utils.fishTool[fishIndex]) && !harpoon) {
-            send(new SendMessage("You need a " + GetItemName(Utils.fishTool[fishIndex]).toLowerCase() + " to fish here."));
-            resetAction(true);
-            return;
-        }
-        if (!playerHasItem(-1)) {
-            send(new SendMessage("Not enough inventory space."));
-            resetAction(true);
-            return;
-        }
-        if (!playerHasItem(314) && fishIndex == 1) {
-            send(new SendMessage("You do not have any feathers."));
-            resetAction(true);
-            return;
-        }
-        lastAction = System.currentTimeMillis();
-        int random = Misc.random(6);
-        int itemId = fishIndex == 1 && getLevel(Skill.FISHING) >= 30 && random < 3 ? 331 : Utils.fishId[fishIndex];
-        if (fishIndex == 1)
-            deleteItem(314, 1);
-        giveExperience(itemId == 331 ? Utils.fishExp[fishIndex] + 100 : Utils.fishExp[fishIndex], Skill.FISHING);
-        addItem(itemId, 1);
-        checkItemUpdate();
-        ItemLog.playerGathering(this, itemId, 1, getPosition().copy(), "Fishing");
-        resourcesGathered++;
-        requestAnim(Utils.fishAnim[fishIndex], 0);
-        triggerRandom(Utils.fishExp[fishIndex]);
-        send(new SendMessage("You fish up some " + GetItemName(itemId).toLowerCase().replace("raw ", "") + "."));
-        if (resourcesGathered >= 4 && Misc.chance(20) == 1) {
-            send(new SendMessage("You take a rest after gathering " + resourcesGathered + " resources."));
-            resetAction(true);
-        }
-    }
-
-    public void startCooking(int id) {
-        if (isBusy()) {
-            send(new SendMessage("You are currently busy to be cooking!"));
-            return;
-        }
-        boolean valid = false;
-        for (int i = 0; i < Utils.cookIds.length; i++) {
-            if (id == Utils.cookIds[i]) {
-                cookIndex = i;
-                valid = true;
-            }
-        }
-        if (valid) {
-            cookAmount = getInvAmt(id);
-            cooking = true;
-        }
-
-    }
-
-    public void cook() {
-        if (isBusy() || cookAmount < 1) {
-            resetAction(true);
-            return;
-        }
-        if (!playerHasItem(Utils.cookIds[cookIndex])) {
-            send(new SendMessage("You are out of fish"));
-            resetAction(true);
-            return;
-        }
-        int id = Utils.cookIds[cookIndex];
-        int ran = 0, index = 0;
-        for (int i = 0; i < Utils.cookIds.length; i++) {
-            if (id == Utils.cookIds[i]) {
-                index = i;
-            }
-        }
-        if (getLevel(Skill.COOKING) < Utils.cookLevel[index]) {
-            send(new SendMessage("You need " + Utils.cookLevel[index] + " cooking to cook the " + Server.itemManager.getName(id).toLowerCase() + "."));
-            resetAction(true);
-            return;
-        }
-        switch (id) {
-            case 2134:
-            case 317:
-                ran = 30 - getLevel(Skill.COOKING);
-                break;
-            case 2138:
-            case 2307:
-                ran = 36 - getLevel(Skill.COOKING);
-                break;
-            case 3363:
-                ran = 42 - getLevel(Skill.COOKING);
-                break;
-            case 335:
-                ran = 50 - getLevel(Skill.COOKING);
-                break;
-            case 331:
-                ran = 60 - getLevel(Skill.COOKING);
-                break;
-            case 377:
-                ran = 70 - getLevel(Skill.COOKING);
-                break;
-            case 371:
-                ran = 80 - getLevel(Skill.COOKING);
-                break;
-            case 7944:
-                ran = 90 - getLevel(Skill.COOKING);
-                break;
-            case 383:
-                ran = 100 - getLevel(Skill.COOKING);
-                break;
-            case 395:
-                ran = 110 - getLevel(Skill.COOKING);
-                break;
-            case 389:
-                ran = 120 - getLevel(Skill.COOKING);
-                break;
-        }
-        if (getEquipment()[Equipment.Slot.HANDS.getId()] == 775)
-            ran -= 4;
-        if (getEquipment()[Equipment.Slot.HEAD.getId()] == 1949)
-            ran -= 4;
-        if (getEquipment()[Equipment.Slot.HEAD.getId()] == 1949 && getEquipment()[Equipment.Slot.HANDS.getId()] == 775)
-            ran -= 2;
-        ran = ran < 0 ? 0 : Math.min(ran, 100);
-        boolean burn = 1 + Utils.random(99) <= ran;
-        if (Utils.cookExp[index] > 0) {
-            cookAmount--;
-            deleteItem(id, 1);
-            setFocus(skillX, skillY);
-            requestAnim(883, 0);
-            if (!burn) {
-                addItem(Utils.cookedIds[index], 1);
-                send(new SendMessage("You cook the " + GetItemName(id)));
-                giveExperience(Utils.cookExp[index], Skill.COOKING);
-            } else {
-                addItem(Utils.burnId[index], 1);
-                send(new SendMessage("You burn the " + GetItemName(id)));
-            }
-            checkItemUpdate();
-            triggerRandom(Utils.cookExp[index]);
-        }
+        TeleportActionService.startTeleport(this, x, y, height, emote);
     }
 
     public boolean inHeat() { //King black dragon's domain!
@@ -5650,10 +3410,10 @@ public class Client extends Player implements Runnable {
         resetTItems(3415);
         resetOTItems(3416);
         send(new InventoryInterface(3323, 3321)); // trading window + bag
-        String out = PlayerHandler.players[trade_reqId].getPlayerName();
-        if (PlayerHandler.players[trade_reqId].playerRights == 1) {
+        String out = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[trade_reqId].getPlayerName();
+        if (net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[trade_reqId].playerRights == 1) {
             out = "@cr1@" + out;
-        } else if (PlayerHandler.players[trade_reqId].playerRights == 2) {
+        } else if (net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[trade_reqId].playerRights == 2) {
             out = "@cr2@" + out;
         }
         send(new SendString("Trading With: " + out, 3417));
@@ -5667,6 +3427,9 @@ public class Client extends Player implements Runnable {
 
     public void declineTrade(boolean tellOther) {
         Client other = getClient(trade_reqId);
+        if (tellOther && other != null) {
+            GameEventBus.post(new TradeCancelEvent(this, other));
+        }
         /* Prevent a dupe? */
         inTrade = false;
         if (tellOther && validClient(trade_reqId))
@@ -5694,12 +3457,12 @@ public class Client extends Player implements Runnable {
     }
 
     public boolean validClient(int index) {
-        Client p = (Client) PlayerHandler.players[index];
+        Client p = (Client) net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[index];
         return p != null && !p.disconnected && p.dbId > 0;
     }
 
     public Client getClient(int index) {
-        return index < 0 ? null : ((Client) PlayerHandler.players[index]);
+        return index < 0 ? null : ((Client) net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[index]);
     }
 
     public void tradeReq(int id) {
@@ -5708,13 +3471,18 @@ public class Client extends Player implements Runnable {
             send(new SendMessage("Trading has been temporarily disabled"));
             return;
         }
-        for (int a = 0; a < PlayerHandler.players.length; a++) {
+        for (int a = 0; a < PlayerRegistry.players.length; a++) {
             Client o = getClient(a);
             if (a != getSlot() && validClient(a) && o.dbId > 0 && o.dbId == dbId) {
                 logout();
             }
         }
-        Client other = (Client) PlayerHandler.players[id];
+        Client other = (Client) net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[id];
+        String tradeBlockMessage = net.dodian.uber.game.engine.systems.interaction.PlayerInteractionGuardService.tradeBlockMessage(this, other);
+        if (tradeBlockMessage != null) {
+            send(new SendMessage(tradeBlockMessage));
+            return;
+        }
         if (validClient(trade_reqId)) {
             setFocus(other.getPosition().getX(), other.getPosition().getY());
             if (isBusy() || other.isBusy()) {
@@ -5736,10 +3504,10 @@ public class Client extends Player implements Runnable {
         if (validClient(trade_reqId) && !inTrade && other.tradeRequested && other.trade_reqId == getSlot()) {
             openTrade();
             other.openTrade();
-        } else if (validClient(trade_reqId) && !inTrade && System.currentTimeMillis() - lastButton > 1000) {
-            lastButton = System.currentTimeMillis();
+        } else if (validClient(trade_reqId) && !inTrade && net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.TRADE_REQUEST, 1000L)) {
             tradeRequested = true;
             trade_reqId = id;
+            GameEventBus.post(new TradeRequestEvent(this, other));
             send(new SendMessage("Sending trade request..."));
             other.send(new SendMessage(getPlayerName() + ":tradereq:"));
         }
@@ -5762,7 +3530,7 @@ public class Client extends Player implements Runnable {
                 int id = 0;
                 for (GameItem item : offeredItems) {
                     if (id > 0) offerItems.append("\\n");
-                    offerItems.append(GetItemName(item.getId()));
+                    offerItems.append(getItemName(item.getId()));
                     String amt = Misc.format(item.getAmount());
                     if (item.getAmount() >= 1000000000) {
                         amt = "@gre@" + (item.getAmount() / 1000000000) + " billion @whi@(" + Misc.format(item.getAmount()) + ")";
@@ -5783,7 +3551,7 @@ public class Client extends Player implements Runnable {
                 int id = 0;
                 for (GameItem item : other.offeredItems) {
                     if (id > 0) otherOfferItems.append("\\n");
-                    otherOfferItems.append(GetItemName(item.getId()));
+                    otherOfferItems.append(getItemName(item.getId()));
                     String amt = Misc.format(item.getAmount());
                     if (item.getAmount() >= 1000000000) {
                         amt = "@gre@" + (item.getAmount() / 1000000000) + " billion @whi@(" + Misc.format(item.getAmount()) + ")";
@@ -5831,8 +3599,12 @@ public class Client extends Player implements Runnable {
                 }
                 if (this.dbId > other.dbId)
                     TradeLog.recordTrade(dbId, other.dbId, offerCopy, otherOfferCopy, true);
+                if (this.dbId > other.dbId) {
+                    GameEventBus.post(new TradeCompleteEvent(this, other));
+                }
                 send(new RemoveInterfaces());
                 tradeResetNeeded = true;
+                PlayerDeferredLifecycleService.signalTradeFinalizeReady(this);
                 saveStats(PlayerSaveReason.TRADE, false, false);
                 tradeSuccessful = true;
                 faceTarget(-1);
@@ -5859,8 +3631,20 @@ public class Client extends Player implements Runnable {
     public void duelReq(int pid) {
         facePlayer(pid);
         Client other = getClient(pid);
+        String duelBlockMessage = net.dodian.uber.game.engine.systems.interaction.PlayerInteractionGuardService.duelBlockMessage(this, other);
+        if (duelBlockMessage != null) {
+            send(new SendMessage(duelBlockMessage));
+            return;
+        }
         if (isBusy() || other.isBusy()) {
             send(new SendMessage(isBusy() ? "You are currently busy" : other.getPlayerName() + " is currently busy!"));
+            return;
+        }
+        if (net.dodian.uber.game.engine.systems.combat.CombatLogoutLockService.isLocked(this)
+                || net.dodian.uber.game.engine.systems.combat.CombatLogoutLockService.isLocked(other)) {
+            send(new SendMessage(net.dodian.uber.game.engine.systems.combat.CombatLogoutLockService.isLocked(this)
+                    ? "You can't duel while in combat."
+                    : other.getPlayerName() + " can't duel while in combat."));
             return;
         }
         if (inWildy() || other.inWildy()) {
@@ -5871,7 +3655,7 @@ public class Client extends Player implements Runnable {
             send(new SendMessage("Dueling has been temporarily disabled"));
             return;
         }
-        for (int a = 0; a < PlayerHandler.players.length; a++) {
+        for (int a = 0; a < PlayerRegistry.players.length; a++) {
             Client o = getClient(a);
             if (a != getSlot() && validClient(a) && o.dbId > 0 && o.dbId == dbId) {
                 logout();
@@ -5980,12 +3764,12 @@ public class Client extends Player implements Runnable {
         canAttack = false;
         canOffer = false;
         duelFight = true;
-        prayers.reset();
+        prayerManager.reset();
         addEffectTime(2, 0); //Need to reset this for dueling!
         GetBonus(true); //Set bonus due to blessing!
         for (int i = 0; i < boostedLevel.length; i++) {
             boostedLevel[i] = 0;
-            refreshSkill(Skill.getSkill(i));
+            ProgressionService.refresh(this, Skill.getSkill(i));
         }
         Client other = getClient(duel_with);
         for (GameItem item : other.offeredItems) {
@@ -5993,20 +3777,20 @@ public class Client extends Player implements Runnable {
         }
         otherdbId = other.dbId;
         final Client player = this;
+        final DuelCountdownState[] countdownState = {DuelCountdownState.initial()};
         player.requestForceChat("It is time to D-D-D-DUEL!");
-        EventManager.getInstance().registerEvent(new Event(600) {
-            int count = 7;
+        GameEventScheduler.runRepeatingMs(600, () -> {
+            var step = DuelCountdownService.advance(countdownState[0]);
+            countdownState[0] = step.getNextState();
 
-            public void execute() {
-                count--;
-                if (count > 0 && count % 2 == 0)
-                    player.requestForceChat("" + (count / 2));
-                else if (count < 1) {
-                    player.requestForceChat("Fight!");
-                    player.canAttack = true;
-                    stop();
-                }
+            if (step.getForceChat() != null) {
+                player.requestForceChat(step.getForceChat());
             }
+            if (step.getEnableCombat()) {
+                player.canAttack = true;
+                return false;
+            }
+            return true;
         });
     }
 
@@ -6026,7 +3810,7 @@ public class Client extends Player implements Runnable {
         duelFight = false;
         canAttack = true;
         inDuel = false;
-        duelRule = new boolean[]{false, false, false, false, false, true, true, true, true, true, true};
+        duelRule = new boolean[]{false, false, false, false, false, false, false, false, false, false, false};
         Arrays.fill(duelBodyRules, false);
         otherdbId = -1;
     }
@@ -6036,67 +3820,44 @@ public class Client extends Player implements Runnable {
         send(new SetVarbit(id, value));
     }
 
-    public boolean duelButton(int button) {
+    public boolean toggleDuelRule(int ruleIndex) {
         Client other = getClient(duel_with);
-        boolean found = false;
-        if (System.currentTimeMillis() - lastButton < 800) {
+        if (other == null || ruleIndex < 0 || ruleIndex >= duelRule.length
+                || !net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.DUEL_RULES, 800L)) {
             return false;
         }
         if (inDuel && !duelFight && !duelConfirmed2 && !other.duelConfirmed2 && !(duelConfirmed && other.duelConfirmed)) {
-            for (int i = 0; i < duelButtons.length; i++) {
-                if (button == duelButtons[i]) {
-                    found = true;
-                    if (duelRule[i]) {
-                        duelRule[i] = false;
-                        other.duelRule[i] = false;
-                    } else {
-                        duelRule[i] = true;
-                        other.duelRule[i] = true;
-                    }
-                }
-            }
-            if (found) {
-                lastButton = System.currentTimeMillis();
-                duelConfirmed = false;
-                other.duelConfirmed = false;
-                send(new SendString("", 6684));
-                other.send(new SendString("", 6684));
-
-                other.duelRule[i] = duelRule[i];
-                RefreshDuelRules();
-                other.RefreshDuelRules();
-            }
-        }
-        return found;
-    }
-
-    public void duelButton2(int button) {
-        Client other = getClient(duel_with);
-        /*
-         * Danno: Null check :p
-         */
-        if (other == null)
-            return;
-        if (System.currentTimeMillis() - lastButton < 400) {
-            return;
-        }
-        if (inDuel && !duelFight && !duelConfirmed2 && !other.duelConfirmed2 && !(duelConfirmed && other.duelConfirmed)) {
-            if (duelBodyRules[button]) {
-                duelBodyRules[button] = false;
-                other.duelBodyRules[button] = false;
-            } else {
-                duelBodyRules[button] = true;
-                other.duelBodyRules[button] = true;
-            }
-            lastButton = System.currentTimeMillis();
+            duelRule[ruleIndex] = !duelRule[ruleIndex];
+            other.duelRule[ruleIndex] = duelRule[ruleIndex];
             duelConfirmed = false;
             other.duelConfirmed = false;
             send(new SendString("", 6684));
             other.send(new SendString("", 6684));
-            other.duelBodyRules[i] = duelBodyRules[i];
             RefreshDuelRules();
             other.RefreshDuelRules();
+            return true;
         }
+        return false;
+    }
+
+    public boolean toggleDuelBodyRule(int ruleIndex) {
+        Client other = getClient(duel_with);
+        if (other == null || ruleIndex < 0 || ruleIndex >= duelBodyRules.length
+                || !net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.DUEL_BODY_RULES, 400L)) {
+            return false;
+        }
+        if (inDuel && !duelFight && !duelConfirmed2 && !other.duelConfirmed2 && !(duelConfirmed && other.duelConfirmed)) {
+            duelBodyRules[ruleIndex] = !duelBodyRules[ruleIndex];
+            other.duelBodyRules[ruleIndex] = duelBodyRules[ruleIndex];
+            duelConfirmed = false;
+            other.duelConfirmed = false;
+            send(new SendString("", 6684));
+            other.send(new SendString("", 6684));
+            RefreshDuelRules();
+            other.RefreshDuelRules();
+            return true;
+        }
+        return false;
     }
 
     public void addFriend(long name) {
@@ -6108,7 +3869,7 @@ public class Client extends Player implements Runnable {
             }
         }
         friends.add(new Friend(name, true));
-        for (Client c : PlayerHandler.playersOnline.values()) {
+        for (Client c : PlayerRegistry.playersOnline.values()) {
             if (c.hasFriend(longName)) {
                 c.refreshFriends();
             }
@@ -6137,8 +3898,8 @@ public class Client extends Player implements Runnable {
             send(new SendMessage("That player is not on your friends list"));
             return;
         }
-        if (PlayerHandler.playersOnline.containsKey(friend)) {
-            Client to = PlayerHandler.playersOnline.get(friend);
+        if (PlayerRegistry.playersOnline.containsKey(friend)) {
+            Client to = PlayerRegistry.playersOnline.get(friend);
             boolean specialRights = to.playerGroup == 6 || to.playerGroup == 10 || to.playerGroup == 35;
             if (specialRights && to.busy && playerRights < 1) {
                 send(new SendMessage("<col=FF0000>This player is busy and did not receive your message."));
@@ -6166,23 +3927,19 @@ public class Client extends Player implements Runnable {
 
     public void refreshFriends() {
         for (Friend f : friends) {
-            if (PlayerHandler.playersOnline.containsKey(f.name)) {
-                boolean ignored = false;
-                for (Player p : PlayerHandler.players) {
-                    if (p != null && p.longName == f.name) {
-                        Client player = (Client) p;
-                        for (Friend ignore : player.ignores) {
-                            ignored = ignore.name == this.longName;
-                        }
-                    }
-                }
-                if (!ignored)
-                    loadpm(f.name, 1);
-                else
-                    loadpm(f.name, 0);
-            } else {
+            Client player = PlayerRegistry.playersOnline.get(f.name);
+            if (player == null) {
                 loadpm(f.name, 0);
+                continue;
             }
+            boolean ignored = false;
+            for (Friend ignore : player.ignores) {
+                if (ignore.name == this.longName) {
+                    ignored = true;
+                    break;
+                }
+            }
+            loadpm(f.name, ignored ? 0 : 1);
         }
     }
 
@@ -6204,13 +3961,9 @@ public class Client extends Player implements Runnable {
             if (f.name == name) {
                 ignores.remove(f);
                 refreshFriends();
-                if (PlayerHandler.allOnline.containsKey(f.name)) {
-                    for (Player p : PlayerHandler.players) {
-                        if (p != null && p.longName == f.name) {
-                            Client player = (Client) p;
-                            player.refreshFriends();
-                        }
-                    }
+                Client player = PlayerRegistry.playersOnline.get(f.name);
+                if (player != null) {
+                    player.refreshFriends();
                 }
                 break;
             }
@@ -6232,77 +3985,15 @@ public class Client extends Player implements Runnable {
         }
         if (canAdd) {
             ignores.add(new Friend(name, true));
-            if (PlayerHandler.allOnline.containsKey(name)) {
-                for (Player p : PlayerHandler.players) {
-                    if (p != null && p.longName == name) {
-                        Client player = (Client) p;
-                        player.refreshFriends();
-                    }
-                }
+            Client player = PlayerRegistry.playersOnline.get(name);
+            if (player != null) {
+                player.refreshFriends();
             }
         }
     }
 
     public void triggerChat(int button) {
-        LegacyDialogueOptionService.triggerChat(this, button);
-    }
-
-    public boolean smithCheck(int id) {
-        for (int i = 0; i < Constants.smithing_frame.length; i++) {
-            for (int i1 = 0; i1 < Constants.smithing_frame[i].length; i1++) {
-                if (id == Constants.smithing_frame[i][i1][0]) {
-                    return true;
-                }
-            }
-        }
-        send(new SendMessage("Client hack detected!"));
-        return false;
-    }
-
-    public int findAxe() {
-        int Eaxe = -1, Iaxe = -1;
-        int weapon = getEquipment()[Equipment.Slot.WEAPON.getId()];
-        for (int i = 0; i < Utils.axes.length; i++) {
-            if (Utils.axes[i] == weapon) {
-                if (getLevel(Skill.WOODCUTTING) >= Utils.axeReq[i])
-                    Eaxe = i;
-            }
-            for (int playerItem : playerItems) {
-                if (Utils.axes[i] == playerItem - 1) {
-                    if (getLevel(Skill.WOODCUTTING) >= Utils.axeReq[i]) {
-                        Iaxe = i;
-                    }
-                }
-            }
-        }
-        return Math.max(Eaxe, Iaxe);
-    }
-
-    /* WOODCUTTING */
-    public void woodcutting(int index) {
-        int woodcutAxe = findAxe();
-        if (woodcutAxe == -1) {
-            resetAction();
-            send(new SendMessage("You need an axe in which you got the required woodcutting level for."));
-            return;
-        }
-        if (!playerHasItem(-1)) {
-            send(new SendMessage("Your inventory is full!"));
-            resetAction(true);
-            return;
-        }
-        lastAction = System.currentTimeMillis();
-        send(new SendMessage("You cut some " + GetItemName(Utils.woodcuttingLogs[index]).toLowerCase()));
-        addItem(Utils.woodcuttingLogs[index], 1);
-        checkItemUpdate();
-        ItemLog.playerGathering(this, Utils.woodcuttingLogs[index], 1, getPosition().copy(), "Woodcutting");
-        resourcesGathered++;
-        giveExperience(Utils.woodcuttingExp[index], Skill.WOODCUTTING);
-        triggerRandom(Utils.woodcuttingExp[index]);
-        if (resourcesGathered >= 4 && Misc.chance(20) == 1) {
-            send(new SendMessage("You take a rest after gathering " + resourcesGathered + " resources."));
-            resetAction(true);
-        } else requestAnim(getWoodcuttingEmote(Utils.axes[woodcutAxe]), 0);
+        DialogueOptionService.triggerChat(this, button);
     }
 
     public void callGfxMask(int id, int height) {
@@ -6349,9 +4040,7 @@ public class Client extends Player implements Runnable {
         if (speed.length != 3) { //Need atleast 3 values!
             return;
         }
-        if (getClientPacketTraceEnabled()) {
-            logger.debug("x = {}, y = {}", startPos.getX(), startPos.getY());
-        }
+        
         int startX = startPos.getX();
         int startY = startPos.getY();
         int endX = endPos.getX();
@@ -6387,37 +4076,29 @@ public class Client extends Player implements Runnable {
 
     public void AddToWalkCords(int X, int Y, long time) {
         newWalkCmdIsRunning = false;
-        if (time > 0) walkBlock = System.currentTimeMillis() + time;
+        if (time > 0) applyWalkBlockMs(time);
         AddToCords(X, Y, false);
     }
 
     public void AddToRunCords(int X, int Y, long time) {
         newWalkCmdIsRunning = true;
-        if (time > 0) walkBlock = System.currentTimeMillis() + time;
+        if (time > 0) applyWalkBlockMs(time);
         AddToCords(X, Y, true);
     }
 
     public void startAttack(Entity enemy) {
         target = enemy;
         if (target instanceof Npc) {
-            attackingNpc = true;
             faceNpc(target.getSlot());
         } else {
-            Server.playerHandler.getClient(target.getSlot()).target = this;
-            attackingPlayer = true;
             facePlayer(target.getSlot());
         }
     }
 
     public void resetAttack() {
         //rerequestAnim();
-        if (target instanceof Npc)
-            attackingNpc = false;
-        else {
-            attackingPlayer = false;
-        }
         magicId = -1;
-        target = null;
+        CombatStartService.clearCombatTarget(this);
     }
 
     public void requestWeaponAnims() {
@@ -6455,7 +4136,7 @@ public class Client extends Player implements Runnable {
 
     public void updatePlayerDisplay() {
         String serverName = getGameWorldId() == 1 ? "Uber Server 3.0" : "Beta World";
-        String text = serverName + " (" + PlayerHandler.getPlayerCount() + " online)";
+        String text = serverName + " (" + PlayerRegistry.getPlayerCount() + " online)";
         sendCachedString(text, 6570);
         lastTopBarText = text;
         sendCachedString("", 6664);
@@ -6523,11 +4204,8 @@ public class Client extends Player implements Runnable {
     public void acceptDuelWon() {
         if (duelFight && duelWin) {
             duelWin = false;
-            if (System.currentTimeMillis() - lastButton < 1000) {
-                lastButton = System.currentTimeMillis();
+            if (!net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.tryAcquireMs(this, net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService.DUEL_ACCEPT_WIN, 1000L)) {
                 return;
-            } else {
-                lastButton = System.currentTimeMillis();
             }
             Client other = getClient(duel_with);
             CopyOnWriteArrayList<GameItem> offerCopy = new CopyOnWriteArrayList<>();
@@ -6720,338 +4398,33 @@ public class Client extends Player implements Runnable {
         getUpdateFlags().setRequired(UpdateFlag.FORCED_CHAT, true);
     }
 
-    /**
-     * @param skillX the skillX to set
-     */
-    public void setSkillX(int skillX) {
-        this.skillX = skillX;
+    public void setInteractionAnchor(int x, int y) {
+        setInteractionAnchor(x, y, getPosition().getZ());
     }
 
-    /**
-     * @param skillY the skillY to set
-     */
-    public void setSkillY(int skillY) {
-        this.skillY = skillY;
+    public void setInteractionAnchor(int x, int y, int z) {
+        setInteractionAnchorState(new InteractionAnchorState(x, y, z));
         if (WanneBank > 0)
             WanneBank = 0;
         if (NpcWanneTalk > 0) NpcWanneTalk = 0;
     }
 
+    public int getInteractionAnchorX() {
+        InteractionAnchorState state = getInteractionAnchorState();
+        return state == null ? -1 : state.getX();
+    }
+
+    public int getInteractionAnchorY() {
+        InteractionAnchorState state = getInteractionAnchorState();
+        return state == null ? -1 : state.getY();
+    }
+
     public void spendTickets() {
-        send(new RemoveInterfaces());
-        int slot = -1;
-        for (int s = 0; s < playerItems.length; s++) {
-            if ((playerItems[s] - 1) == 2996) {
-                slot = s;
-                break;
-            }
-        }
-        if (slot == -1) {
-            send(new SendMessage("You have no agility tickets!"));
-        } else if (playerItemsN[slot] < 10) {
-            send(new SendMessage("You must hand in at least 10 tickets at once"));
-        } else {
-            int amount = playerItemsN[slot];
-            giveExperience(amount * 700, Skill.AGILITY);
-            send(new SendMessage("You exchange your " + amount + " agility tickets"));
-            deleteItem(2996, playerItemsN[slot]);
-            checkItemUpdate();
-        }
+        AgilityTicketExchangeService.spendTickets(this);
     }
 
-    public void setSkill(int skill, int itemMade, int amount, int itemOne, int itemTwo, int xp, int emote, int tick) {
-        playerSkillAction.add(skill);
-        playerSkillAction.add(itemMade);
-        playerSkillAction.add(amount);
-        playerSkillAction.add(itemOne);
-        playerSkillAction.add(itemTwo);
-        playerSkillAction.add(xp);
-        playerSkillAction.add(emote);
-        playerSkillAction.add(tick);
-    }
-
-    public void setSkillAction(int skill, int itemMade, int amount, int itemOne, int itemTwo, int xp, int emote, int tick) {
-        //playerSkillAction 0 = skillId, 1 = item Made, 2 = amount, 3 = item one, 4 = item two, 5 = xp, 6 = emote, 7 = tickTimer
-        resetAction();
-        sendFrame246(1746, skill == Skill.HERBLORE.getId() ? 150 : 190, itemMade);
-        //Doubt this is how you do it but meh cba!
-        send(new SendString("\\n".repeat((skill == Skill.HERBLORE.getId() ? 4 : 5)) + GetItemName(itemMade), 2799));
-        sendFrame164(4429);
-        setSkill(skill, itemMade, amount, itemOne, itemTwo, xp, emote, tick);
-    }
-
-    private void skillActionYield() {
-        if (skillActionCount < 1) { //Count is less than 1!
-            resetAction();
-            return;
-        }
-        if (isBusy()) {
-            send(new SendMessage("You are currently busy to be doing this!"));
-            return;
-        }
-
-        int itemOne = playerSkillAction.get(3), itemTwo = playerSkillAction.get(4), itemMake = playerSkillAction.get(1);
-        int amount = playerSkillAction.get(2);
-        if (itemMake == 12695) { //Super combat potion
-            if (!playerHasItem(itemOne) || (!playerHasItem(111) && !playerHasItem(269)) || !playerHasItem(2440) || !playerHasItem(2442)) {
-                resetAction();
-                String text = !playerHasItem(111) && !playerHasItem(269) ? GetItemName(269).toLowerCase() : !playerHasItem(itemOne) ? GetItemName(2436).toLowerCase() : !playerHasItem(2440) ? GetItemName(2440).toLowerCase() : GetItemName(2442).toLowerCase();
-                send(new SendMessage("You do not have anymore " + text + "."));
-                return;
-            }
-            deleteItem(itemOne, amount);
-            deleteItem(!playerHasItem(269) ? 111 : 269, amount); //Can use either unf torstol potion or torstol herb!
-            deleteItem(2440, amount);
-            deleteItem(2442, amount);
-            addItem(itemMake, amount);
-        } else if (itemMake == 11730) { //Overload potion
-            if (!playerHasItem(itemOne) || !playerHasItem(2444) || !playerHasItem(12695)) {
-                resetAction();
-                String text = !playerHasItem(itemOne) ? GetItemName(itemOne).toLowerCase() : !playerHasItem(2444) ? GetItemName(2444).toLowerCase() : GetItemName(12695).toLowerCase();
-                send(new SendMessage("You do not have anymore " + text + "."));
-                return;
-            }
-            deleteItem(itemOne, amount);
-            deleteItem(2444, amount);
-            deleteItem(12695, amount);
-            addItem(itemMake, amount);
-        } else if (itemMake >= 569 && itemMake <= 576) {
-            if (!playerHasItem(itemOne) || !playerHasItem(itemTwo, 3)) {
-                resetAction();
-                send(new SendMessage("You need one unpowered orb and 3 cosmic runes to cast on this obelisk."));
-                return;
-            }
-            callGfxMask(itemMake == 569 ? 152 : 149 + ((itemMake - 571) / 2), 100);
-            deleteItem(itemOne, amount);
-            deleteRunes(new int[]{itemTwo}, new int[]{3});
-            addItem(itemMake, amount);
-        } else if (itemMake == 1775) {
-            if (!playerHasItem(itemOne) || !playerHasItem(itemTwo)) {
-                resetAction();
-                send(new SendMessage("You need one bucket of sand and one soda ash"));
-                return;
-            }
-            deleteItem(itemOne, amount);
-            addItem(1925, amount);
-            deleteItem(itemTwo, amount);
-            addItem(itemMake, amount);
-        } else {
-            if (!playerHasItem(itemOne) || (itemTwo != -1 && !playerHasItem(itemTwo))) {
-                resetAction();
-                send(new SendMessage("You do not have anymore " + (!playerHasItem(itemOne) ? GetItemName(itemOne).toLowerCase() : GetItemName(itemTwo).toLowerCase()) + "."));
-                return;
-            }
-            if (getInvAmt(itemOne) < amount || (itemTwo != -1 && getInvAmt(itemTwo) < amount)) //Incase we use 15 as amount!
-                amount = Math.min(getInvAmt(itemOne), getInvAmt(itemTwo));
-            deleteItem(itemOne, amount);
-            if (itemTwo != -1) //For gem crafting or stringing! OBS!
-                deleteItem(itemTwo, amount);
-            addItem(itemMake, amount);
-        }
-        checkItemUpdate();
-        requestAnim(playerSkillAction.get(6), 0);
-        int xp = playerSkillAction.get(5) * amount;
-        giveExperience(xp, Skill.getSkill(playerSkillAction.get(0)));
-        triggerRandom(xp);
-        skillActionCount--;
-        skillActionTimer = playerSkillAction.get(7);
-        if (!skillMessage.isEmpty()) send(new SendMessage(skillMessage)); //Incase we want a skill message..OBS!
-    }
-
-    public void guideBook() {
-        send(new SendMessage("this is me a guide book!"));
-        clearQuestInterface();
-        showInterface(8134);
-        send(new SendString("Newcomer's Guide", 8144));
-        send(new SendString("---------------------------", 8145));
-        send(new SendString("Welcome to Dodian.net!", 8147));
-        send(new SendString("This guide is to help new players to get a general", 8148));
-        send(new SendString("understanding of how Dodian works!", 8149));
-        send(new SendString("", 8150));
-        send(new SendString("For specific boss or skill locations", 8151));
-        send(new SendString("navigate to the 'Guides' section of the forums.", 8152));
-        send(new SendString("", 8153));
-        send(new SendString("Here in Yanille, there are various enemies to kill,", 8154));
-        send(new SendString("with armor rewards that get better the higher their level.", 8155));
-        send(new SendString("", 8156));
-        send(new SendString("From Yanille, you can also head North-East to access", 8157));
-        send(new SendString("the mining area or South-West", 8158));
-        send(new SendString("up the stairs in the magic guild to access the essence mine.", 8159));
-        send(new SendString("", 8160));
-        send(new SendString("If you navigate over to your spellbook, you will see", 8161));
-        send(new SendString("some teleports, these all lead to key points on the server", 8162));
-        send(new SendString("", 8163));
-        send(new SendString("Seers, Catherby, Fishing Guild, and Gnome Stronghold", 8164));
-        send(new SendString("teleports will all bring you to skilling locations.", 8165));
-        send(new SendString("", 8166));
-        send(new SendString("Legends Guild, and Taverly teleports", 8167));
-        send(new SendString("will all bring you to locations with more monsters to train on.", 8168));
-        send(new SendString("", 8169));
-        send(new SendString("Teleporting to Taverly and heading up the path", 8170));
-        send(new SendString("is how you access the Slayer Master!", 8171));
-        send(new SendString("", 8172));
-        send(new SendString("If you have more questions please visit the 'Guides'", 8173));
-        send(new SendString("section of the forums, and if you still can't find the answer.", 8174));
-        send(new SendString("Feel free to just ask a moderator!", 8175));
-        send(new SendString("---------------------------", 8176));
-    }
-
-    public Prayers getPrayerManager() {
-        return prayers;
-    }
-
-    private int getItem(int i, int i2) {
-        if (!playerHasItem(items[i2]) && items[i2] != -1) {
-            return blanks[i][i2];
-        }
-        return jewelry[i][i2];
-    }
-
-    public int[][] blanks = {
-            {-1, 1647, 1647, 1647, 1647, 1647, 1647},
-            {-1, 1666, 1666, 1666, 1666, 1666, 1666},
-            {-1, 1685, 1685, 1685, 1685, 1685, 1685}};
-    public int[] startSlots = {4233, 4245, 4257, 79};
-    public int[] items = {-1, 1607, 1605, 1603, 1601, 1615, 6573};
-    public int[] black = {-1, -1, -1};
-    public int[] sizes = {100, 75, 120, 11067};
-    public int[] moulds = {1592, 1597, 1595, 11065};
-
-    public int findStrungAmulet(int amulet) {
-        for (int i = 0; i < strungAmulets.length; i++) {
-            if (jewelry[2][i] == amulet) {
-                return strungAmulets[i];
-            }
-        }
-        return -1;
-    }
-
-    public int[] strungAmulets = {1692, 1694, 1696, 1698, 1700, 1702, 6581};
-
-    private final int[][] jewelry = {{1635, 1637, 1639, 1641, 1643, 1645, 6575}, {1654, 1656, 1658, 1660, 1662, 1664, 6577},
-            {1673, 1675, 1677, 1679, 1681, 1683, 6579}, {11069, 11072, 11076, 11085, 11092, 11115, 11130}};
-
-    private final int[][] jewelry_levels = {{5, 20, 27, 34, 43, 55, 67}, {6, 22, 29, 40, 56, 72, 82},
-            {8, 23, 31, 50, 70, 80, 90}, {7, 24, 30, 42, 58, 74, 84}};
-
-    private final int[][] jewelry_xp = {{15, 40, 55, 70, 85, 100, 115}, {20, 55, 60, 75, 90, 105, 120},
-            {30, 65, 70, 85, 100, 150, 165}, {25, 60, 65, 80, 95, 110, 125}};
-
-    public void showItemsGold() {
-        int slot;
-        for (int i = 0; i < startSlots.length - 1; i++) {
-            slot = startSlots[i];
-            if (!playerHasItem(moulds[i])) {
-                changeInterfaceStatus(slot - 5, true);
-                changeInterfaceStatus(slot - 1, false);
-                continue;
-            } else {
-                changeInterfaceStatus(slot - 5, false);
-                changeInterfaceStatus(slot - 1, true);
-            }
-            int[] itemsToShow = new int[7];
-            for (int i2 = 0; i2 < itemsToShow.length; i2++) {
-                itemsToShow[i2] = getItem(i, i2);
-                if (i2 != 0 && itemsToShow[i2] != jewelry[i][i2])
-                    sendFrame246(slot + 13 + i2 - 1 - i, sizes[i], black[i]);
-                else if (i2 != 0) {
-                    sendFrame246(slot + 13 + i2 - 1 - i, sizes[i], -1);
-                }
-            }
-            setGoldItems(slot, itemsToShow);
-        }
-    }
-
-    public void setGoldItems(int slot, int[] items) {
-        send(new SetGoldItems(slot, items));
-    }
-
-    public int goldIndex = -1, goldSlot = -1;
-    public int goldCraftingCount = 0;
-    public boolean goldCrafting = false;
-
-    public void goldCraft() {
-        int level = jewelry_levels[goldIndex][goldSlot];
-        int amount = goldCraftingCount;
-        int item = jewelry[goldIndex][goldSlot];
-        int xp = jewelry_xp[goldIndex][goldSlot];
-        if (isBusy()) {
-            send(new SendMessage("You are currently busy to be crafting!"));
-            return;
-        }
-        if (amount <= 0) {
-            goldCrafting = false;
-            resetAction();
-            return;
-        }
-        if (level > getLevel(Skill.CRAFTING)) {
-            send(new SendMessage("You need a crafting level of " + level + " to make this."));
-            goldCrafting = false;
-            return;
-        }
-        if (!playerHasItem(2357)) {
-            goldCrafting = false;
-            send(new SendMessage("You need at least one gold bar."));
-            return;
-        }
-        if (goldSlot != 0 && !playerHasItem(items[goldSlot])) {
-            goldCrafting = false;
-            send(new SendMessage("You need a " + GetItemName(items[goldSlot]).toLowerCase() + " to make this."));
-            return;
-        }
-        goldCraftingCount--;
-        if (goldCraftingCount <= 0) {
-            goldCrafting = false;
-        }
-        requestAnim(0x383, 0);
-        deleteItem(2357, 1);
-        if (goldSlot != 0)
-            deleteItem(items[goldSlot], 1);
-        send(new SendMessage("You craft a " + GetItemName(item).toLowerCase()));
-        addItem(item, 1);
-        checkItemUpdate();
-        giveExperience(xp * 10, Skill.CRAFTING);
-        triggerRandom(xp * 10);
-    }
-
-    public void startGoldCrafting(int interfaceID, int slot, int amount) {
-        int index = 0;
-        for (int i = 0; i < 3; i++)
-            if (startSlots[i] == interfaceID)
-                index = i;
-        int level = jewelry_levels[index][slot];
-        if (level > getLevel(Skill.CRAFTING)) {
-            send(new SendMessage("You need a crafting level of " + level + " to make this."));
-            return;
-        }
-        if (!playerHasItem(2357)) {
-            send(new SendMessage("You need at least one gold bar."));
-            return;
-        }
-        if (slot != 0 && !playerHasItem(items[slot])) {
-            send(new SendMessage("You need a " + GetItemName(items[slot]).toLowerCase() + " to make this."));
-            return;
-        }
-        goldCraftingCount = amount;
-        goldIndex = index;
-        goldSlot = slot;
-        goldCrafting = true;
-        send(new RemoveInterfaces());
-    }
-
-    public void deleteRunes(int[] runes, int[] qty) {
-        for (int i = 0; i < runes.length; i++) {
-            deleteItem(runes[i], qty[i]);
-        }
-    }
-
-    public boolean hasRunes(int[] runes, int[] qty) {
-        for (int i = 0; i < runes.length; i++) {
-            if (!playerHasItem(runes[i], qty[i])) {
-                return true;
-            }
-        }
-        return false;
+    public PrayerManager getPrayerManager() {
+        return prayerManager;
     }
 
     public void checkBow() {
@@ -7060,12 +4433,7 @@ public class Client extends Player implements Runnable {
     }
 
     public boolean bowWeapon(int weaponId) {
-        boolean bow = false;
-        for (int i = 0; i < Constants.shortbow.length; i++)
-            if (weaponId == Constants.shortbow[i] || weaponId == Constants.longbow[i]) {
-                bow = true;
-                break;
-            }
+        boolean bow = net.dodian.uber.game.skill.fletching.FletchingData.isBowWeapon(weaponId);
         if (weaponId == 839 || weaponId == 841 || weaponId == 4212 || weaponId == 6724 || weaponId == 20997 ||
                 weaponId == 11235 || weaponId == 4734 || (weaponId >= 12765 && weaponId <= 12768))
             bow = true;
@@ -7080,8 +4448,8 @@ public class Client extends Player implements Runnable {
             return;
         }
         ArrayList<GameItem> otherInv = new ArrayList<>();
-        if (PlayerHandler.getPlayer(player) != null) { //Online check
-            Client other = (Client) PlayerHandler.getPlayer(player);
+        if (PlayerRegistry.getPlayer(player) != null) { //Online check
+            Client other = (Client) PlayerRegistry.getPlayer(player);
             for (int i = 0; i < Objects.requireNonNull(other).playerItems.length; i++) {
                 otherInv.add(i, new GameItem(other.playerItems[i] - 1, other.playerItemsN[i]));
             }
@@ -7111,17 +4479,19 @@ public class Client extends Player implements Runnable {
         }
         ArrayList<GameItem> otherBank = new ArrayList<>();
         IsBanking = false;
-        if (PlayerHandler.getPlayer(player) != null) { //Online check
-            Client other = (Client) PlayerHandler.getPlayer(player);
+        clearBankStyleView();
+        if (PlayerRegistry.getPlayer(player) != null) { //Online check
+            Client other = (Client) PlayerRegistry.getPlayer(player);
+            ArrayList<Integer> ids = new ArrayList<>();
+            ArrayList<Integer> amounts = new ArrayList<>();
             for (int i = 0; i < Objects.requireNonNull(other).bankItems.length; i++) {
-                otherBank.add(i, new GameItem(other.bankItems[i] - 1, other.bankItemsN[i]));
+                if (other.bankItems[i] > 0 && other.bankItemsN[i] > 0) {
+                    ids.add(other.bankItems[i] - 1);
+                    amounts.add(other.bankItemsN[i]);
+                }
             }
-            send(new SendString("Examine the bank of " + player, 5383));
-            sendBank(5382, otherBank);
-            resetItems(5064);
-            send(new InventoryInterface(5292, 5063));
+            openBankStyleView(ids, amounts, "Examine the bank of " + player);
             IsBanking = false;
-            checkBankInterface = true;
         } else {
             send(new SendMessage("Loading " + player + "'s bank..."));
             CommandDbService.submit(
@@ -7142,7 +4512,7 @@ public class Client extends Player implements Runnable {
         /* Untradeable items prio 1! */
         if (!Ground.untradeable_items.isEmpty())
             for (GroundItem item : Ground.untradeable_items) {
-                if (item.isTaken() || dbId != item.playerId || !GoodDistance(getPosition().getX(), getPosition().getY(), item.x, item.y, 104))
+                if (item.isTaken() || dbId != item.playerId || !isWithinDistance(getPosition().getX(), getPosition().getY(), item.x, item.y, 104))
                     continue;
                 send(new RemoveGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
                 send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
@@ -7150,7 +4520,7 @@ public class Client extends Player implements Runnable {
         /* Tradeable items prio 2! */
         if (!Ground.tradeable_items.isEmpty())
             for (GroundItem item : Ground.tradeable_items) {
-                if (item.isTaken() || (item.playerId != dbId && !item.isVisible()) || !GoodDistance(getPosition().getX(), getPosition().getY(), item.x, item.y, 104))
+                if (item.isTaken() || (item.playerId != dbId && !item.isVisible()) || !isWithinDistance(getPosition().getX(), getPosition().getY(), item.x, item.y, 104))
                     continue;
                 send(new RemoveGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
                 send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
@@ -7158,7 +4528,7 @@ public class Client extends Player implements Runnable {
         /* Static ground items prio last! */
         if (!Ground.ground_items.isEmpty())
             for (GroundItem item : Ground.ground_items) {
-                if (item.isTaken() || !item.visible || !GoodDistance(getPosition().getX(), getPosition().getY(), item.x, item.y, 104))
+                if (item.isTaken() || !item.visible || !isWithinDistance(getPosition().getX(), getPosition().getY(), item.x, item.y, 104))
                     continue;
                 send(new RemoveGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
                 send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
@@ -7167,46 +4537,11 @@ public class Client extends Player implements Runnable {
 
 
 
-    public void removeExperienceFromPlayer(String user, int id, int xp) {
-        String skillName = Objects.requireNonNull(getSkill(id)).getName();
-        if (PlayerHandler.getPlayer(user) != null) { //Online check
-            Client other = (Client) PlayerHandler.getPlayer(user);
-            int currentXp = Objects.requireNonNull(other).getExperience(Skill.values()[id]);
-            xp = Math.min(currentXp, xp);
-            other.setExperience(currentXp - xp, Objects.requireNonNull(getSkill(id)));
-            other.setLevel(Skills.getLevelForExperience(other.getExperience(Skill.values()[id])), Objects.requireNonNull(getSkill(id)));
-            other.refreshSkill(Skill.getSkill(id));
-            send(new SendMessage("Removed " + xp + "/" + currentXp + " xp from " + user + "'s " + skillName + "(id:" + id + ")!"));
-        } else {
-            final int requestedXp = xp;
-            CommandDbService.submit(
-                    "remove-skill",
-                    () -> CommandDbService.removeOfflineExperience(user, skillName, requestedXp),
-                    result -> {
-                        if (disconnected) {
-                            return;
-                        }
-                        if (result.getStatus() == CommandDbService.OfflineSkillMutationResult.Status.NOT_FOUND) {
-                            send(new SendMessage("username '" + user + "' have yet to login!"));
-                            return;
-                        }
-                        send(new SendMessage("Removed " + result.getRemovedXp() + "/" + result.getCurrentXp()
-                                + " xp from " + user + "'s " + skillName + "(id:" + id + ")!"));
-                    },
-                    exception -> {
-                        if (!disconnected) {
-                            logger.debug("issue: {}", exception.getMessage(), exception);
-                            send(new SendMessage("Could not update that player's skill right now."));
-                        }
-                    }
-            );
-        }
-    }
-
+    @Deprecated
     public void removeItemsFromPlayer(String user, int id, int amount) {
         int totalItemRemoved = 0;
-        if (PlayerHandler.getPlayer(user) != null) { //Online check
-            Client other = (Client) PlayerHandler.getPlayer(user);
+        if (PlayerRegistry.getPlayer(user) != null) { //Online check
+            Client other = (Client) PlayerRegistry.getPlayer(user);
             for (int i = 0; i < Objects.requireNonNull(other).bankItems.length; i++) {
                 if (other.bankItems[i] - 1 == id) {
                     int canRemove = Math.min(other.bankItemsN[i], amount);
@@ -7240,11 +4575,11 @@ public class Client extends Player implements Runnable {
                 }
             }
             if (totalItemRemoved > 0) { //Update items only if there is any deleted!
-                send(new SendMessage("Finished deleting " + totalItemRemoved + " of " + GetItemName(id).toLowerCase()));
+                send(new SendMessage("Finished deleting " + totalItemRemoved + " of " + getItemName(id).toLowerCase()));
                 other.checkItemUpdate();
                 other.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
             } else
-                send(new SendMessage("The user '" + user + "' did not had any " + GetItemName(id).toLowerCase()));
+                send(new SendMessage("The user '" + user + "' did not had any " + getItemName(id).toLowerCase()));
         } else { //Database check!
             final int requestedAmount = amount;
             CommandDbService.submit(
@@ -7259,9 +4594,9 @@ public class Client extends Player implements Runnable {
                             return;
                         }
                         if (result.getTotalItemRemoved() > 0) {
-                            send(new SendMessage("Finished deleting " + result.getTotalItemRemoved() + " of " + GetItemName(id).toLowerCase()));
+                            send(new SendMessage("Finished deleting " + result.getTotalItemRemoved() + " of " + getItemName(id).toLowerCase()));
                         } else {
-                            send(new SendMessage("The user " + user + " did not had any " + GetItemName(id).toLowerCase()));
+                            send(new SendMessage("The user " + user + " did not had any " + getItemName(id).toLowerCase()));
                         }
                     },
                     exception -> {
@@ -7311,11 +4646,15 @@ public class Client extends Player implements Runnable {
             send(new SendMessage("username '" + player + "' have yet to login!"));
             return;
         }
-        send(new SendString("Examine the bank of " + player, 5383));
-        sendBank(5382, result.getItems());
-        resetItems(5064);
-        send(new InventoryInterface(5292, 5063));
-        checkBankInterface = true;
+        ArrayList<Integer> ids = new ArrayList<>();
+        ArrayList<Integer> amounts = new ArrayList<>();
+        for (GameItem item : result.getItems()) {
+            if (item.getId() >= 0 && item.getAmount() > 0) {
+                ids.add(item.getId());
+                amounts.add(item.getAmount());
+            }
+        }
+        openBankStyleView(ids, amounts, "Examine the bank of " + player);
     }
 
     public void dropAllItems() {
@@ -7344,15 +4683,12 @@ public class Client extends Player implements Runnable {
         send(new SendString("", 811)); //Trollheim?!
         send(new SendString("Shilo", 812));
         send(new SendString("Sophanem", 813));
-        showInterface(802);
+        openInterface(802);
     }
 
     public void transport(Position pos) {
         resetActionTeleport();
-        moveTo(pos.getX(), pos.getY(), pos.getZ());
-        teleportToX = pos.getX();
-        teleportToY = pos.getY();
-        teleportToZ = pos.getZ();
+        teleportTo(pos.getX(), pos.getY(), pos.getZ());
     }
 
     public void resetActionTeleport() {
@@ -7361,63 +4697,52 @@ public class Client extends Player implements Runnable {
     }
 
     public void travelTrigger(int checkPos) {
+        travelTrigger(checkPos, actionButtonId);
+    }
+
+    public void travelTrigger(int checkPos, int buttonId) {
         if (travelInitiate) {
             return;
         }
         boolean home = checkPos != 0;
-        int[] posTrigger = {1, 3, 4, 7, 10, 2, 5, 6, 11}; //0-4 is to something! rest is to the Catherby
-        int[][] travel = {
-                {3057, 2803, 3421, 0}, //Catherby
-                {3058, -1, -1, 0}, //Mountain aka Trollheim?
-                {3059, 3511, 3506, 0}, //Castle aka Canifis
-                {3060, 3274, 2798, 0}, //Tent aka Sophanem
-                {3056, 2863, 2971, 0}, //Tree aka shilo
-                {48054, 2772, 3234, 0} //Totem aka Brimhaven
-        };
-        for (int i = 0; i < travel.length; i++)
-            if (travel[i][0] == actionButtonId) { //Initiate the teleport!
-                /* Check conditions! */
-                if ((!home && i == 0) || (home && i != 0)) {
-                    send(new SendMessage(!home ? "You are already here!" : "Please select Catherby!"));
-                    return;
+        TravelDecision decision = TravelRouteService.resolve(home, checkPos, buttonId, this::getTravel);
+        if (decision instanceof TravelDecision.Ignored) {
+            return;
+        }
+        if (decision instanceof TravelDecision.Rejected rejected) {
+            send(new SendMessage(rejected.getMessage()));
+            return;
+        }
+        if (decision instanceof TravelDecision.RequireUnlockDialogue unlockDialogue) {
+            DialogueService.setDialogueId(this, unlockDialogue.getDialogueId());
+            DialogueService.setDialogueSent(this, false);
+            return;
+        }
+        if (decision instanceof TravelDecision.Approved approved) {
+            varbit(153, approved.getVarbitValue());
+            travelInitiate = true;
+            Position destination = approved.getDestination();
+            GameEventScheduler.runLaterMs(1800, () -> {
+                if (!disconnected) {
+                    transport(destination);
+                    send(new RemoveInterfaces());
+                    travelInitiate = false;
                 }
-                if (travel[i][1] == -1) {
-                    send(new SendMessage("This will lead you to nothing!"));
-                    return;
-                }
-                if (i > 0 && !getTravel(i - 1)) {
-                    NpcDialogue = 48054;
-                    return;
-                }
-                /* Set configs! */
-                final int pos = i;
-                varbit(153, home ? posTrigger[checkPos + 3] : posTrigger[i - 1]);
-                travelInitiate = true;
-                EventManager.getInstance().registerEvent(new Event(1800) {
-                    @Override
-                    public void execute() {
-                        if (!disconnected) {
-                            transport(new Position(travel[pos][1], travel[pos][2], 0));
-                            send(new RemoveInterfaces());
-                            travelInitiate = false;
-                        }
-                        this.stop();
-                    }
-                });
-            }
+            });
+        }
     }
 
     public int refundSlot = -1;
-    public ArrayList<RewardItem> rewardList = new ArrayList<>();
+    public ArrayList<PartyRoomRewardItem> rewardList = new ArrayList<>();
+    private final ArrayList<String> refundDates = new ArrayList<>();
 
     public void setRefundList() {
         rewardList.clear();
-        try (Connection conn = getDbConnection();
-             Statement stm = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
-            String query = "SELECT * FROM " + DbTables.GAME_REFUND_ITEMS + " WHERE receivedBy='" + dbId + "' AND claimed IS NULL ORDER BY date ASC";
-            ResultSet result = stm.executeQuery(query);
-            while (result.next()) {
-                rewardList.add(new RewardItem(result.getInt("item"), result.getInt("amount")));
+        refundDates.clear();
+        try {
+            for (RefundRecord refund : RefundRepository.loadUnclaimed(dbId)) {
+                rewardList.add(new PartyRoomRewardItem(refund.getItemId(), refund.getAmount()));
+                refundDates.add(refund.getDate());
             }
         } catch (Exception e) {
             logger.warn("Error in checking sql!! {}", e.getMessage(), e);
@@ -7435,7 +4760,7 @@ public class Client extends Player implements Runnable {
         text[0] = "Refund Item List";
         int position = Math.min(3, rewardList.size() - slot);
         for (int i = 0; i < position; i++)
-            text[i + 1] = "Claim " + rewardList.get(slot + i).getAmount() + " of " + GetItemName(rewardList.get(slot + i).getId());
+            text[i + 1] = "Claim " + rewardList.get(slot + i).getAmount() + " of " + getItemName(rewardList.get(slot + i).getId());
         text[position + 1] = text.length < 6 && slot == 0 ? "Close" : text.length == 6 ? "Next" : "Previous";
         if (text.length == 6)
             text[position + 2] = slot == 0 ? "Close" : "Previous";
@@ -7444,18 +4769,19 @@ public class Client extends Player implements Runnable {
 
     public void reclaim(int position) {
         int slot = refundSlot + position;
-        try (Connection conn = getDbConnection();
-             Statement stm = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
-            String query = "SELECT * FROM " + DbTables.GAME_REFUND_ITEMS + " WHERE receivedBy='" + dbId + "' AND claimed IS NULL ORDER BY date ASC";
-            ResultSet result = stm.executeQuery(query);
-            String date = "";
-            RewardItem item = rewardList.get(slot - 1);
-            while (result.next() && date.isEmpty()) {
-                if (result.getRow() == slot) {
-                    date = result.getString("date");
-                }
+        try {
+            int rowIndex = slot - 1;
+            if (rowIndex < 0 || rowIndex >= rewardList.size() || rowIndex >= refundDates.size()) {
+                sendMessage("That refund entry is no longer available.");
+                setRefundList();
+                return;
             }
-            stm.executeUpdate("UPDATE " + DbTables.GAME_REFUND_ITEMS + " SET claimed='" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()) + "' where date='" + date + "'");
+            PartyRoomRewardItem item = rewardList.get(rowIndex);
+            if (!RefundRepository.markClaimed(dbId, refundDates.get(rowIndex))) {
+                sendMessage("That refund entry was already claimed.");
+                setRefundList();
+                return;
+            }
             /* Set back options! */
             setRefundList();
             if (!rewardList.isEmpty()) {
@@ -7489,13 +4815,19 @@ public class Client extends Player implements Runnable {
     }
 
     public int totalLevel() {
-        return Skill.enabledSkills()
-                .mapToInt(skill -> Skills.getLevelForExperience(getExperience(skill)))
-                .sum() + (int) Skill.disabledSkills().count();
+        int total = 0;
+        for (Skill skill : Skill.values()) {
+            if (skill.isEnabled()) {
+                total += Skills.getLevelForExperience(getExperience(skill));
+            } else {
+                total++;
+            }
+        }
+        return total;
     }
 
     public boolean doingTeleport() {
-        return tStage > 0;
+        return getActiveActionType() == PlayerActionType.TELEPORT;
     }
 
     public boolean isWindowFocused() {

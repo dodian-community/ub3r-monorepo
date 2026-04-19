@@ -1,0 +1,328 @@
+package net.dodian.uber.game.activity.casino
+
+import net.dodian.uber.game.engine.systems.dialogue.DialogueService
+import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
+import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.netty.listener.out.SendString
+import net.dodian.uber.game.persistence.audit.AsyncSqlService
+import net.dodian.uber.game.persistence.db.DbTables
+import net.dodian.uber.game.persistence.repository.DbAsyncRepository
+import net.dodian.uber.game.engine.util.Misc
+import net.dodian.utilities.Utils
+import net.dodian.uber.game.engine.config.gameWorldId
+import org.slf4j.LoggerFactory
+
+class SlotMachine {
+    var remainingAutoSpins: Int = -1
+    @Volatile var houseBalance: Int = 0
+    @Volatile var jackpotPool: Int = 240000
+
+    @Volatile var coinsWonBillions: Int = 0
+    @Volatile var coinsLostBillions: Int = 0
+    @Volatile var coinsWonRemainder: Int = 0
+    @Volatile var coinsLostRemainder: Int = 0
+
+    @Deprecated("Use remainingAutoSpins instead")
+    var slotsGames: Int
+        get() = remainingAutoSpins
+        set(value) {
+            remainingAutoSpins = value
+        }
+
+    @Deprecated("Use houseBalance instead")
+    var peteBalance: Int
+        get() = houseBalance
+        set(value) {
+            houseBalance = value
+        }
+
+    @Deprecated("Use jackpotPool instead")
+    var slotsJackpot: Int
+        get() = jackpotPool
+        set(value) {
+            jackpotPool = value
+        }
+
+    @Deprecated("Use coinsWonBillions instead")
+    var CoinsBillion_Win: Int
+        get() = coinsWonBillions
+        set(value) {
+            coinsWonBillions = value
+        }
+
+    @Deprecated("Use coinsLostBillions instead")
+    var CoinsBillion_Lose: Int
+        get() = coinsLostBillions
+        set(value) {
+            coinsLostBillions = value
+        }
+
+    @Deprecated("Use coinsWonRemainder instead")
+    var Coins_Win: Int
+        get() = coinsWonRemainder
+        set(value) {
+            coinsWonRemainder = value
+        }
+
+    @Deprecated("Use coinsLostRemainder instead")
+    var Coins_Lose: Int
+        get() = coinsLostRemainder
+        set(value) {
+            coinsLostRemainder = value
+        }
+
+    private val slotSymbols = ArrayList<SlotSymbol>()
+    private val counterLock = Any()
+    private val logger = LoggerFactory.getLogger(SlotMachine::class.java)
+
+    init {
+        slotSymbols.add(SlotSymbol(1, "0", intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)))
+        slotSymbols.add(SlotSymbol(2, "1", intArrayOf(17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33)))
+        slotSymbols.add(SlotSymbol(3, "2", intArrayOf(34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50)))
+        slotSymbols.add(SlotSymbol(4, "3", intArrayOf(51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67)))
+        slotSymbols.add(SlotSymbol(5, "4", intArrayOf(68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84)))
+        slotSymbols.add(SlotSymbol(6, "5", intArrayOf(85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101)))
+        slotSymbols.add(SlotSymbol(7, "X", intArrayOf(102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125)))
+        slotSymbols.add(SlotSymbol(8, "7", intArrayOf(126, 127)))
+    }
+
+    fun spin(): SlotSpin {
+        val spinSymbols = Array(3) { resolveSymbol(Misc.random(127)) ?: slotSymbols[0] }
+        return SlotSpin(spinSymbols)
+    }
+
+    private fun resolveSymbol(stop: Int): SlotSymbol? {
+        for (symbol in slotSymbols) {
+            if (symbol.matchesStop(stop)) {
+                return symbol
+            }
+        }
+        return null
+    }
+
+    fun rollDice(client: Client, amount: Int) {
+        if (amount > 50_000_000 || amount < 100_000) {
+            DialogueService.setDialogueSent(client, true)
+            client.convoId = -1
+            client.send(RemoveInterfaces())
+            client.clearWalkableInterface()
+            if (amount > 50_000_000) {
+                client.sendMessage("You can't bet more than 50M")
+            }
+            if (amount < 100_000) {
+                client.sendMessage("Party pete do not accept anything less then 100k as a gamble!")
+            }
+            return
+        }
+        if (client.playerHasItem(995, 2_000_000_000)) {
+            DialogueService.setDialogueSent(client, true)
+            client.convoId = -1
+            client.send(RemoveInterfaces())
+            client.sendMessage("You can't bet with more then 2b cash in your inventory!")
+            return
+        }
+        if (!client.playerHasItem(995, amount)) {
+            DialogueService.setDialogueSent(client, true)
+            client.convoId = -1
+            client.send(RemoveInterfaces())
+            client.sendMessage("You do not have enough cash!")
+            return
+        }
+
+        client.deleteItem(995, amount)
+        client.sendString("", 7815)
+        client.sendString("", 8399)
+        client.sendString("Royal Dice", 7815)
+        client.sendString("Bet: $amount", 8399)
+
+        val first = ((Math.random() * 999_999_999).toInt() % 6) + 1
+        val second = ((Math.random() * 999_999_999).toInt() % 6) + 1
+        val total = first + second
+
+        client.sendString(first.toString(), 8424)
+        client.sendString(second.toString(), 8425)
+
+        if (total > 7 && total < 12) {
+            client.sendString("Roll: $total.  You win!", 8426)
+            client.addItem(995, amount * 2)
+            if (client.playerGroup != 6 || client.playerRights < 2) {
+                trackDiceTotals(1, amount)
+            }
+        } else if (total == 12) {
+            client.sendString("Roll: $total.  You win a Jackpot!", 8426)
+            client.addItem(995, amount + amount + amount / 2)
+            if (amount + amount / 2 > 50_000_000) {
+                Client.publicyell(client.playerName + " has won " + Utils.format(amount + amount / 2) + " gp jackpot at the Dice!")
+            }
+            if (client.playerGroup != 6 || client.playerRights < 2) {
+                trackDiceTotals(1, amount + amount / 2)
+            }
+        } else {
+            client.sendString("Roll: $total.  You lose", 8426)
+            if (client.playerGroup != 6 || client.playerRights < 2) {
+                trackDiceTotals(2, amount)
+            }
+        }
+
+        client.checkItemUpdate()
+        client.setWalkableInterface(6675)
+    }
+
+    fun loadBalanceTracker() {
+        if (gameWorldId == 5) {
+            return
+        }
+        AsyncSqlService.execute(
+            "slot-machine-load-gamble",
+            Runnable {
+                try {
+                    DbAsyncRepository.withConnection { conn ->
+                        conn.prepareStatement("SELECT Tracker_ID, CoinsBillion, Coins FROM ${DbTables.GAME_PETE_CO}").use { stmt ->
+                            stmt.executeQuery().use { results ->
+                                var winBillions = 0
+                                var winCoins = 0
+                                var loseBillions = 0
+                                var loseCoins = 0
+                                while (results.next()) {
+                                    when (results.getInt("Tracker_ID")) {
+                                        1 -> {
+                                            winBillions = results.getInt("CoinsBillion")
+                                            winCoins = results.getInt("Coins")
+                                        }
+
+                                        2 -> {
+                                            loseBillions = results.getInt("CoinsBillion")
+                                            loseCoins = results.getInt("Coins")
+                                        }
+                                    }
+                                }
+                                synchronized(counterLock) {
+                                    coinsWonBillions = winBillions
+                                    coinsWonRemainder = winCoins
+                                    coinsLostBillions = loseBillions
+                                    coinsLostRemainder = loseCoins
+                                }
+                            }
+                        }
+                    }
+                } catch (exception: Exception) {
+                    logger.error("Failed loading slot machine balances", exception)
+                }
+            },
+        )
+    }
+
+    fun trackDiceTotals(id: Int, amount: Int) {
+        if (gameWorldId == 5) {
+            return
+        }
+        val trackerId: Int
+        val coinsBillion: Int
+        val coins: Int
+        synchronized(counterLock) {
+            if (id == 1) {
+                coinsWonRemainder += amount
+                if (coinsWonRemainder > 1_000_000_000) {
+                    coinsWonRemainder -= 1_000_000_000
+                    coinsWonBillions += 1
+                }
+                trackerId = 1
+                coinsBillion = coinsWonBillions
+                coins = coinsWonRemainder
+            } else {
+                coinsLostRemainder += amount
+                if (coinsLostRemainder > 1_000_000_000) {
+                    coinsLostRemainder -= 1_000_000_000
+                    coinsLostBillions += 1
+                }
+                trackerId = 2
+                coinsBillion = coinsLostBillions
+                coins = coinsLostRemainder
+            }
+        }
+
+        AsyncSqlService.execute(
+            "slot-machine-track-dice",
+            Runnable {
+                try {
+                    DbAsyncRepository.withConnection { conn ->
+                        conn.prepareStatement("UPDATE ${DbTables.GAME_PETE_CO} SET CoinsBillion = ?, Coins = ? WHERE Tracker_ID = ?")
+                            .use { stmt ->
+                                stmt.setInt(1, coinsBillion)
+                                stmt.setInt(2, coins)
+                                stmt.setInt(3, trackerId)
+                                stmt.executeUpdate()
+                            }
+                        conn.prepareStatement(
+                            "INSERT INTO ${DbTables.GAME_PETE_CO} (Tracker_ID, CoinsBillion, Coins) SELECT ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM ${DbTables.GAME_PETE_CO} WHERE Tracker_ID = ?)",
+                        ).use { insert ->
+                            insert.setInt(1, trackerId)
+                            insert.setInt(2, coinsBillion)
+                            insert.setInt(3, coins)
+                            insert.setInt(4, trackerId)
+                            insert.executeUpdate()
+                        }
+                    }
+                } catch (exception: Exception) {
+                    logger.error("Failed tracking slot machine counters for trackerId={}", trackerId, exception)
+                }
+            },
+        )
+    }
+
+    fun playSlotMachine(client: Client, times: Int) {
+        if (!client.playerHasItem(995, 3000)) {
+            client.send(RemoveInterfaces())
+            client.sendMessage("You don't have enough gold to play!")
+            return
+        }
+
+        remainingAutoSpins = times
+        if (remainingAutoSpins > 0) {
+            remainingAutoSpins--
+            client.sendString("PETE'S SLOTS CO - JACKPOT: $remainingAutoSpins plays remaining", 13896)
+        } else {
+            client.sendString("PETE'S SLOTS CO - JACKPOT: Manual play", 13896)
+        }
+
+        client.deleteItem(995, 3000)
+        if (houseBalance + 3000 < Int.MAX_VALUE) {
+            houseBalance += (3000 * 0.15).toInt()
+        }
+        if (jackpotPool + 3000 < Int.MAX_VALUE) {
+            jackpotPool += (3000 * 0.50).toInt()
+        }
+
+        val spin = spin()
+        val winnings = spin.getWinnings()
+        client.sendString("", 13884)
+        client.sendString(spin.getSymbols()[0].output(), 13885)
+        client.sendString(spin.getSymbols()[1].output(), 13886)
+        client.sendString(spin.getSymbols()[2].output(), 13887)
+
+        if (winnings in 1..239_999) {
+            client.addItem(995, winnings)
+            client.sendMessage("You have won " + Utils.format(winnings) + " gp!")
+        } else if (winnings >= 240_000) {
+            client.sendMessage("You have won the jackpot!  There is a 15% tax on winnings.")
+            val amount = (winnings * 0.85).toInt()
+            client.addItem(995, amount)
+            client.sendMessage("You receive " + Utils.format(amount) + " gp")
+            client.sendString("Jackpot!", 18812)
+            jackpotPool = (jackpotPool / 0.85).toInt()
+            Client.publicyell(client.playerName + " has won the " + Utils.format(winnings) + " gp jackpot at the slots!")
+        }
+    }
+
+    @Deprecated("Use loadBalanceTracker instead")
+    fun loadGamble() = loadBalanceTracker()
+
+    @Deprecated("Use trackDiceTotals instead")
+    fun trackDice(id: Int, amount: Int) = trackDiceTotals(id, amount)
+
+    @Deprecated("Use playSlotMachine instead")
+    fun playSlots(client: Client, times: Int) = playSlotMachine(client, times)
+}
+
+

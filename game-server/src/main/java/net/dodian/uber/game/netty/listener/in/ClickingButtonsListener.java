@@ -1,18 +1,22 @@
 package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
-import net.dodian.uber.game.content.buttons.ButtonClickDispatcher;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
-import net.dodian.uber.game.runtime.eventbus.GameEventBus;
-import net.dodian.uber.game.runtime.eventbus.events.ButtonClickEvent;
+import net.dodian.uber.game.engine.event.GameEventBus;
+import net.dodian.uber.game.events.widget.ButtonClickEvent;
+import net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService;
+import net.dodian.uber.game.ui.buttons.ButtonClickLoggingService;
+import net.dodian.uber.game.ui.buttons.ButtonClickRequest;
+import net.dodian.uber.game.ui.buttons.InterfaceButtonBinding;
+import net.dodian.uber.game.ui.buttons.InterfaceButtonRegistry;
+import net.dodian.uber.game.ui.buttons.InterfaceButtonService;
+import net.dodian.uber.game.engine.systems.net.PacketButtonService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static net.dodian.utilities.DotEnvKt.getButtonTraceEnabled;
 
 @PacketHandler(opcode = 185)
 public class ClickingButtonsListener implements PacketListener {
@@ -26,40 +30,68 @@ public class ClickingButtonsListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        int packetSize = packet.getSize();
+        int packetSize = packet.size();
         if (packetSize < 4) {
             logger.warn("ClickingButtons opcode 185 with unexpected size {} from {}", packetSize, client.getPlayerName());
             return;
         }
 
-        ByteBuf payload = packet.getPayload();
+        ByteBuf payload = packet.payload();
         int actionButton = payload.readInt();
-
-        if (getButtonTraceEnabled() && logger.isTraceEnabled()) {
-            logger.trace("ClickButton buttonId={} size={} player={}", actionButton, packetSize, client.getPlayerName());
+        int actionIndex = -1;
+        if (packet.opcode() == 186 && payload.isReadable()) {
+            actionIndex = payload.readUnsignedByte();
         }
-        if (System.currentTimeMillis() - client.lastButton < 600 || !client.validClient) {
-            client.lastButton = System.currentTimeMillis();
+        PacketButtonService.recordLastActionIndex(client, actionIndex);
+
+        if (PacketButtonService.isSmeltingInterfaceActive(client)) {
+            logger.warn(
+                    "Smelting button click buttonId={} actionIndex={} size={} iface={} player={}",
+                    actionButton,
+                    actionIndex,
+                    packetSize,
+                    client.activeInterfaceId,
+                    client.getPlayerName()
+            );
+        }
+
+        if (!client.validClient || !PlayerTickThrottleService.tryAcquireMs(client, PlayerTickThrottleService.BUTTON_GENERAL, 600L)) {
             return;
         }
 
-        if (!(actionButton >= 9157 && actionButton <= 9194)) {
-            client.actionButtonId = actionButton;
-        }
-        if (actionButton != 10239 && actionButton != 10238 && actionButton != 6212 && actionButton != 6211) {
-            client.resetAction(false);
-        }
+        PacketButtonService.prepareAction(client, actionButton);
 
-        if (GameEventBus.INSTANCE.postWithResult(new ButtonClickEvent(client, actionButton))) {
+        InterfaceButtonBinding resolvedBinding = InterfaceButtonRegistry.INSTANCE.resolve(client, actionButton, actionIndex);
+        ButtonClickRequest request = new ButtonClickRequest(
+                client,
+                actionButton,
+                actionIndex,
+                client.activeInterfaceId,
+                resolvedBinding != null ? resolvedBinding.getInterfaceId() : -1,
+                resolvedBinding != null ? resolvedBinding.getComponentId() : -1,
+                resolvedBinding != null ? resolvedBinding.getComponentKey() : "raw:" + actionButton
+        );
+
+        if (GameEventBus.postWithResult(new ButtonClickEvent(request))) {
+            ButtonClickLoggingService.logClick(request, packet.opcode(), true);
             return;
         }
 
-        if (ButtonClickDispatcher.tryHandle(client, actionButton)) {
+        if (InterfaceButtonService.tryHandle(client, actionButton, actionIndex)) {
+            ButtonClickLoggingService.logClick(request, packet.opcode(), true);
             return;
         }
 
-        if (getButtonTraceEnabled() && logger.isTraceEnabled()) {
-            logger.trace("Unhandled button buttonId={} player={} iface={}", client.actionButtonId, client.getPlayerName(), client.activeInterfaceId);
+        if (PacketButtonService.isSmeltingInterfaceActive(client)) {
+            logger.warn(
+                    "Unhandled smelting button buttonId={} actionIndex={} iface={} player={}",
+                    actionButton,
+                    actionIndex,
+                    client.activeInterfaceId,
+                    client.getPlayerName()
+            );
         }
+
+        ButtonClickLoggingService.logClick(request, packet.opcode(), false);
     }
 }

@@ -7,7 +7,7 @@ import net.dodian.uber.game.netty.codec.ByteOrder;
 
 public class SetRegionSong implements OutgoingPacket {
 
-    private int songId;
+    private final int songId;
 
     public SetRegionSong(int songId) {
         this.songId = songId;

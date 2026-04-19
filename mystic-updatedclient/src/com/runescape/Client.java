@@ -16486,6 +16486,8 @@ public class Client extends GameApplet {
 	public int clanChatMode;
 	public int autoCastId = 0;
 	public static Sprite[] cacheSprite;
+	public static Sprite[] cacheSprite3;
+	public static Sprite[] cacheSprite4;
 	private ProducingGraphicsBuffer leftFrame;
 	private ProducingGraphicsBuffer topFrame;
 	private int ignoreCount;

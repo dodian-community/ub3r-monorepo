@@ -1,11 +1,4 @@
 package net.dodian.uber.game.netty.login;
-
-import net.dodian.uber.game.model.entity.player.PlayerHandler;
-
-/**
- * Thin wrapper that lives in the new clean package but simply reuses the logic
- * from the legacy implementation while we incrementally migrate.
- */
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
@@ -19,9 +12,7 @@ public class LoginHandshakeHandler extends ByteToMessageDecoder {
     private static final Logger logger = LoggerFactory.getLogger(LoginHandshakeHandler.class);
     public static final AttributeKey<Long> SERVER_SEED_KEY = AttributeKey.valueOf("serverSeed");
 
-    public LoginHandshakeHandler(PlayerHandler playerHandler) {
-        // The playerHandler is currently unused in the handshake but may be needed later.
-    }
+    public LoginHandshakeHandler() {}
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, java.util.List<Object> out) {

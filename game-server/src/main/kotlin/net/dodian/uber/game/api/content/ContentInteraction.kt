@@ -1,0 +1,89 @@
+package net.dodian.uber.game.api.content
+
+import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.engine.systems.interaction.DispatchTiming
+import net.dodian.uber.game.engine.systems.interaction.ObjectInteractionPolicy
+import net.dodian.uber.game.engine.systems.interaction.PlayerInteractionGuardService
+import net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService
+import net.dodian.uber.game.engine.systems.interaction.ObjectInteractionDistance
+import net.dodian.uber.game.engine.systems.action.PolicyPreset
+import net.dodian.uber.game.engine.systems.action.UnifiedPolicyDsl
+import net.dodian.cache.objects.GameObjectData
+import net.dodian.uber.game.model.Position
+
+typealias ContentObjectInteractionPolicy = ObjectInteractionPolicy
+typealias ContentDispatchTiming = DispatchTiming
+typealias ContentInteractionType = ObjectInteractionPolicy.InteractionType
+typealias ContentObjectDistanceRule = ObjectInteractionPolicy.DistanceRule
+
+object ContentInteraction {
+    const val BUTTON_GENERAL: String = PlayerTickThrottleService.BUTTON_GENERAL
+    const val TRADE_REQUEST: String = PlayerTickThrottleService.TRADE_REQUEST
+    const val DUEL_REQUEST: String = PlayerTickThrottleService.DUEL_REQUEST
+    const val TRADE_CONFIRM_STAGE_ONE: String = PlayerTickThrottleService.TRADE_CONFIRM_STAGE_ONE
+    const val TRADE_CONFIRM_STAGE_TWO: String = PlayerTickThrottleService.TRADE_CONFIRM_STAGE_TWO
+    const val DUEL_CONFIRM_STAGE_ONE: String = PlayerTickThrottleService.DUEL_CONFIRM_STAGE_ONE
+    const val DUEL_CONFIRM_STAGE_TWO: String = PlayerTickThrottleService.DUEL_CONFIRM_STAGE_TWO
+    const val DUEL_RULES: String = PlayerTickThrottleService.DUEL_RULES
+    const val DUEL_BODY_RULES: String = PlayerTickThrottleService.DUEL_BODY_RULES
+    const val DUEL_ACCEPT_WIN: String = PlayerTickThrottleService.DUEL_ACCEPT_WIN
+    const val CHAT_PRIVACY: String = PlayerTickThrottleService.CHAT_PRIVACY
+    const val PICKUP_GROUND_ITEM: String = PlayerTickThrottleService.PICKUP_GROUND_ITEM
+    const val CLICK_ITEM: String = PlayerTickThrottleService.CLICK_ITEM
+    const val WEB_OBSTACLE: String = PlayerTickThrottleService.WEB_OBSTACLE
+    const val YANILLE_CHEST: String = PlayerTickThrottleService.YANILLE_CHEST
+    const val LEGENDS_CHEST: String = PlayerTickThrottleService.LEGENDS_CHEST
+    const val THIEVING_GENERIC: String = PlayerTickThrottleService.THIEVING_GENERIC
+
+    @JvmStatic
+    fun tryAcquire(player: Client, key: String, cooldownTicks: Int): Boolean {
+        return PlayerTickThrottleService.tryAcquire(player, key, cooldownTicks)
+    }
+
+    @JvmStatic
+    fun tryAcquireMs(player: Client, key: String, cooldownMs: Long): Boolean {
+        return PlayerTickThrottleService.tryAcquireMs(player, key, cooldownMs)
+    }
+
+    @JvmStatic
+    fun nearestBoundaryCardinalPolicy(settleTicks: Int = 1): ContentObjectInteractionPolicy {
+        val base = UnifiedPolicyDsl.toObjectPolicy(PolicyPreset.GATHERING)
+        return base.copy(settleTicks = settleTicks.coerceAtLeast(0))
+    }
+
+    @JvmStatic
+    fun nearestBoundaryAnyPolicy(settleTicks: Int = 1): ContentObjectInteractionPolicy {
+        val base = UnifiedPolicyDsl.toObjectPolicy(PolicyPreset.DIALOGUE)
+        return base.copy(settleTicks = settleTicks.coerceAtLeast(0))
+    }
+
+    @JvmStatic
+    fun canStartDialogue(player: Client): Boolean = PlayerInteractionGuardService.canStartDialogue(player)
+
+    @JvmStatic
+    fun canOpenBank(player: Client): Boolean = PlayerInteractionGuardService.canOpenBank(player)
+
+    @JvmStatic
+    fun canOpenShop(player: Client): Boolean = PlayerInteractionGuardService.canOpenShop(player)
+
+    @JvmStatic
+    fun blockingInteractionMessage(player: Client): String? = PlayerInteractionGuardService.blockingInteractionMessage(player)
+
+    @JvmStatic
+    fun withinNearestBoundaryCardinal(
+        player: Client,
+        objectId: Int,
+        objectPosition: Position,
+        obj: GameObjectData?,
+    ): Boolean {
+        val playerPlanePosition = Position(objectPosition.x, objectPosition.y, player.position.z)
+        return ObjectInteractionDistance.resolveDistancePosition(
+            client = player,
+            walkTo = playerPlanePosition,
+            objectId = objectId,
+            objectData = obj,
+            def = null,
+            mode = ObjectInteractionDistance.DistanceMode.POLICY_NEAREST_BOUNDARY_CARDINAL,
+        ) != null
+    }
+}

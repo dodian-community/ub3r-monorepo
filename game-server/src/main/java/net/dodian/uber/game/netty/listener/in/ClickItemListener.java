@@ -1,13 +1,17 @@
 package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
-import net.dodian.uber.game.content.items.ItemDispatcher;
+import net.dodian.uber.game.engine.systems.interaction.items.ItemDispatcher;
+import net.dodian.uber.game.engine.event.GameEventBus;
+import net.dodian.uber.game.events.item.ItemClickEvent;
 import net.dodian.uber.game.model.entity.player.Client;
-import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
+import net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService;
+import net.dodian.uber.game.skill.runecrafting.Runecrafting;
+import net.dodian.uber.game.engine.systems.net.PacketItemActionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +31,7 @@ public class ClickItemListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
 
         // Faithful replication of legacy decoding order with the corrected item ID read.
         int interfaceId = buf.readUnsignedShort();
@@ -37,7 +41,7 @@ public class ClickItemListener implements PacketListener {
         // Debug line to confirm packet data is now being read correctly.
         logger.debug("ClickItem: [interface={}, slot={}, id={}] for player {}", interfaceId, itemSlot, itemId, client.getPlayerName());
 
-        if (client.fillEssencePouch(itemId)) {
+        if (Runecrafting.fillPouch(client, itemId)) {
             return;
         }
 
@@ -45,8 +49,7 @@ public class ClickItemListener implements PacketListener {
             return;
         }
 
-        if (itemSlot < 0 || itemSlot >= client.playerItems.length) {
-            client.disconnected = true;
+        if (!PacketItemActionService.validateInventorySlot(client, itemSlot)) {
             return;
         }
 
@@ -59,31 +62,12 @@ public class ClickItemListener implements PacketListener {
         boolean isHerb = (itemId >= 199 && itemId <= 219) || itemId == 3049 || itemId == 3051;
         if (isHerb) {
             processItemClick(client, itemId, itemSlot, interfaceId);
-        } else if (System.currentTimeMillis() - client.lastAction > 100) {
+        } else if (PlayerTickThrottleService.tryAcquireMs(client, PlayerTickThrottleService.CLICK_ITEM, 100L)) {
             processItemClick(client, itemId, itemSlot, interfaceId);
-            client.lastAction = System.currentTimeMillis();
         }
     }
 
     public void processItemClick(Client client, int id, int slot, int interfaceId) {
-        int item = client.playerItems[slot] - 1;
-        if (item != id) {
-            return;
-        }
-        boolean bypassDuelGuards = item == 4155 || item == 2528 || item == 6543 || item == 5733;
-        if (!bypassDuelGuards && client.duelRule[7] && client.inDuel && client.duelFight) {
-            client.send(new SendMessage("Food has been disabled for this duel"));
-            return;
-        }
-        if (!bypassDuelGuards && (client.inDuel || client.duelFight || client.duelConfirmed || client.duelConfirmed2)) {
-            if (item != 4155) {
-                client.send(new SendMessage("This item cannot be used in a duel!"));
-                return;
-            }
-        }
-        if (ItemDispatcher.tryHandle(client, 1, item, slot, interfaceId)) {
-            client.checkItemUpdate();
-            return;
-        }
+        PacketItemActionService.handleFirstClickItem(client, id, slot, interfaceId);
     }
 }

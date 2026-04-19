@@ -1,8 +1,12 @@
 package net.dodian.uber.game.netty.listener;
 
+import net.dodian.uber.game.engine.systems.net.PacketRegistrationReport;
 import net.dodian.uber.game.netty.listener.in.WalkingListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Manages packet listener registration and provides backward compatibility.
@@ -32,13 +36,13 @@ public final class PacketListenerManager {
             Class.forName("net.dodian.uber.game.netty.listener.in.ChatListener");
             // Load UseItemOnPlayerListener for opcode 14
             Class.forName("net.dodian.uber.game.netty.listener.in.UseItemOnPlayerListener");
-            // Load FollowPlayerListener for opcode 39
+            // Load opcode-39 player menu listener (Trade with in current mapping)
             Class.forName("net.dodian.uber.game.netty.listener.in.FollowPlayerListener");
             // Load ItemOnGroundItemListener for opcode 25
             Class.forName("net.dodian.uber.game.netty.listener.in.ItemOnGroundItemListener");
             // Load UseItemOnNpcListener for opcode 57
             Class.forName("net.dodian.uber.game.netty.listener.in.UseItemOnNpcListener");
-            // Load LegacyBridge then ItemOnItem so listener overwrites any bridge registration
+            // Load the compatibility bridge before ItemOnItem so the concrete listener wins registration
             Class.forName("net.dodian.uber.game.netty.listener.in.ItemOnItemListener");
             // Load ClickItem2Listener for opcode 16
             Class.forName("net.dodian.uber.game.netty.listener.in.ClickItem2Listener");
@@ -97,20 +101,32 @@ public final class PacketListenerManager {
             Class.forName("net.dodian.uber.game.netty.listener.in.MouseClicksListener");
             Class.forName("net.dodian.uber.game.netty.listener.in.MoveItemsListener");
             Class.forName("net.dodian.uber.game.netty.listener.in.UpdateChatListener");
+            Class.forName("net.dodian.uber.game.netty.listener.in.SyntaxInputListener");
+            Class.forName("net.dodian.uber.game.netty.listener.in.BankTabCreationListener");
             
             // Register no-op handlers for unused opcodes
             repository.registerNoOp(77);  // Currently unused
             repository.registerNoOp(202); // Client idle logout (not used)
-            repository.registerNoOp(230); // Anti-cheat/checks for 2nd click npc (not used)
             repository.registerNoOp(86);  // Camera movement (unused)
+            repository.registerNoOp(229); // Client plane/update side packet (non-gameplay)
             
             // Note: WalkingListener registers itself for opcodes 248, 164, 98 in its static block
-            
+
+            PacketRegistrationReport report = buildRegistrationReport();
+            validateCriticalOpcodesOrThrow(report);
+            logger.info(
+                "Packet listener registration summary registered={} duplicate_overwrite_count={} missing_critical={}",
+                report.getRegisteredCount(),
+                report.getDuplicateOverwriteCount(),
+                report.getMissingCriticalOpcodes()
+            );
+
             // Lock the repository to prevent further modifications
             repository.lock();
             logger.info("All packet listeners registered successfully");
         } catch (Exception e) {
             logger.error("Failed to register packet listeners", e);
+            throw new ExceptionInInitializerError(e);
         }
     }
 
@@ -138,5 +154,25 @@ public final class PacketListenerManager {
      */
     public static PacketRepository getRepository() {
         return repository;
+    }
+
+    private static PacketRegistrationReport buildRegistrationReport() {
+        List<Integer> missingCriticalOpcodes = new ArrayList<>();
+        for (int opcode : PacketRegistrationReport.CRITICAL_OPCODES) {
+            if (!repository.has(opcode)) {
+                missingCriticalOpcodes.add(opcode);
+            }
+        }
+        return new PacketRegistrationReport(
+            repository.getRegisteredCount(),
+            missingCriticalOpcodes,
+            repository.getDuplicateOverwriteCount()
+        );
+    }
+
+    private static void validateCriticalOpcodesOrThrow(PacketRegistrationReport report) {
+        if (report.getHasMissingCriticalOpcodes()) {
+            throw new IllegalStateException("Missing critical packet listeners: " + report.getMissingCriticalOpcodes());
+        }
     }
 }

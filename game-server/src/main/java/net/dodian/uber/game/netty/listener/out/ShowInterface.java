@@ -6,20 +6,10 @@ import net.dodian.uber.game.netty.codec.ByteMessage;
 
 /**
  * Sends interface opcode (97) to open a specific interface on the client.
- * This replaces the legacy client.showInterface(int) implementation
+ * This replaces the legacy client.openInterface(int) implementation
  * and uses the complete Netty pipeline (ByteMessage -> ByteMessageEncoder -> GamePacketEncoder).
  */
-public class ShowInterface implements OutgoingPacket {
-
-    private final int interfaceId;
-
-    public ShowInterface(int interfaceId) {
-        this.interfaceId = interfaceId;
-    }
-
-    public int getInterfaceId() {
-        return interfaceId;
-    }
+public record ShowInterface(int interfaceId) implements OutgoingPacket {
 
     @Override
     public void send(Client client) {

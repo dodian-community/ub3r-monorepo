@@ -86,7 +86,19 @@ public class SendBankItems implements OutgoingPacket {
             }
         }
 
+        ItemContainerTrace.log(client, "SendBankItems", interfaceId, itemIds.size(), summarizePreview());
         client.send(message);
+    }
+
+    private String summarizePreview() {
+        StringBuilder preview = new StringBuilder();
+        for (int i = 0; i < itemIds.size() && preview.length() < 120; i++) {
+            if (preview.length() > 0) {
+                preview.append(", ");
+            }
+            preview.append(itemIds.get(i)).append('x').append(amounts.get(i));
+        }
+        return preview.toString();
     }
 
     private static boolean matchesTraceSubset(List<Integer> itemIds, List<Integer> amounts, int interfaceId) {

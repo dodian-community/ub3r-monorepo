@@ -2,6 +2,7 @@ package net.dodian.uber.game.netty.game;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import net.dodian.uber.game.engine.metrics.PacketRejectTelemetry;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.NetworkConstants;
 import org.slf4j.Logger;
@@ -43,23 +44,31 @@ public class GamePacketHandler extends SimpleChannelInboundHandler<GamePacket> {
         }
 
         if (packetsInWindow >= NetworkConstants.PACKET_RATE_LIMIT_PER_WINDOW) {
+            PacketRejectTelemetry.record(packet.opcode(), "rate_limit_window");
             if (!windowRateLimitLogged) {
                 logger.warn("[Netty] Rate limit exceeded for {}: opcode={} size={} (>{} packets in {}ms window)",
-                        client.getPlayerName(), packet.getOpcode(), packet.getSize(),
+                        client.getPlayerName(), packet.opcode(), packet.size(),
                         NetworkConstants.PACKET_RATE_LIMIT_PER_WINDOW, PACKET_WINDOW_MILLIS);
                 windowRateLimitLogged = true;
             }
             logger.debug("[Netty] Dropping packet opcode={} size={} from {} due to rate limit ({} per {}ms)",
-                    packet.getOpcode(), packet.getSize(), client.getPlayerName(),
+                    packet.opcode(), packet.size(), client.getPlayerName(),
                     NetworkConstants.PACKET_RATE_LIMIT_PER_WINDOW, PACKET_WINDOW_MILLIS);
             releasePacket(packet);
             return;
         }
 
         packetsInWindow++;
-        logger.trace("[Netty] Queued packet opcode={} size={} for game-thread handling", packet.getOpcode(), packet.getSize());
+        logger.trace("[Netty] Queued packet opcode={} size={} for game-thread handling", packet.opcode(), packet.size());
+
+        if (packet.opcode() == 0) {
+            client.resetTimeOutCounter();
+            releasePacket(packet);
+            return;
+        }
 
         if (!client.queueInboundPacket(packet)) {
+            PacketRejectTelemetry.record(packet.opcode(), "inbound_queue_overflow");
             logger.warn("[Netty] Inbound queue overflow for {}, closing channel", client.getPlayerName());
             releasePacket(packet);
             ctx.close();
@@ -67,8 +76,8 @@ public class GamePacketHandler extends SimpleChannelInboundHandler<GamePacket> {
     }
 
     private void releasePacket(GamePacket packet) {
-        if (packet != null && packet.getPayload() != null && packet.getPayload().refCnt() > 0) {
-            packet.getPayload().release();
+        if (packet != null && packet.payload() != null && packet.payload().refCnt() > 0) {
+            packet.payload().release();
         }
     }
 

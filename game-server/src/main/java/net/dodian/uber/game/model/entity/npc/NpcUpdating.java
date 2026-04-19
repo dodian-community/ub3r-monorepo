@@ -9,17 +9,15 @@ import net.dodian.uber.game.model.entity.player.Player;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
-import net.dodian.uber.game.runtime.sync.SynchronizationContext;
-import net.dodian.uber.game.runtime.sync.scratch.ThreadLocalSyncScratch;
-import net.dodian.uber.game.runtime.sync.viewport.ViewportSnapshot;
+import net.dodian.uber.game.engine.sync.SynchronizationContext;
+import net.dodian.uber.game.engine.sync.scratch.ThreadLocalSyncScratch;
+import net.dodian.uber.game.engine.sync.viewport.ViewportSnapshot;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import static net.dodian.utilities.DotEnvKt.getSyncScratchBufferReuseEnabled;
 
 /**
  * @author Dashboard
@@ -30,7 +28,6 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     private static final boolean DEBUG_NPC_MOVEMENT_WRITES = false;
     private static final int MAX_LOCAL_NPC_ADDS_PER_TICK = 15;
     private static final int MAX_LOCAL_NPC_CAP = 255;
-    private static final AtomicInteger DEBUG_MOVEMENT_WRITE_COUNTER = new AtomicInteger();
     private static final NpcUpdateBlockSet BLOCK_SET = new NpcUpdateBlockSet();
 
     private static final NpcUpdating instance = new NpcUpdating();
@@ -60,6 +57,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
                     buf.putBits(1, 1);
                     stream.putBits(2, 3); // tells client to remove this npc from list
                     i.remove();
+                    player.bumpLocalNpcMembershipRevision();
                 }
             }
 
@@ -71,6 +69,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
                 boolean exceptions = removeNpc(player, npc);
                 if (npc == null || !(player.withinDistance(npc) && npc.isVisible()) || !npc.isVisible() || exceptions) continue;
                 if (player.getLocalNpcs().add(npc)) {
+                    player.bumpLocalNpcMembershipRevision();
                     if(npc.getId() == 1306 || npc.getId() == 1307) //Makeover mage!
                         npc.setId(player.getGender() == 0 ? 1306 : 1307);
                     addNpc(player, npc, stream);
@@ -88,8 +87,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
             }
             // Note: endFrameVarSizeWord equivalent is handled by the outer packet wrapper
 
-            if (DEBUG_NPC_MOVEMENT_WRITES && movementWrites > 0) {
-                DEBUG_MOVEMENT_WRITE_COUNTER.addAndGet(movementWrites);
+            if (DEBUG_NPC_MOVEMENT_WRITES && movementWrites > 0 && logger.isDebugEnabled()) {
                 logger.debug("npcMovementWrites viewer={} count={}", player.getPlayerName(), movementWrites);
             }
         } finally {
@@ -105,7 +103,9 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         if (Server.chunkManager == null) {
             return Server.npcManager.getNpcs();
         }
-        return Server.chunkManager.findUpdateNpcs(player, 16);
+        java.util.ArrayList<Npc> candidates = new java.util.ArrayList<>();
+        Server.chunkManager.forEachUpdateNpcCandidate(player, 16, candidates::add);
+        return candidates;
     }
 
     private void pruneLocalNpcsToProtocolCap(Player player) {
@@ -122,6 +122,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
                 continue;
             }
             iterator.remove();
+            player.bumpLocalNpcMembershipRevision();
         }
     }
 
@@ -131,9 +132,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         if (!npc.canBeSeenBy(c)) {
             return true;
         }
-        if(c.quests[1] > 0 && npc.getId() == 999 && npc.getPosition().getX() == 2 && npc.getPosition().getY() == 2)
-            return true;
-        return false;
+        return c.quests[1] > 0 && npc.getId() == 999 && npc.getPosition().getX() == 2 && npc.getPosition().getY() == 2;
     }
 
 
@@ -172,23 +171,15 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     }
 
     private ByteMessage withUpdateBlock() {
-        if (getSyncScratchBufferReuseEnabled()) {
-            return ThreadLocalSyncScratch.npcUpdateBlock();
-        }
-        return ByteMessage.raw(16384);
+        return ThreadLocalSyncScratch.npcUpdateBlock();
     }
 
     private ByteMessage withSharedBlock() {
-        if (getSyncScratchBufferReuseEnabled()) {
-            return ThreadLocalSyncScratch.sharedBlock();
-        }
-        return ByteMessage.raw(512);
+        return ThreadLocalSyncScratch.sharedBlock();
     }
 
     private static void releaseScratch(ByteMessage message) {
-        if (!getSyncScratchBufferReuseEnabled()) {
-            message.releaseAll();
-        }
+        // Scratch buffers are reused from thread-local storage.
     }
 
     public void appendTextUpdate(Npc npc, ByteMessage buf) {
@@ -264,8 +255,8 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     }
     @Override
     public void appendFaceCoordinates(Npc npc, ByteMessage buf) {
-        buf.putShort(npc.getFacePosition().getX(), ByteOrder.LITTLE); // writeWordBigEndian
-        buf.putShort(npc.getFacePosition().getY(), ByteOrder.LITTLE); // writeWordBigEndian
+        buf.putShort(npc.getFaceCoordinateX(), ByteOrder.LITTLE); // writeWordBigEndian
+        buf.putShort(npc.getFaceCoordinateY(), ByteOrder.LITTLE); // writeWordBigEndian
     }
 
     @Override
@@ -297,9 +288,19 @@ public class NpcUpdating extends EntityUpdating<Npc> {
                 buf.putBits(1, 0);
             }
         } else {
+            int translatedDirection = translateDirectionToClient(npc);
+            if (translatedDirection == -1) {
+                if (npc.getUpdateFlags().isUpdateRequired()) {
+                    buf.putBits(1, 1);
+                    buf.putBits(2, 0);
+                } else {
+                    buf.putBits(1, 0);
+                }
+                return;
+            }
             buf.putBits(1, 1);
             buf.putBits(2, 1);
-            buf.putBits(3, Utils.xlateDirectionToClient[npc.getDirection()]);
+            buf.putBits(3, translatedDirection);
             if (npc.getUpdateFlags().isUpdateRequired()) {
                 buf.putBits(1, 1);
             } else {
@@ -308,8 +309,13 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         }
     }
 
-    public static int consumeDebugMovementWriteCounter() {
-        return DEBUG_MOVEMENT_WRITE_COUNTER.getAndSet(0);
+    private int translateDirectionToClient(Npc npc) {
+        int direction = npc.getDirection();
+        if (direction < 0 || direction >= Utils.xlateDirectionToClient.length) {
+            logger.warn("Invalid npc direction {} for slot={} id={}", direction, npc.getSlot(), npc.getId());
+            return -1;
+        }
+        return Utils.xlateDirectionToClient[direction];
     }
 
 }

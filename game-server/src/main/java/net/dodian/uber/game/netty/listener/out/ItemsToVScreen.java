@@ -2,25 +2,21 @@ package net.dodian.uber.game.netty.listener.out;
 
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.model.item.GameItem;
-import net.dodian.uber.game.netty.listener.OutgoingPacket;
 import net.dodian.uber.game.netty.codec.ByteMessage;
-import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.MessageType;
-import net.dodian.uber.game.netty.codec.ValueType;
+import net.dodian.uber.game.netty.listener.OutgoingPacket;
 
 import java.util.Collection;
 
 /**
- * Sends items to virtual screen (interface 6822).
- * This replaces the legacy itemsToVScreen_old() method with proper Netty implementation.
- * 
- * Packet structure:
- * - Opcode: 53 (variable size word)
- * - Interface ID: 2 bytes (6822)
- * - Item count: 2 bytes
- * - For each item:
- *   - Amount: 1 byte (if <= 254) or 1 byte (255) + 4 bytes (if > 254)
- *   - Item ID: 2 bytes (writeWordBigEndianA - item ID + 1)
+ * Sends items to the duel victory screen container (interface 6822).
+ *
+ * Mystic's item-container update path reads:
+ * - interface id: int
+ * - item count: short
+ * - for each item:
+ *   - amount: int
+ *   - item id: short (only when amount != 0)
  */
 public class ItemsToVScreen implements OutgoingPacket {
 
@@ -38,32 +34,25 @@ public class ItemsToVScreen implements OutgoingPacket {
     @Override
     public void send(Client client) {
         ByteMessage message = ByteMessage.message(53, MessageType.VAR_SHORT);
-        
-        // Write interface ID
-        message.putShort(6822);
-        
-        // Write item count
+
+        message.putInt(6822);
         message.putShort(items.size());
-        
-        // Write each item
+
+        StringBuilder preview = new StringBuilder();
         for (GameItem item : items) {
-            // Write amount
-            if (item.getAmount() > 254) {
-                message.put(255); // item's stack count. if over 254, write byte 255
-                // writesDWord_v2 - scrambled byte order [16-23][24-31][0-7][8-15]
-                int amount = item.getAmount();
-                message.put((amount >> 16) & 0xFF); // bits 16-23
-                message.put((amount >> 24) & 0xFF); // bits 24-31
-                message.put(amount & 0xFF);         // bits 0-7
-                message.put((amount >> 8) & 0xFF);  // bits 8-15
-            } else {
-                message.put(item.getAmount());
+            message.putInt(item.getAmount());
+            if (item.getAmount() != 0) {
+                message.putShort(item.getId() + 1);
             }
-            
-            // Write item ID (writeWordBigEndianA = little-endian + 128)
-            message.putShort(item.getId() + 1, ByteOrder.LITTLE, ValueType.ADD);
+            if (preview.length() < 120) {
+                if (preview.length() > 0) {
+                    preview.append(", ");
+                }
+                preview.append(item.getId()).append('x').append(item.getAmount());
+            }
         }
-        
+
+        ItemContainerTrace.log(client, "ItemsToVScreen", 6822, items.size(), preview.toString());
         client.send(message);
     }
 }

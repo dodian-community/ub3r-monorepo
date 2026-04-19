@@ -1,12 +1,10 @@
 package net.dodian.uber.game.model.entity;
 
-import net.dodian.cache.region.Region;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
-import net.dodian.uber.game.model.UpdateFlag;
-import net.dodian.uber.game.model.UpdateFlags;
-import net.dodian.uber.game.model.combat.impl.CombatStyleHandler;
+import net.dodian.uber.game.model.entity.CombatStyle;
+import net.dodian.uber.game.engine.systems.pathing.collision.CollisionManager;
 import net.dodian.uber.game.model.entity.npc.Npc;
 
 import java.awt.*;
@@ -17,31 +15,35 @@ public abstract class Entity {
 
     private final Position position;
     private final Position originalPosition;
-    private final Position facePosition;
     private final int slot;
     private int gfxId, gfxHeight;
     private final Type type;
 
     private final UpdateFlags updateFlags;
 
-    private CombatStyleHandler.CombatStyles combatStyle = CombatStyleHandler.CombatStyles.ACCURATE_MELEE;
+    private CombatStyle combatStyle = CombatStyle.ACCURATE_MELEE;
 
     private int animationDelay;
     private int animationId;
     private String text;
+    private int faceCoordinateX = 1;
+    private int faceCoordinateY = 1;
+    private int persistedFaceX = 0;
+    private int persistedFaceY = 0;
+    private volatile long currentGameCycle = 0L;
+    private volatile long processedGameCycle = 0L;
 
     private final Map<Entity, Integer> damage = new HashMap<>();
 
     public Entity(Position position, int slot, Type type) {
         this.position = position.copy();
         this.originalPosition = position.copy();
-        this.facePosition = new Position(0, 0);
         this.updateFlags = new UpdateFlags();
         this.slot = slot;
         this.type = type;
     }
 
-    public void requestAnim(int id, int delay) {
+    public void performAnimation(int id, int delay) {
         setAnimationId(id);
         setAnimationDelay(delay * 10);
         getUpdateFlags().setRequired(UpdateFlag.ANIM, true);
@@ -51,6 +53,10 @@ public abstract class Entity {
         this.gfxId = id;
         this.gfxHeight = height;
         getUpdateFlags().setRequired(UpdateFlag.GRAPHICS, true);
+    }
+
+    public void performGraphic(int id, int delay) {
+        setGfx(id, delay);
     }
     public int getGfxHeight() {
         return this.gfxHeight;
@@ -67,9 +73,13 @@ public abstract class Entity {
         return text;
     }
 
-    public boolean GoodDistance(int entityX, int entityY, int otherX, int otherY, int distance) {
+    public boolean isWithinDistance(int entityX, int entityY, int otherX, int otherY, int distance) {
         int dist = (int) Math.sqrt(Math.pow(entityX - otherX, 2) + Math.pow(entityY - otherY, 2));
         return dist <= distance;
+    }
+
+    public boolean isWithinDistance(Position otherPosition, int distance) {
+        return getPosition().withinDistance(otherPosition, distance);
     }
 
     public int getSlot() {
@@ -77,12 +87,85 @@ public abstract class Entity {
     }
 
     public void setFocus(int focusPointX, int focusPointY) {
-        facePosition.moveTo(2 * focusPointX + 1, 2 * focusPointY + 1);
+        faceCoordinateX = encodeFaceCoordinate(focusPointX);
+        faceCoordinateY = encodeFaceCoordinate(focusPointY);
+        getUpdateFlags().setRequired(UpdateFlag.FACE_CHARACTER, false);
         getUpdateFlags().setRequired(UpdateFlag.FACE_COORDINATE, true);
     }
 
-    public Position getFacePosition() {
-        return this.facePosition;
+    public int getFaceCoordinateX() {
+        return faceCoordinateX;
+    }
+
+    public int getFaceCoordinateY() {
+        return faceCoordinateY;
+    }
+
+    public int getFaceCoordinateWorldX() {
+        return decodeFaceCoordinate(faceCoordinateX);
+    }
+
+    public int getFaceCoordinateWorldY() {
+        return decodeFaceCoordinate(faceCoordinateY);
+    }
+
+    public void setPersistedFaceCoord(int focusPointX, int focusPointY) {
+        persistedFaceX = focusPointX;
+        persistedFaceY = focusPointY;
+    }
+
+    public int getPersistedFaceX() {
+        return persistedFaceX;
+    }
+
+    public int getPersistedFaceY() {
+        return persistedFaceY;
+    }
+
+    public boolean hasPersistedFaceCoord() {
+        return persistedFaceX != 0 || persistedFaceY != 0;
+    }
+
+    public int getPersistedFaceCoordinateX() {
+        return encodeFaceCoordinate(persistedFaceX);
+    }
+
+    public int getPersistedFaceCoordinateY() {
+        return encodeFaceCoordinate(persistedFaceY);
+    }
+
+    public long getCurrentGameCycle() {
+        return currentGameCycle;
+    }
+
+    public void setCurrentGameCycle(long currentGameCycle) {
+        this.currentGameCycle = currentGameCycle;
+    }
+
+    public long getProcessedGameCycle() {
+        return processedGameCycle;
+    }
+
+    public void setProcessedGameCycle(long processedGameCycle) {
+        this.processedGameCycle = processedGameCycle;
+    }
+
+    private int encodeFaceCoordinate(int value) {
+        long encoded = (2L * value) + 1L;
+        if (encoded < 0L) {
+            return 0;
+        }
+        if (encoded > 0xFFFFL) {
+            return 0xFFFF;
+        }
+        return (int) encoded;
+    }
+
+    private int decodeFaceCoordinate(int value) {
+        if (value <= 1) {
+            return 0;
+        }
+        return (value - 1) / 2;
     }
 
     public int getAnimationDelay() {
@@ -140,15 +223,15 @@ public abstract class Entity {
     }
 
     public boolean canMove(int x, int y) {
-        return Region.canMove(getPosition().getX(), getPosition().getY(), getPosition().getX() + x,
-                getPosition().getY() + y, getPosition().getZ(), getSize(), getSize());
+        return CollisionManager.global().canMove(getPosition().getX(), getPosition().getY(),
+                getPosition().getX() + x, getPosition().getY() + y, getPosition().getZ(), getSize(), getSize());
     }
 
-    public CombatStyleHandler.CombatStyles getCombatStyle() {
+    public CombatStyle getCombatStyle() {
         return combatStyle;
     }
 
-    public void setCombatStyle(CombatStyleHandler.CombatStyles combatStyle) {
+    public void setCombatStyle(CombatStyle combatStyle) {
         this.combatStyle = combatStyle;
     }
 

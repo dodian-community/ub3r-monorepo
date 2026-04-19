@@ -8,14 +8,21 @@ import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.model.player.skills.prayer.Prayers
-import net.dodian.utilities.Misc
+import net.dodian.uber.game.skill.prayer.PrayerManager
+import net.dodian.uber.game.engine.systems.animation.PlayerAnimationService
+import net.dodian.uber.game.engine.systems.combat.CombatAttackResult
+import net.dodian.uber.game.engine.systems.combat.CombatHitQueueService
+import net.dodian.uber.game.engine.systems.combat.CombatLogoutLockService
+import net.dodian.uber.game.engine.systems.combat.resolveCombatTargetPlayer
+import net.dodian.uber.game.engine.systems.skills.ProgressionService
+import net.dodian.uber.game.engine.systems.skills.RuneCostService
+import net.dodian.uber.game.engine.util.Misc
 import net.dodian.utilities.Utils
 import kotlin.math.min
 
-fun Client.handleMagicAttack(): Int {
-    if (combatTimer > 0 || stunTimer > 0 || target == null) //Need this to be a check here!
-        return 0
+fun Client.handleMagicAttack(): CombatAttackResult? {
+    if (stunTimer > 0 || target == null)
+        return null
     if(goodDistanceEntity(target, 5))
         resetWalkingQueue()
 
@@ -31,25 +38,30 @@ fun Client.handleMagicAttack(): Int {
                     type = checkSlot % 4
                     break
                 }
-        } else return 0 //Unhandled regular magic!
+        } else return null //Unhandled regular magic!
     }
     /* Checks after known magic cast! */
     if (getLevel(Skill.MAGIC) < requiredLevel[slot]) {
         send(SendMessage("You need a magic level of ${requiredLevel[slot]} to cast this spell!"))
         resetAttack()
-        return 0
+        return null
     }
-    if (!runeCheck()) {
+    if (!RuneCostService.ensureBloodRune(this)) {
         resetAttack()
-        return 0
+        return null
     }
 
-    combatTimer = coolDown[type]
-    lastCombat = 16
-    setFocus(target.position.x, target.position.y)
+    CombatLogoutLockService.refreshInteraction(this, target)
+    if (target is Player) {
+        facePlayer(target.slot)
+    } else {
+        setFocus(target.position.x, target.position.y)
+    }
+    val distance = distanceToPoint(target.position.x, target.position.y)
+    val hitDelay = getDistanceDelay(distance, true).toLong()
     deleteItem(565, 1)
     checkItemUpdate()
-    sendAnimation(1979)
+    PlayerAnimationService.requestAttack(this, 1979)
     var maxHit = baseDamage[slot] * magicBonusDamage()
     if (target is Npc) { // Slayer damage!
         val checkNpc = Server.npcManager.getNpc(target.slot)
@@ -83,8 +95,14 @@ fun Client.handleMagicAttack(): Int {
     if (target is Npc) {
         val npc = Server.npcManager.getNpc(target.slot)
         if (landCrit) hit + Utils.dRandom2(extra).toInt()
-        if (hit >= npc.currentHealth) hit = npc.currentHealth
-        npc.dealDamage(this, hit, if (landCrit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+        CombatHitQueueService.enqueue(
+            currentGameCycle + hitDelay,
+            this,
+            npc,
+            hit,
+            if (landCrit) Entity.hitType.CRIT else Entity.hitType.STANDARD,
+            Entity.damageType.MAGIC,
+        )
         val chance = Misc.chance(8) == 1 && armourSet("ahrim")
         /* Ancient effects */
         if(type == 2) { //Heal effect
@@ -99,15 +117,20 @@ fun Client.handleMagicAttack(): Int {
                 npc.inflictEffect(1, true, getSlot(), slot/4 + 1, 5)
         }
         /* Give experience */
-        giveExperience(40 * hit, Skill.MAGIC)
-        giveExperience(13 * hit, Skill.HITPOINTS)
+        ProgressionService.addXp(this, 40 * hit, Skill.MAGIC)
+        ProgressionService.addXp(this, 13 * hit, Skill.HITPOINTS)
     }
     if (target is Player) {
-        val player = Server.playerHandler.getClient(target.slot)
+        val player = resolveCombatTargetPlayer(target.slot) ?: return CombatAttackResult(coolDown[type])
         if (landCrit) hit + Utils.dRandom2(extra).toInt()
-        if (player.prayerManager.isPrayerOn(Prayers.Prayer.PROTECT_MAGIC)) (hit * 0.6).toInt()
-        if(hit >= player.currentHealth) hit = player.currentHealth
-        player.dealDamage(this, hit, if(landCrit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
+        CombatHitQueueService.enqueue(
+            currentGameCycle + hitDelay,
+            this,
+            player,
+            hit,
+            if(landCrit) Entity.hitType.CRIT else Entity.hitType.STANDARD,
+            Entity.damageType.MAGIC,
+        )
         val chance = Misc.chance(8) == 1 && armourSet("ahrim")
         /* Ancient effects */
         if(type == 2) { //Heal effect
@@ -128,7 +151,8 @@ fun Client.handleMagicAttack(): Int {
         if(autocast_spellIndex < 0) target = null //Set this as no target if we got no autocast set!
     }
 
-    if (debug) send(SendMessage("hit = $hit, elapsed = $combatTimer"))
+    val nextDelay = coolDown[type]
+    if (debug) send(SendMessage("hit = $hit, nextDelay = $nextDelay, hitDelay = $hitDelay"))
 
-    return 1
+    return CombatAttackResult(nextDelay)
 }

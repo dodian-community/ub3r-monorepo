@@ -10,50 +10,81 @@ public final class ByteBufReader {
 
     private ByteBufReader() {}
 
-    /**
-     * Reads a signed short (16-bit) according to the given order and value type.
-     * Supports BIG and LITTLE orders used by Dodian.
-     */
-    public static int readShort(ByteBuf buf, ValueType vt, ByteOrder order) {
-        int b1 = buf.readUnsignedByte();
-        int b2 = buf.readUnsignedByte();
+    public static int readShort(ByteBuf buf, ValueType valueType, ByteOrder order) {
+        return readShortSigned(buf, order, valueType);
+    }
 
-        int high, low;
+    public static int readShortSigned(ByteBuf buf, ByteOrder order, ValueType valueType) {
+        int value = readShortInternal(buf, order, valueType);
+        return value > 32767 ? value - 65536 : value;
+    }
+
+    public static int readShortUnsigned(ByteBuf buf, ByteOrder order, ValueType valueType) {
+        return readShortInternal(buf, order, valueType) & 0xFFFF;
+    }
+
+    public static int readByte(ByteBuf buf, ValueType valueType) {
+        return readSignedByte(buf, valueType);
+    }
+
+    public static int readSignedByte(ByteBuf buf, ValueType valueType) {
+        int value = buf.readUnsignedByte();
+        int transformed = applyTransform(value, valueType);
+        return transformed > 127 ? transformed - 256 : transformed;
+    }
+
+    public static int readUnsignedByte(ByteBuf buf, ValueType valueType) {
+        return applyTransform(buf.readUnsignedByte(), valueType);
+    }
+
+    public static int readInt(ByteBuf buf) {
+        return buf.readInt();
+    }
+
+    public static long readLong(ByteBuf buf) {
+        return buf.readLong();
+    }
+
+    public static String readTerminatedString(ByteBuf buf) {
+        return readTerminatedString(buf, buf.readableBytes());
+    }
+
+    public static String readTerminatedString(ByteBuf buf, int maxLength) {
+        int safeLength = Math.max(0, Math.min(maxLength, buf.readableBytes()));
+        StringBuilder builder = new StringBuilder(safeLength);
+        for (int i = 0; i < safeLength && buf.isReadable(); i++) {
+            int value = buf.readUnsignedByte();
+            if (value == 0 || value == 10) {
+                break;
+            }
+            builder.append((char) value);
+        }
+        return builder.toString();
+    }
+
+    private static int readShortInternal(ByteBuf buf, ByteOrder order, ValueType valueType) {
+        int value = 0;
         switch (order) {
-            case BIG: // RuneScape variant: low byte is first in stream
-                low  = applyTransform(b1, vt);
-                high = b2;
+            case BIG:
+                value |= readUnsignedByte(buf, ValueType.NORMAL) << 8;
+                value |= readUnsignedByte(buf, valueType);
                 break;
             case LITTLE:
-                low  = applyTransform(b1, vt);
-                high = b2;
+                value |= readUnsignedByte(buf, valueType);
+                value |= readUnsignedByte(buf, ValueType.NORMAL) << 8;
                 break;
+            case MIDDLE:
+                throw new UnsupportedOperationException("Middle-endian short is impossible");
+            case INVERSE_MIDDLE:
+                throw new UnsupportedOperationException("Inverse-middle-endian short is impossible");
             default:
-                throw new UnsupportedOperationException("ByteOrder " + order + " not yet supported for readShort");
+                throw new UnsupportedOperationException("Unsupported ByteOrder " + order);
         }
-        int value = (high << 8) | low;
-        if (value > 32767) value -= 65536;
         return value;
     }
 
-    /** Reads a signed byte with a transform. */
-    public static int readByte(ByteBuf buf, ValueType vt) {
-        int val = buf.readByte(); // signed
-        switch (vt) {
-            case ADD:
-                return val - 128;
-            case NEGATE:
-                return -val;
-            case SUBTRACT:
-                return 128 - val;
-            case NORMAL:
-            default:
-                return val;
-        }
-    }
-
-    private static int applyTransform(int value, ValueType vt) {
-        switch (vt) {
+    private static int applyTransform(int value, ValueType valueType) {
+        switch (valueType) {
             case ADD:
                 return (value - 128) & 0xFF;
             case NEGATE:

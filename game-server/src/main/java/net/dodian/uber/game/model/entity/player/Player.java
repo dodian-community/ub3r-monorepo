@@ -3,43 +3,61 @@ package net.dodian.uber.game.model.entity.player;
 import net.dodian.uber.game.Constants;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.netty.codec.ByteMessage;
-import net.dodian.uber.game.netty.codec.ByteOrder;
-import net.dodian.uber.game.netty.codec.ValueType;
-import net.dodian.uber.game.event.Event;
-import net.dodian.uber.game.event.EventManager;
 import net.dodian.uber.game.model.EntityType;
 import net.dodian.uber.game.model.Position;
-import net.dodian.uber.game.model.UpdateFlag;
-import net.dodian.uber.game.model.WalkToTask;
+import net.dodian.uber.game.model.entity.UpdateFlag;
 import net.dodian.uber.game.model.entity.Entity;
 import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.npc.NpcData;
 import net.dodian.uber.game.model.entity.npc.NpcDrop;
 import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.chunk.Chunk;
-import net.dodian.uber.game.model.chunk.ChunkRepository;
-import net.dodian.uber.game.model.music.RegionSong;
-import net.dodian.uber.game.model.object.GlobalObject;
-import net.dodian.uber.game.model.object.Object;
-import net.dodian.uber.game.model.player.content.Skillcape;
+import net.dodian.uber.game.model.chunk.ChunkEntityIndex;
+import net.dodian.uber.game.engine.systems.zone.RegionSong;
+import net.dodian.uber.game.model.objects.GlobalObject;
+import net.dodian.uber.game.model.objects.WorldObject;
+import net.dodian.uber.game.skill.Skillcape;
 import net.dodian.uber.game.netty.listener.out.InventoryInterface;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.netty.listener.out.SendSideTab;
 import net.dodian.uber.game.netty.listener.out.SendString;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
-import net.dodian.uber.game.model.player.skills.prayer.Prayers;
-import net.dodian.uber.game.model.player.skills.slayer.SlayerTask;
-import net.dodian.uber.game.model.player.skills.thieving.PyramidPlunder;
-import net.dodian.uber.game.party.Balloons;
-import net.dodian.uber.game.party.RewardItem;
+import net.dodian.uber.game.skill.prayer.PrayerManager;
+import net.dodian.uber.game.skill.slayer.Slayer;
+import net.dodian.uber.game.engine.systems.dialogue.DialogueService;
+import net.dodian.uber.game.activity.partyroom.PartyRoomBalloons;
+import net.dodian.uber.game.activity.partyroom.PartyRoomRewardItem;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
-import net.dodian.uber.game.skills.mining.MiningState;
-import net.dodian.uber.game.runtime.interaction.ActiveInteraction;
-import net.dodian.uber.game.runtime.interaction.InteractionIntent;
-import net.dodian.uber.game.runtime.queue.QueueTaskHandle;
-import net.dodian.uber.game.runtime.task.GameTaskSet;
-import net.dodian.utilities.Misc;
+import net.dodian.uber.game.skill.mining.MiningState;
+import net.dodian.uber.game.skill.woodcutting.WoodcuttingState;
+import net.dodian.uber.game.skill.fletching.FletchingState;
+import net.dodian.uber.game.skill.fishing.FishingState;
+import net.dodian.uber.game.skill.cooking.CookingState;
+import net.dodian.uber.game.skill.crafting.CraftingState;
+import net.dodian.uber.game.skill.prayer.PrayerOfferingState;
+import net.dodian.uber.game.skill.runecrafting.RunecraftingState;
+import net.dodian.uber.game.engine.systems.interaction.ActiveInteraction;
+import net.dodian.uber.game.engine.systems.interaction.StaticObjectOverrides;
+import net.dodian.uber.game.engine.systems.interaction.InteractionAnchorState;
+import net.dodian.uber.game.engine.systems.interaction.InteractionIntent;
+import net.dodian.uber.game.engine.systems.combat.CombatCancellationReason;
+import net.dodian.uber.game.engine.systems.combat.CombatCooldownState;
+import net.dodian.uber.game.engine.systems.combat.CombatEngagementState;
+import net.dodian.uber.game.engine.systems.combat.CombatTargetState;
+import net.dodian.uber.game.engine.lifecycle.DeathTaskState;
+import net.dodian.uber.game.skill.smithing.ActiveSmithingSelection;
+import net.dodian.uber.game.skill.smithing.SmeltingSelection;
+import net.dodian.uber.game.skill.thieving.PyramidPlunderPlayerState;
+import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason;
+import net.dodian.uber.game.engine.systems.action.PendingProductionSelection;
+import net.dodian.uber.game.engine.systems.action.ActiveProductionSelection;
+import net.dodian.uber.game.engine.systems.action.PlayerActionType;
+import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry;
+import net.dodian.uber.game.engine.scheduler.QueueTaskHandle;
+import net.dodian.uber.game.engine.tasking.GameTaskSet;
+import net.dodian.uber.game.engine.loop.GameCycleClock;
+import net.dodian.uber.game.engine.util.Misc;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,26 +70,16 @@ public abstract class Player extends Entity {
     public long longName = 0;
     public int wildyLevel = 0;
     public long lastAction = 0, lastMagic = 0;
-    public long lastPickAction = 0, lastAxeAction = 0, lastFishAction = 0;
-    private int playerNpc = -1;
+    public long lastPickAction = 0, lastFishAction = 0;
     public boolean premium = false, randomed = false, genieCombatFlag = false;
     public int playerGroup = 3, latestNews = 0, dbId = -1, questPage = 0, playerRights; //Online stuff!
     public int[] playerLooks = new int[13];
     public boolean saveNeeded = true, lookNeeded = false, discord = false;
-    // Start clean after account load; dirtiness is tracked by mutation sites.
-    private volatile int saveDirtyMask = 0;
-    private volatile long lastSavedRevision = 0L;
-    private volatile long saveRevision = 0L;
-    private volatile long lastProcessedCycle = 0L;
-    private volatile InteractionIntent pendingInteraction;
-    private volatile ActiveInteraction activeInteraction;
-    private volatile long interactionEarliestCycle = 0L;
-    private volatile QueueTaskHandle interactionTaskHandle;
-    private volatile QueueTaskHandle farmDebugTaskHandle;
-    private volatile QueueTaskHandle miningTaskHandle;
-    private volatile GameTaskSet<?> playerTaskSet;
-    private volatile MiningState miningState;
-    private int lastCombat = 0, combatTimer = 0, snareTimer = 0, stunTimer = 0;
+    private final PlayerAccountState accountState = new PlayerAccountState(this);
+    private final PlayerInteractionState interactionState = new PlayerInteractionState();
+    private final PlayerMovementState movementState = new PlayerMovementState(this);
+    private final PlayerUpdateState updateState = new PlayerUpdateState(this);
+    int lastCombat = 0, combatTimer = 0, snareTimer = 0, stunTimer = 0;
     public long start = 0, lastPlayerCombat = 0;
     public static int id = -1, localId = -1;
     public boolean busy = false, invis = false;
@@ -81,57 +89,47 @@ public abstract class Player extends Entity {
     public int duelStatus = -1, iconTimer = 6; // duelStatus 0 = Requesting duel, 1 = in duel screen, 2 = waiting for other player to accept, 3 = in duel, 4 = won
     public String forcedChat = "";
     public int headIcon = -1, skullIcon = -1, customCombat = -1;
-    private WalkToTask walkToTask;
     public boolean IsPMLoaded = false;
     public int playerIsMember = 1;
     public int[] playerBonus = new int[12];
     public int fightType = 1; //What it should do!
     public fightStyle weaponStyle = fightStyle.PUNCH;
-    private int playerSE = 0x328; // SE = Standard Emotion
-    private int playerSEW = 0x333; // SEW = Standard Emotion Walking
-    private int playerSER = 0x338; // SER = Standard Emotion Run
     public boolean IsCutting = false, IsAnvil = false;
     public boolean isFiremaking = false;
-    public PyramidPlunder getPlunder = new PyramidPlunder(((Client) this));
-    public boolean attackingPlayer = false, attackingNpc = false;
     public int MyShopID = -1;
     public int NpcDialogue = 0, NpcTalkTo = 0, NpcWanneTalk = 0;
-    public boolean IsBanking = false, isPartyInterface = false, checkBankInterface, NpcDialogueSend = false;
-    private Entity.hitType hitType, hitType2 = Entity.hitType.STANDARD;
+    public boolean IsBanking = false, isPartyInterface = false, checkBankInterface, bankStyleViewOpen = false, NpcDialogueSend = false;
+    private Entity.hitType hitType;
+    private final Entity.hitType hitType2 = Entity.hitType.STANDARD;
     public boolean isNpc, morph = false;
     public boolean initialized = false, disconnected = false, isKicked = false;
     public boolean isActive = false, debug = false;
-    public int actionTimer = 0;
     public String connectedFrom = "";
     public int ip = 0;
     public String UUID = "";
     public boolean takeAsNote = false;
     public String playerName = null, playerPass = null;
-    public PlayerHandler handler = null;
     public int maxItemAmount = Integer.MAX_VALUE;
     public int[] playerItems = new int[28];
     public int[] playerItemsN = new int[28];
-    public int playerBankSize = 800;
+    public int playerBankSize = 1300;
     public int[] bankItems = new int[playerBankSize];
     public int[] bankItemsN = new int[playerBankSize];
     public int pHairC, pTorsoC, pLegsC, pFeetC, pSkinC;
-    private int pGender, pHead, pTorso, pArms, pHands, pLegs, pFeet, pBeard;
     private final int[] playerEquipment = new int[14];
     private final int[] playerEquipmentN = new int[14];
-    private final int[] playerLevel = new int[21];
-    private final int[] playerXP = new int[21];
-    public int maxHealth = 10, currentHealth = getLevel(Skill.HITPOINTS);
-    public int maxPrayer = 1, currentPrayer = getLevel(Skill.PRAYER);
+    public int maxHealth = 10, currentHealth = 10;
+    public int maxPrayer = 1, currentPrayer = 1;
     public final static int maxPlayerListSize = Constants.maxPlayers;
     public Player[] playerList = new Player[maxPlayerListSize]; // To remove -Dashboard
     public int playerListSize = 0;
-    public Set<Player> playersUpdating = new LinkedHashSet<>(255);
+    public PlayerSlotMembershipSet playersUpdating = new PlayerSlotMembershipSet(Constants.maxPlayers + 1);
     private final Set<Npc> localNpcs = new LinkedHashSet<>(254);
+    private long localPlayerMembershipRevision = 0L;
+    private long localNpcMembershipRevision = 0L;
     private Chunk currentChunk;
-    private ChunkRepository chunkRepository;
+    private ChunkEntityIndex chunkEntityIndex;
     public boolean loaded = false;
-    private final boolean[] songUnlocked = new boolean[RegionSong.values().length];
-    private int faceTarget = -1;
     public int[] newWalkCmdX = new int[WALKING_QUEUE_SIZE];
     public int[] newWalkCmdY = new int[WALKING_QUEUE_SIZE];
     public int[] tmpNWCX = new int[WALKING_QUEUE_SIZE];
@@ -141,8 +139,6 @@ public abstract class Player extends Entity {
     public int[] travelBackX = new int[WALKING_QUEUE_SIZE];
     public int[] travelBackY = new int[WALKING_QUEUE_SIZE];
     public int numTravelBackSteps = 0;
-    private int graphicId = 0;
-    private int graphicHeight = 0;
     public int m4001 = 0;
     public int m4002 = 0;
     public int m4003 = 0;
@@ -158,8 +154,9 @@ public abstract class Player extends Entity {
     public boolean UsingAgility = false;
     public int agilityCourseStage = 0;
     public long walkBlock = 0;
+    private long walkBlockUntilCycle = -1L;
     public boolean xLog = false;
-    public ArrayList<RewardItem> offeredPartyItems = new ArrayList<>();
+    public ArrayList<PartyRoomRewardItem> offeredPartyItems = new ArrayList<>();
     /*
      Entity(1 = player, 2 = npc, 3 = object, 4 = itemInv)
      slot
@@ -169,12 +166,8 @@ public abstract class Player extends Entity {
     public ArrayList<Integer> playerPotato = new ArrayList<>();
     //Herblore service
     public int herbMaking = -1;
-    public ArrayList<RewardItem> herbOptions = new ArrayList<>();
+    public ArrayList<PartyRoomRewardItem> herbOptions = new ArrayList<>();
     //Slayer
-    private final ArrayList<Integer> slayerData = new ArrayList<>();
-    private final ArrayList<Boolean> travelData = new ArrayList<>();
-    private final ArrayList<Integer> paid = new ArrayList<>();
-    private final ArrayList<Boolean> unlocked = new ArrayList<>();
     public int unlockLength = 2;
     public int lastRecoverEffect = 0, lastRecover = 4;
     public int[] boostedLevel = new int[21];
@@ -184,13 +177,35 @@ public abstract class Player extends Entity {
     public int dailyLogin = 1;
     public ArrayList<String> dailyReward = new ArrayList<>();
     public int staffSize = 5;
+    private final PlayerStats stats = new PlayerStats(this);
+    private final PlayerAppearanceState appearanceState = new PlayerAppearanceState(this);
+    private final PlayerProgressState progressState = new PlayerProgressState(this);
+    private final PlayerCombatState combatState = new PlayerCombatState(this);
 
     public Player(int slot) {
         super(new Position(-1, -1, 0), slot, Entity.Type.PLAYER);
-        teleportToX = teleportToY = -1;
-        mapRegionX = mapRegionY = -1;
-        currentX = currentY = teleportToZ = 0;
+        // Delegated state components are not safe to call from field initializers.
+        currentHealth = maxHealth;
+        currentPrayer = maxPrayer;
+        movementState.initializeRegionState();
         resetWalkingQueue();
+    }
+
+    public void applyWalkBlockMs(long durationMs) {
+        if (durationMs <= 0L) {
+            return;
+        }
+        walkBlock = Math.max(walkBlock, System.currentTimeMillis() + durationMs);
+        long ticks = Math.max(1, GameCycleClock.ticksForDurationMs(durationMs));
+        walkBlockUntilCycle = Math.max(walkBlockUntilCycle, GameCycleClock.currentCycle() + ticks);
+    }
+
+    public boolean isWalkBlockedAtCycle(long cycle) {
+        return cycle < walkBlockUntilCycle || System.currentTimeMillis() < walkBlock;
+    }
+
+    public boolean isWalkBlocked() {
+        return isWalkBlockedAtCycle(GameCycleClock.currentCycle());
     }
 
     public boolean isShopping() {
@@ -198,37 +213,14 @@ public abstract class Player extends Entity {
     }
 
     public void bossCount(String name, int amount) {
-        for(int i = 0; i < boss_name.length; i++) {
-            if(boss_name[i].equalsIgnoreCase(name))
-                boss_amount[i] = amount;
-        }
+        progressState.bossCount(name, amount);
     }
 
     public void defaultDailyReward(Client c) {
-        dailyReward.add(0, c.today.getTime() + "");
-        dailyReward.add(1, "6000"); //1 hour added to the timer for battlestaff
-        dailyReward.add(2, "0");
-        dailyReward.add(3, "0");
-        dailyReward.add(4, "60");
+        accountState.defaultDailyReward(c);
     }
     public void battlestavesData() {
-        if(dailyReward.isEmpty()) { //If size is empty do not send!
-            return;
-        }
-        int time = Integer.parseInt(dailyReward.get(1));
-        int amount = Integer.parseInt(dailyReward.get(2));
-        int current = Integer.parseInt(dailyReward.get(3));
-        int maxAmount = Integer.parseInt(dailyReward.get(4));
-        if(current == maxAmount) { //Cant get anymore battlestaffs this day!
-            return;
-        }
-        time -= 1;
-        if(time <= 0) { //Need this just incase someone is in the negative!
-            dailyReward.set(1, "6000");
-            dailyReward.set(2, (amount + 20) + "");
-            dailyReward.set(3, (current + 20) + "");
-            ((Client) this).send(new SendMessage("<col=ff6200>You got "+(amount + 20)+" battlestaves that you can claim at Baba Yaga."));
-        } else dailyReward.set(1, time + "");
+        accountState.battlestavesData();
     }
 
     public void addEffectTime(int slot, int ticks) {
@@ -290,7 +282,7 @@ public abstract class Player extends Entity {
                     dealDamage(null, 3 + Misc.random(12), Entity.hitType.STANDARD);
                     c.send(new SendMessage("The thirst from the heat damage you!"));
                 } else {
-                    c.requestAnim(829, 0);
+                    c.performAnimation(829, 0);
                     c.checkItemUpdate();
                     //c.send(new SendMessage("You take a sip on some water.")); //Should we add a msg when drinking?!
                 }
@@ -311,14 +303,12 @@ public abstract class Player extends Entity {
             }
         }
     }
-    private boolean antiFireEffect() {
+    boolean antiFireEffect() {
         return effects.size() > 1 && effects.get(1) > 0;
     }
 
     public void defaultCharacterLook(Client temp) {
-        int[] testLook = {0, 3, 14, 18, 26, 34, 38, 42, 2, 14, 5, 4, 0}; // DEfault look!
-        System.arraycopy(testLook, 0, playerLooks, 0, 13);
-        temp.setLook(playerLooks);
+        appearanceState.defaultCharacterLook(temp);
     }
 
     public enum fightStyle {
@@ -335,99 +325,81 @@ public abstract class Player extends Entity {
     }
 
     void destruct() {
-        releaseCachedUpdateBlock();
+        updateState.releaseCachedUpdateBlock();
         cancelMiningTask();
         clearMiningState();
-        if (playerTaskSet != null) {
-            playerTaskSet.terminateTasks();
-            playerTaskSet = null;
-        }
+        cancelWoodcuttingTask();
+        clearWoodcuttingState();
+        interactionState.terminatePlayerTasks();
         removeFromChunk();
         getPosition().moveTo(-1, -1);
-        mapRegionX = mapRegionY = -1;
-        currentX = currentY = 0;
+        movementState.resetTransientState();
         resetWalkingQueue();
     }
 
     public void setTask(String input) {
-        if (input.isEmpty())
-            input = "-1,-1,0,0,0,0,-1";
-        slayerData.clear();
-        String[] tasks = input.split(",");
-        for (String task : tasks) slayerData.add(Integer.parseInt(task));
-        ensureSlayerDataSize();
+        progressState.setTask(input);
     }
     public String saveTaskAsString() {
-        StringBuilder tasks = new StringBuilder();
-        for (int i = 0; i < slayerData.size(); i++) {
-            tasks.append(slayerData.get(i).toString()).append(i == slayerData.size() - 1 ? "" : ",");
-        }
-        return tasks.toString();
+        return progressState.saveTaskAsString();
     }
     public ArrayList<Integer> getSlayerData() {
-        //"-1,-1,0,0,0,0,-1" //master, taskid, total, currentAmount, streak, points, partner
-        ensureSlayerDataSize();
-        return slayerData;
+        return progressState.getSlayerData();
     }
 
     private void ensureSlayerDataSize() {
-        final int[] defaultSlayerData = {-1, -1, 0, 0, 0, 0, -1};
-        for (int i = slayerData.size(); i < defaultSlayerData.length; i++) {
-            slayerData.add(defaultSlayerData[i]);
-        }
+        progressState.ensureSlayerDataSize();
+    }
+
+    public SlayerTaskState getSlayerTaskState() {
+        ensureSlayerDataSize();
+        ArrayList<Integer> data = getSlayerData();
+        return new SlayerTaskState(
+            data.get(0),
+            data.get(1),
+            data.get(2),
+            data.get(3),
+            data.get(4),
+            data.get(5),
+            data.get(6)
+        );
+    }
+
+    public void setSlayerTaskState(SlayerTaskState state) {
+        ensureSlayerDataSize();
+        ArrayList<Integer> data = getSlayerData();
+        data.set(0, state.getMasterNpcId());
+        data.set(1, state.getTaskOrdinal());
+        data.set(2, state.getAssignmentAmount());
+        data.set(3, state.getRemainingAmount());
+        data.set(4, state.getStreak());
+        data.set(5, state.getPoints());
+        data.set(6, state.getBlockedTaskOrdinal());
     }
 
     public void setTravel(String input) {
-        if (input.isEmpty()) input = "0:0:0:0:0";
-        String[] travel = input.split(":");
-        for (String s : travel) travelData.add(s.equals("1"));
+        progressState.setTravel(input);
     }
     public String saveTravelAsString() {
-        StringBuilder travel = new StringBuilder();
-        for (int i = 0; i < travelData.size(); i++) {
-            int id = travelData.get(i) ? 1 : 0;
-            travel.append(id).append(i == travelData.size() - 1 ? "" : ":");
-        }
-        return travel.toString();
+        return progressState.saveTravelAsString();
     }
     public boolean getTravel(int i) {
-        return travelData.get(i);
+        return progressState.getTravel(i);
     }
     public void saveTravel(int i) {
-        travelData.set(i, true);
+        progressState.saveTravel(i);
     }
     public void addUnlocks(int i, String... check) {
-            if(check.length == 1) {
-                if(unlocked.isEmpty() || i == unlocked.size()) {
-                    paid.add(i, -1);
-                    unlocked.add(i, check[0].equals("1"));
-                } else {
-                    paid.set(i, -1);
-                    unlocked.set(i, check[0].equals("1"));
-                }
-            } else if (check.length == 2) {
-                if(unlocked.isEmpty() || i == unlocked.size()) {
-                    unlocked.add(i, check[1].equals("1"));
-                    paid.add(i, check[0].equals("1") ? 1 : 0);
-                } else {
-                    unlocked.set(i, check[1].equals("1"));
-                    paid.set(i, check[0].equals("1") ? 1 : 0);
-                }
-            }
+        progressState.addUnlocks(i, check);
     }
     public String saveUnlocksAsString() {
-        StringBuilder unlocks = new StringBuilder();
-        for (int i = 0; i < unlocked.size(); i++) {
-            int unlock = unlocked.get(i) ? 1 : 0;
-            unlocks.append(paid.get(i) == -1 ? unlock + "" : paid.get(i) + "," + unlock).append(i == unlocked.size() - 1 ? "" : ":");
-        }
-        return unlocks.toString();
+        return progressState.saveUnlocksAsString();
     }
     public boolean checkUnlock(int i) {
-        return !unlocked.isEmpty() && unlocked.size() >= i && unlocked.get(i);
+        return progressState.checkUnlock(i);
     }
     public int checkUnlockPaid(int i) {
-        return paid.isEmpty() || paid.size() < i  ? -1 : paid.get(i);
+        return progressState.checkUnlockPaid(i);
     }
 
     public abstract void initialize();
@@ -445,32 +417,17 @@ public abstract class Player extends Entity {
     }
 
     public void println_debug(String str) {
-        if (!net.dodian.utilities.DotEnvKt.getClientPacketTraceEnabled()
-                && !net.dodian.utilities.DotEnvKt.getClientUiTraceEnabled()) {
-            return;
-        }
-        if (logger.isDebugEnabled()) {
-            logger.debug("[player-{}]: {}", getSlot(), str);
-        }
+        logger.debug("[player-{}] {}", getPlayerName(), str);
     }
 
     public void println(String str) {
-        if (!net.dodian.utilities.DotEnvKt.getClientPacketTraceEnabled()
-                && !net.dodian.utilities.DotEnvKt.getClientUiTraceEnabled()) {
-            return;
-        }
-        logger.info("[player-{}]: {}", getSlot(), str);
     }
 
     public String getSongUnlockedSaveText() {
-        StringBuilder out = new StringBuilder();
-        for (boolean b : songUnlocked) {
-            out.append(b ? 1 : 0).append(" ");
-        }
-        return out.toString();
+        return progressState.getSongUnlockedSaveText();
     }
 
-    public boolean withinDistance(Object o) {
+    public boolean withinDistance(WorldObject o) {
         if (getPosition().getZ() != o.z)
             return false;
         int deltaX = o.x - getPosition().getX(),
@@ -479,7 +436,7 @@ public abstract class Player extends Entity {
     }
 
     public boolean withinDistance(Player otherPlr) {
-        if (!otherPlr.isActive)
+        if (!otherPlr.isActivePlayer())
             return false;
         if (getPosition().getZ() != otherPlr.getPosition().getZ())
             return false;
@@ -502,207 +459,231 @@ public abstract class Player extends Entity {
      * @return The username of the player.
      */
     public String getPlayerName() {
-        return this.playerName;
+        return accountState.getPlayerName();
     }
 
     public void setPlayerName(String playerName) {
-        this.playerName = playerName;
+        accountState.setPlayerName(playerName);
     }
 
-    public WalkToTask getWalkToTask() {
-        return this.walkToTask;
+    public String getPlayerPass() {
+        return accountState.getPlayerPass();
     }
 
-    public void setWalkToTask(WalkToTask walkToTask) {
-        this.walkToTask = walkToTask;
+    public void setPlayerPass(String playerPass) {
+        accountState.setPlayerPass(playerPass);
+    }
+
+    public int getDbId() {
+        return accountState.getDbId();
+    }
+
+    public void setDbId(int dbId) {
+        accountState.setDbId(dbId);
+    }
+
+    public int getPlayerRights() {
+        return accountState.getPlayerRights();
+    }
+
+    public void setPlayerRights(int playerRights) {
+        accountState.setPlayerRights(playerRights);
+    }
+
+    public int getPlayerGroup() {
+        return accountState.getPlayerGroup();
+    }
+
+    public void setPlayerGroup(int playerGroup) {
+        accountState.setPlayerGroup(playerGroup);
+    }
+
+    public boolean isPremium() {
+        return accountState.isPremium();
+    }
+
+    public void setPremium(boolean premium) {
+        accountState.setPremium(premium);
+    }
+
+    public int getLatestNews() {
+        return accountState.getLatestNews();
+    }
+
+    public void setLatestNews(int latestNews) {
+        accountState.setLatestNews(latestNews);
+    }
+
+    public String getConnectedFrom() {
+        return accountState.getConnectedFrom();
+    }
+
+    public void setConnectedFrom(String connectedFrom) {
+        accountState.setConnectedFrom(connectedFrom);
+    }
+
+    public int getIp() {
+        return accountState.getIp();
+    }
+
+    public void setIp(int ip) {
+        accountState.setIp(ip);
+    }
+
+    public String getUUID() {
+        return accountState.getUUID();
+    }
+
+    public void setUUID(String UUID) {
+        accountState.setUUID(UUID);
+    }
+
+    public boolean isInitialized() {
+        return accountState.isInitialized();
+    }
+
+    public void setInitialized(boolean initialized) {
+        accountState.setInitialized(initialized);
+    }
+
+    public boolean isDisconnected() {
+        return accountState.isDisconnected();
+    }
+
+    public void setDisconnected(boolean disconnected) {
+        accountState.setDisconnected(disconnected);
+    }
+
+    public boolean isActivePlayer() {
+        return accountState.isActivePlayer();
+    }
+
+    public void setActivePlayer(boolean active) {
+        accountState.setActivePlayer(active);
+    }
+
+    public boolean isKicked() {
+        return accountState.isKicked();
+    }
+
+    public void setKicked(boolean kicked) {
+        accountState.setKicked(kicked);
+    }
+
+    public boolean isSaveNeeded() {
+        return accountState.isSaveNeeded();
+    }
+
+    public void setSaveNeeded(boolean saveNeeded) {
+        accountState.setSaveNeeded(saveNeeded);
+    }
+
+    public boolean isYellOn() {
+        return accountState.isYellOn();
+    }
+
+    public void setYellOn(boolean yellOn) {
+        accountState.setYellOn(yellOn);
+    }
+
+    public boolean isDiscordEnabled() {
+        return accountState.isDiscord();
+    }
+
+    public void setDiscordEnabled(boolean discord) {
+        accountState.setDiscord(discord);
+    }
+
+    public boolean isInstaLootEnabled() {
+        return accountState.isInstaLoot();
+    }
+
+    public void setInstaLootEnabled(boolean instaLoot) {
+        accountState.setInstaLoot(instaLoot);
+    }
+
+    public int getDailyLogin() {
+        return accountState.getDailyLogin();
+    }
+
+    public void setDailyLogin(int dailyLogin) {
+        accountState.setDailyLogin(dailyLogin);
+    }
+
+    public ArrayList<String> getDailyReward() {
+        return accountState.getDailyReward();
     }
 
     public int mapRegionX, mapRegionY; // the map region the player is
     // currently in
-    private int currentX, currentY; // relative x/y coordinates (to map region)
-    // Note that mapRegionX*8+currentX yields absX
 
     public static final int WALKING_QUEUE_SIZE = 80;
     public int[] walkingQueueX = new int[WALKING_QUEUE_SIZE], walkingQueueY = new int[WALKING_QUEUE_SIZE];
     public int wQueueReadPtr = 0; // points to slot for reading from queue
     public int wQueueWritePtr = 0; // points to (first free) slot for writing
     public boolean isRunning = false;
+    private int lastWalkDeltaX = 0;
+    private int lastWalkDeltaY = 0;
     public int teleportToX, teleportToY, teleportToZ; // contain absolute x/y
     public boolean walkingBlock = false;
     public void resetWalkingQueue() {
-        walkingBlock = true;
-        wQueueReadPtr = wQueueWritePtr = 0;
-        newWalkCmdSteps = 0;
-        // properly initialize this to make the "travel back" algorithm work
-        for (int i = 0; i < WALKING_QUEUE_SIZE; i++) {
-            walkingQueueX[i] = currentX;
-            walkingQueueY[i] = currentY;
-        }
+        movementState.resetWalkingQueue();
     }
 
     public void addToWalkingQueue(int x, int y) {
-        int next = (wQueueWritePtr + 1) % WALKING_QUEUE_SIZE;
-        if (next == wQueueWritePtr)
-            return; // walking queue full, silently discard the data
-        walkingQueueX[wQueueWritePtr] = x;
-        walkingQueueY[wQueueWritePtr] = y;
-        wQueueWritePtr = next;
+        movementState.addToWalkingQueue(x, y);
     }
 
     // returns 0-7 for next walking direction or -1, if we're not moving
     public int getNextWalkingDirection() {
-        if (wQueueReadPtr == wQueueWritePtr)
-            return -1; // walking queue empty
-        int dir;
-        do {
-            dir = Utils.direction(currentX, currentY, walkingQueueX[wQueueReadPtr], walkingQueueY[wQueueReadPtr]);
-            if (dir == -1) {
-                wQueueReadPtr = (wQueueReadPtr + 1) % WALKING_QUEUE_SIZE;
-            } else {
-                // Convert the 16-direction value to 8-direction by dividing by 2
-                dir = dir / 2;
-                // Ensure the direction is within 0-7 range
-                if (dir < 0 || dir > 7) {
-                    println_debug("Invalid direction calculated: " + dir);
-                    resetWalkingQueue();
-                    return -1;
-                }
-            }
-        } while (dir == -1 && wQueueReadPtr != wQueueWritePtr);
-        
-        if (dir == -1) {
-            return -1;
-        }
-        
-        // Update position using the 8-direction deltas
-        Position newPos = new Position(getPosition().getX(), getPosition().getY(), getPosition().getZ());
-        int deltaX = Utils.directionDeltaX[dir];
-        int deltaY = Utils.directionDeltaY[dir];
-        
-        currentX += deltaX;
-        currentY += deltaY;
-        newPos.move(deltaX, deltaY);
-        getPosition().moveTo(newPos.getX(), newPos.getY());
-        
-        return dir;
+        return movementState.getNextWalkingDirection();
     }
 
-    // calculates directions of player movement, or the new coordinates when
-    // teleporting
-    private boolean didTeleport = false; // set to true if char did teleport in
-    // this cycle
-    private boolean mapRegionDidChange = false;
+    public int getLastWalkDeltaX() {
+        return lastWalkDeltaX;
+    }
+
+    public int getLastWalkDeltaY() {
+        return lastWalkDeltaY;
+    }
+
+    public void setLastWalkDelta(int deltaX, int deltaY) {
+        this.lastWalkDeltaX = deltaX;
+        this.lastWalkDeltaY = deltaY;
+    }
+
     public boolean firstSend = false;
-    private int primaryDirection = -1, secondaryDirection = -1; // direction char is going in this cycle
 
     public void getNextPlayerMovement() {
-        Client temp = (Client) this;
-        mapRegionDidChange = false;
-        didTeleport = false;
-        primaryDirection = secondaryDirection = -1;
-
-        if (teleportToX != -1 && teleportToY != -1) {
-            mapRegionDidChange = true;
-            if (mapRegionX != -1 && mapRegionY != -1) {
-                // check, whether destination is within current map region
-                int relX = teleportToX - mapRegionX * 8, relY = teleportToY - mapRegionY * 8;
-                if (relX >= 2 * 8 && relX < 11 * 8 && relY >= 2 * 8 && relY < 11 * 8)
-                    mapRegionDidChange = false;
-            }
-            if (mapRegionDidChange) {
-                // after map region change the relative coordinates range
-                // between 48 - 55+
-                if (firstSend) {
-                    temp.pLoaded = false;
-                } else {
-                    firstSend = true;
-                }
-                mapRegionX = (teleportToX >> 3) - 6;
-                mapRegionY = (teleportToY >> 3) - 6;
-                // playerListSize = 0; // completely rebuild playerList after
-                // teleport AND map region change
-            }
-            currentX = teleportToX - 8 * mapRegionX;
-            currentY = teleportToY - 8 * mapRegionY;
-            Position newPos = new Position(teleportToX, teleportToY, teleportToZ);
-            resetWalkingQueue();
-
-            teleportToX = teleportToY = -1;
-            teleportToZ = 0;
-            didTeleport = true;
-            temp.getPosition().moveTo(newPos.getX(), newPos.getY(), newPos.getZ());
-        } else {
-
-            primaryDirection = getNextWalkingDirection();
-            if (primaryDirection == -1)
-                return; // standing
-
-            if (isRunning) {
-                secondaryDirection = getNextWalkingDirection();
-            }
-
-            // check, if we're required to change the map region
-            int deltaX = 0, deltaY = 0;
-            if (currentX < 2 * 8) {
-                deltaX = 4 * 8;
-                mapRegionX -= 4;
-                mapRegionDidChange = true;
-            } else if (currentX >= 11 * 8) {
-                deltaX = -4 * 8;
-                mapRegionX += 4;
-                mapRegionDidChange = true;
-            }
-            if (currentY < 2 * 8) {
-                deltaY = 4 * 8;
-                mapRegionY -= 4;
-                mapRegionDidChange = true;
-            } else if (currentY >= 11 * 8) {
-                deltaY = -4 * 8;
-                mapRegionY += 4;
-                mapRegionDidChange = true;
-            }
-
-            if (mapRegionDidChange) {
-                // have to adjust all relative coordinates
-                if (firstSend) {
-                    temp.pLoaded = false;
-                } else {
-                    firstSend = true;
-                }
-                currentX += deltaX;
-                currentY += deltaY;
-                for (int i = 0; i < WALKING_QUEUE_SIZE; i++) {
-                    walkingQueueX[i] += deltaX;
-                    walkingQueueY[i] += deltaY;
-                }
-            }
-        }
+        movementState.getNextPlayerMovement();
     }
 
     public int getLevel(Skill skill) {
-        return playerLevel[skill.getId()];
+        return stats.getLevel(skill);
     }
 
     public int getExperience(Skill skill) {
-        return playerXP[skill.getId()];
+        return stats.getExperience(skill);
     }
 
     public void addExperience(int experience, Skill skill) {
-        playerXP[skill.getId()] += experience;
+        stats.addExperience(experience, skill);
     }
 
     public void setLevel(int level, Skill skill) {
-        playerLevel[skill.getId()] = level;
+        stats.setLevel(level, skill);
     }
 
     public void setExperience(int experience, Skill skill) {
-        playerXP[skill.getId()] = experience;
+        stats.setExperience(experience, skill);
     }
 
     // handles anything related to character position basically walking, running
     // and standing
     // applies to only to "non-thisPlayer" charracters
     public void updatePlayerMovement(ByteMessage str) {
+        int primaryDirection = getPrimaryDirection();
+        int secondaryDirection = getSecondaryDirection();
         if (primaryDirection == -1) {
             // don't have to update the character position, because the char is
             // just standing
@@ -714,19 +695,50 @@ public abstract class Player extends Entity {
                 str.putBits(1, 0);
         } else if (secondaryDirection == -1) {
             // send "walking packet"
+            int translatedPrimary = translateDirectionToClient(primaryDirection, "local-primary");
+            if (translatedPrimary == -1) {
+                if (getUpdateFlags().isUpdateRequired() || getUpdateFlags().get(UpdateFlag.CHAT)) {
+                    str.putBits(1, 1);
+                    str.putBits(2, 0);
+                } else {
+                    str.putBits(1, 0);
+                }
+                return;
+            }
             str.putBits(1, 1);
             str.putBits(2, 1);
-            str.putBits(3, Utils.xlateDirectionToClient[primaryDirection]);
+            str.putBits(3, translatedPrimary);
             str.putBits(1, getUpdateFlags().isUpdateRequired() ? 1 : 0);
         } else {
             // send "running packet"
+            int translatedPrimary = translateDirectionToClient(primaryDirection, "local-primary");
+            int translatedSecondary = translateDirectionToClient(secondaryDirection, "local-secondary");
+            if (translatedPrimary == -1) {
+                if (getUpdateFlags().isUpdateRequired() || getUpdateFlags().get(UpdateFlag.CHAT)) {
+                    str.putBits(1, 1);
+                    str.putBits(2, 0);
+                } else {
+                    str.putBits(1, 0);
+                }
+                return;
+            }
             str.putBits(1, 1);
-            str.putBits(2, 2);
-            str.putBits(3, Utils.xlateDirectionToClient[primaryDirection]);
-            str.putBits(3, Utils.xlateDirectionToClient[secondaryDirection]);
+            str.putBits(2, translatedSecondary == -1 ? 1 : 2);
+            str.putBits(3, translatedPrimary);
+            if (translatedSecondary != -1) {
+                str.putBits(3, translatedSecondary);
+            }
             str.putBits(1, getUpdateFlags().isUpdateRequired() ? 1 : 0);
         }
 
+    }
+
+    private int translateDirectionToClient(int direction, String phase) {
+        if (direction < 0 || direction >= Utils.xlateDirectionToClient.length) {
+            logger.warn("Invalid player direction {} for {} during {}", direction, getPlayerName(), phase);
+            return -1;
+        }
+        return Utils.xlateDirectionToClient[direction];
     }
 
     public void addNewPlayer(Player plr, ByteMessage str, ByteMessage updateBlock) {
@@ -736,6 +748,7 @@ public abstract class Player extends Entity {
         int id = plr.getSlot();
         playerList[playerListSize++] = plr;
         playersUpdating.add(plr);
+        bumpLocalPlayerMembershipRevision();
         str.putBits(11, id);
         str.putBits(1, 1);// Requires update?
         PlayerUpdating.getInstance().appendAddLocalBlockUpdate(plr, updateBlock);
@@ -752,145 +765,85 @@ public abstract class Player extends Entity {
         str.putBits(5, z); // x coordinate relative to thisPlayer
     }
 
-    // --- Cached player update block (for efficient multi-viewer reuse) ---
-    private ByteMessage cachedUpdateBlock = null;
-    private boolean cachedUpdateBlockValid = false;
-    private volatile long appearanceRevision = 0L;
-    private volatile long cachedAppearanceRevision = -1L;
-    private volatile byte[] cachedAppearanceBytes = null;
-
-    /**
-     * Returns true if the cached update block can be reused this cycle.
-     */
     public boolean isCachedUpdateBlockValid() {
-        return cachedUpdateBlockValid
-                && cachedUpdateBlock != null
-                && cachedUpdateBlock.getBuffer().refCnt() > 0;
+        return updateState.isCachedUpdateBlockValid();
     }
 
-    /**
-     * Writes the cached block into the supplied stream. Caller must ensure it
-     * is valid first.
-     */
     public void writeCachedUpdateBlock(ByteMessage dst) {
-        dst.putBytes(cachedUpdateBlock);
+        updateState.writeCachedUpdateBlock(dst);
     }
 
-    /**
-     * Stores a freshly-built update block for re-use next time.
-     */
     public void cacheUpdateBlock(ByteMessage src) {
-        releaseCachedUpdateBlock();
-        if (src != null) {
-            src.retain();
-            this.cachedUpdateBlock = src;
-            this.cachedUpdateBlockValid = true;
-            return;
-        }
-        this.cachedUpdateBlockValid = false;
+        updateState.cacheUpdateBlock(src);
     }
 
-    /**
-     * Invalidates the cached block (called whenever an update flag is set or
-     * at the end of the tick).
-     */
     public void invalidateCachedUpdateBlock() {
-        this.cachedUpdateBlockValid = false;
-        releaseCachedUpdateBlock();
+        updateState.invalidateCachedUpdateBlock();
     }
 
     public void markAppearanceDirty() {
-        appearanceRevision++;
-        cachedAppearanceRevision = -1L;
-        cachedAppearanceBytes = null;
+        updateState.markAppearanceDirty();
     }
 
     public long getAppearanceRevision() {
-        return appearanceRevision;
+        return updateState.getAppearanceRevision();
     }
 
     public boolean isCachedAppearanceValid() {
-        return cachedAppearanceBytes != null && cachedAppearanceRevision == appearanceRevision;
+        return updateState.isCachedAppearanceValid();
     }
 
     public byte[] getCachedAppearanceBytes() {
-        return cachedAppearanceBytes;
+        return updateState.getCachedAppearanceBytes();
     }
 
     public void cacheAppearanceBytes(byte[] bytes) {
-        cachedAppearanceBytes = bytes;
-        cachedAppearanceRevision = appearanceRevision;
+        updateState.cacheAppearanceBytes(bytes);
     }
-
-    private void releaseCachedUpdateBlock() {
-        if (cachedUpdateBlock == null) {
-            return;
-        }
-        if (cachedUpdateBlock.getBuffer().refCnt() > 0) {
-            cachedUpdateBlock.release();
-        }
-        cachedUpdateBlock = null;
-    }
-
-    private final byte[] chatText = new byte[4096];
-    private int chatTextSize = 0;  // Changed from byte to int to handle chat text > 127 chars
-    private int chatTextEffects = 0, chatTextColor = 0;
-    private String chatTextMessage = "";
 
     public byte[] getChatText() {
-        return this.chatText;
+        return updateState.getChatText();
     }
 
     public int getChatTextSize() {
-        return this.chatTextSize;
+        return updateState.getChatTextSize();
     }
 
     public void setChatTextSize(int chatTextSize) {
-        this.chatTextSize = chatTextSize;
+        updateState.setChatTextSize(chatTextSize);
     }
 
     public int getChatTextEffects() {
-        return this.chatTextEffects;
+        return updateState.getChatTextEffects();
     }
 
     public void setChatTextEffects(int chatTextEffects) {
-        this.chatTextEffects = chatTextEffects;
+        updateState.setChatTextEffects(chatTextEffects);
     }
 
     public int getChatTextColor() {
-        return this.chatTextColor;
+        return updateState.getChatTextColor();
     }
 
     public void setChatTextColor(int chatTextColor) {
-        this.chatTextColor = chatTextColor;
+        updateState.setChatTextColor(chatTextColor);
     }
 
     public String getChatTextMessage() {
-        return chatTextMessage;
+        return updateState.getChatTextMessage();
     }
 
     public void setChatTextMessage(String chatTextMessage) {
-        this.chatTextMessage = chatTextMessage == null ? "" : chatTextMessage;
+        updateState.setChatTextMessage(chatTextMessage);
     }
 
     public void clearUpdateFlags() {
-        IsStair = false; //What is this?!
-        faceTarget(-1);
-        getUpdateFlags().clear();
-        
-        // Reset chat-related fields when clearing flags to prevent T2 packet size mismatches
-        chatTextSize = 0;
-        chatTextColor = 0;
-        chatTextEffects = 0;
-        // Note: chatText buffer doesn't need to be cleared as chatTextSize controls usage
-        
-        // Any change this tick means our cached block is no longer valid.
-        invalidateCachedUpdateBlock();
+        updateState.clearUpdateFlags();
+        combatState.clearPendingHits();
     }
 
     public void faceTarget(int index) {
-        this.faceTarget = index;
-        getUpdateFlags().setRequired(UpdateFlag.FACE_CHARACTER, true);
+        updateState.faceTarget(index);
     }
     public void faceNpc(int index) {
         faceTarget(index);
@@ -900,237 +853,599 @@ public abstract class Player extends Entity {
     }
 
     public void gfx0(int gfx) {
-        graphicId = gfx;
-        graphicHeight = 65536;
-        getUpdateFlags().setRequired(UpdateFlag.GRAPHICS, true);
+        updateState.gfx0(gfx);
     }
 
     public int getFaceTarget() {
-        return this.faceTarget;
+        return updateState.getFaceTarget();
     }
-    public abstract void process(); //Send every 600 ms
-
     public void markSaveDirty(int segmentMask) {
-        saveDirtyMask |= segmentMask;
-        saveRevision++;
+        accountState.markSaveDirty(segmentMask);
     }
 
     public void clearSaveDirtyMask(int segmentMask) {
-        saveDirtyMask &= ~segmentMask;
+        accountState.clearSaveDirtyMask(segmentMask);
     }
 
     public void clearAllSaveDirty() {
-        saveDirtyMask = 0;
-        lastSavedRevision = saveRevision;
+        accountState.clearAllSaveDirty();
     }
 
     public int getSaveDirtyMask() {
-        return saveDirtyMask;
+        return accountState.getSaveDirtyMask();
     }
 
     public long getLastSavedRevision() {
-        return lastSavedRevision;
+        return accountState.getLastSavedRevision();
     }
 
     public long getSaveRevision() {
-        return saveRevision;
+        return accountState.getSaveRevision();
     }
 
     public void setLastSavedRevision(long lastSavedRevision) {
-        this.lastSavedRevision = lastSavedRevision;
+        accountState.setLastSavedRevision(lastSavedRevision);
     }
 
     public long getLastProcessedCycle() {
-        return lastProcessedCycle;
+        return accountState.getLastProcessedCycle();
     }
 
     public void setLastProcessedCycle(long lastProcessedCycle) {
-        this.lastProcessedCycle = lastProcessedCycle;
+        accountState.setLastProcessedCycle(lastProcessedCycle);
     }
 
     public InteractionIntent getPendingInteraction() {
-        return pendingInteraction;
+        return interactionState.getPendingInteraction();
     }
 
     public void setPendingInteraction(InteractionIntent pendingInteraction) {
-        this.pendingInteraction = pendingInteraction;
+        interactionState.setPendingInteraction(pendingInteraction);
     }
 
     public ActiveInteraction getActiveInteraction() {
-        return activeInteraction;
+        return interactionState.getActiveInteraction();
     }
 
     public void setActiveInteraction(ActiveInteraction activeInteraction) {
-        this.activeInteraction = activeInteraction;
+        interactionState.setActiveInteraction(activeInteraction);
     }
 
     public long getInteractionEarliestCycle() {
-        return interactionEarliestCycle;
+        return interactionState.getInteractionEarliestCycle();
     }
 
     public void setInteractionEarliestCycle(long interactionEarliestCycle) {
-        this.interactionEarliestCycle = interactionEarliestCycle;
+        interactionState.setInteractionEarliestCycle(interactionEarliestCycle);
     }
 
     public QueueTaskHandle getInteractionTaskHandle() {
-        return interactionTaskHandle;
+        return interactionState.getInteractionTaskHandle();
     }
 
     public void setInteractionTaskHandle(QueueTaskHandle interactionTaskHandle) {
-        this.interactionTaskHandle = interactionTaskHandle;
+        interactionState.setInteractionTaskHandle(interactionTaskHandle);
     }
 
     public void cancelInteractionTask() {
-        QueueTaskHandle handle = interactionTaskHandle;
-        interactionTaskHandle = null;
-        if (handle != null) {
-            handle.cancel();
-        }
+        interactionState.cancelInteractionTask();
     }
 
     public QueueTaskHandle getFarmDebugTaskHandle() {
-        return farmDebugTaskHandle;
+        return interactionState.getFarmDebugTaskHandle();
     }
 
     public void setFarmDebugTaskHandle(QueueTaskHandle farmDebugTaskHandle) {
-        this.farmDebugTaskHandle = farmDebugTaskHandle;
+        interactionState.setFarmDebugTaskHandle(farmDebugTaskHandle);
     }
 
     public void cancelFarmDebugTask() {
-        QueueTaskHandle handle = farmDebugTaskHandle;
-        farmDebugTaskHandle = null;
-        if (handle != null) {
-            handle.cancel();
-        }
+        interactionState.cancelFarmDebugTask();
     }
 
     public QueueTaskHandle getMiningTaskHandle() {
-        return miningTaskHandle;
+        return interactionState.getMiningTaskHandle();
     }
 
     public void setMiningTaskHandle(QueueTaskHandle miningTaskHandle) {
-        this.miningTaskHandle = miningTaskHandle;
+        interactionState.setMiningTaskHandle(miningTaskHandle);
     }
 
     public void cancelMiningTask() {
-        QueueTaskHandle handle = miningTaskHandle;
-        miningTaskHandle = null;
-        if (handle != null) {
-            handle.cancel();
-        }
+        interactionState.cancelMiningTask();
     }
 
     public MiningState getMiningState() {
-        return miningState;
+        return interactionState.getMiningState();
     }
 
     public void setMiningState(MiningState miningState) {
-        this.miningState = miningState;
+        interactionState.setMiningState(miningState);
     }
 
     public void clearMiningState() {
-        miningState = null;
+        interactionState.clearMiningState();
+    }
+
+    public QueueTaskHandle getWoodcuttingTaskHandle() {
+        return interactionState.getWoodcuttingTaskHandle();
+    }
+
+    public void setWoodcuttingTaskHandle(QueueTaskHandle woodcuttingTaskHandle) {
+        interactionState.setWoodcuttingTaskHandle(woodcuttingTaskHandle);
+    }
+
+    public void cancelWoodcuttingTask() {
+        interactionState.cancelWoodcuttingTask();
+    }
+
+    public WoodcuttingState getWoodcuttingState() {
+        return interactionState.getWoodcuttingState();
+    }
+
+    public void setWoodcuttingState(WoodcuttingState woodcuttingState) {
+        interactionState.setWoodcuttingState(woodcuttingState);
+    }
+
+    public void clearWoodcuttingState() {
+        interactionState.clearWoodcuttingState();
+    }
+
+    public FletchingState getFletchingState() {
+        return interactionState.getFletchingState();
+    }
+
+    public void setFletchingState(FletchingState fletchingState) {
+        interactionState.setFletchingState(fletchingState);
+    }
+
+    public void clearFletchingState() {
+        interactionState.clearFletchingState();
+    }
+
+    public FishingState getFishingState() {
+        return interactionState.getFishingState();
+    }
+
+    public void setFishingState(FishingState fishingState) {
+        interactionState.setFishingState(fishingState);
+    }
+
+    public void clearFishingState() {
+        interactionState.clearFishingState();
+    }
+
+    public CookingState getCookingState() {
+        return interactionState.getCookingState();
+    }
+
+    public void setCookingState(CookingState cookingState) {
+        interactionState.setCookingState(cookingState);
+    }
+
+    public void clearCookingState() {
+        interactionState.clearCookingState();
+    }
+
+    public CraftingState getCraftingState() {
+        return interactionState.getCraftingState();
+    }
+
+    public void setCraftingState(CraftingState craftingState) {
+        interactionState.setCraftingState(craftingState);
+    }
+
+    public void clearCraftingState() {
+        interactionState.clearCraftingState();
+    }
+
+    public PrayerOfferingState getPrayerOfferingState() {
+        return interactionState.getPrayerOfferingState();
+    }
+
+    public void setPrayerOfferingState(PrayerOfferingState prayerOfferingState) {
+        interactionState.setPrayerOfferingState(prayerOfferingState);
+    }
+
+    public void clearPrayerOfferingState() {
+        interactionState.clearPrayerOfferingState();
+    }
+
+    public RunecraftingState getRunecraftingState() {
+        return interactionState.getRunecraftingState();
+    }
+
+    public void setRunecraftingState(RunecraftingState runecraftingState) {
+        interactionState.setRunecraftingState(runecraftingState);
+    }
+
+    public void clearRunecraftingState() {
+        interactionState.clearRunecraftingState();
+    }
+
+    public InteractionAnchorState getInteractionAnchorState() {
+        return interactionState.getInteractionAnchorState();
+    }
+
+    public void setInteractionAnchorState(InteractionAnchorState interactionAnchorState) {
+        interactionState.setInteractionAnchorState(interactionAnchorState);
+    }
+
+    public void clearInteractionAnchorState() {
+        interactionState.clearInteractionAnchorState();
+    }
+
+    public PyramidPlunderPlayerState getPyramidPlunderState() {
+        return interactionState.getPyramidPlunderState();
+    }
+
+    public void setPyramidPlunderState(PyramidPlunderPlayerState pyramidPlunderState) {
+        interactionState.setPyramidPlunderState(pyramidPlunderState);
+    }
+
+    public void clearPyramidPlunderState() {
+        interactionState.clearPyramidPlunderState();
+    }
+
+    public AgilitySessionState getAgilitySessionState() {
+        AgilitySessionState state = interactionState.getAgilitySessionState();
+        if (state == null) {
+            state = new AgilitySessionState(agilityCourseStage, GameCycleClock.currentCycle());
+            interactionState.setAgilitySessionState(state);
+        }
+        return state;
+    }
+
+    public void setAgilitySessionState(AgilitySessionState state) {
+        interactionState.setAgilitySessionState(state);
+        agilityCourseStage = state != null ? state.getCourseStage() : 0;
+    }
+
+    public int getAgilitySessionStage() {
+        return getAgilitySessionState().getCourseStage();
+    }
+
+    public void setAgilitySessionStage(int stage) {
+        AgilitySessionState current = getAgilitySessionState();
+        setAgilitySessionState(current.withCourseStage(stage, GameCycleClock.currentCycle()));
+    }
+
+    public void clearAgilitySessionState() {
+        interactionState.clearAgilitySessionState();
+        agilityCourseStage = 0;
+    }
+
+    public MovementLockState getMovementLockState() {
+        MovementLockState state = interactionState.getMovementLockState();
+        if (state == null && UsingAgility) {
+            state = new MovementLockState("legacy", GameCycleClock.currentCycle());
+            interactionState.setMovementLockState(state);
+        }
+        return state;
+    }
+
+    public boolean isMovementLocked() {
+        return getMovementLockState() != null;
+    }
+
+    public void setMovementLockState(MovementLockState state) {
+        interactionState.setMovementLockState(state);
+        UsingAgility = state != null;
+    }
+
+    public void setMovementLocked(boolean locked) {
+        setMovementLockState(locked ? new MovementLockState("compat", GameCycleClock.currentCycle()) : null);
+    }
+
+    public void clearMovementLockState() {
+        setMovementLockState(null);
+    }
+
+    public SkillingEventState getSkillingEventState() {
+        SkillingEventState state = interactionState.getSkillingEventState();
+        if (state == null) {
+            int randomSkillId = this instanceof Client ? ((Client) this).random_skill : -1;
+            state = new SkillingEventState(randomed, randomSkillId, chestEvent, chestEventOccur);
+            interactionState.setSkillingEventState(state);
+        }
+        return state;
+    }
+
+    public void setSkillingEventState(SkillingEventState state) {
+        interactionState.setSkillingEventState(state);
+        randomed = state.isRandomEventOpen();
+        if (this instanceof Client) {
+            ((Client) this).random_skill = state.getRandomSkillId();
+        }
+        chestEvent = state.getChestEventCount();
+        chestEventOccur = state.isChestEventPendingMove();
+    }
+
+    public PlayerPotatoState getPlayerPotatoState() {
+        PlayerPotatoState state = interactionState.getPlayerPotatoState();
+        if (state != null) {
+            return state;
+        }
+        if (playerPotato.size() >= 4) {
+            state = new PlayerPotatoState(playerPotato.get(0), playerPotato.get(1), playerPotato.get(2), playerPotato.get(3));
+            interactionState.setPlayerPotatoState(state);
+            return state;
+        }
+        return null;
+    }
+
+    public void setPlayerPotatoState(PlayerPotatoState state) {
+        interactionState.setPlayerPotatoState(state);
+        playerPotato.clear();
+        if (state != null) {
+            playerPotato.add(state.getFlowType());
+            playerPotato.add(state.getTargetSlot());
+            playerPotato.add(state.getTargetIdentifier());
+            playerPotato.add(state.getStage());
+        }
+    }
+
+    public void clearPlayerPotatoState() {
+        interactionState.clearPlayerPotatoState();
+        playerPotato.clear();
+    }
+
+    public String getActiveSkillSessionKey() {
+        return interactionState.getActiveSkillSessionKey();
+    }
+
+    public long getActiveSkillSessionStartedCycle() {
+        return interactionState.getActiveSkillSessionStartedCycle();
+    }
+
+    public void setActiveSkillSession(String key, long startedCycle) {
+        interactionState.setActiveSkillSession(key, startedCycle);
+    }
+
+    public void clearActiveSkillSession() {
+        interactionState.clearActiveSkillSession();
+    }
+
+    public QueueTaskHandle getActiveActionHandle() {
+        return interactionState.getActiveActionHandle();
+    }
+
+    public void setActiveActionHandle(QueueTaskHandle activeActionHandle) {
+        interactionState.setActiveActionHandle(activeActionHandle);
+    }
+
+    public PlayerActionType getActiveActionType() {
+        return interactionState.getActiveActionType();
+    }
+
+    public void setActiveActionType(PlayerActionType activeActionType) {
+        interactionState.setActiveActionType(activeActionType);
+    }
+
+    public long getActionStartedCycle() {
+        return interactionState.getActionStartedCycle();
+    }
+
+    public void setActionStartedCycle(long actionStartedCycle) {
+        interactionState.setActionStartedCycle(actionStartedCycle);
+    }
+
+    public void cancelActiveAction() {
+        interactionState.cancelActiveAction();
+    }
+
+    public void clearActiveActionState() {
+        interactionState.clearActiveActionState();
+    }
+
+    public PlayerActionCancelReason getActiveActionCancelReason() {
+        return interactionState.getActiveActionCancelReason();
+    }
+
+    public void setActiveActionCancelReason(PlayerActionCancelReason activeActionCancelReason) {
+        interactionState.setActiveActionCancelReason(activeActionCancelReason);
+    }
+
+    public PlayerActionCancelReason getLastActionCancelReason() {
+        return interactionState.getLastActionCancelReason();
+    }
+
+    public void setLastActionCancelReason(PlayerActionCancelReason lastActionCancelReason) {
+        interactionState.setLastActionCancelReason(lastActionCancelReason);
+    }
+
+    public long getLastActionCancelCycle() {
+        return interactionState.getLastActionCancelCycle();
+    }
+
+    public void setLastActionCancelCycle(long lastActionCancelCycle) {
+        interactionState.setLastActionCancelCycle(lastActionCancelCycle);
+    }
+
+    public CombatTargetState getCombatTargetState() {
+        return interactionState.getCombatTargetState();
+    }
+
+    public void setCombatTargetState(CombatTargetState combatTargetState) {
+        interactionState.setCombatTargetState(combatTargetState);
+    }
+
+    public void clearCombatTargetState() {
+        interactionState.clearCombatTargetState();
+    }
+
+    public CombatEngagementState getCombatEngagementState() {
+        return interactionState.getCombatEngagementState();
+    }
+
+    public void setCombatEngagementState(CombatEngagementState combatEngagementState) {
+        interactionState.setCombatEngagementState(combatEngagementState);
+    }
+
+    public void clearCombatEngagementState() {
+        interactionState.clearCombatEngagementState();
+    }
+
+    public CombatCooldownState getCombatCooldownState() {
+        return interactionState.getCombatCooldownState();
+    }
+
+    public void setCombatCooldownState(CombatCooldownState combatCooldownState) {
+        interactionState.setCombatCooldownState(combatCooldownState);
+    }
+
+    public void clearCombatCooldownState() {
+        interactionState.clearCombatCooldownState();
+    }
+
+    public AttackStartDedupeState getAttackStartDedupeState() {
+        return interactionState.getAttackStartDedupeState();
+    }
+
+    public void setAttackStartDedupeState(AttackStartDedupeState state) {
+        interactionState.setAttackStartDedupeState(state);
+    }
+
+    public void clearAttackStartDedupeState() {
+        interactionState.clearAttackStartDedupeState();
+    }
+
+    public CombatCancellationReason getCombatCancellationReason() {
+        return interactionState.getCombatCancellationReason();
+    }
+
+    public void setCombatCancellationReason(CombatCancellationReason combatCancellationReason) {
+        interactionState.setCombatCancellationReason(combatCancellationReason);
+    }
+
+    public void clearCombatCancellationReason() {
+        interactionState.clearCombatCancellationReason();
+    }
+
+    public long getCombatLogoutLockUntilCycle() {
+        return interactionState.getCombatLogoutLockUntilCycle();
+    }
+
+    public void setCombatLogoutLockUntilCycle(long combatLogoutLockUntilCycle) {
+        interactionState.setCombatLogoutLockUntilCycle(combatLogoutLockUntilCycle);
+    }
+
+    public long getLastBlockAnimationCycle() {
+        return interactionState.getLastBlockAnimationCycle();
+    }
+
+    public void setLastBlockAnimationCycle(long lastBlockAnimationCycle) {
+        interactionState.setLastBlockAnimationCycle(lastBlockAnimationCycle);
+    }
+
+    public DeathTaskState getDeathTaskState() {
+        return interactionState.getDeathTaskState();
+    }
+
+    public void setDeathTaskState(DeathTaskState deathTaskState) {
+        interactionState.setDeathTaskState(deathTaskState);
+    }
+
+    public void clearDeathTaskState() {
+        interactionState.clearDeathTaskState();
+    }
+
+    public ActiveSmithingSelection getActiveSmithingSelection() {
+        return interactionState.getActiveSmithingSelection();
+    }
+
+    public void setActiveSmithingSelection(ActiveSmithingSelection activeSmithingSelection) {
+        interactionState.setActiveSmithingSelection(activeSmithingSelection);
+    }
+
+    public void clearActiveSmithingSelection() {
+        interactionState.clearActiveSmithingSelection();
+    }
+
+    public SmeltingSelection getSmeltingSelection() {
+        return interactionState.getSmeltingSelection();
+    }
+
+    public void setSmeltingSelection(SmeltingSelection smeltingSelection) {
+        interactionState.setSmeltingSelection(smeltingSelection);
+    }
+
+    public void clearSmeltingSelection() {
+        interactionState.clearSmeltingSelection();
+    }
+
+    public int getPendingSmeltingBarId() {
+        return interactionState.getPendingSmeltingBarId();
+    }
+
+    public void setPendingSmeltingBarId(int barId) {
+        interactionState.setPendingSmeltingBarId(barId);
+    }
+
+    public void clearPendingSmeltingBarId() {
+        interactionState.clearPendingSmeltingBarId();
+    }
+
+    public PendingProductionSelection getPendingProductionSelection() {
+        return interactionState.getPendingProductionSelection();
+    }
+
+    public void setPendingProductionSelection(PendingProductionSelection pendingProductionSelection) {
+        interactionState.setPendingProductionSelection(pendingProductionSelection);
+    }
+
+    public void clearPendingProductionSelection() {
+        interactionState.clearPendingProductionSelection();
+    }
+
+    public ActiveProductionSelection getActiveProductionSelection() {
+        return interactionState.getActiveProductionSelection();
+    }
+
+    public void setActiveProductionSelection(ActiveProductionSelection activeProductionSelection) {
+        interactionState.setActiveProductionSelection(activeProductionSelection);
+    }
+
+    public void clearActiveProductionSelection() {
+        interactionState.clearActiveProductionSelection();
     }
 
     public GameTaskSet<?> getPlayerTaskSet() {
-        return playerTaskSet;
+        return interactionState.getPlayerTaskSet();
     }
 
     public void setPlayerTaskSet(GameTaskSet<?> playerTaskSet) {
-        this.playerTaskSet = playerTaskSet;
+        interactionState.setPlayerTaskSet(playerTaskSet);
     }
 
+    public long getThrottleUntilCycle(String key) {
+        return interactionState.getThrottleUntilCycle(key);
+    }
 
+    public void setThrottleUntilCycle(String key, long cycle) {
+        interactionState.setThrottleUntilCycle(key, cycle);
+    }
+
+    public void clearThrottleUntilCycle(String key) {
+        interactionState.clearThrottleUntilCycle(key);
+    }
 
     public void postProcessing() {
-        if (walkingBlock) {
-            walkingBlock = false;
-            return;
-        }
-        if (newWalkCmdSteps > 0) {
-            int firstX = newWalkCmdX[0], firstY = newWalkCmdY[0]; // travel backwards to find a proper connection vertex
-            int lastDir;
-            boolean found = false;
-            numTravelBackSteps = 0;
-            int ptr = wQueueReadPtr;
-            int dir = Utils.direction(currentX, currentY, firstX, firstY);
-            if (dir != -1 && (dir & 1) != 0) { // we can't connect first and current directly
-                do {
-                    lastDir = dir;
-                    if (--ptr < 0)
-                        ptr = WALKING_QUEUE_SIZE - 1;
-
-                    travelBackX[numTravelBackSteps] = walkingQueueX[ptr];
-                    travelBackY[numTravelBackSteps++] = walkingQueueY[ptr];
-                    dir = Utils.direction(walkingQueueX[ptr], walkingQueueY[ptr], firstX, firstY);
-                    if (lastDir != dir) {
-                        found = true;
-                        break;
-                    }
-                } while (ptr != wQueueWritePtr);
-            } else found = true;
-
-            wQueueWritePtr = wQueueReadPtr;
-            addToWalkingQueue(currentX, currentY);
-
-            if (dir != -1 && (dir & 1) != 0) {
-                for (int i = 0; i < numTravelBackSteps - 1; i++) {
-                    addToWalkingQueue(travelBackX[i], travelBackY[i]);
-                }
-                int wayPointX2 = travelBackX[numTravelBackSteps - 1], wayPointY2 = travelBackY[numTravelBackSteps - 1];
-                int wayPointX1, wayPointY1;
-                if (numTravelBackSteps == 1) {
-                    wayPointX1 = currentX;
-                    wayPointY1 = currentY;
-                } else {
-                    wayPointX1 = travelBackX[numTravelBackSteps - 2];
-                    wayPointY1 = travelBackY[numTravelBackSteps - 2];
-                }
-                dir = Utils.direction(wayPointX1, wayPointY1, wayPointX2, wayPointY2);
-                if (!(dir == -1 || (dir & 1) != 0)) {
-                    dir >>= 1;
-                    int x = wayPointX1, y = wayPointY1;
-                    while (x != wayPointX2 || y != wayPointY2) {
-                        x += Utils.directionDeltaX[dir];
-                        y += Utils.directionDeltaY[dir];
-                        if ((Utils.direction(x, y, firstX, firstY) & 1) == 0) {
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (found)
-                        addToWalkingQueue(wayPointX1, wayPointY1);
-                }
-            } else {
-                for (int i = 0; i < numTravelBackSteps; i++) {
-                    addToWalkingQueue(travelBackX[i], travelBackY[i]);
-                }
-            }
-            // now we can finally add those waypoints because we made sure
-            // about the connection to first
-            for (int i = 0; i < newWalkCmdSteps; i++) {
-                addToWalkingQueue(newWalkCmdX[i], newWalkCmdY[i]);
-            }
-        }
-        isRunning = UsingAgility && System.currentTimeMillis() < walkBlock ? newWalkCmdIsRunning : buttonOnRun;
-        newWalkCmdSteps = 0;
+        movementState.postProcessing();
     }
 
     public boolean buttonOnRun = true;
 
-    private int damageDealt = 0, damageDealt2;
-    protected boolean IsStair = false;
     public int deathStage = 0;
     public long deathTimer = 0;
+    public long deathStartedCycle = 0;
+
+    public boolean isDeathSequenceActive() {
+        return getDeathTaskState() != null || deathStage > 0 || deathTimer > 0;
+    }
 
     public void appendMask400Update(ByteMessage buf) { // Forcemovement mask!
-        buf.put(m4001, ValueType.SUBTRACT); // writeByteS
-        buf.put(m4002, ValueType.SUBTRACT);
-        buf.put(m4003, ValueType.SUBTRACT);
-        buf.put(m4004, ValueType.SUBTRACT);
-        buf.putShort(m4006, ByteOrder.BIG, ValueType.ADD); // writeWordBigEndianA
-        buf.putShort(m4005, ValueType.ADD); // writeWordA
-        buf.put(m4007, ValueType.SUBTRACT);
+        updateState.appendMask400Update(buf);
     }
 
     // PM Stuff
@@ -1141,114 +1456,11 @@ public abstract class Player extends Entity {
     public abstract void sendpm(long name, int rights, byte[] chatmessage, int messagesize);
 
     public void dealDamage(Entity attacker, int amt, hitType type) {
-        Client plr = ((Client) this);
-        if(attacker != null && ((attacker.getType() == Type.NPC && ((Npc) attacker).getCurrentHealth() < 1) || (attacker.getType() == Type.PLAYER && ((Client) attacker).getCurrentHealth() < 1)))
-            setLastCombat(16); //Sets this if the guy attacking is not below 1 health aka dead!
-        if (deathStage >= 0 && getCurrentHealth() < 1)
-            amt = 0;
-        else if (amt > currentHealth) amt = currentHealth;
-        double rolledChance = Math.random();
-        double level = ((getLevel(Skill.PRAYER) + 1) / 8D) / 100D;
-        double chance = level + 0.025; //(((Client) this).getEquipment()[3] == 11284 ? 0.1 : 0.0), maybe?!
-        double dmg = ((Client) this).neglectDmg() / 10D;
-        double reduceDamage = 1.0 - (dmg / 100);
-        int oldDmg = amt;
-        if (!(plr.inDuel && plr.duelRule[5]) && rolledChance <= chance && playerBonus[11] > 0 && oldDmg > 0) {
-            amt = reduceDamage <= 0 ? 0 : (int)(amt * reduceDamage);
-            if(amt != oldDmg)
-                ((Client) this).send(new SendMessage("<col=FFD700>You neglected "+(amt == 0 ? "all" : "some")+" of the damage!"));
-        }
-        if (!getUpdateFlags().isRequired(UpdateFlag.HIT2)) {
-            this.hitType2 = type;
-            damageDealt2 = amt;
-            getUpdateFlags().setRequired(UpdateFlag.HIT2, true);
-        } else if(!getUpdateFlags().isRequired(UpdateFlag.HIT)) {
-            this.hitType = type;
-            damageDealt = amt;
-            getUpdateFlags().setRequired(UpdateFlag.HIT, true);
-        }
-        setCurrentHealth(Math.max(getCurrentHealth() - amt, 0));
-        ((Client) this).refreshSkill(Skill.HITPOINTS);
-        plr.debug("Dealing " + amt + " damage to you (hp=" + currentHealth + ")");
-        if (attacker instanceof Player) { //Pvp damage profile!
-            int totalDmg;
-            if (getDamage().containsKey(attacker)) {
-                totalDmg = getDamage().get(attacker) + amt;
-                getDamage().remove(attacker);
-            } else
-                totalDmg = amt;
-            getDamage().put(attacker, totalDmg);
-        }
-        boolean veracEffect = Misc.chance(8) == 1 && armourSet("verac");
-        if (veracEffect && amt > 0 && getCurrentHealth() > 0 && attacker instanceof Player) {
-            ((Client) this).stillgfx(1041, attacker.getPosition(), 100);
-            ((Player) attacker).dealDamage(plr, amt, type);
-        } else if (veracEffect && amt > 0 && getCurrentHealth() > 0 && attacker instanceof Npc) {
-            ((Client) this).stillgfx(1041, attacker.getPosition(), 100);
-            ((Npc) attacker).dealDamage(plr, amt, type);
-        }
+        combatState.dealDamage(attacker, amt, type);
     }
 
     public void dealDamage(int amt, Entity.hitType type, Entity attacker, Entity.damageType dmg) {
-        Client plr = ((Client) this);
-        Npc npc = ((Npc) attacker);
-        if(dmg.equals(damageType.FIRE_BREATH)) { //Dragons new effect!
-            boolean gotAntiEffect = plr.getEquipment()[Equipment.Slot.SHIELD.getId()] == 1540
-                    || plr.getEquipment()[Equipment.Slot.SHIELD.getId()] == 11284
-                    || prayers.isPrayerOn(Prayers.Prayer.PROTECT_MAGIC) || antiFireEffect();
-            if(npc != null && npc.getId() == 239 && gotAntiEffect) amt /= 2;
-            else if (npc != null && npc.getId() != 239 && gotAntiEffect) {
-                amt *= 3; amt /= 10; //Ugly way to write reduce dmg by 70%
-            } else plr.send(new SendMessage("You are badly burnt by the dragon fire!"));
-        } else if(dmg.equals(damageType.MELEE) && prayers.isPrayerOn(Prayers.Prayer.PROTECT_MELEE)) amt /= 2;
-        else if(dmg.equals(damageType.RANGED) && prayers.isPrayerOn(Prayers.Prayer.PROTECT_RANGE)) amt /= 2;
-        else if(dmg.equals(damageType.MAGIC) && prayers.isPrayerOn(Prayers.Prayer.PROTECT_MAGIC)) amt /= 2;
-        else if(dmg.equals(damageType.JAD_RANGED) && prayers.isPrayerOn(Prayers.Prayer.PROTECT_RANGE)) amt = 0;
-        else if(dmg.equals(damageType.JAD_MAGIC) && prayers.isPrayerOn(Prayers.Prayer.PROTECT_MAGIC)) amt = 0;
-        dealDamage(attacker, amt, type);
-    }
-
-    private void delayedHit(Entity source, Entity target, final int damage, Entity.hitType type, int delay) {
-        if(source instanceof Client && target instanceof Npc) {
-            final Client p = (Client) source;
-            final Npc n = (Npc) target;
-            EventManager.getInstance().registerEvent(new Event(delay) {
-
-                public void execute() {
-                    if(p.disconnected) {
-                        stop();
-                        return;
-                    }
-                    if(!n.alive) {
-                        stop();
-                        return;
-                    }
-                    n.dealDamage(p, damage, type);
-                    stop();
-                }
-
-            });
-        }
-        if(source instanceof Client && target instanceof Client) {
-            final Client p = (Client) source;
-            final Client other = (Client) target;
-            EventManager.getInstance().registerEvent(new Event(delay) {
-
-                public void execute() {
-                    if(p.disconnected) {
-                        stop();
-                        return;
-                    }
-                    if(other.disconnected || other.deathStage > 0) {
-                        stop();
-                        return;
-                    }
-                    other.receieveDamage(p, damage, type);
-                    stop();
-                }
-
-            });
-        }
+        combatState.dealDamage(amt, type, attacker, dmg);
     }
 
     public void sendAnimation(int id) {
@@ -1263,23 +1475,25 @@ public abstract class Player extends Entity {
         teleportToZ = getPosition().getZ();
     }
 
-    Prayers prayers = new Prayers(this);
+    PrayerManager prayerManager = new PrayerManager(this);
 
     public boolean isSongUnlocked(int songId) {
-        return this.songUnlocked[songId];
+        return progressState.isSongUnlocked(songId);
     }
     public boolean blackMaskEffect(int npcId) {
-        String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : Objects.requireNonNull(SlayerTask.slayerTasks.getTask(getSlayerData().get(1))).getTextRepresentation();
-        SlayerTask.slayerTasks slayerTask = SlayerTask.slayerTasks.getSlayerNpc(npcId);
-        boolean onTask = slayerTask != null && slayerTask.getTextRepresentation().equals(taskName) && getSlayerData().get(3) > 0;
+        SlayerTaskState state = getSlayerTaskState();
+        String taskName = state.getMasterNpcId() == -1 || state.getRemainingAmount() <= 0 ? "" : Objects.requireNonNull(net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forOrdinal(state.getTaskOrdinal())).getTextRepresentation();
+        net.dodian.uber.game.skill.slayer.SlayerTaskDefinition slayerTask = net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forNpc(npcId);
+        boolean onTask = slayerTask != null && slayerTask.getTextRepresentation().equals(taskName) && state.getRemainingAmount() > 0;
         int itemId = getEquipment()[Equipment.Slot.HEAD.getId()];
         return (itemId == 8921 || itemId == 11864) && onTask;
     }
     public boolean blackMaskImbueEffect(int npcId) {
-        String taskName = getSlayerData().get(0) == -1 || getSlayerData().get(3) <= 0 ? "" : Objects.requireNonNull(SlayerTask.slayerTasks.getTask(getSlayerData().get(1))).getTextRepresentation();
-        SlayerTask.slayerTasks slayerTask = SlayerTask.slayerTasks.getSlayerNpc(npcId);
-        boolean onTask = slayerTask != null && slayerTask.getTextRepresentation().equals(taskName) && getSlayerData().get(3) > 0;
-        String headName = ((Client) this).GetItemName(getEquipment()[Equipment.Slot.HEAD.getId()]).toLowerCase();
+        SlayerTaskState state = getSlayerTaskState();
+        String taskName = state.getMasterNpcId() == -1 || state.getRemainingAmount() <= 0 ? "" : Objects.requireNonNull(net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forOrdinal(state.getTaskOrdinal())).getTextRepresentation();
+        net.dodian.uber.game.skill.slayer.SlayerTaskDefinition slayerTask = net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forNpc(npcId);
+        boolean onTask = slayerTask != null && slayerTask.getTextRepresentation().equals(taskName) && state.getRemainingAmount() > 0;
+        String headName = ((Client) this).getItemName(getEquipment()[Equipment.Slot.HEAD.getId()]).toLowerCase();
         return (headName.contains("black mask (i)") || headName.contains("slayer helmet (i)")) && onTask;
     }
 
@@ -1287,7 +1501,7 @@ public abstract class Player extends Entity {
         return playerEquipment[slot];
     }
     public String getEquipName(int slot) {
-        return ((Client) this).GetItemName(getEquipment(slot));
+        return ((Client) this).getItemName(getEquipment(slot));
     }
     public boolean armourSet(String armourName) {
         return switch (armourName) {
@@ -1325,15 +1539,11 @@ public abstract class Player extends Entity {
         return false;
     }
     public boolean gotSlayerHelmet(Client c) {
-        return c.GetItemName(getEquipment()[Equipment.Slot.HEAD.getId()]).toLowerCase().contains("slayer helm");
+        return c.getItemName(getEquipment()[Equipment.Slot.HEAD.getId()]).toLowerCase().contains("slayer helm");
     }
 
     public boolean areAllSongsUnlocked() {
-        for (boolean unlocked : songUnlocked) {
-            if (!unlocked)
-                return false;
-        }
-        return true;
+        return progressState.areAllSongsUnlocked();
     }
 
     public int dateDays(Date lowestDate, Date highestDate) {
@@ -1351,7 +1561,7 @@ public abstract class Player extends Entity {
     }
 
     public void setSongUnlocked(int songId, boolean unlocked) {
-        this.songUnlocked[songId] = unlocked;
+        progressState.setSongUnlocked(songId, unlocked);
     }
 
     /**
@@ -1363,41 +1573,56 @@ public abstract class Player extends Entity {
         return localNpcs;
     }
 
+    public long getLocalPlayerMembershipRevision() {
+        return localPlayerMembershipRevision;
+    }
+
+    public void bumpLocalPlayerMembershipRevision() {
+        localPlayerMembershipRevision++;
+    }
+
+    public long getLocalNpcMembershipRevision() {
+        return localNpcMembershipRevision;
+    }
+
+    public void bumpLocalNpcMembershipRevision() {
+        localNpcMembershipRevision++;
+    }
+
     public boolean didTeleport() {
-        return this.didTeleport;
+        return movementState.didTeleport();
     }
 
     public boolean didMapRegionChange() {
-        return this.mapRegionDidChange;
+        return movementState.didMapRegionChange();
     }
 
     public int getPrimaryDirection() {
-        return this.primaryDirection;
+        return movementState.getPrimaryDirection();
     }
 
     public int getSecondaryDirection() {
-        return this.secondaryDirection;
+        return movementState.getSecondaryDirection();
     }
 
     public int getCurrentX() {
-        return this.currentX;
+        return movementState.getCurrentX();
     }
 
     public int getCurrentY() {
-        return this.currentY;
+        return movementState.getCurrentY();
     }
 
     public void setGraphic(int graphicId, int graphicHeight) {
-        this.graphicId = graphicId;
-        this.graphicHeight = graphicHeight;
+        updateState.setGraphic(graphicId, graphicHeight);
     }
 
     public int getGraphicId() {
-        return this.graphicId;
+        return updateState.getGraphicId();
     }
 
     public int getGraphicHeight() {
-        return this.graphicHeight;
+        return updateState.getGraphicHeight();
     }
 
     public String getForcedChat() {
@@ -1413,233 +1638,189 @@ public abstract class Player extends Entity {
     }
 
     public int getGender() {
-        return this.pGender;
+        return appearanceState.getGender();
     }
 
     public void setGender(int pGender) {
-        this.pGender = pGender;
-        markAppearanceDirty();
+        appearanceState.setGender(pGender);
     }
 
     public int getTorso() {
-        return this.pTorso;
+        return appearanceState.getTorso();
     }
 
     public void setTorso(int pTorso) {
-        this.pTorso = pTorso;
-        markAppearanceDirty();
+        appearanceState.setTorso(pTorso);
     }
 
     public int getArms() {
-        return this.pArms;
+        return appearanceState.getArms();
     }
 
     public void setArms(int pArms) {
-        this.pArms = pArms;
-        markAppearanceDirty();
+        appearanceState.setArms(pArms);
     }
 
     public int getLegs() {
-        return this.pLegs;
+        return appearanceState.getLegs();
     }
 
     public void setLegs(int pLegs) {
-        this.pLegs = pLegs;
-        markAppearanceDirty();
+        appearanceState.setLegs(pLegs);
     }
 
     public int getHands() {
-        return this.pHands;
+        return appearanceState.getHands();
     }
 
     public void setHands(int pHands) {
-        this.pHands = pHands;
-        markAppearanceDirty();
+        appearanceState.setHands(pHands);
     }
 
     public int getFeet() {
-        return this.pFeet;
+        return appearanceState.getFeet();
     }
 
     public void setFeet(int pFeet) {
-        this.pFeet = pFeet;
-        markAppearanceDirty();
+        appearanceState.setFeet(pFeet);
     }
 
     public int getBeard() {
-        return this.pBeard;
+        return appearanceState.getBeard();
     }
 
     public void setBeard(int pBeard) {
-        this.pBeard = pBeard;
-        markAppearanceDirty();
+        appearanceState.setBeard(pBeard);
     }
 
     public int getHead() {
-        return this.pHead;
+        return appearanceState.getHead();
     }
 
     public void setHead(int pHead) {
-        this.pHead = pHead;
-        markAppearanceDirty();
+        appearanceState.setHead(pHead);
     }
 
     public int getStandAnim() {
-        return this.playerSE;
+        return appearanceState.getStandAnim();
     }
 
     public void setStandAnim(int playerSE) {
-        this.playerSE = playerSE;
+        appearanceState.setStandAnim(playerSE);
     }
 
     public int getWalkAnim() {
-        return this.playerSEW;
+        return appearanceState.getWalkAnim();
     }
 
     public void setAgilityEmote(int walk, int run) {
-        setWalkAnim(walk);
-        setRunAnim(run);
-        markAppearanceDirty();
-        getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+        appearanceState.setAgilityEmote(walk, run);
     }
 
     public void setWalkAnim(int playerSEW) {
-        this.playerSEW = playerSEW;
-        markAppearanceDirty();
-        this.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+        appearanceState.setWalkAnim(playerSEW);
     }
 
     public int getRunAnim() {
-        return this.playerSER;
+        return appearanceState.getRunAnim();
     }
 
     public void setRunAnim(int playerSER) {
-        this.playerSER = playerSER;
-        markAppearanceDirty();
-        this.getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
+        appearanceState.setRunAnim(playerSER);
     }
 
     public int getPlayerNpc() {
-        return this.playerNpc;
+        return appearanceState.getPlayerNpc();
     }
 
     public void setPlayerNpc(int playerNpc) {
-        this.playerNpc = playerNpc;
-        markAppearanceDirty();
+        appearanceState.setPlayerNpc(playerNpc);
     }
 
     public int getDamageDealt() {
-        return this.damageDealt;
+        return combatState.getDamageDealt();
     }
     public int getDamageDealt2() {
-        return this.damageDealt2;
+        return combatState.getDamageDealt2();
     }
     public Entity.hitType getHitType() {
-        return this.hitType;
+        return combatState.getHitType();
     }
     public Entity.hitType getHitType2() {
-        return this.hitType2;
+        return combatState.getHitType2();
     }
 
     public int getCurrentHealth() {
-        return this.currentHealth;
+        return stats.getCurrentHealth();
     }
     public int getMaxHealth() {
-        return this.maxHealth;
+        return stats.getMaxHealth();
     }
     public void setCurrentHealth(int currentHealth) {
-        this.currentHealth = currentHealth;
+        stats.setCurrentHealth(currentHealth);
     }
     public void heal(int healing) {
-        heal(healing, 0);
+        stats.heal(healing);
     }
     public void heal(int healing, int overHeal) {
-        Client c = (Client) this;
-        int maxLevel = getMaxHealth() + overHeal;
-        setCurrentHealth(Math.min(getCurrentHealth() + healing, maxLevel));
-        c.refreshSkill(Skill.HITPOINTS);
+        stats.heal(healing, overHeal);
     }
     public void eat(int healing, int removeId, int removeSlot) {
-        Client c = (Client) this;
-        if (c.deathStage > 0 || c.deathTimer > 0 || c.getCurrentHealth() < 1) {
-            return;
-        }
-        if(getCurrentHealth() < getMaxHealth()) {
-            c.requestAnim(829, 0);
-            c.deleteItem(removeId, removeSlot, 1);
-            c.send(new SendMessage("You eat the " + Server.itemManager.getName(removeId).toLowerCase() + "."));
-            heal(healing);
-        } else c.send(new SendMessage("You have full health already, so you spare the "+ Server.itemManager.getName(removeId).toLowerCase() +" for later."));
+        stats.eat(healing, removeId, removeSlot);
     }
 
     public void boost(int boosted, Skill skill) {
-        if (skill == null)
-            return;
-
-        if(skill == Skill.HITPOINTS || skill == Skill.PRAYER) //Cant do health or prayer with this method!
-            return;
-
-        Client c = (Client) this;
-        int lvl = Skills.getLevelForExperience(getExperience(skill));
-        int currentLevel = c.getLevel(skill);
-        boosted = currentLevel >= lvl + boosted ? currentLevel - lvl : boosted;
-        boostedLevel[skill.getId()] = boosted;
-        c.refreshSkill(skill);
-        c.markSaveDirty(PlayerSaveSegment.STATS.getMask());
+        stats.boost(boosted, skill);
     }
 
     public int getCurrentPrayer() {
-        return this.currentPrayer;
+        return stats.getCurrentPrayer();
     }
     public int getMaxPrayer() {
-        return this.maxPrayer;
+        return stats.getMaxPrayer();
     }
     public void setCurrentPrayer(int amount) {
-        this.currentPrayer = amount;
+        stats.setCurrentPrayer(amount);
     }
     public void drainPrayer(int amount) {
-        pray(-amount);
-        if(getCurrentPrayer() <= 0) {
-            setCurrentPrayer(0);
-            prayers.reset();
-            ((Client) this).send(new SendMessage("<col=8B8000>Your prayer has ran out! Please recharge at a nearby altar!"));
-        }
+        stats.drainPrayer(amount);
     }
     public void pray(int healing) {
-        Client c = (Client) this;
-        int maxLevel = getMaxPrayer();
-        setCurrentPrayer(Math.min(getCurrentPrayer() + healing, maxLevel));
-        c.refreshSkill(Skill.PRAYER);
+        stats.pray(healing);
     }
 
     public boolean isInCombat() {
-        return getLastCombat() > 0;
+        return combatState.isInCombat();
+    }
+
+    public boolean isDeadOrDying() {
+        return combatState.isDeadOrDying();
     }
 
     public int getLastCombat() {
-        return lastCombat;
+        return combatState.getLastCombat();
     }
     public void setLastCombat(int lastCombat) {
-        this.lastCombat = lastCombat;
+        combatState.setLastCombat(lastCombat);
     }
 
     public int getCombatTimer() {
-        return combatTimer;
+        return combatState.getCombatTimer();
     }
     public void setCombatTimer(int timer) {
-        this.combatTimer = timer;
+        combatState.setCombatTimer(timer);
     }
     public int getStunTimer() {
-        return stunTimer;
+        return combatState.getStunTimer();
     }
     public void setStunTimer(int timer) {
-        this.stunTimer = timer;
+        combatState.setStunTimer(timer);
     }
     public int getSnareTimer() {
-        return snareTimer;
+        return combatState.getSnareTimer();
     }
     public void setSnareTimer(int timer) {
-        this.snareTimer = timer;
+        combatState.setSnareTimer(timer);
     }
 
     /**
@@ -1648,39 +1829,21 @@ public abstract class Player extends Entity {
      * @return the combat level.
      */
     public int determineCombatLevel() {
-        int magLvl = Skills.getLevelForExperience(getExperience(Skill.MAGIC));
-        int ranLvl = Skills.getLevelForExperience(getExperience(Skill.RANGED));
-        int attLvl = Skills.getLevelForExperience(getExperience(Skill.ATTACK));
-        int strLvl = Skills.getLevelForExperience(getExperience(Skill.STRENGTH));
-        int defLvl = Skills.getLevelForExperience(getExperience(Skill.DEFENCE));
-        int hitLvl = Skills.getLevelForExperience(getExperience(Skill.HITPOINTS));
-        int prayLvl = Skills.getLevelForExperience(getExperience(Skill.PRAYER));
-        double mag = magLvl * 1.5;
-        double ran = ranLvl * 1.5;
-        double attstr = attLvl + strLvl;
-        double combatLevel;
-        if (ran > attstr && ran > mag) { // player is ranged class
-            combatLevel = ((double)(defLvl) * 0.25) + ((double)(hitLvl) * 0.25) + ((double)(prayLvl / 2) * 0.25) + ((double)(ranLvl) * 0.4875);
-        } else if (mag > attstr) { // player is mage class
-            combatLevel = (((double)(defLvl) * 0.25) + ((double)(hitLvl) * 0.25) + ((double)(prayLvl / 2) * 0.25) + ((double)(magLvl) * 0.4875));
-        } else {
-            combatLevel = (((double)(defLvl) * 0.25) + ((double)(hitLvl) * 0.25) + ((double)(prayLvl / 2) * 0.25) + ((double)(attLvl) * 0.325) + ((double)(strLvl) * 0.325));
-        }
-        return customCombat != -1 ? customCombat : (int)combatLevel;
+        return stats.determineCombatLevel();
     }
 
     public int getSkillLevel(Skill skill) {
-        return Skills.getLevelForExperience(getExperience(skill));
+        return stats.getSkillLevel(skill);
     }
 
     public boolean skillcapePerk(Skill skill, boolean checkInventory) {
         Skillcape skillcape = Skillcape.getSkillCape(getEquipment()[Equipment.Slot.CAPE.getId()]);
-        boolean maxCape = ((Client) this).GetItemName(getEquipment()[Equipment.Slot.CAPE.getId()]).toLowerCase().contains("max cape");
+        boolean maxCape = ((Client) this).getItemName(getEquipment()[Equipment.Slot.CAPE.getId()]).toLowerCase().contains("max cape");
 
         if(checkInventory && (!maxCape || (skillcape != null && skillcape.getSkill() != skill))) {
             for(int i = 0; i < 28 && !maxCape; i++) {
                 skillcape = Skillcape.getSkillCape(playerItems[i] - 1);
-                if(((Client) this).GetItemName(playerItems[i] - 1).toLowerCase().contains("max cape")
+                if(((Client) this).getItemName(playerItems[i] - 1).toLowerCase().contains("max cape")
                 || (skillcape != null && skillcape.getSkill() == skill))
                     maxCape = true; //I am lazy and this is some shiet that could work :L
             }
@@ -1832,64 +1995,19 @@ public abstract class Player extends Entity {
     public ArrayList<String> monsterName = new ArrayList<>();
     public ArrayList<Integer> monsterCount = new ArrayList<>();
     public void addMonsterName(String name) {
-        int index = monsterName.size();
-        if(index == 0) { //Add the first entry!
-            monsterName.add(name);
-            monsterCount.add(1);
-        } else { //Sorting after first entry!
-            ArrayList<String> nameClone = (ArrayList<String>) monsterName.clone();
-            ArrayList<Integer> countClone = (ArrayList<Integer>) monsterCount.clone();
-            monsterName.clear();
-            monsterCount.clear();
-            monsterName.add(name);
-            monsterCount.add(1);
-            for(int i = 0; i < nameClone.size(); i++) {
-                monsterName.add(nameClone.get(i));
-                monsterCount.add(countClone.get(i));
-            }
-        }
+        progressState.addMonsterName(name);
     }
     public int getMonsterIndex(String name) {
-        int slot = -1;
-        for(int i = 0; i < monsterName.size() && slot == -1; i++)
-            if(monsterName.get(i).equals(name)) {
-                slot = i;
-            }
-        return slot;
+        return progressState.getMonsterIndex(name);
     }
     public void incrementMonsterLog(Npc npc) {
-        String name = npc.npcName().toLowerCase();
-        int index = getMonsterIndex(name);
-        if(index >= 0)
-            addMonsterLog(npc, index);
-        else addMonsterName(name);
+        progressState.incrementMonsterLog(npc);
     }
     public void addMonsterLog(Npc npc, int index) {
-        String name = npc.npcName().toLowerCase();
-        int amount = index == -1 ? 0 : monsterCount.get(index);
-        int newAmount = amount < 1048576 ? amount + 1 : amount;
-        if(index == 0)
-            monsterCount.set(index, newAmount);
-        else if(index > 0) { //Sorting time!
-            ArrayList<String> nameClone = (ArrayList<String>) monsterName.clone();
-            ArrayList<Integer> countClone = (ArrayList<Integer>) monsterCount.clone();
-            monsterName.clear();
-            monsterCount.clear();
-            nameClone.remove(index);
-            countClone.remove(index);
-            monsterName.add(name);
-            monsterCount.add(newAmount);
-            for(int i = 0; i < nameClone.size(); i++) {
-                monsterName.add(nameClone.get(i));
-                monsterCount.add(countClone.get(i));
-            }
-        }
+        progressState.addMonsterLog(npc, index);
     }
     public int monsterKC(Npc npc) {
-        int index = getMonsterIndex(npc.npcName().toLowerCase());
-        if(index >= 0)
-            return monsterCount.get(index);
-        return 0;
+        return progressState.monsterKC(npc);
     }
 
     public void checkLoot(Client c, NpcData n) {
@@ -1930,11 +2048,7 @@ public abstract class Player extends Entity {
                         currentChance += checkChance;
                 }
             }
-            c.send(new SendString("Loot from 1000 " + n.getName(), 5383));
-            c.checkBankInterface = true;
-            c.sendBank(lootedItem, lootedAmount);
-            c.resetItems(5064);
-            c.send(new InventoryInterface(5292, 5063));
+            c.openBankStyleView(lootedItem, lootedAmount, "Loot from 1000 " + n.getName());
             if (wealth)
                 c.send(new SendMessage("<col=FF6347>This is a result with a ring of wealth!"));
     }
@@ -1984,11 +2098,7 @@ public abstract class Player extends Entity {
                         lootedAmount.set(pos, lootedAmount.get(pos) + coins);
                 }
             }
-            c.send(new SendString("Loot from 1000 Yanille Chest", 5383));
-            c.checkBankInterface = true;
-            c.sendBank(lootedItem, lootedAmount);
-            c.resetItems(5064);
-            c.send(new InventoryInterface(5292, 5063));
+            c.openBankStyleView(lootedItem, lootedAmount, "Loot from 1000 Yanille Chest");
         }
         if(objectId == 375 && objPos.getX() == 2733 && objPos.getY() == 3374 && objPos.getZ() == 0) { //Check timer on a object!
             ArrayList<Integer> lootedItem = new ArrayList<>();
@@ -2014,104 +2124,33 @@ public abstract class Player extends Entity {
                         lootedAmount.set(pos, lootedAmount.get(pos) + coins);
                 }
             }
-            c.send(new SendString("Loot from 1000 Yanille Chest", 5383));
-            c.checkBankInterface = true;
-            c.sendBank(lootedItem, lootedAmount);
-            c.resetItems(5064);
-            c.send(new InventoryInterface(5292, 5063));
+            c.openBankStyleView(lootedItem, lootedAmount, "Loot from 1000 Yanille Chest");
         }
     }
 
     public void customObjects() {
         Client client = (Client) this;
         client.replaceDoors();
-        Balloons.updateBalloons(client);
+        StaticObjectOverrides.replayTo(client);
+        PartyRoomBalloons.updateVisibleBalloons(client);
         GlobalObject.updateObject(client);
         for(int i = 0; i <= 4; i++) //Refresh farming varbits!
             client.varbit(client.farming.getFarmData().getFarmPatchConfig() + i, 0);
         client.farming.updateCompost(client);
         client.farming.updateFarmPatch(client);
-        if(client.getPosition().getZ() == 0) {
-            /* NMZ object removal!*/
-            for (int x = 0; x <= 9; x++)
-                for (int y = 0; y <= 8; y++)
-                    client.ReplaceObject2(new Position(2600 + x, 3111 + y, 0), -1, 0, 10);
-            client.ReplaceObject2(new Position(2869, 9813, 0), 2343, 0, 10); //Brick
-            client.ReplaceObject2(new Position(2870, 9813, 0), 2343, 0, 10); //Brick
-            client.ReplaceObject2(new Position(2871, 9813, 0), 2343, 0, 10); //Brick
-
-            client.ReplaceObject2(new Position(2866, 9797, 0), 2343, 0, 10); //Brick
-            client.ReplaceObject2(new Position(2866, 9798, 0), 2343, 0, 10); //Brick
-            client.ReplaceObject2(new Position(2866, 9799, 0), 2343, 0, 10); //Brick
-            client.ReplaceObject2(new Position(2866, 9800, 0), 2343, 0, 10); //Brick
-
-            client.ReplaceObject2(new Position(2885, 9794, 0), 882, 0, 10); // Shortcut entrance Taverly
-            client.ReplaceObject2(new Position(2899, 9728, 0), 882, 0, 10); // Shortcut exit Taverly
-
-            client.ReplaceObject2(new Position(2572, 3105, 0), 14890, 0, 10); //Sand Pit in Yanille!
-            client.ReplaceObject2(new Position(2542, 3097, 0), -1, 0, 10); //Remove portal near dad!
-            client.ReplaceObject2(new Position(2942, 4688, 0), 12260, 3, 10); //Teleport of some sort!
-
-            client.ReplaceObject2(new Position(2613, 3084, 0), 3994, -3, 11);
-            client.ReplaceObject2(new Position(2628, 3151, 0), 2104, -3, 11);
-            client.ReplaceObject2(new Position(2629, 3151, 0), 2105, -3, 11);
-            client.ReplaceObject2(new Position(2733, 3374, 0), 375, -1, 11);
-            client.ReplaceObject2(new Position(2688, 3481, 0), 27978, 1, 11); //Blood altar
-            client.ReplaceObject2(new Position(2626, 3116, 0), 14905, -1, 11); //Nature altar
-            client.ReplaceObject2(new Position(2595, 3409, 0), 133, -1, 10); // Dragon lair
-
-            client.ReplaceObject2(new Position(2669, 2713, 0), -1, -1, 11); // Remove door?
-            client.ReplaceObject2(new Position(2713, 3483, 0), -1, -1, 0); // Remove seers door?
-            client.ReplaceObject2(new Position(2716, 3472, 0), -1, -1, 0); // Remove seers door?
-            client.ReplaceObject2(new Position(2594, 3102, 0), -1, -1, 0); // Remove Yanille door?
-            client.ReplaceObject2(new Position(2816, 3438, 0), -1, -1, 0); // Remove Catherby door?
-            /* Rope from Tzhaar city */
-            client.ReplaceObject2(new Position(2443, 5169, 0), 2352, 0, 10);
-            /*
-             * Danno: Box off new area from noobs =]
-             */
-            client.ReplaceObject2(new Position(2770, 3140, 0), 2050, 0, 10);
-            client.ReplaceObject2(new Position(2771, 3140, 0), 2050, 0, 10);
-            client.ReplaceObject2(new Position(2772, 3140, 0), 2050, 0, 10);
-            client.ReplaceObject2(new Position(2772, 3141, 0), 2050, 0, 10);
-            client.ReplaceObject2(new Position(2772, 3142, 0), 2050, 0, 10);
-            client.ReplaceObject2(new Position(2772, 3143, 0), 2050, 0, 10);
-            /* Blocking object! */
-            //client.ReplaceObject2(new Position(2832, 2971, 0), 2050, 0, 10);
-            /* ? */
-            client.ReplaceObject2(new Position(2998, 3931, 0), 6951, 0, 0);
-            client.ReplaceObject2(new Position(2904, 9678, 0), 6951, 0, 10);
-            // slayer update
-            // ReplaceObject2(2904, 9678, -1, -1, 11);
-            // ReplaceObject2(2691, 9774, 2107, 0, 11);
-            // Ancient slayer dunegon
-            client.ReplaceObject(2661, 9815, 2391, 0, 0);
-            client.ReplaceObject(2662, 9815, 2392, -2, 0);
-            /* Gnome mining cavern */
-            client.ReplaceObject2(new Position(2492, 9916, 0), 7491, 0, 10);
-            client.ReplaceObject2(new Position(2493, 9915, 0), 7491, 0, 10);
-            /* Elemental obelisk */
-            client.ReplaceObject2(new Position(2863, 3427, 0), 2151, 0, 10); //Water
-            client.ReplaceObject2(new Position(3531, 3536, 0), 2150, 0, 10); //Earth
-            client.ReplaceObject2(new Position(3059, 3564, 0), 2153, 0, 10); //Fire
-            client.ReplaceObject2(new Position(2743, 3174, 0), 2152, 0, 10); //Air
-            /* Desert shiet */
-            client.ReplaceObject2(new Position(3284, 2809, 0), 20391, 2, 0);
-            client.ReplaceObject2(new Position(3283, 2809, 0), 20391, 4, 0);
-        }
     }
 
     public boolean rejectTeleport() {
-        return getPlunder.hinderTeleport();
+        return net.dodian.uber.game.skill.thieving.PyramidPlunder.hindersTeleport(((Client) this));
     }
     public void loginPosition(int x, int y, int z) {
         moveTo(x, y, z);
         if(getPositionName(getPosition()) == positions.PYRAMID_PLUNDER)
-            getPlunder.resetPlunder();
+            net.dodian.uber.game.skill.thieving.PyramidPlunder.reset(((Client) this));
     }
 
     public void examineItem(Client c, int id, int amount) {
-        String name = c.GetItemName(id);
+        String name = c.getItemName(id);
         if(amount >= 0x186a0)
             c.send(new SendMessage(amount + " x " + name));
         else { //Got this incase we need to do future stuff for item examine!
@@ -2158,7 +2197,7 @@ public abstract class Player extends Entity {
         Client c = ((Client) this);
         if(herbOptions.isEmpty()) {
             herbMaking = -1;
-            c.nextDiag = -1;
+            DialogueService.setNextDialogueId(c, -1);
             return;
         }
         int slot = herbMaking;
@@ -2166,7 +2205,7 @@ public abstract class Player extends Entity {
         text[0] = "What do you wish me to do?";
         int position = Math.min(3, herbOptions.size() - slot);
         for(int i = 0; i < position; i++)
-            text[i + 1] = c.GetItemName(herbOptions.get(slot + i).getId());
+            text[i + 1] = c.getItemName(herbOptions.get(slot + i).getId());
         text[position + 1] = text.length < 6 && slot == 0 ? "Close" : text.length == 6 ? "Next" : "Previous";
         if(text.length == 6)
             text[position + 2] = slot == 0 ? "Close" : "Previous";
@@ -2182,8 +2221,8 @@ public abstract class Player extends Entity {
         return currentChunk;
     }
 
-    public ChunkRepository getChunkRepository() {
-        return chunkRepository;
+    public ChunkEntityIndex getChunkEntityIndex() {
+        return chunkEntityIndex;
     }
 
     public void syncChunkMembership() {
@@ -2193,25 +2232,25 @@ public abstract class Player extends Entity {
 
         Chunk newChunk = getPosition().getChunk();
 
-        if (currentChunk != null && currentChunk.equals(newChunk) && chunkRepository != null) {
+        if (currentChunk != null && currentChunk.equals(newChunk) && chunkEntityIndex != null) {
             return;
         }
 
-        if (chunkRepository != null) {
-            chunkRepository.remove(this);
+        if (chunkEntityIndex != null) {
+            chunkEntityIndex.remove(this);
         }
 
-        ChunkRepository repo = Server.chunkManager.load(newChunk);
+        ChunkEntityIndex repo = Server.chunkManager.load(newChunk);
         repo.add(this);
         currentChunk = newChunk;
-        chunkRepository = repo;
+        chunkEntityIndex = repo;
     }
 
     public void removeFromChunk() {
-        if (chunkRepository != null) {
-            chunkRepository.remove(this);
+        if (chunkEntityIndex != null) {
+            chunkEntityIndex.remove(this);
         }
-        chunkRepository = null;
+        chunkEntityIndex = null;
         currentChunk = null;
     }
 

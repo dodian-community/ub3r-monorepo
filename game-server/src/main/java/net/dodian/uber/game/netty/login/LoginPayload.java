@@ -8,18 +8,13 @@ import io.netty.buffer.ByteBuf;
  * in an instance of this class which is then passed to
  * {@link LoginProcessorHandler} for validation and login logic.
  */
-public class LoginPayload {
-
-    private final ByteBuf payload;
-
-    public LoginPayload(ByteBuf payload) {
-        this.payload = payload;
-    }
+public record LoginPayload(ByteBuf payload) {
 
     /**
      * The retained payload buffer. Callers must release when done.
      */
-    public ByteBuf getPayload() {
+    @Override
+    public ByteBuf payload() {
         return payload;
     }
 }

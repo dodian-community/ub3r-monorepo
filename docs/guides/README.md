@@ -14,6 +14,7 @@ This is the category in which you'll find documentation on how to set things up,
             <li><a href="/docs/guides/installing_mysql.md">Installing MySQL Database</a></li>
             <li style="margin-top: 5px"><a href="/docs/guides/glossary.md">Glossary</a></li>
             <li><a href="/docs/guides/account_registration_website.md">Account Registration Website Guide</a></li>
+            <li><a href="/docs/guides/task_coroutine_system.md">Task Coroutine System Guide</a></li>
         </ul>
     </li>
     <li><a href="/docs/contribution">Contribution</a>

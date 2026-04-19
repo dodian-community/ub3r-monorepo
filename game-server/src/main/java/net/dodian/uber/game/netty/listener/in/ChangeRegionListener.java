@@ -6,6 +6,7 @@ import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketHandler;
 import net.dodian.uber.game.netty.listener.PacketListener;
 import net.dodian.uber.game.netty.listener.PacketListenerManager;
+import net.dodian.uber.game.engine.systems.net.PacketConnectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,21 +28,12 @@ public class ChangeRegionListener implements PacketListener {
     @Override
     public void handle(Client client, GamePacket packet) throws Exception {
         // No payload to read; ensure we consume any bytes if size>0 just in case
-        ByteBuf buf = packet.getPayload();
+        ByteBuf buf = packet.payload();
         if (buf.isReadable()) {
             buf.skipBytes(buf.readableBytes());
         }
 
-        if (!client.pLoaded) {
-            client.pLoaded = true;
-        }
-        if (!client.IsPMLoaded) {
-            client.refreshFriends();
-            client.IsPMLoaded = true;
-        }
-        if (packet.getOpcode() == 121) {
-            // Loads new area => spawn custom objects
-            client.customObjects();
-        }
+        PacketConnectionService.handleRegionChange(client, packet.opcode() == 121);
     }
 }
+

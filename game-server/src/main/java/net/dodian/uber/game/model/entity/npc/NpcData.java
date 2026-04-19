@@ -3,6 +3,11 @@
  */
 package net.dodian.uber.game.model.entity.npc;
 
+import net.dodian.uber.game.persistence.world.npc.NpcDataInterop;
+import net.dodian.uber.game.persistence.world.npc.NpcDefinitionData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.ResultSet;
 import java.util.ArrayList;
 
@@ -12,29 +17,40 @@ import java.util.ArrayList;
  */
 public class NpcData {
 
+    private static final Logger logger = LoggerFactory.getLogger(NpcData.class);
+
     private final ArrayList<NpcDrop> drops = new ArrayList<>();
     private String name = "", examine="";
     private int attackEmote, deathEmote, respawn, combat, size;
     private final int[] level = new int[7];
 
+    public NpcData(String name, String examine, int attackEmote, int deathEmote, int respawn, int combat, int size, int[] levels) {
+        this.name = name == null ? "" : name;
+        this.examine = examine;
+        this.attackEmote = attackEmote;
+        this.deathEmote = deathEmote;
+        this.respawn = respawn;
+        this.combat = combat;
+        this.size = size;
+        if (levels != null && levels.length >= this.level.length) {
+            System.arraycopy(levels, 0, this.level, 0, this.level.length);
+        }
+    }
+
     public NpcData(ResultSet row) {
         try {
-            attackEmote = row.getInt("attackEmote");
-            deathEmote = row.getInt("deathEmote");
-            name = row.getString("name");
-            examine = row.getString("examine");
-            respawn = row.getInt("respawn");
-            combat = row.getInt("combat");
-            size = row.getInt("size");
-            level[0] = row.getInt("defence");
-            level[1] = row.getInt("attack");
-            level[2] = row.getInt("strength");
-            level[3] = row.getInt("hitpoints");
-            level[4] = row.getInt("ranged");
-            level[5] = 0; // a npc got no prayer!
-            level[6] = row.getInt("magic");
+            NpcDefinitionData parsed = NpcDataInterop.fromResultSet(row);
+            NpcData mapped = NpcDataInterop.toLegacy(parsed);
+            attackEmote = mapped.attackEmote;
+            deathEmote = mapped.deathEmote;
+            name = mapped.name;
+            examine = mapped.examine;
+            respawn = mapped.respawn;
+            combat = mapped.combat;
+            size = mapped.size;
+            System.arraycopy(mapped.level, 0, level, 0, level.length);
         } catch (Exception e) {
-            System.out.println("NpcData error..." + e);
+            logger.error("NpcData error while mapping result set", e);
         }
     }
 

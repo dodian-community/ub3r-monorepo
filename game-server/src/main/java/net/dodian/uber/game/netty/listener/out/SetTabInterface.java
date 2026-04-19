@@ -7,8 +7,8 @@ import net.dodian.uber.game.netty.codec.ValueType;
 
 public class SetTabInterface implements OutgoingPacket {
 
-    private int mainFrame;
-    private int subFrame;
+    private final int mainFrame;
+    private final int subFrame;
 
     public SetTabInterface(int mainFrame, int subFrame) {
         this.mainFrame = mainFrame;
