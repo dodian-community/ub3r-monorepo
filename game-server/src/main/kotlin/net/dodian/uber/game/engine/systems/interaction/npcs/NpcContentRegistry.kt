@@ -98,6 +98,13 @@ object NpcContentRegistry : ContentBootstrap {
     }
 
     @JvmStatic
+    fun hasAttackHandler(npcId: Int): Boolean {
+        bootstrap()
+        val definition = byNpcId.getOrNull(npcId) ?: return false
+        return definition.onAttack !== NO_CLICK_HANDLER
+    }
+
+    @JvmStatic
     fun allSpawns(): List<NpcSpawnDef> {
         bootstrap()
         return definitions.flatMap { it.entries }

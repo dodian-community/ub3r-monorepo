@@ -36,6 +36,11 @@ object LegendsGuildGateService {
     private const val VISUAL_OPEN_MS = 2_400L
     private const val TRAVERSAL_TICK_MS = 600
     private const val TRAVERSAL_TIMEOUT_MS = 8_000L
+    private val pathfinder =
+        AStarPathfindingAlgorithm(
+            collision = { x, y, z, dx, dy -> CollisionManager.global().traversable(x, y, z, dx, dy) },
+            heuristic = Heuristic.EUCLIDEAN,
+        )
 
     private enum class Stage {
         TO_ENTRY,
@@ -287,13 +292,12 @@ object LegendsGuildGateService {
             return
         }
 
-        for (player in PlayerRegistry.players) {
-            val viewer = player as? Client ?: continue
+        PlayerRegistry.forEachActivePlayer { viewer ->
             if (!viewer.isActive || viewer.disconnected || viewer.position.z != leftGate.z) {
-                continue
+                return@forEachActivePlayer
             }
             if (!viewer.isWithinDistance(viewer.position.x, viewer.position.y, leftGate.x, leftGate.y, 60)) {
-                continue
+                return@forEachActivePlayer
             }
             if (leftFace != null) {
                 viewer.ReplaceObject(leftGate.x, leftGate.y, GATE_OBJECT_LEFT, leftFace, GATE_TYPE)
@@ -335,11 +339,6 @@ object LegendsGuildGateService {
             return true
         }
 
-        val pathfinder =
-            AStarPathfindingAlgorithm(
-                collision = { x, y, z, dx, dy -> CollisionManager.global().traversable(x, y, z, dx, dy) },
-                heuristic = Heuristic.EUCLIDEAN,
-            )
         val path = pathfinder.find(client.position.x, client.position.y, destination.x, destination.y, destination.z)
         if (path.isEmpty()) {
             return false
@@ -465,4 +464,3 @@ object LegendsGuildGateService {
         visualToken.set(0)
     }
 }
-

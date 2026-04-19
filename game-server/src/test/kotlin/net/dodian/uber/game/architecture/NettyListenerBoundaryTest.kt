@@ -83,4 +83,13 @@ class NettyListenerBoundaryTest {
             "Gameplay mutations still exist in netty listeners.\n${violations.joinToString("\n")}",
         )
     }
+
+    @Test
+    fun `packet listener manager validates critical opcodes at startup`() {
+        val managerSource = Files.readString(Paths.get("src/main/java/net/dodian/uber/game/netty/listener/PacketListenerManager.java"))
+        val reportSource = Files.readString(Paths.get("src/main/kotlin/net/dodian/uber/game/engine/systems/net/PacketRegistrationReport.kt"))
+
+        assertTrue(managerSource.contains("validateCriticalOpcodesOrThrow"))
+        assertTrue(reportSource.contains("intArrayOf(2, 17, 35"))
+    }
 }

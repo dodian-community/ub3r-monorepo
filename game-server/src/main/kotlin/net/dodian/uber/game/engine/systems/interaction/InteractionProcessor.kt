@@ -5,7 +5,9 @@ import net.dodian.cache.objects.GameObjectData
 import net.dodian.cache.objects.GameObjectDef
 import net.dodian.uber.game.combat.getAttackStyle
 import net.dodian.uber.game.engine.systems.interaction.objects.ObjectContentRegistry
+import net.dodian.uber.game.engine.systems.interaction.objects.ObjectClickLoggingService
 import net.dodian.uber.game.engine.systems.interaction.objects.ObjectInteractionService
+import net.dodian.uber.game.engine.systems.interaction.npcs.BankerApproachFallbackService
 import net.dodian.uber.game.engine.systems.interaction.npcs.NpcContentDispatcher
 import net.dodian.uber.game.engine.systems.interaction.items.ItemOnNpcContentService
 import net.dodian.uber.game.engine.event.GameEventBus
@@ -13,10 +15,14 @@ import net.dodian.uber.game.events.item.ItemOnNpcEvent
 import net.dodian.uber.game.events.magic.MagicOnNpcEvent
 import net.dodian.uber.game.events.magic.MagicOnPlayerEvent
 import net.dodian.uber.game.model.Position
+import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.model.objects.GlobalObject
 import net.dodian.uber.game.model.objects.WorldObject
+import net.dodian.uber.game.engine.systems.combat.AttackStartDedupeService
+import net.dodian.uber.game.engine.systems.combat.AttackStartDedupeService.Decision
+import net.dodian.uber.game.engine.systems.combat.CombatCommandService
 import net.dodian.uber.game.engine.systems.combat.CombatIntent
 import net.dodian.uber.game.engine.systems.combat.CombatStartService
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancellationService
@@ -29,36 +35,51 @@ import net.dodian.uber.game.engine.systems.skills.SkillPolicyResult
 import net.dodian.uber.game.engine.systems.skills.SkillPolicyRoute
 import net.dodian.uber.game.engine.util.Misc
 import net.dodian.uber.game.engine.config.runtimePhaseWarnMs
+import net.dodian.uber.game.engine.state.InteractionSessionStateAdapter
+import net.dodian.uber.game.engine.state.TeleportIntentStateAdapter
 import org.slf4j.LoggerFactory
 import java.util.IdentityHashMap
 
 object InteractionProcessor {
     private val logger = LoggerFactory.getLogger(InteractionProcessor::class.java)
     private val settledSinceCycle = IdentityHashMap<InteractionIntent, Long>()
+    private val objectDistanceRejectLogged = IdentityHashMap<InteractionIntent, Boolean>()
 
     @JvmStatic
     fun process(player: Client): InteractionExecutionResult {
-        val intent = player.pendingInteraction ?: return InteractionExecutionResult.CANCELLED
-        if (player.didTeleport() || player.disconnected || !player.isActive || !player.validClient) {
-            clear(player)
-            return InteractionExecutionResult.CANCELLED
-        }
-        if (PlayerRegistry.cycle < player.interactionEarliestCycle) {
-            return InteractionExecutionResult.WAITING
-        }
-        return when (intent) {
-            is NpcInteractionIntent -> processNpcInteraction(player, intent)
-            is ObjectClickIntent -> processObjectClick(player, intent)
-            is ItemOnObjectIntent -> processItemOnObject(player, intent)
-            is MagicOnObjectIntent -> processMagicOnObject(player, intent)
-            is ItemOnNpcIntent -> processItemOnNpc(player, intent)
-            is MagicOnNpcIntent -> processMagicOnNpc(player, intent)
-            is MagicOnPlayerIntent -> processMagicOnPlayer(player, intent)
-            is AttackPlayerIntent -> processAttackPlayer(player, intent)
-            else -> {
+        return try {
+            val intent = InteractionSessionStateAdapter.pending(player) ?: return InteractionExecutionResult.CANCELLED
+            if (TeleportIntentStateAdapter.didTeleport(player) || player.disconnected || !player.isActive || !player.validClient) {
                 clear(player)
-                InteractionExecutionResult.CANCELLED
+                return InteractionExecutionResult.CANCELLED
             }
+            if (PlayerRegistry.cycle < player.interactionEarliestCycle) {
+                return InteractionExecutionResult.WAITING
+            }
+            when (intent) {
+                is NpcInteractionIntent -> processNpcInteraction(player, intent)
+                is ObjectClickIntent -> processObjectClick(player, intent)
+                is ItemOnObjectIntent -> processItemOnObject(player, intent)
+                is MagicOnObjectIntent -> processMagicOnObject(player, intent)
+                is ItemOnNpcIntent -> processItemOnNpc(player, intent)
+                is MagicOnNpcIntent -> processMagicOnNpc(player, intent)
+                is MagicOnPlayerIntent -> processMagicOnPlayer(player, intent)
+                is AttackPlayerIntent -> processAttackPlayer(player, intent)
+                else -> {
+                    clear(player)
+                    InteractionExecutionResult.CANCELLED
+                }
+            }
+        } catch (throwable: Throwable) {
+            logger.error(
+                "Interaction processing failed slot={} name={} intent={}",
+                player.slot,
+                player.playerName,
+                InteractionSessionStateAdapter.pending(player)?.javaClass?.simpleName ?: "none",
+                throwable,
+            )
+            clear(player)
+            InteractionExecutionResult.CANCELLED
         }
     }
 
@@ -89,6 +110,9 @@ object InteractionProcessor {
         val legendsGuardFrontLane = isLegendsGuardFrontLaneInteraction(player, npc, intent.option)
         val routeStart = System.nanoTime()
         if (!legendsGuardFrontLane && !player.goodDistanceEntity(npc, range)) {
+            if (BankerApproachFallbackService.shouldAttemptFallback(player, npc, intent.option)) {
+                BankerApproachFallbackService.tryRouteCustomerSide(player, npc)
+            }
             return InteractionExecutionResult.WAITING
         }
         if (npc.position.withinDistance(player.position, 0)) {
@@ -130,7 +154,7 @@ object InteractionProcessor {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
-        if (player.pendingInteraction !== intent) {
+        if (!InteractionSessionStateAdapter.isPending(player, intent)) {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
@@ -169,6 +193,22 @@ object InteractionProcessor {
                 resolveDistanceMode(policy.distanceRule),
             ) == null
         ) {
+            if (objectDistanceRejectLogged.putIfAbsent(intent, true) == null) {
+                ObjectClickLoggingService.log(
+                    context =
+                        ObjectInteractionContext.click(
+                            client = player,
+                            option = intent.option,
+                            objectId = intent.objectId,
+                            position = targetPosition,
+                            obj = routeSnapshot.objectData,
+                            packetOpcode = intent.opcode,
+                        ),
+                    resolution = null,
+                    handled = false,
+                    handlerSource = "InteractionProcessor.distance_reject",
+                )
+            }
             skillObjectBinding?.let {
                 SkillPolicyMetrics.record(it.preset, SkillPolicyRoute.OBJECT, SkillPolicyResult.POLICY_REJECT)
             }
@@ -293,7 +333,7 @@ object InteractionProcessor {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
-        if (player.pendingInteraction !== intent) {
+        if (!InteractionSessionStateAdapter.isPending(player, intent)) {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
@@ -412,7 +452,7 @@ object InteractionProcessor {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
-        if (player.pendingInteraction !== intent) {
+        if (!InteractionSessionStateAdapter.isPending(player, intent)) {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
@@ -529,7 +569,7 @@ object InteractionProcessor {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
-        if (player.pendingInteraction !== intent) {
+        if (!InteractionSessionStateAdapter.isPending(player, intent)) {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
@@ -580,7 +620,7 @@ object InteractionProcessor {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
-        if (player.pendingInteraction !== intent) {
+        if (!InteractionSessionStateAdapter.isPending(player, intent)) {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
@@ -623,7 +663,7 @@ object InteractionProcessor {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
-        if (player.pendingInteraction !== intent) {
+        if (!InteractionSessionStateAdapter.isPending(player, intent)) {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
@@ -666,13 +706,13 @@ object InteractionProcessor {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
-        if (player.pendingInteraction !== intent) {
+        if (!InteractionSessionStateAdapter.isPending(player, intent)) {
             clear(player)
             return InteractionExecutionResult.CANCELLED
         }
 
         player.activeInteraction = ActiveInteraction(intent, player.lastProcessedCycle)
-        CombatStartService.startPlayerAttack(player, victim, CombatIntent.ATTACK_PLAYER)
+        CombatCommandService.requestAttack(player, victim, CombatIntent.ATTACK_PLAYER)
         clear(player)
         slowLogIfNeeded(
             player,
@@ -731,8 +771,17 @@ object InteractionProcessor {
         if (timing.handled) {
             return timing
         }
-        CombatStartService.beginAttackNow(player, npc, CombatIntent.ATTACK_NPC)
+        CombatCommandService.requestAttack(player, npc, CombatIntent.ATTACK_NPC)
         return timing
+    }
+
+    private fun refreshCombatTargetFacing(player: Client, target: Entity) {
+        player.target = target
+        if (target is net.dodian.uber.game.model.entity.npc.Npc) {
+            player.faceNpc(target.slot)
+        } else {
+            player.facePlayer(target.slot)
+        }
     }
 
     private fun settleNpcInteractionMovement(player: Client) {
@@ -742,9 +791,11 @@ object InteractionProcessor {
     }
 
     private fun clear(player: Client) {
-        player.pendingInteraction?.let { settledSinceCycle.remove(it) }
-        player.pendingInteraction = null
-        player.activeInteraction = null
+        InteractionSessionStateAdapter.pending(player)?.let {
+            settledSinceCycle.remove(it)
+            objectDistanceRejectLogged.remove(it)
+        }
+        InteractionSessionStateAdapter.clear(player)
         player.interactionEarliestCycle = 0
         player.interactionTaskHandle = null
     }

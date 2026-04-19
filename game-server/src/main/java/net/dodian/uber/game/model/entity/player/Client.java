@@ -37,6 +37,8 @@ import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
 import net.dodian.uber.game.engine.net.InboundPacketMailbox;
 import net.dodian.uber.game.engine.net.OutboundSessionQueue;
 import net.dodian.uber.game.engine.processing.EntityProcessor;
+import net.dodian.uber.game.engine.metrics.PacketErrorTelemetry;
+import net.dodian.uber.game.engine.metrics.PacketRejectTelemetry;
 import net.dodian.uber.game.skill.crafting.Tanning;
 import net.dodian.uber.game.engine.systems.dialogue.DialogueOptionService;
 import net.dodian.uber.game.ui.dialogue.DialogueDisplayService;
@@ -55,12 +57,16 @@ import net.dodian.uber.game.engine.systems.action.DuelCountdownState;
 import net.dodian.uber.game.engine.systems.animation.PlayerAnimationService;
 import net.dodian.uber.game.engine.systems.combat.CombatStartService;
 import net.dodian.uber.game.engine.systems.interaction.PlayerInteractionGuardService;
+import net.dodian.uber.game.engine.systems.interaction.items.ItemDispatcher;
 import net.dodian.uber.game.engine.systems.interaction.InteractionAnchorState;
+import net.dodian.uber.game.engine.systems.interaction.ui.TradeDuelSessionService;
 import net.dodian.uber.game.engine.lifecycle.PlayerDeferredLifecycleService;
+import net.dodian.uber.game.engine.systems.net.PacketRejectReason;
 import net.dodian.uber.game.engine.util.Misc;
 import net.dodian.utilities.MD5;
 import net.dodian.utilities.Utils;
 import net.dodian.uber.game.engine.systems.skills.ProgressionService;
+import net.dodian.uber.game.skill.agility.AgilityTicketExchangeService;
 
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -682,6 +688,17 @@ public class Client extends Player implements Runnable {
             try {
                 dispatchQueuedPacket(packet);
             } catch (Exception ex) {
+                PacketRejectTelemetry.record(packet.opcode(), PacketRejectReason.LISTENER_EXCEPTION);
+                PacketErrorTelemetry.recordListenerException(packet.opcode(), getPlayerName(), getSlot(), packet.size(), ex);
+                logger.error(
+                        "Inbound listener exception player={} slot={} opcode={} size={} recent={}",
+                        getPlayerName(),
+                        getSlot(),
+                        packet.opcode(),
+                        packet.size(),
+                        describeRecentInboundPackets(),
+                        ex
+                );
                 disconnected = true;
                 println_debug("Error processing opcode " + packet.opcode() + " for " + getPlayerName() + ": " + ex.getMessage());
                 break;
@@ -1045,9 +1062,8 @@ public class Client extends Player implements Runnable {
                     c.refreshFriends();
                 }
             }
-            if (inTrade) declineTrade();
-            else if (inDuel && !duelFight) declineDuel();
-            else if (duel_with > 0 && validClient(duel_with) && inDuel && duelFight) {
+            TradeDuelSessionService.closeOnLogout(this);
+            if (duel_with > 0 && validClient(duel_with) && inDuel && duelFight) {
                 Client p = getClient(duel_with);
                 p.duelWin = true;
                 p.DuelVictory();
@@ -1563,13 +1579,6 @@ public class Client extends Player implements Runnable {
             return;
         }
 
-        if (!Ground.isTracked(target) || target.isTaken() || !Ground.canPickup(this, target)) {
-            attemptGround = null;
-            pickupWanted = false;
-            PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(this);
-            return;
-        }
-
         if (!hasSpace() && Server.itemManager.isStackable(target.id) && !playerHasItem(target.id)) {
             send(new SendMessage("Your inventory is full!"));
             attemptGround = null;
@@ -1586,11 +1595,21 @@ public class Client extends Player implements Runnable {
             return;
         }
 
-        if (addItem(target.id, target.amount)) {
+        if (!Ground.tryClaimPickup(this, target)) {
+            attemptGround = null;
+            pickupWanted = false;
+            PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(this);
+            return;
+        }
+
+        boolean added = addItem(target.id, target.amount);
+        if (added) {
             GameEventBus.post(new ItemPickupEvent(this, target, getPosition().copy()));
             Ground.deleteItem(target);
             ItemLog.playerPickup(this, target.npc ? target.npcId : target.playerId, target.id, target.amount, getPosition().copy(), target.npc);
             checkItemUpdate();
+        } else {
+            Ground.releaseClaim(target);
         }
         attemptGround = null;
         pickupWanted = false;
@@ -1855,7 +1874,7 @@ public class Client extends Player implements Runnable {
             return;
         }
         if (wearID == 4155) { //Enchanted gem
-            net.dodian.uber.game.skill.slayer.Slayer.sendCurrentTask(this);
+            ItemDispatcher.tryHandle(this, 1, wearID, slot, interFace);
             return;
         }
         if (duelConfirmed && !duelFight)
@@ -4079,7 +4098,6 @@ public class Client extends Player implements Runnable {
     public void resetAttack() {
         //rerequestAnim();
         magicId = -1;
-        target = null;
         CombatStartService.clearCombatTarget(this);
     }
 
@@ -4402,25 +4420,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void spendTickets() {
-        send(new RemoveInterfaces());
-        int slot = -1;
-        for (int s = 0; s < playerItems.length; s++) {
-            if ((playerItems[s] - 1) == 2996) {
-                slot = s;
-                break;
-            }
-        }
-        if (slot == -1) {
-            send(new SendMessage("You have no agility tickets!"));
-        } else if (playerItemsN[slot] < 10) {
-            send(new SendMessage("You must hand in at least 10 tickets at once"));
-        } else {
-            int amount = playerItemsN[slot];
-            ProgressionService.addXp(this, amount * 700, Skill.AGILITY);
-            send(new SendMessage("You exchange your " + amount + " agility tickets"));
-            deleteItem(2996, playerItemsN[slot]);
-            checkItemUpdate();
-        }
+        AgilityTicketExchangeService.spendTickets(this);
     }
 
     public PrayerManager getPrayerManager() {
@@ -4815,9 +4815,15 @@ public class Client extends Player implements Runnable {
     }
 
     public int totalLevel() {
-        return Skill.enabledSkills()
-                .mapToInt(skill -> Skills.getLevelForExperience(getExperience(skill)))
-                .sum() + (int) Skill.disabledSkills().count();
+        int total = 0;
+        for (Skill skill : Skill.values()) {
+            if (skill.isEnabled()) {
+                total += Skills.getLevelForExperience(getExperience(skill));
+            } else {
+                total++;
+            }
+        }
+        return total;
     }
 
     public boolean doingTeleport() {

@@ -28,11 +28,11 @@ object DialogueOptionService {
         fun setDialogueSent(sent: Boolean) = DialogueService.setDialogueSent(c, sent)
         fun resetDialogue() = DialogueService.resetDialogueState(c)
 
-        if (c.playerPotato.isNotEmpty()) {
-            if (c.playerPotato[0] == 2 && c.playerPotato[3] == 1) {
+        val potatoState = c.playerPotatoState
+        if (potatoState != null && potatoState.flowType == 2 && potatoState.isActive) {
                 c.send(RemoveInterfaces())
-                val tempNpc: Npc = Server.npcManager.getNpc(c.playerPotato[1])
-                val npcId = c.playerPotato[2]
+                val tempNpc: Npc = Server.npcManager.getNpc(potatoState.targetSlot)
+                val npcId = potatoState.targetIdentifier
                 resetDialogue()
 
                 if (button == 1) {
@@ -107,9 +107,8 @@ object DialogueOptionService {
                 } else if (button == 5) {
                     Server.npcManager.reloadAllData(c, npcId)
                 }
-                c.playerPotato.clear()
+                c.clearPlayerPotatoState()
                 return
-            }
         }
 
         val dialogueId = DialogueService.currentDialogueId(c)
@@ -143,7 +142,8 @@ object DialogueOptionService {
 
         if (dialogueId == 16) {
             if (button == 1) {
-                val checkTask = net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forOrdinal(c.slayerData[1])
+                val slayerState = c.slayerTaskState
+                val checkTask = net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forOrdinal(slayerState.taskOrdinal)
                 if (checkTask != null) {
                     for (i in checkTask.npcId.indices) {
                         for (slot in 0 until c.monsterName.size) {

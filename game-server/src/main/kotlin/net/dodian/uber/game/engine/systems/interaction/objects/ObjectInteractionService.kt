@@ -238,7 +238,7 @@ object ObjectInteractionService {
                         ObjectClickLoggingService.log(context, resolution = resolution, handled = true)
                         return DispatchTiming(true, resolveNs, handlerNs, handlerName)
                     }
-                } catch (e: RuntimeException) {
+                } catch (e: Throwable) {
                     logger.error(
                         "Error handling object interaction type={} objectId={} at {} via {}",
                         context.type,

@@ -1,12 +1,23 @@
 package net.dodian.uber.game.objects.banking
 
 import net.dodian.cache.objects.GameObjectData
+import net.dodian.uber.game.api.content.ContentInteraction
 import net.dodian.uber.game.objects.ObjectContent
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 
 object BankChestObjectContent : ObjectContent {
     override val objectIds: IntArray = BankingObjectIds.chestObjects
+
+    override fun clickInteractionPolicy(
+        option: Int,
+        objectId: Int,
+        position: Position,
+        obj: GameObjectData?,
+    ) = when (option) {
+        1, 2 -> ContentInteraction.nearestBoundaryCardinalPolicy()
+        else -> null
+    }
 
     override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
         client.openUpBankRouted()
@@ -20,5 +31,4 @@ object BankChestObjectContent : ObjectContent {
         return true
     }
 }
-
 

@@ -5,6 +5,8 @@ import net.dodian.uber.game.engine.systems.interaction.InteractionIntent;
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason;
 import net.dodian.uber.game.engine.systems.action.PendingProductionSelection;
 import net.dodian.uber.game.engine.systems.combat.CombatCancellationReason;
+import net.dodian.uber.game.engine.systems.combat.CombatCooldownState;
+import net.dodian.uber.game.engine.systems.combat.CombatEngagementState;
 import net.dodian.uber.game.engine.systems.combat.CombatTargetState;
 import net.dodian.uber.game.engine.lifecycle.DeathTaskState;
 import net.dodian.uber.game.engine.systems.action.ActiveProductionSelection;
@@ -40,6 +42,9 @@ final class PlayerInteractionState {
     private volatile PlayerActionCancelReason lastActionCancelReason;
     private volatile long lastActionCancelCycle = 0L;
     private volatile CombatTargetState combatTargetState;
+    private volatile CombatEngagementState combatEngagementState;
+    private volatile CombatCooldownState combatCooldownState;
+    private volatile AttackStartDedupeState attackStartDedupeState;
     private volatile CombatCancellationReason combatCancellationReason;
     private volatile long combatLogoutLockUntilCycle = 0L;
     private volatile long lastBlockAnimationCycle = -1L;
@@ -60,6 +65,12 @@ final class PlayerInteractionState {
     private volatile RunecraftingState runecraftingState;
     private volatile InteractionAnchorState interactionAnchorState;
     private volatile PyramidPlunderPlayerState pyramidPlunderState;
+    private volatile MovementLockState movementLockState;
+    private volatile AgilitySessionState agilitySessionState;
+    private volatile SkillingEventState skillingEventState;
+    private volatile PlayerPotatoState playerPotatoState;
+    private volatile String activeSkillSessionKey;
+    private volatile long activeSkillSessionStartedCycle = 0L;
     private final ConcurrentHashMap<String, Long> throttleUntilCycles = new ConcurrentHashMap<>();
 
     InteractionIntent getPendingInteraction() {
@@ -270,6 +281,68 @@ final class PlayerInteractionState {
         pyramidPlunderState = null;
     }
 
+    MovementLockState getMovementLockState() {
+        return movementLockState;
+    }
+
+    void setMovementLockState(MovementLockState movementLockState) {
+        this.movementLockState = movementLockState;
+    }
+
+    void clearMovementLockState() {
+        movementLockState = null;
+    }
+
+    AgilitySessionState getAgilitySessionState() {
+        return agilitySessionState;
+    }
+
+    void setAgilitySessionState(AgilitySessionState agilitySessionState) {
+        this.agilitySessionState = agilitySessionState;
+    }
+
+    void clearAgilitySessionState() {
+        agilitySessionState = null;
+    }
+
+    SkillingEventState getSkillingEventState() {
+        return skillingEventState;
+    }
+
+    void setSkillingEventState(SkillingEventState skillingEventState) {
+        this.skillingEventState = skillingEventState;
+    }
+
+    PlayerPotatoState getPlayerPotatoState() {
+        return playerPotatoState;
+    }
+
+    void setPlayerPotatoState(PlayerPotatoState playerPotatoState) {
+        this.playerPotatoState = playerPotatoState;
+    }
+
+    void clearPlayerPotatoState() {
+        playerPotatoState = null;
+    }
+
+    String getActiveSkillSessionKey() {
+        return activeSkillSessionKey;
+    }
+
+    void setActiveSkillSession(String key, long startedCycle) {
+        activeSkillSessionKey = key;
+        activeSkillSessionStartedCycle = startedCycle;
+    }
+
+    long getActiveSkillSessionStartedCycle() {
+        return activeSkillSessionStartedCycle;
+    }
+
+    void clearActiveSkillSession() {
+        activeSkillSessionKey = null;
+        activeSkillSessionStartedCycle = 0L;
+    }
+
     QueueTaskHandle getActiveActionHandle() {
         return activeActionHandle;
     }
@@ -342,6 +415,42 @@ final class PlayerInteractionState {
 
     void clearCombatTargetState() {
         combatTargetState = null;
+    }
+
+    CombatEngagementState getCombatEngagementState() {
+        return combatEngagementState;
+    }
+
+    void setCombatEngagementState(CombatEngagementState combatEngagementState) {
+        this.combatEngagementState = combatEngagementState;
+    }
+
+    void clearCombatEngagementState() {
+        combatEngagementState = null;
+    }
+
+    CombatCooldownState getCombatCooldownState() {
+        return combatCooldownState;
+    }
+
+    void setCombatCooldownState(CombatCooldownState combatCooldownState) {
+        this.combatCooldownState = combatCooldownState;
+    }
+
+    void clearCombatCooldownState() {
+        combatCooldownState = null;
+    }
+
+    AttackStartDedupeState getAttackStartDedupeState() {
+        return attackStartDedupeState;
+    }
+
+    void setAttackStartDedupeState(AttackStartDedupeState attackStartDedupeState) {
+        this.attackStartDedupeState = attackStartDedupeState;
+    }
+
+    void clearAttackStartDedupeState() {
+        attackStartDedupeState = null;
     }
 
     CombatCancellationReason getCombatCancellationReason() {
@@ -455,6 +564,7 @@ final class PlayerInteractionState {
     void terminatePlayerTasks() {
         cancelActiveAction();
         clearActiveActionState();
+        clearActiveSkillSession();
         if (playerTaskSet != null) {
             playerTaskSet.terminateTasks();
             playerTaskSet = null;

@@ -69,6 +69,34 @@ object FollowRouting {
         return false
     }
 
+    @JvmStatic
+    fun routeToExactTile(
+        follower: Client,
+        destinationX: Int,
+        destinationY: Int,
+        z: Int,
+        running: Boolean = follower.buttonOnRun,
+    ): Boolean {
+        if (collisionManager.isTileBlocked(destinationX, destinationY, z)) {
+            return false
+        }
+        val searchStart = System.nanoTime()
+        val path = pathfinding.find(follower.position.x, follower.position.y, destinationX, destinationY, z)
+        FollowPathfindingTelemetry.recordSearch(
+            durationNanos = System.nanoTime() - searchStart,
+            foundPath = path.isNotEmpty(),
+        )
+        if (path.isEmpty()) {
+            return false
+        }
+        val validated = validatePath(follower.position.x, follower.position.y, z, path)
+        if (validated.isEmpty()) {
+            return false
+        }
+        applyRoute(follower, validated, running)
+        return true
+    }
+
     private fun buildBoundaryCandidates(
         follower: Client,
         targetX: Int,
@@ -213,5 +241,4 @@ object FollowRouting {
 
     private val CARDINAL_OFFSETS = listOf(-1 to 0, 1 to 0, 0 to 1, 0 to -1)
 }
-
 

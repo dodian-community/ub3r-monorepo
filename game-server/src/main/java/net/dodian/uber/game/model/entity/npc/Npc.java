@@ -42,6 +42,7 @@ import java.util.List;
  */
 public class Npc extends Entity {
     private static final Logger logger = LoggerFactory.getLogger(Npc.class);
+    private static final boolean COMBAT_TELEMETRY_ENABLED = Boolean.getBoolean("combat.telemetry.enabled");
     public long inFrenzy = -1;
     public boolean hadFrenzy = false;
     public final int[] poisonDamage = new int[]{-1, -1, 100, 0, 0, 4}; //Player or npc (0 or 1), id, time left in ticks, startDamage, currentDamage, changeDamage.
@@ -196,7 +197,7 @@ public class Npc extends Entity {
         faceTarget = -1;
         walking = false;
         getUpdateFlags().clear();
-        if (defaultFace >= 0 && defaultFace < Utils.directionDeltaX.length) {
+        if (!hasActiveCombatTargets() && defaultFace >= 0 && defaultFace < Utils.directionDeltaX.length) {
             setFocus(
                     getPosition().getX() + Utils.directionDeltaX[defaultFace],
                     getPosition().getY() + Utils.directionDeltaY[defaultFace]
@@ -419,9 +420,27 @@ public class Npc extends Entity {
         if(!multiAttack) {
             Client enemy = getTarget(true);
             if (enemy == null) {
+                if (COMBAT_TELEMETRY_ENABLED) {
+                    logger.info(
+                            "combat.telemetry phase=target_selection npcId={} npcSlot={} reason=no_eligible_target contributors={} fighting={}",
+                            id,
+                            getSlot(),
+                            getDamage().size(),
+                            fighting
+                    );
+                }
                 fighting = false;
                 return;
             } else {
+                if (COMBAT_TELEMETRY_ENABLED) {
+                    logger.info(
+                            "combat.telemetry phase=target_selection npcId={} npcSlot={} reason=selected_target targetSlot={} contributors={}",
+                            id,
+                            getSlot(),
+                            enemy.getSlot(),
+                            getDamage().size()
+                    );
+                }
                 setFocus(enemy.getPosition().getX(), enemy.getPosition().getY());
                 getUpdateFlags().setRequired(UpdateFlag.FACE_COORDINATE, true);
             }
@@ -443,28 +462,28 @@ public class Npc extends Entity {
                 type = chance == 6 ? Misc.chance(2) : type;
                 for (Entity e : getDamage().keySet()) {
                     if (e instanceof Player) {
-                        if (fighting && (!getPosition().withinDistance(e.getPosition(), getEffectiveAttackRange()) || ((Player) e).getCurrentHealth() < 1 || ((Client) e).deathStage > 0))
+                        Client candidate = (Client) e;
+                        if (!isEligibleNpcAttackTarget(candidate, true)) {
                             continue;
-                        if(isActivelyTargetingThisNpc((Client) e)) {
-                            enemy = PlayerRegistry.getClient(e.getSlot());
-                            int hitDiff = 0;
-                            if (type == 1) {
-                                sendArrow(enemy, -1, 448); //446 = old, 448 = new!
-                                delayGfx(enemy, 2656, 450, 3, Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.JAD_MAGIC);
-                            } else if (type == 2) {
-                                CalculateMaxHit(false);
-                                delayGfx(enemy, 2652, -1, 3, Utils.random(maxHit), false, this, damageType.JAD_RANGED);
-                                final Client c = enemy;
-                                GameEventScheduler.runLaterMs(600, () -> {
-                                    if(c.disconnected || c.getCurrentHealth() < 1) {
-                                        return;
-                                    }
-                                    c.stillgfx(451, c.getPosition().getY(), c.getPosition().getX());
-                                });
-                            } else {
-                                performAnimation(data.getAttackEmote(), 0);
-                                enemy.dealDamage(landHit(enemy, true) ? Utils.random(maxHit) : hitDiff, Entity.hitType.STANDARD, this, damageType.MELEE);
-                            }
+                        }
+                        enemy = PlayerRegistry.getClient(e.getSlot());
+                        int hitDiff = 0;
+                        if (type == 1) {
+                            sendArrow(enemy, -1, 448); //446 = old, 448 = new!
+                            delayGfx(enemy, 2656, 450, 3, Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.JAD_MAGIC);
+                        } else if (type == 2) {
+                            CalculateMaxHit(false);
+                            delayGfx(enemy, 2652, -1, 3, Utils.random(maxHit), false, this, damageType.JAD_RANGED);
+                            final Client c = enemy;
+                            GameEventScheduler.runLaterMs(600, () -> {
+                                if(c.disconnected || c.getCurrentHealth() < 1) {
+                                    return;
+                                }
+                                c.stillgfx(451, c.getPosition().getY(), c.getPosition().getX());
+                            });
+                        } else {
+                            performAnimation(data.getAttackEmote(), 0);
+                            enemy.dealDamage(landHit(enemy, true) ? Utils.random(maxHit) : hitDiff, Entity.hitType.STANDARD, this, damageType.MELEE);
                         }
                     }
                 }
@@ -477,16 +496,16 @@ public class Npc extends Entity {
                 //278 = start gfx!, 288 = range gfx!
                 if(!landRanged) {
                     performAnimation(data.getAttackEmote(), 0);
-                    if(target != null && isActivelyTargetingThisNpc(target))
+                    if(isEligibleNpcAttackTarget(target, true))
                         target.dealDamage(landHit(target, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
-                    if(enemy != null && isActivelyTargetingThisNpc(enemy))
+                    if(isEligibleNpcAttackTarget(enemy, true))
                         enemy.dealDamage(landHit(enemy, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
                 } else { //Ranged!
-                    if(target != null && isActivelyTargetingThisNpc(target)) {
+                    if(isEligibleNpcAttackTarget(target, true)) {
                         sendArrow(target, -1, 288);
                         delayGfx(target, 6240, -1, target.distanceToPoint(getPosition(), target.getPosition()), Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.MAGIC);
                     }
-                    if(enemy != null && isActivelyTargetingThisNpc(enemy)) {
+                    if(isEligibleNpcAttackTarget(enemy, true)) {
                         sendArrow(target, -1, 288);
                         delayGfx(target, 6240, -1, enemy.distanceToPoint(getPosition(), enemy.getPosition()), Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.MAGIC);
                     }
@@ -499,20 +518,20 @@ public class Npc extends Entity {
                 boolean landMagic = Misc.chance(6) == 1;
                 //279 = start gfx!, 289 = range gfx!, 280 = magic gfx!
                 if(!landMagic) {
-                    if(target != null && isActivelyTargetingThisNpc(target)) {
+                    if(isEligibleNpcAttackTarget(target, true)) {
                         sendArrow(target, -1, 289);
                         delayGfx(target, data.getAttackEmote(), -1, target.distanceToPoint(getPosition(), target.getPosition()), landHit(target, false) ? Utils.random(maxHit) : 0, false, this, damageType.RANGED);
                     }
-                    if(enemy != null && isActivelyTargetingThisNpc(enemy)) {
+                    if(isEligibleNpcAttackTarget(enemy, true)) {
                         sendArrow(enemy, -1, 289);
                         delayGfx(enemy, data.getAttackEmote(), -1, enemy.distanceToPoint(getPosition(), enemy.getPosition()), landHit(enemy, false) ? Utils.random(maxHit) : 0, false, this, damageType.RANGED);
                     }
                 } else { //Magic!
-                    if(target != null && isActivelyTargetingThisNpc(target)) {
+                    if(isEligibleNpcAttackTarget(target, true)) {
                         sendArrow(target, 279, 280);
                         delayGfx(target, 6234, 281, target.distanceToPoint(getPosition(), target.getPosition()), Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.MAGIC);
                     }
-                    if(enemy != null && isActivelyTargetingThisNpc(enemy)) {
+                    if(isEligibleNpcAttackTarget(enemy, true)) {
                         sendArrow(target, 279, 280);
                         delayGfx(target, 6234, 281, enemy.distanceToPoint(getPosition(), enemy.getPosition()), Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.MAGIC);
                     }
@@ -525,19 +544,19 @@ public class Npc extends Entity {
                 boolean landMelee = Misc.chance(6) == 1;
                 //magic earth wave or surge gfx's
                 if(!landMelee) {
-                    if(target != null && isActivelyTargetingThisNpc(target)) {
+                    if(isEligibleNpcAttackTarget(target, true)) {
                         sendArrow(target, 164, 165);
                         delayGfx(target, data.getAttackEmote(), -1, target.distanceToPoint(getPosition(), target.getPosition()), Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.MAGIC);
                     }
-                    if(enemy != null && isActivelyTargetingThisNpc(enemy)) {
+                    if(isEligibleNpcAttackTarget(enemy, true)) {
                         sendArrow(enemy, 164, 165);
                         delayGfx(enemy, data.getAttackEmote(), -1, enemy.distanceToPoint(getPosition(), enemy.getPosition()), Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.MAGIC);
                     }
                 } else { //Melee!
                     performAnimation(5327, 0);
-                    if(target != null && isActivelyTargetingThisNpc(target))
+                    if(isEligibleNpcAttackTarget(target, true))
                         target.dealDamage(landHit(target, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
-                    if(enemy != null && isActivelyTargetingThisNpc(enemy))
+                    if(isEligibleNpcAttackTarget(enemy, true))
                         enemy.dealDamage(landHit(enemy, true) ? Utils.random(maxHit) : 0, Entity.hitType.STANDARD, this, damageType.MELEE);
                 }
             }
@@ -567,8 +586,29 @@ public class Npc extends Entity {
         return chance < (NpcHitChance*100);
     }
 
-    private boolean isActivelyTargetingThisNpc(Client player) {
-        return CombatRuntimeService.isTargetingNpc(player, this);
+    private boolean hasActiveCombatTargets() {
+        if (!fighting || getDamage().isEmpty()) {
+            return false;
+        }
+        for (Entity entity : getDamage().keySet()) {
+            if (entity instanceof Client && isEligibleNpcAttackTarget((Client) entity, false)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isEligibleNpcAttackTarget(Client player, boolean requireInRange) {
+        if (!validClient(player)) {
+            return false;
+        }
+        if (player.getCurrentHealth() < 1 || player.deathStage > 0) {
+            return false;
+        }
+        if (!requireInRange) {
+            return true;
+        }
+        return getPosition().withinDistance(player.getPosition(), getEffectiveAttackRange());
     }
 
     public void addBossCount(Player p) {
@@ -721,12 +761,13 @@ public class Npc extends Entity {
             return null;
         for (Entity e : getDamage().keySet()) {
             if (e instanceof Player) {
-                if (fighting && (!getPosition().withinDistance(e.getPosition(), getEffectiveAttackRange()) || ((Player) e).getCurrentHealth() < 1))
+                Client candidate = (Client) e;
+                if (!isEligibleNpcAttackTarget(candidate, fighting))
                     continue;
                 int damage = getDamage().get(e);
                 if (damage > highest) {
                     highest = damage == 0 ? -1 : damage;
-                    killer = (Client) e;
+                    killer = candidate;
                 }
             }
         }
@@ -739,12 +780,13 @@ public class Npc extends Entity {
             return null;
         for (Entity e : getDamage().keySet()) {
             if (e instanceof Player) {
-                if (fighting && (!getPosition().withinDistance(e.getPosition(), getEffectiveAttackRange()) || ((Player) e).getCurrentHealth() < 1 || first == e))
+                Client candidate = (Client) e;
+                if (first == e || !isEligibleNpcAttackTarget(candidate, fighting))
                     continue;
                 int damage = getDamage().get(e);
                 if (damage > highest) {
                     highest = damage == 0 ? -1 : damage;
-                    killer = (Client) e;
+                    killer = candidate;
                 }
             }
         }

@@ -5,6 +5,7 @@ import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.engine.systems.combat.CombatLogoutLockService
 import net.dodian.uber.game.engine.systems.interaction.PlayerInteractionGuardService
+import net.dodian.uber.game.engine.systems.interaction.ui.TradeDuelSessionService
 
 /**
  * Kotlin service for player-to-player social interaction requests that have
@@ -49,8 +50,7 @@ object PacketInteractionRequestService {
             return
         }
         if (!client.inTrade) {
-            client.trade_reqId = targetSlot
-            client.tradeReq(client.trade_reqId)
+            TradeDuelSessionService.requestTrade(client, targetSlot)
         }
     }
 
@@ -92,7 +92,7 @@ object PacketInteractionRequestService {
             )
             return
         }
-        client.duelReq(pid)
+        TradeDuelSessionService.requestDuel(client, pid)
     }
 
     // -------------------------------------------------------------------------
@@ -130,7 +130,7 @@ object PacketInteractionRequestService {
             return
         }
         if (!client.inTrade) {
-            client.duelReq(targetSlot)
+            TradeDuelSessionService.requestLegacyTrade(client, targetSlot)
         }
     }
 
@@ -151,4 +151,3 @@ object PacketInteractionRequestService {
         return false
     }
 }
-

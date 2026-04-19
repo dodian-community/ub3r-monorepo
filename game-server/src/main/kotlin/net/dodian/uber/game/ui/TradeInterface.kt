@@ -1,6 +1,7 @@
 package net.dodian.uber.game.ui
 
 import net.dodian.uber.game.api.content.ContentInteraction
+import net.dodian.uber.game.engine.systems.interaction.ui.TradeDuelSessionService
 import net.dodian.uber.game.ui.buttons.InterfaceButtonContent
 import net.dodian.uber.game.ui.buttons.buttonBinding
 import org.slf4j.LoggerFactory
@@ -21,24 +22,7 @@ object TradeInterface : InterfaceButtonContent {
                     ) {
                         return@buttonBinding true
                     }
-                    if (client.inTrade && !client.tradeConfirmed) {
-                        client.tradeConfirmed = true
-                        if (other.tradeConfirmed) {
-                            if (other.hasTradeSpace() || client.hasTradeSpace()) {
-                                client.sendMessage(client.failer)
-                                other.sendMessage(client.failer)
-                                client.declineTrade()
-                                return@buttonBinding true
-                            }
-                            client.confirmScreen()
-                            other.confirmScreen()
-                        } else {
-                            client.sendString("Waiting for other player...", 3431)
-                            if (client.validClient(client.trade_reqId)) {
-                                other.sendString("Other player has accepted", 3431)
-                            }
-                        }
-                    }
+                    TradeDuelSessionService.confirmTradeStageOne(client, other)
                 } catch (e: Exception) {
                     logger.warn("Trade button issue!", e)
                 }
@@ -52,16 +36,7 @@ object TradeInterface : InterfaceButtonContent {
                     ) {
                         return@buttonBinding true
                     }
-                    if (client.inTrade && client.tradeConfirmed && other.tradeConfirmed && !client.tradeConfirmed2) {
-                        client.tradeConfirmed2 = true
-                        if (other.tradeConfirmed2) {
-                            client.giveItems()
-                            other.giveItems()
-                        } else {
-                            other.sendString("Other player has accepted.", 3535)
-                            client.sendString("Waiting for other player...", 3535)
-                        }
-                    }
+                    TradeDuelSessionService.confirmTradeStageTwo(client, other)
                 } catch (e: Exception) {
                     logger.warn("Trade button issue!", e)
                 }

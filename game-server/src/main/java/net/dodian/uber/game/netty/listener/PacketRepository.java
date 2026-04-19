@@ -26,6 +26,7 @@ public final class PacketRepository implements Iterable<PacketListener> {
      * Whether this repository is locked (read-only).
      */
     private volatile boolean locked = false;
+    private int duplicateOverwriteCount = 0;
 
     /**
      * Singleton instance.
@@ -61,6 +62,7 @@ public final class PacketRepository implements Iterable<PacketListener> {
         if (listeners[opcode] != null) {
             // Only warn if it's actually a different listener instance/class
             if (listeners[opcode] != listener && !listeners[opcode].getClass().equals(listener.getClass())) {
+                duplicateOverwriteCount++;
                 logger.warn("Overwriting existing listener for opcode {}: {} -> {}", 
                     opcode, listeners[opcode].getClass().getSimpleName(), listener.getClass().getSimpleName());
             } else {
@@ -142,6 +144,10 @@ public final class PacketRepository implements Iterable<PacketListener> {
      */
     public boolean isLocked() {
         return locked;
+    }
+
+    public int getDuplicateOverwriteCount() {
+        return duplicateOverwriteCount;
     }
 
     @Override

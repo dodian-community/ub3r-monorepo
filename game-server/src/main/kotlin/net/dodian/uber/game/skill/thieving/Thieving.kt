@@ -31,7 +31,7 @@ object Thieving {
     @JvmStatic
     fun attempt(player: Client, entityId: Int, position: Position) {
         val data = ThievingDefinition.forId(entityId) ?: return
-        if (player.chestEventOccur) return
+        if (player.skillingEventState.isChestEventPendingMove) return
         val failChance = 0
         val face =
             if ((position.x == 2658 && position.y == 3297) || (position.x == 2663 && position.y == 3296)) 0
@@ -71,7 +71,6 @@ object Thieving {
                 return@runLaterMs
             }
             ProgressionService.addXp(player, data.receivedExperience, Skill.THIEVING)
-            player.canPreformAction = false
             if (data.item.size > 1) {
                 val rollChance = (Math.random() * 100).toInt()
                 for (i in data.item.indices) {
@@ -97,7 +96,8 @@ object Thieving {
             }
             player.checkItemUpdate()
             SkillingRandomEventService.trigger(player, data.receivedExperience)
-            player.chestEvent++
+            val state = player.skillingEventState
+            player.skillingEventState = state.withChestEventCount(state.chestEventCount + 1)
         }
     }
 
@@ -151,7 +151,7 @@ private class ChestObjectContent : ObjectContent {
             return true
         }
         if (objectId == 375 && position.x == 2593 && position.y == 3108 && client.position.z == 1) {
-            if (client.chestEventOccur) {
+            if (client.skillingEventState.isChestEventPendingMove) {
                 return true
             }
             if (client.getLevel(Skill.THIEVING) < 70) {
@@ -187,13 +187,14 @@ private class ChestObjectContent : ObjectContent {
                 ProgressionService.addXp(client, 300, Skill.THIEVING)
             }
             client.checkItemUpdate()
-            client.chestEvent++
+            val state = client.skillingEventState
+            client.skillingEventState = state.withChestEventCount(state.chestEventCount + 1)
             client.stillgfx(444, position.y, position.x)
             SkillingRandomEventService.trigger(client, 900)
             return true
         }
         if (objectId == 375 && position.x == 2733 && position.y == 3374) {
-            if (client.chestEventOccur) {
+            if (client.skillingEventState.isChestEventPendingMove) {
                 return true
             }
             if (!client.premium) {
@@ -233,7 +234,8 @@ private class ChestObjectContent : ObjectContent {
                 ProgressionService.addXp(client, 500, Skill.THIEVING)
             }
             client.checkItemUpdate()
-            client.chestEvent++
+            val state = client.skillingEventState
+            client.skillingEventState = state.withChestEventCount(state.chestEventCount + 1)
             client.stillgfx(444, position.y, position.x)
             SkillingRandomEventService.trigger(client, 1500)
             return true
@@ -247,7 +249,7 @@ private class ChestObjectContent : ObjectContent {
                 client.sendMessage("This chest is empty!")
                 true
             }
-            20873, 20885, 11729, 11730, 11731, 11732, 11733, 11734 -> {
+            20885, 11729, 11730, 11731, 11732, 11733, 11734 -> {
                 Thieving.attempt(client, objectId, position)
                 true
             }

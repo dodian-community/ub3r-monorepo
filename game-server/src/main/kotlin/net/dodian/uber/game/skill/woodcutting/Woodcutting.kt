@@ -16,8 +16,8 @@ import net.dodian.uber.game.skill.runtime.action.gatheringAction
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.api.content.ContentActions
+import net.dodian.uber.game.api.content.ContentInteraction
 import net.dodian.uber.game.api.content.ContentTiming
-import net.dodian.uber.game.engine.systems.interaction.ObjectInteractionDistance
 import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
@@ -214,17 +214,7 @@ object Woodcutting {
         treePosition: Position,
         objectData: GameObjectData?,
     ): Boolean {
-        val playerPlanePosition = Position(treePosition.x, treePosition.y, client.position.z)
-        val resolved =
-            ObjectInteractionDistance.resolveDistancePosition(
-                client,
-                playerPlanePosition,
-                objectId,
-                objectData,
-                null,
-                ObjectInteractionDistance.DistanceMode.POLICY_NEAREST_BOUNDARY_CARDINAL,
-            )
-        return resolved != null
+        return ContentInteraction.withinNearestBoundaryCardinal(client, objectId, treePosition, objectData)
     }
 }
 

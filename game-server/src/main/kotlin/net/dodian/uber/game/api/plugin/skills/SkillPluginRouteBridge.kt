@@ -69,3 +69,18 @@ fun SkillPluginBuilder.bindItemContentClick(
         }
     }
 }
+
+fun SkillPluginBuilder.bindItemContentClicks(
+    preset: PolicyPreset,
+    content: ItemContent,
+    vararg options: ItemClickOption,
+) {
+    require(options.isNotEmpty()) { "Item content binding requires at least one option." }
+    options.forEach { option ->
+        bindItemContentClick(
+            preset = preset,
+            option = option.id,
+            content = content,
+        )
+    }
+}

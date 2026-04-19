@@ -13,8 +13,12 @@ import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.engine.systems.combat.CombatDefenderReaction;
 import net.dodian.uber.game.engine.systems.combat.CombatLogoutLockService;
 import net.dodian.uber.game.engine.util.Misc;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class PlayerCombatState {
+    private static final Logger logger = LoggerFactory.getLogger(PlayerCombatState.class);
+    private static final boolean COMBAT_TELEMETRY_ENABLED = Boolean.getBoolean("combat.telemetry.enabled");
     private final Player owner;
     private final PendingHitBuffer pendingHits = new PendingHitBuffer();
 
@@ -24,14 +28,18 @@ class PlayerCombatState {
 
     void dealDamage(Entity attacker, int amt, Entity.hitType type) {
         Client player = (Client) owner;
+        int originalAmt = amt;
+        String mitigationBranch = "none";
         if (attacker != null && ((attacker.getType() == Entity.Type.NPC && ((Npc) attacker).getCurrentHealth() < 1)
                 || (attacker.getType() == Entity.Type.PLAYER && ((Client) attacker).getCurrentHealth() < 1))) {
             setLastCombat(16);
         }
         if (owner.isDeathSequenceActive() || owner.getCurrentHealth() < 1) {
             amt = 0;
+            mitigationBranch = "target_dead_or_dying";
         } else if (amt > owner.currentHealth) {
             amt = owner.currentHealth;
+            mitigationBranch = "clamped_to_current_hp";
         }
         double rolledChance = Math.random();
         double level = ((owner.getLevel(Skill.PRAYER) + 1) / 8D) / 100D;
@@ -41,9 +49,22 @@ class PlayerCombatState {
         int oldDamage = amt;
         if (!(player.inDuel && player.duelRule[5]) && rolledChance <= chance && owner.playerBonus[11] > 0 && oldDamage > 0) {
             amt = reduceDamage <= 0 ? 0 : (int) (amt * reduceDamage);
+            mitigationBranch = "neglect";
             if (amt != oldDamage) {
                 player.send(new SendMessage("<col=FFD700>You neglected " + (amt == 0 ? "all" : "some") + " of the damage!"));
             }
+        }
+        if (COMBAT_TELEMETRY_ENABLED) {
+            logger.info(
+                    "combat.telemetry phase=mitigation player={} attackerType={} branch={} before={} after={} duel={} duelProtectRule={}",
+                    player.getPlayerName(),
+                    attacker == null ? "none" : attacker.getType(),
+                    mitigationBranch,
+                    originalAmt,
+                    amt,
+                    player.inDuel,
+                    player.inDuel && player.duelRule[5]
+            );
         }
         CombatLogoutLockService.refreshInteraction(attacker, owner);
         maybePlayDefenderReaction(amt, inferDamageType(attacker));
@@ -53,6 +74,8 @@ class PlayerCombatState {
     void dealDamage(int amt, Entity.hitType type, Entity attacker, Entity.damageType damageType) {
         Client player = (Client) owner;
         Npc npc = (Npc) attacker;
+        int originalAmt = amt;
+        String mitigationBranch = "none";
         if (damageType.equals(Entity.damageType.FIRE_BREATH)) {
             boolean gotAntiEffect = player.getEquipment()[Equipment.Slot.SHIELD.getId()] == 1540
                     || player.getEquipment()[Equipment.Slot.SHIELD.getId()] == 11284
@@ -60,22 +83,44 @@ class PlayerCombatState {
                     || owner.antiFireEffect();
             if (npc != null && npc.getId() == 239 && gotAntiEffect) {
                 amt /= 2;
+                mitigationBranch = "fire_breath_kbd_half";
             } else if (npc != null && npc.getId() != 239 && gotAntiEffect) {
                 amt *= 3;
                 amt /= 10;
+                mitigationBranch = "fire_breath_reduced";
             } else {
                 player.send(new SendMessage("You are badly burnt by the dragon fire!"));
+                mitigationBranch = "fire_breath_full";
             }
         } else if (damageType.equals(Entity.damageType.MELEE) && owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_MELEE)) {
             amt /= 2;
+            mitigationBranch = "protect_melee";
         } else if (damageType.equals(Entity.damageType.RANGED) && owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_RANGE)) {
             amt /= 2;
+            mitigationBranch = "protect_range";
         } else if (damageType.equals(Entity.damageType.MAGIC) && owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_MAGIC)) {
             amt /= 2;
+            mitigationBranch = "protect_magic";
         } else if (damageType.equals(Entity.damageType.JAD_RANGED) && owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_RANGE)) {
             amt = 0;
+            mitigationBranch = "protect_jad_range";
         } else if (damageType.equals(Entity.damageType.JAD_MAGIC) && owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_MAGIC)) {
             amt = 0;
+            mitigationBranch = "protect_jad_magic";
+        }
+        if (COMBAT_TELEMETRY_ENABLED) {
+            logger.info(
+                    "combat.telemetry phase=mitigation player={} attackerType={} damageType={} branch={} before={} after={} protectMelee={} protectRange={} protectMagic={}",
+                    player.getPlayerName(),
+                    attacker == null ? "none" : attacker.getType(),
+                    damageType,
+                    mitigationBranch,
+                    originalAmt,
+                    amt,
+                    owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_MELEE),
+                    owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_RANGE),
+                    owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_MAGIC)
+            );
         }
         CombatLogoutLockService.refreshInteraction(attacker, owner);
         maybePlayDefenderReaction(amt, damageType);

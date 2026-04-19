@@ -15,6 +15,7 @@ import net.dodian.uber.game.engine.systems.interaction.PlayerInteractionIntent
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancellationService
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.engine.loop.GameCycleClock
+import net.dodian.uber.game.engine.state.InteractionSessionStateAdapter
 import net.dodian.uber.game.engine.scheduler.QueueTaskHandle
 import net.dodian.uber.game.engine.tasking.GameTaskRuntime
 import net.dodian.uber.game.engine.tasking.TaskPriority
@@ -29,7 +30,7 @@ object InteractionTaskScheduler {
             fullResetAnimation = false,
             resetCompatibilityState = true,
         )
-        player.pendingInteraction = intent
+        InteractionSessionStateAdapter.schedule(player, intent)
         player.activeInteraction = null
         player.interactionEarliestCycle = GameCycleClock.currentCycle()
         val handle =

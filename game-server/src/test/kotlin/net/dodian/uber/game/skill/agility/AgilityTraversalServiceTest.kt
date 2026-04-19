@@ -54,6 +54,27 @@ class AgilityTraversalServiceTest {
     }
 
     @Test
+    fun `gnome pipe traversal crosses blocked segment for object 23138`() {
+        val client = clientAt(slot = 4, nameKey = 2004L, x = 2484, y = 3430, z = 0)
+        CollisionManager.global().flagSolid(2484, 3431, 0)
+
+        val started =
+            Agility(client).GnomePipe(
+                SkillActionContext(
+                    player = client,
+                    objectId = 23138,
+                    option = 1,
+                    objectPosition = Position(2484, 3431, 0),
+                ),
+            )
+
+        assertTrue(started)
+        runMovementTicks(client, ticks = 24)
+        assertEquals(2484, client.position.x)
+        assertEquals(3437, client.position.y)
+    }
+
+    @Test
     fun `canceling traversal clears movement lock and personal passage grants`() {
         val client = clientAt(slot = 3, nameKey = 2003L, x = 3200, y = 3200, z = 0)
         val context =

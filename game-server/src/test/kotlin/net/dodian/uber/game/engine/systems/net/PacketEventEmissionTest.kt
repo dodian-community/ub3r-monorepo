@@ -33,9 +33,12 @@ class PacketEventEmissionTest {
 
     @Test
     fun `use item on player service emits item on player event`() {
-        assertContains(
+        val source = normalizedSource(
             Paths.get("src/main/kotlin/net/dodian/uber/game/engine/systems/net/PacketItemActionService.kt"),
-            Regex("""GameEventBus\.post\s*\(\s*ItemOnPlayerEvent\s*\("""),
+        )
+        assertTrue(
+            Regex("""ContentEvents\.post\s*\(\s*ItemOnPlayerEvent\s*\(""").containsMatchIn(source) ||
+                Regex("""GameEventBus\.post\s*\(\s*ItemOnPlayerEvent\s*\(""").containsMatchIn(source),
         )
     }
 

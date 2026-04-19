@@ -2,15 +2,13 @@ package net.dodian.uber.game.engine.systems.interaction.npcs
 
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.api.content.ContentErrorPolicy
 import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.events.npc.NpcClickEvent
 import net.dodian.uber.game.api.content.ContentDispatchTiming
 import net.dodian.uber.game.engine.systems.skills.SkillInteractionDispatcher
-import org.slf4j.LoggerFactory
 
 object NpcContentDispatcher {
-    private val logger = LoggerFactory.getLogger(NpcContentDispatcher::class.java)
-
     @JvmStatic
     fun tryHandleClick(client: Client, option: Int, npc: Npc): Boolean {
         return tryHandleClickTimed(client, option, npc).handled
@@ -37,25 +35,15 @@ object NpcContentDispatcher {
             return ContentDispatchTiming(false, resolveNs, 0L, null)
         }
         val handlerStart = System.nanoTime()
-        val handled =
-            try {
-                when (option) {
-                    1 -> content.onFirstClick(client, npc)
-                    2 -> content.onSecondClick(client, npc)
-                    3 -> content.onThirdClick(client, npc)
-                    4 -> content.onFourthClick(client, npc)
-                    else -> false
-                }
-            } catch (e: RuntimeException) {
-                logger.error(
-                    "Error handling npc click (option={}, npcId={}) via {}",
-                    option,
-                    npc.id,
-                    content.name,
-                    e,
-                )
-                false
+        val handled = ContentErrorPolicy.runBoolean(client, "npc.dispatch.click.$option") {
+            when (option) {
+                1 -> content.onFirstClick(client, npc)
+                2 -> content.onSecondClick(client, npc)
+                3 -> content.onThirdClick(client, npc)
+                4 -> content.onFourthClick(client, npc)
+                else -> false
             }
+        }
         val handlerNs = System.nanoTime() - handlerStart
         return ContentDispatchTiming(handled, resolveNs, handlerNs, content.name)
     }
@@ -70,18 +58,7 @@ object NpcContentDispatcher {
             return ContentDispatchTiming(false, resolveNs, 0L, null)
         }
         val handlerStart = System.nanoTime()
-        val handled =
-            try {
-                content.onAttack(client, npc)
-            } catch (e: RuntimeException) {
-                logger.error(
-                    "Error handling npc attack (npcId={}) via {}",
-                    npc.id,
-                    content.name,
-                    e,
-                )
-                false
-            }
+        val handled = ContentErrorPolicy.runBoolean(client, "npc.dispatch.attack") { content.onAttack(client, npc) }
         val handlerNs = System.nanoTime() - handlerStart
         return ContentDispatchTiming(handled, resolveNs, handlerNs, content.name)
     }

@@ -17,6 +17,8 @@ import net.dodian.uber.game.persistence.repository.DbAsyncRepository
 import net.dodian.uber.game.persistence.repository.DbResult
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.engine.loop.GameThreadTaskQueue
+import net.dodian.uber.game.engine.tasking.PlayerScopedCoroutineService
+import net.dodian.uber.game.engine.loop.TickThreadBlockingGuard
 import org.slf4j.LoggerFactory
 import net.dodian.uber.game.persistence.db.DbTables
 
@@ -96,6 +98,7 @@ object AccountPersistenceService {
         updateProgress: Boolean,
         finalSave: Boolean,
     ) {
+        TickThreadBlockingGuard.requireNotGameThread("AccountPersistenceService.saveSynchronously")
         PlayerSaveService.saveSynchronously(client, reason, updateProgress, finalSave)
     }
 
@@ -108,7 +111,11 @@ object AccountPersistenceService {
         if (dbId < 1) {
             return
         }
-        scope.launch {
+        PlayerScopedCoroutineService.launch(
+            player = client,
+            jobKey = "refund-check",
+            scope = scope,
+        ) {
             val hasUnclaimedResult =
                 DbAsyncRepository.suspendReadConnection(dispatcher) { conn ->
                     conn.prepareStatement(
@@ -158,6 +165,7 @@ object AccountPersistenceService {
 
     @JvmStatic
     fun shutdownAndDrain(timeout: Duration) {
+        TickThreadBlockingGuard.requireNotGameThread("AccountPersistenceService.shutdownAndDrain")
         PlayerSaveService.shutdownAndDrain(timeout)
         DbDispatchers.shutdown(DbDispatchers.accountExecutor, timeout)
     }

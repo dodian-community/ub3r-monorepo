@@ -8,6 +8,7 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.api.content.ContentTiming
 import net.dodian.uber.game.engine.systems.skills.ProgressionService
+import net.dodian.uber.game.skill.agility.runtime.AgilityPassageOverlayService
 import net.dodian.uber.game.skill.runtime.action.SkillingRandomEventService
 import net.dodian.uber.game.engine.systems.world.npc.NpcSpawnLocator
 import net.dodian.uber.game.engine.util.Misc
@@ -34,6 +35,11 @@ class AgilityWerewolf(private val c: Client) {
         }
     }
 
+    private fun queueAgilityWalk(deltaX: Int, deltaY: Int, durationMs: Long) {
+        AgilityPassageOverlayService.grantForDelta(c, deltaX, deltaY, durationMs)
+        c.AddToWalkCords(deltaX, deltaY, durationMs)
+    }
+
     private fun requireAgilityLevel(level: Int): Boolean {
         if (c.getLevel(Skill.AGILITY) >= level) {
             return true
@@ -43,14 +49,14 @@ class AgilityWerewolf(private val c: Client) {
     }
 
     fun StepStone(pos: Position) {
-        if (c.UsingAgility) {
+        if (c.isMovementLocked) {
             return
         }
         if (!requireAgilityLevel(AgilityData.WEREWOLF_COURSE_LEVEL)) {
             return
         }
         if (pos.x == 3538 && pos.y == 9875 && c.position.x == 3538 && c.position.y == 9873) {
-            c.UsingAgility = true
+            c.setMovementLocked(true)
             val npc = NpcSpawnLocator.werewolfCourseNpc(0)
             c.performAnimation(769, 0)
             c.walkBlock = System.currentTimeMillis() + 600
@@ -85,10 +91,10 @@ class AgilityWerewolf(private val c: Client) {
                 c.transport(Position(pos.x, pos.y, 0))
                 giveEndExperience(160, true)
                 Ground.addFloorItem(c, Position(x, y, 0), 4179, 1, 100)
-                c.UsingAgility = false
+                c.setMovementLocked(false)
             }
         } else if (pos.x == 3538 && pos.y == 9877 && c.position.x == 3538 && c.position.y == 9875) {
-            c.UsingAgility = true
+            c.setMovementLocked(true)
             c.performAnimation(769, 0)
             c.walkBlock = System.currentTimeMillis() + 600
             runLater(600) {
@@ -97,10 +103,10 @@ class AgilityWerewolf(private val c: Client) {
                 }
                 c.transport(Position(pos.x, pos.y, 0))
                 giveEndExperience(160, true)
-                c.UsingAgility = false
+                c.setMovementLocked(false)
             }
         } else if (pos.x == 3540 && pos.y == 9877 && c.position.x == 3538 && c.position.y == 9877) {
-            c.UsingAgility = true
+            c.setMovementLocked(true)
             c.performAnimation(769, 0)
             c.walkBlock = System.currentTimeMillis() + 600
             runLater(600) {
@@ -109,10 +115,10 @@ class AgilityWerewolf(private val c: Client) {
                 }
                 c.transport(Position(pos.x, pos.y, 0))
                 giveEndExperience(160, true)
-                c.UsingAgility = false
+                c.setMovementLocked(false)
             }
         } else if (pos.x == 3540 && pos.y == 9879 && c.position.x == 3540 && c.position.y == 9877) {
-            c.UsingAgility = true
+            c.setMovementLocked(true)
             c.performAnimation(769, 0)
             c.walkBlock = System.currentTimeMillis() + 600
             runLater(600) {
@@ -121,10 +127,10 @@ class AgilityWerewolf(private val c: Client) {
                 }
                 c.transport(Position(pos.x, pos.y, 0))
                 giveEndExperience(160, true)
-                c.UsingAgility = false
+                c.setMovementLocked(false)
             }
         } else if (pos.x == 3540 && pos.y == 9881 && c.position.x == 3540 && c.position.y == 9879) {
-            c.UsingAgility = true
+            c.setMovementLocked(true)
             c.performAnimation(769, 0)
             c.walkBlock = System.currentTimeMillis() + 600
             runLater(600) {
@@ -133,20 +139,20 @@ class AgilityWerewolf(private val c: Client) {
                 }
                 c.transport(Position(pos.x, pos.y, 0))
                 giveEndExperience(160, true)
-                c.UsingAgility = false
+                c.setMovementLocked(false)
             }
         }
     }
 
     fun hurdle(pos: Position) {
-        if (c.UsingAgility) {
+        if (c.isMovementLocked) {
             return
         }
         if (!requireAgilityLevel(AgilityData.WEREWOLF_COURSE_LEVEL)) {
             return
         }
         if (pos.x in 3537..3543 && pos.y == 9893 && c.position.x in 3537..3543 && c.position.y == 9892) {
-            c.UsingAgility = true
+            c.setMovementLocked(true)
             val npc = NpcSpawnLocator.werewolfCourseNpc(1)
             npc?.text = "GO GO GO!"
             c.setFocus(pos.x, pos.y)
@@ -158,10 +164,10 @@ class AgilityWerewolf(private val c: Client) {
                 }
                 c.transport(Position(pos.x, pos.y + 1, 0))
                 giveEndExperience(160, true)
-                c.UsingAgility = false
+                c.setMovementLocked(false)
             }
         } else if (pos.x in 3537..3543 && pos.y == 9896 && c.position.x in 3537..3543 && c.position.y == 9895) {
-            c.UsingAgility = true
+            c.setMovementLocked(true)
             c.setFocus(pos.x, pos.y)
             c.performAnimation(2750, 0)
             c.walkBlock = System.currentTimeMillis() + 600
@@ -171,10 +177,10 @@ class AgilityWerewolf(private val c: Client) {
                 }
                 c.transport(Position(pos.x, pos.y + 1, 0))
                 giveEndExperience(160, true)
-                c.UsingAgility = false
+                c.setMovementLocked(false)
             }
         } else if (pos.x in 3537..3543 && pos.y == 9899 && c.position.x in 3537..3543 && c.position.y == 9898) {
-            c.UsingAgility = true
+            c.setMovementLocked(true)
             c.setFocus(pos.x, pos.y)
             c.performAnimation(2750, 0)
             c.walkBlock = System.currentTimeMillis() + 600
@@ -184,24 +190,24 @@ class AgilityWerewolf(private val c: Client) {
                 }
                 c.transport(Position(pos.x, pos.y + 1, 0))
                 giveEndExperience(160, true)
-                c.UsingAgility = false
+                c.setMovementLocked(false)
             }
         }
     }
 
     fun pipe(pos: Position) {
-        if (c.UsingAgility) {
+        if (c.isMovementLocked) {
             return
         }
         if (!requireAgilityLevel(AgilityData.WEREWOLF_COURSE_LEVEL)) {
             return
         }
         if ((pos.x == 3538 || pos.x == 3541 || pos.x == 3544) && pos.y == 9905 && c.position.x == pos.x && c.position.y == pos.y - 1) {
-            c.UsingAgility = true
+            c.setMovementLocked(true)
             val npc = NpcSpawnLocator.werewolfCourseNpc(2)
             npc?.text = "You smell good!!"
             c.walkAnim = 746
-            c.AddToWalkCords(0, 6, 3600)
+            queueAgilityWalk(0, 6, 3600)
             var part = 0
             runRepeating(600) {
                 if (c.disconnected) {
@@ -213,7 +219,7 @@ class AgilityWerewolf(private val c: Client) {
                         c.requestWeaponAnims()
                         c.performAnimation(748, 0)
                         giveEndExperience(600, true)
-                        c.UsingAgility = false
+                        c.setMovementLocked(false)
                         false
                     }
                     part == 1 -> {
@@ -227,38 +233,38 @@ class AgilityWerewolf(private val c: Client) {
     }
 
     fun slope(pos: Position) {
-        if (c.UsingAgility) {
+        if (c.isMovementLocked) {
             return
         }
         if (!requireAgilityLevel(60)) {
             return
         }
         if (pos.x == 3532 && pos.y in 9909..9911 && c.position.x == pos.x + 1 && c.position.y in 9909..9911) {
-            c.UsingAgility = true
+            c.setMovementLocked(true)
             val npc = NpcSpawnLocator.werewolfCourseNpc(3)
             npc?.text = "You fetch good... Now bleed!"
             c.walkAnim = 737
-            c.AddToWalkCords(-3, 0, 1800)
+            queueAgilityWalk(-3, 0, 1800)
             runLater(1800) {
                 if (c.disconnected) {
                     return@runLater
                 }
                 c.requestWeaponAnims()
                 giveEndExperience(400, true)
-                c.UsingAgility = false
+                c.setMovementLocked(false)
             }
         }
     }
 
     fun zipLine(pos: Position) {
-        if (c.UsingAgility) {
+        if (c.isMovementLocked) {
             return
         }
         if (!requireAgilityLevel(60)) {
             return
         }
         if (pos.x in 3527..3529 && pos.y in 9909..9911 && c.position.x == 3528 && (c.position.y == 9910 || c.position.y == 9909)) {
-            c.UsingAgility = true
+            c.setMovementLocked(true)
             c.setFocus(3528, 9908)
             val npc = NpcSpawnLocator.werewolfCourseNpc(4)
             val lastNpc = NpcSpawnLocator.werewolfCourseNpc(5)
@@ -273,7 +279,7 @@ class AgilityWerewolf(private val c: Client) {
                 c.requestWeaponAnims()
                 giveEndExperience(1500, true)
                 lastNpc?.text = "Hand in that juicy stick to me!"
-                c.UsingAgility = false
+                c.setMovementLocked(false)
             }
         }
     }

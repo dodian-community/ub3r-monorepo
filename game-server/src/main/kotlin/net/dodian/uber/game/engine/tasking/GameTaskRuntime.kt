@@ -61,6 +61,42 @@ object GameTaskRuntime {
     }
 
     @JvmStatic
+    fun queueSkillAction(
+        player: Client,
+        actionName: String,
+        priority: TaskPriority = TaskPriority.STANDARD,
+        block: suspend GameTask.() -> Unit,
+    ): TaskHandle =
+        queuePlayer(player, priority) {
+            setMetadata("skillAction", actionName)
+            block()
+        }
+
+    @JvmStatic
+    fun queueNpcAction(
+        npc: Npc,
+        actionName: String,
+        priority: TaskPriority = TaskPriority.STANDARD,
+        block: suspend GameTask.() -> Unit,
+    ): TaskHandle =
+        queueNpc(npc, priority) {
+            setMetadata("npcAction", actionName)
+            block()
+        }
+
+    @JvmStatic
+    fun queueDialogueStep(
+        player: Client,
+        stepName: String,
+        priority: TaskPriority = TaskPriority.STANDARD,
+        block: suspend GameTask.() -> Unit,
+    ): TaskHandle =
+        queuePlayer(player, priority) {
+            setMetadata("dialogueStep", stepName)
+            block()
+        }
+
+    @JvmStatic
     fun queueWorld(
         priority: TaskPriority = TaskPriority.STANDARD,
         block: suspend GameTask.() -> Unit,

@@ -6,6 +6,7 @@ import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
+import net.dodian.uber.game.skill.runtime.action.SkillStateCoordinator
 
 class SkillPluginBuilder internal constructor(
     private val name: String,
@@ -123,6 +124,56 @@ class SkillPluginBuilder internal constructor(
 
     fun lifecycle(block: SkillPluginLifecycleBuilder.() -> Unit) {
         lifecycle = SkillPluginLifecycleBuilder().apply(block).build()
+    }
+
+    fun startSession(sessionKey: String) {
+        composeLifecycle(
+            onStart = { SkillStateCoordinator.beginSession(it, sessionKey) },
+        )
+    }
+
+    fun requireSession(sessionKey: String) {
+        composeLifecycle(
+            onAttempt = { client ->
+                val existing = client.activeSkillSessionKey
+                if (existing != null && existing != sessionKey) {
+                    client.sendMessage("You are already doing another skill action.")
+                }
+            },
+        )
+    }
+
+    fun endSession(sessionKey: String) {
+        composeLifecycle(
+            onStop = { SkillStateCoordinator.endSession(it, sessionKey) },
+        )
+    }
+
+    private fun composeLifecycle(
+        onAttempt: ((Client) -> Unit)? = null,
+        onStart: ((Client) -> Unit)? = null,
+        onCycle: ((Client) -> Unit)? = null,
+        onStop: ((Client) -> Unit)? = null,
+    ) {
+        lifecycle =
+            SkillPluginLifecycleHooks(
+                onAttempt = compose(lifecycle.onAttempt, onAttempt),
+                onStart = compose(lifecycle.onStart, onStart),
+                onCycle = compose(lifecycle.onCycle, onCycle),
+                onStop = compose(lifecycle.onStop, onStop),
+            )
+    }
+
+    private fun compose(
+        first: ((Client) -> Unit)?,
+        second: ((Client) -> Unit)?,
+    ): ((Client) -> Unit)? {
+        if (first == null) return second
+        if (second == null) return first
+        return { client ->
+            first(client)
+            second(client)
+        }
     }
 
     internal fun build(): SkillPluginDefinition {

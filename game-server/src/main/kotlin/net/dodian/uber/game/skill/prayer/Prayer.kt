@@ -38,7 +38,7 @@ object Prayer {
     @JvmStatic
     fun altarBones(client: Client, itemId: Int): Boolean {
         val bone = Bones.getBone(itemId)
-        if (bone == null || !client.playerHasItem(itemId) || client.randomed) {
+        if (bone == null || !client.playerHasItem(itemId) || client.skillingEventState.isRandomEventOpen) {
             client.resetAction()
             return false
         }
@@ -84,7 +84,7 @@ object Prayer {
 }
 
 private class AltarObjectContent : ObjectContent {
-    override val objectIds: IntArray = intArrayOf(409, 20377)
+    override val objectIds: IntArray = PrayerRouteIds.ALTAR_OBJECT_IDS
 
     override fun onFirstClick(client: Client, objectId: Int, position: Position, obj: GameObjectData?): Boolean {
         if (client.currentPrayer < client.maxPrayer) {
@@ -105,10 +105,10 @@ private class AltarObjectContent : ObjectContent {
         itemSlot: Int,
         interfaceId: Int,
     ): Boolean {
-        if (objectId != 409) {
+        if (objectId != PrayerRouteIds.MAIN_ALTAR_OBJECT_ID) {
             return false
         }
-        if (Bones.getBone(itemId) == null || !client.playerHasItem(itemId) || client.randomed) {
+        if (Bones.getBone(itemId) == null || !client.playerHasItem(itemId) || client.skillingEventState.isRandomEventOpen) {
             client.resetAction()
             return false
         }
@@ -119,7 +119,7 @@ private class AltarObjectContent : ObjectContent {
 }
 
 object BuryBonesItems : ItemContent {
-    override val itemIds: IntArray = Bones.values().map { it.getItemId() }.toIntArray()
+    override val itemIds: IntArray = PrayerRouteIds.BONE_ITEM_IDS
 
     override fun onFirstClick(client: Client, itemId: Int, itemSlot: Int, interfaceId: Int): Boolean {
         return Prayer.attempt(client, itemId, itemSlot)
@@ -138,7 +138,7 @@ object PrayerSkillPlugin : SkillPlugin {
             bindObjectContentUseItem(
                 preset = PolicyPreset.PRODUCTION,
                 content = altarObjects,
-                itemIds = BuryBonesItems.itemIds,
+                itemIds = PrayerRouteIds.BONE_ITEM_IDS,
             )
             bindItemContentClick(
                 preset = PolicyPreset.PRODUCTION,

@@ -7,7 +7,9 @@ import net.dodian.uber.game.ui.QuestTabEntry
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
+import net.dodian.uber.game.api.plugin.skills.ItemClickOption
 import net.dodian.uber.game.api.plugin.skills.bindItemContentClick
+import net.dodian.uber.game.api.plugin.skills.bindItemContentClicks
 import net.dodian.uber.game.api.plugin.skills.skillPlugin
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
 
@@ -56,9 +58,10 @@ object Slayer {
 
     @JvmStatic
     fun sendTask(client: Client) {
-        val checkTask = SlayerTaskDefinition.forOrdinal(client.slayerData[1])
-        if (checkTask != null && client.slayerData[3] > 0) {
-            client.sendMessage("You need to kill ${client.slayerData[3]} more of ${checkTask.textRepresentation} <col=FF0000>|</col> Current streak is ${client.slayerData[4]}.")
+        val state = client.slayerTaskState
+        val checkTask = SlayerTaskDefinition.forOrdinal(state.taskOrdinal)
+        if (checkTask != null && state.remainingAmount > 0) {
+            client.sendMessage("You need to kill ${state.remainingAmount} more of ${checkTask.textRepresentation} <col=FF0000>|</col> Current streak is ${state.streak}.")
         } else {
             client.sendMessage("You need to be assigned a task!")
         }
@@ -74,7 +77,8 @@ object Slayer {
         while (index < tasks.size) {
             val task = tasks[index]
             val slayerLevel = client.getLevel(Skill.SLAYER)
-            if (client.slayerData[1] != -1 && client.slayerData[1] == task.ordinal) {
+            val state = client.slayerTaskState
+            if (state.taskOrdinal != -1 && state.taskOrdinal == task.ordinal) {
                 index++
             } else if (task.assignedLevelRange.floor <= slayerLevel && slayerLevel <= task.assignedLevelRange.ceiling && allow(task)) {
                 slayer.add(task)
@@ -161,20 +165,12 @@ object SlayerMaskItems : ItemContent {
 object SlayerSkillPlugin : SkillPlugin {
     override val definition =
         skillPlugin(name = "Slayer", skill = Skill.SLAYER) {
-            bindItemContentClick(
-                preset = PolicyPreset.DIALOGUE,
-                option = 1,
-                content = SlayerGemItems,
-            )
-            bindItemContentClick(
-                preset = PolicyPreset.DIALOGUE,
-                option = 2,
-                content = SlayerGemItems,
-            )
-            bindItemContentClick(
-                preset = PolicyPreset.DIALOGUE,
-                option = 3,
-                content = SlayerGemItems,
+            bindItemContentClicks(
+                PolicyPreset.DIALOGUE,
+                SlayerGemItems,
+                ItemClickOption.FIRST,
+                ItemClickOption.SECOND,
+                ItemClickOption.THIRD,
             )
             bindItemContentClick(
                 preset = PolicyPreset.DIALOGUE,

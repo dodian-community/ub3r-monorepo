@@ -2,14 +2,19 @@ package net.dodian.uber.game.skill.woodcutting
 
 import net.dodian.cache.objects.GameObjectData
 import net.dodian.uber.game.model.Position
+import net.dodian.uber.game.skill.runtime.action.ActionStopReason
+import net.dodian.uber.game.skill.runtime.action.SkillActionState
 
 data class WoodcuttingState(
     val treeObjectId: Int,
     val treePosition: Position,
     val objectData: GameObjectData?,
-    val startedCycle: Long,
+    override val startedCycle: Long,
     val resourcesGathered: Int,
-)
+    override val active: Boolean = true,
+    override val stopReason: ActionStopReason? = null,
+    override val targetRef: String? = null,
+) : SkillActionState
 
 enum class TreeDef(
     val objectIds: IntArray,

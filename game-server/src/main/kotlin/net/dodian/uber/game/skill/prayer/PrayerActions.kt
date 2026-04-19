@@ -10,16 +10,16 @@ object PrayerActions {
         playerAction(
             player = client,
             type = PlayerActionType.ALTAR_BONES,
-            actionName = "altar_bones",
+            actionName = PrayerActionIds.ALTAR_BONES,
             onStop = { player, _ ->
                 player.clearPrayerOfferingState()
             },
         ) {
             while (player.prayerOfferingState != null) {
                 val boneItemId = player.prayerOfferingState?.boneItemId ?: return@playerAction
-                emitCycle("altar_bones")
+                emitCycle(PrayerActionIds.ALTAR_BONES)
                 if (!Prayer.altarBones(player, boneItemId)) return@playerAction
-                emitSuccess("altar_bones")
+                emitSuccess(PrayerActionIds.ALTAR_BONES)
                 waitTicks(3)
             }
         }

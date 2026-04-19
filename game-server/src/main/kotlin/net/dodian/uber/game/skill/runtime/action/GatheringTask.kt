@@ -1,6 +1,6 @@
 package net.dodian.uber.game.skill.runtime.action
 
-import net.dodian.uber.game.engine.event.GameEventBus
+import net.dodian.uber.game.api.content.ContentEvents
 import net.dodian.uber.game.engine.tasking.GameTaskRuntime
 import net.dodian.uber.game.engine.tasking.TaskHandle
 import net.dodian.uber.game.engine.tasking.TaskPriority
@@ -40,8 +40,8 @@ abstract class GatheringTask(
 
         beforeStart()
         onStart()
-        GameEventBus.post(SkillingActionStartedEvent(client, actionName))
-        GameEventBus.post(SkillActionStartEvent(client, actionName))
+        ContentEvents.post(SkillingActionStartedEvent(client, actionName))
+        ContentEvents.post(SkillActionStartEvent(client, actionName))
 
         handle =
             GameTaskRuntime.queuePlayer(client, priority) {
@@ -72,9 +72,9 @@ abstract class GatheringTask(
     }
 
     protected fun succeedCycle() {
-        GameEventBus.post(SkillingActionCycleEvent(client, actionName))
-        GameEventBus.post(SkillingActionSucceededEvent(client, actionName))
-        GameEventBus.post(SkillActionCompleteEvent(client, actionName))
+        ContentEvents.post(SkillingActionCycleEvent(client, actionName))
+        ContentEvents.post(SkillingActionSucceededEvent(client, actionName))
+        ContentEvents.post(SkillActionCompleteEvent(client, actionName))
     }
 
     fun cancel(reason: ActionStopReason = ActionStopReason.USER_INTERRUPT) {
@@ -87,8 +87,8 @@ abstract class GatheringTask(
         }
         stopped = true
         onStop(reason)
-        GameEventBus.post(SkillingActionStoppedEvent(client, actionName, reason))
-        GameEventBus.post(SkillActionInterruptEvent(client, actionName, reason))
+        ContentEvents.post(SkillingActionStoppedEvent(client, actionName, reason))
+        ContentEvents.post(SkillActionInterruptEvent(client, actionName, reason))
         handle?.cancel()
         handle = null
     }

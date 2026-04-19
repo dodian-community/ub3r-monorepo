@@ -22,6 +22,9 @@ public class TradeRequestListener implements PacketListener {
     @Override
     public void handle(Client client, GamePacket packet) {
         ByteBuf buf = packet.payload();
+        if (buf.readableBytes() < 2) {
+            return;
+        }
         int targetSlot = buf.readUnsignedShort();
         Client other = client.getClient(targetSlot);
         if (!client.validClient(targetSlot) || client.getSlot() == targetSlot) {

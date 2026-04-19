@@ -1,6 +1,7 @@
 package net.dodian.uber.game.ui
 
 import net.dodian.uber.game.api.content.ContentInteraction
+import net.dodian.uber.game.engine.systems.interaction.ui.TradeDuelSessionService
 import net.dodian.uber.game.ui.buttons.InterfaceButtonContent
 import net.dodian.uber.game.ui.buttons.buttonBinding
 
@@ -30,20 +31,10 @@ object DuelInterface : InterfaceButtonContent {
                     return@buttonBinding true
                 }
                 if (!client.validClient(client.duel_with)) {
-                    client.declineDuel()
-                } else {
-                    client.canOffer = false
+                    TradeDuelSessionService.closeOpenDuel(client)
+                    return@buttonBinding true
                 }
-                client.duelConfirmed2 = true
-                if (other.duelConfirmed2) {
-                    client.removeEquipment()
-                    other.removeEquipment()
-                    client.startDuel()
-                    other.startDuel()
-                } else {
-                    client.sendString("Waiting for other player...", 6571)
-                    other.sendString("Other player has accepted", 6571)
-                }
+                TradeDuelSessionService.confirmDuelStageTwo(client, other)
                 true
             },
             buttonBinding(-1, 3, "duel.confirm.stage_one", intArrayOf(CONFIRM_STAGE_ONE_BUTTON)) { client, _ ->
@@ -63,29 +54,10 @@ object DuelInterface : InterfaceButtonContent {
                     return@buttonBinding true
                 }
                 if (!client.validClient(client.duel_with)) {
-                    client.declineDuel()
+                    TradeDuelSessionService.closeOpenDuel(client)
+                    return@buttonBinding true
                 }
-                client.duelConfirmed = true
-                if (other.duelConfirmed) {
-                    if (client.duelRule[0] && client.duelRule[1] && client.duelRule[2]) {
-                        client.declineDuel()
-                        client.sendMessage("At least one combat style must be enabled!")
-                        other.sendMessage("At least one combat style must be enabled!")
-                        return@buttonBinding true
-                    }
-                    if (client.hasEnoughSpace() || other.hasEnoughSpace()) {
-                        client.sendMessage(client.failer)
-                        other.sendMessage(client.failer)
-                        client.declineDuel()
-                        return@buttonBinding true
-                    }
-                    client.canOffer = false
-                    client.confirmDuel()
-                    other.confirmDuel()
-                } else {
-                    client.sendString("Waiting for other player...", 6684)
-                    other.sendString("Other player has accepted.", 6684)
-                }
+                TradeDuelSessionService.confirmDuelStageOne(client, other)
                 true
             },
         )

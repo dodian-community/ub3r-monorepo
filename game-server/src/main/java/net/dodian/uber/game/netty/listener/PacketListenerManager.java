@@ -1,8 +1,12 @@
 package net.dodian.uber.game.netty.listener;
 
+import net.dodian.uber.game.engine.systems.net.PacketRegistrationReport;
 import net.dodian.uber.game.netty.listener.in.WalkingListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Manages packet listener registration and provides backward compatibility.
@@ -107,12 +111,22 @@ public final class PacketListenerManager {
             repository.registerNoOp(229); // Client plane/update side packet (non-gameplay)
             
             // Note: WalkingListener registers itself for opcodes 248, 164, 98 in its static block
-            
+
+            PacketRegistrationReport report = buildRegistrationReport();
+            validateCriticalOpcodesOrThrow(report);
+            logger.info(
+                "Packet listener registration summary registered={} duplicate_overwrite_count={} missing_critical={}",
+                report.getRegisteredCount(),
+                report.getDuplicateOverwriteCount(),
+                report.getMissingCriticalOpcodes()
+            );
+
             // Lock the repository to prevent further modifications
             repository.lock();
             logger.info("All packet listeners registered successfully");
         } catch (Exception e) {
             logger.error("Failed to register packet listeners", e);
+            throw new ExceptionInInitializerError(e);
         }
     }
 
@@ -140,5 +154,25 @@ public final class PacketListenerManager {
      */
     public static PacketRepository getRepository() {
         return repository;
+    }
+
+    private static PacketRegistrationReport buildRegistrationReport() {
+        List<Integer> missingCriticalOpcodes = new ArrayList<>();
+        for (int opcode : PacketRegistrationReport.CRITICAL_OPCODES) {
+            if (!repository.has(opcode)) {
+                missingCriticalOpcodes.add(opcode);
+            }
+        }
+        return new PacketRegistrationReport(
+            repository.getRegisteredCount(),
+            missingCriticalOpcodes,
+            repository.getDuplicateOverwriteCount()
+        );
+    }
+
+    private static void validateCriticalOpcodesOrThrow(PacketRegistrationReport report) {
+        if (report.getHasMissingCriticalOpcodes()) {
+            throw new IllegalStateException("Missing critical packet listeners: " + report.getMissingCriticalOpcodes());
+        }
     }
 }

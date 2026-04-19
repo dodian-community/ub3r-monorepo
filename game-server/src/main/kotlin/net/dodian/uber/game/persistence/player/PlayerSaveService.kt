@@ -14,6 +14,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
+import net.dodian.uber.game.engine.loop.TickThreadBlockingGuard
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.persistence.account.AccountPersistenceService
 import net.dodian.uber.game.persistence.player.PlayerSaveReason
@@ -79,6 +80,7 @@ object PlayerSaveService {
         updateProgress: Boolean,
         finalSave: Boolean,
     ) {
+        TickThreadBlockingGuard.requireNotGameThread("PlayerSaveService.saveSynchronously")
         val dirtyMask =
             if (finalSave || updateProgress) PlayerSaveSegment.ALL_MASK else client.saveDirtyMask
         if (dirtyMask == 0 && !finalSave) {
@@ -103,6 +105,7 @@ object PlayerSaveService {
 
     @JvmStatic
     fun shutdownAndDrain(timeout: Duration) {
+        TickThreadBlockingGuard.requireNotGameThread("PlayerSaveService.shutdownAndDrain")
         shuttingDown.set(true)
         val deadline = System.nanoTime() + timeout.toNanos()
         while (System.nanoTime() < deadline) {

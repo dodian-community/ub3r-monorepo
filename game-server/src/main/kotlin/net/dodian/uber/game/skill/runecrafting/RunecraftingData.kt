@@ -1,5 +1,8 @@
 package net.dodian.uber.game.skill.runecrafting
 
+import net.dodian.uber.game.skill.runtime.action.ActionStopReason
+import net.dodian.uber.game.skill.runtime.action.SkillActionState
+
 data class RunecraftingRequest(
     val runeId: Int,
     val requiredLevel: Int,
@@ -8,7 +11,11 @@ data class RunecraftingRequest(
 
 data class RunecraftingState(
     val lastAltarCraftAtMillis: Long = 0L,
-)
+    override val active: Boolean = true,
+    override val startedCycle: Long = 0L,
+    override val stopReason: ActionStopReason? = null,
+    override val targetRef: String? = null,
+) : SkillActionState
 
 data class RunecraftingAltarDefinition(
     val objectId: Int,

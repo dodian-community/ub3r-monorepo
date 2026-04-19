@@ -3,10 +3,17 @@ package net.dodian.uber.game.engine.systems.net
 import io.netty.channel.embedded.EmbeddedChannel
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.engine.tasking.GameTaskRuntime
+import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.uber.game.model.Position
+import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.entity.npc.Npc
+import net.dodian.uber.game.model.entity.player.AttackStartDedupeState
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.engine.systems.combat.CombatIntent
+import net.dodian.uber.game.engine.systems.combat.CombatStartService
+import net.dodian.uber.game.engine.systems.interaction.AttackPlayerIntent
 import net.dodian.uber.game.engine.systems.interaction.InteractionProcessor
+import net.dodian.uber.game.engine.systems.interaction.NpcInteractionIntent
 import net.dodian.uber.game.engine.systems.interaction.PersonalPassageService
 import net.dodian.uber.game.engine.systems.world.npc.NpcManager
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
@@ -26,12 +33,14 @@ class PacketInteractionServiceTest {
         Server.npcManager = previousNpcManager ?: NpcManager()
         Server.npcManager.npcMap.clear()
         PlayerRegistry.playersOnline.clear()
+        PlayerRegistry.initializeSlots()
     }
 
     @AfterEach
     fun tearDown() {
         GameTaskRuntime.clear()
         PlayerRegistry.playersOnline.clear()
+        PlayerRegistry.initializeSlots()
         Server.npcManager = previousNpcManager
     }
 
@@ -94,6 +103,122 @@ class PacketInteractionServiceTest {
         assertFalse(InteractionProcessor.isLegendsGuardFrontLaneInteraction(client, eastGuard, option = 5))
     }
 
+    @Test
+    fun `same-target npc attack packet is ignored when combat target is already active`() {
+        val client = clientAt(slot = 14, nameKey = 141L, x = 3200, y = 3200)
+        val npc = npcAt(slot = 56, id = 1, x = 3201, y = 3200)
+        GameCycleClock.syncTo(100)
+        CombatStartService.beginAttackNow(client, npc, CombatIntent.ATTACK_NPC)
+
+        PacketInteractionService.handleNpcAttack(client, opcode = 72, npcIndex = npc.slot)
+        assertTrue(client.pendingInteraction == null)
+        assertEquals(npc.slot, client.combatEngagementState?.targetSlot)
+    }
+
+    @Test
+    fun `same-target npc attack packet is ignored when cooldown is active and state is transiently missing`() {
+        val client = clientAt(slot = 20, nameKey = 1410L, x = 3200, y = 3200)
+        val npc = npcAt(slot = 60, id = 1, x = 3201, y = 3200)
+        CombatStartService.beginAttackNow(client, npc, CombatIntent.ATTACK_NPC)
+        client.combatTargetState = null
+        client.combatTimer = 3
+        client.attackStartDedupeState =
+            AttackStartDedupeState(
+                CombatIntent.ATTACK_NPC,
+                Entity.Type.NPC,
+                npc.slot,
+                1L,
+            )
+
+        PacketInteractionService.handleNpcAttack(client, opcode = 72, npcIndex = npc.slot)
+
+        assertTrue(client.pendingInteraction == null)
+        assertTrue(client.target === npc)
+    }
+
+    @Test
+    fun `same-target player attack packet is ignored when combat target is already active`() {
+        val attacker = clientAt(slot = 15, nameKey = 151L, x = 3200, y = 3200)
+        val victim = clientAt(slot = 16, nameKey = 161L, x = 3201, y = 3200)
+        GameCycleClock.syncTo(200)
+        CombatStartService.beginAttackNow(attacker, victim, CombatIntent.ATTACK_PLAYER)
+        val before = attacker.combatCooldownState ?: error("missing combat cooldown")
+
+        PacketInteractionService.handleAttackPlayer(attacker, opcode = 73, victimSlot = victim.slot)
+        assertTrue(attacker.pendingInteraction == null)
+        val after = attacker.combatCooldownState ?: error("missing combat cooldown")
+        assertEquals(before.nextAttackCycle, after.nextAttackCycle)
+        assertEquals(victim.slot, attacker.combatEngagementState?.targetSlot)
+    }
+
+    @Test
+    fun `different target attack packet retargets immediately without resetting cooldown`() {
+        val attacker = clientAt(slot = 23, nameKey = 1151L, x = 3200, y = 3200)
+        val firstVictim = clientAt(slot = 24, nameKey = 1161L, x = 3201, y = 3200)
+        val secondVictim = clientAt(slot = 25, nameKey = 1171L, x = 3202, y = 3200)
+
+        GameCycleClock.syncTo(300)
+        CombatStartService.beginAttackNow(attacker, firstVictim, CombatIntent.ATTACK_PLAYER)
+        attacker.combatCooldownState =
+            attacker.combatCooldownState?.copy(
+                initialSwingConsumed = true,
+                nextAttackCycle = 305L,
+                lastAttackCycle = 299L,
+            )
+        attacker.combatTimer = 5
+
+        PacketInteractionService.handleAttackPlayer(attacker, opcode = 73, victimSlot = secondVictim.slot)
+
+        assertTrue(attacker.pendingInteraction == null)
+        assertEquals(secondVictim.slot, attacker.combatEngagementState?.targetSlot)
+        assertEquals(305L, attacker.combatCooldownState?.nextAttackCycle)
+    }
+
+    @Test
+    fun `same-target player attack packet is ignored when cooldown is active and state is transiently missing`() {
+        val attacker = clientAt(slot = 26, nameKey = 1510L, x = 3200, y = 3200)
+        val victim = clientAt(slot = 27, nameKey = 1610L, x = 3201, y = 3200)
+        CombatStartService.beginAttackNow(attacker, victim, CombatIntent.ATTACK_PLAYER)
+        attacker.combatTargetState = null
+        attacker.combatTimer = 2
+        attacker.attackStartDedupeState =
+            AttackStartDedupeState(
+                CombatIntent.ATTACK_PLAYER,
+                Entity.Type.PLAYER,
+                victim.slot,
+                1L,
+            )
+
+        PacketInteractionService.handleAttackPlayer(attacker, opcode = 73, victimSlot = victim.slot)
+
+        assertTrue(attacker.pendingInteraction == null)
+        assertTrue(attacker.target === victim)
+    }
+
+    @Test
+    fun `same-target npc attack packet is ignored when matching attack is already pending`() {
+        val client = clientAt(slot = 17, nameKey = 171L, x = 3200, y = 3200)
+        val npc = npcAt(slot = 57, id = 3951, x = 3201, y = 3200)
+        val pending = NpcInteractionIntent(opcode = 72, createdCycle = 1L, npcIndex = npc.slot, option = 5)
+        client.pendingInteraction = pending
+
+        PacketInteractionService.handleNpcAttack(client, opcode = 72, npcIndex = npc.slot)
+
+        assertTrue(client.pendingInteraction === pending)
+    }
+
+    @Test
+    fun `same-target player attack packet is ignored when matching attack is already pending`() {
+        val attacker = clientAt(slot = 18, nameKey = 181L, x = 3200, y = 3200)
+        val victim = clientAt(slot = 19, nameKey = 191L, x = 3201, y = 3200)
+        val pending = AttackPlayerIntent(opcode = 73, createdCycle = 1L, victimIndex = victim.slot)
+        attacker.pendingInteraction = pending
+
+        PacketInteractionService.handleAttackPlayer(attacker, opcode = 73, victimSlot = victim.slot)
+
+        assertTrue(attacker.pendingInteraction === pending)
+    }
+
     private fun clientAt(slot: Int, nameKey: Long, x: Int, y: Int): Client {
         val client = Client(EmbeddedChannel(), slot)
         client.longName = nameKey
@@ -107,6 +232,7 @@ class PacketInteractionServiceTest {
         client.teleportTo(x, y, 0)
         primeMovementState(client)
         PlayerRegistry.playersOnline[nameKey] = client
+        PlayerRegistry.players[slot] = client
         return client
     }
 

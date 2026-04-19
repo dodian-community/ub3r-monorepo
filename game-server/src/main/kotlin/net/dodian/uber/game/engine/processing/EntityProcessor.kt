@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.engine.config.runtimePhaseWarnMs
 import net.dodian.uber.game.engine.loop.GameCycleClock
+import net.dodian.uber.game.engine.loop.GameThreadContext
 import net.dodian.uber.game.engine.loop.GameLoopService
 import net.dodian.uber.game.engine.loop.GameThreadTaskQueue
 import net.dodian.uber.game.engine.sync.util.IntHashSet
@@ -36,6 +37,7 @@ class EntityProcessor : Runnable {
     private val activeNpcSlots = IntHashSet(256)
 
     override fun run() {
+        GameThreadContext.bindCurrentThread()
         GameCycleClock.advance()
         val now = System.currentTimeMillis()
         GameThreadTaskQueue.drain()
@@ -98,7 +100,18 @@ class EntityProcessor : Runnable {
         FollowPathfindingTelemetry.logIfSlow(GameCycleClock.currentCycle())
         val activePlayers = PlayerRegistry.snapshotActivePlayersSortedBySlot()
         for (player in activePlayers) {
-            processPlayer(player, wallClockNow)
+            try {
+                processPlayer(player, wallClockNow)
+            } catch (throwable: Throwable) {
+                logger.error(
+                    "PLAYER_MAIN actor failed slot={} name={} pos={}",
+                    player.slot,
+                    player.playerName,
+                    player.position,
+                    throwable,
+                )
+                player.disconnected = true
+            }
         }
     }
 
@@ -266,7 +279,20 @@ class EntityProcessor : Runnable {
                 maxPendingBefore = pendingBefore
             }
 
-            val result = player.processQueuedPackets(NetworkConstants.PACKET_PROCESS_LIMIT_PER_TICK)
+            val result =
+                try {
+                    player.processQueuedPackets(NetworkConstants.PACKET_PROCESS_LIMIT_PER_TICK)
+                } catch (throwable: Throwable) {
+                    logger.error(
+                        "INBOUND_PACKETS actor failed slot={} name={} pendingBefore={}",
+                        player.slot,
+                        player.playerName,
+                        pendingBefore,
+                        throwable,
+                    )
+                    player.disconnected = true
+                    continue
+                }
             processedPackets += result.processedPackets()
             processedWalkPackets += result.walkPacketsProcessed()
             processedMousePackets += result.mousePacketsProcessed()

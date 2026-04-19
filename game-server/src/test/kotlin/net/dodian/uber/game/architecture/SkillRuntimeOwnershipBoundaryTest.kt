@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test
 class SkillRuntimeOwnershipBoundaryTest {
     private val kotlinSourceRoot: Path = Paths.get("src/main/kotlin")
     private val skillsRoot: Path = Paths.get("src/main/kotlin/net/dodian/uber/game/skill")
+    private val skillRoutingRoot: Path = Paths.get("src/main/kotlin/net/dodian/uber/game/engine/systems/skills")
     private val retiredServiceFile: Path =
         Paths.get("src/main/kotlin/net/dodian/uber/game/systems/action/SkillingActionService.kt")
 
@@ -90,6 +91,98 @@ class SkillRuntimeOwnershipBoundaryTest {
         assertTrue(
             missing.isEmpty(),
             "Runtime API naming/signature drift detected:\n${missing.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `skill modules avoid direct legacy player flags and counters`() {
+        val forbiddenPatterns = listOf(
+            ".UsingAgility" to Regex("""\.UsingAgility\b"""),
+            ".agilityCourseStage" to Regex("""\.agilityCourseStage\b"""),
+            ".slayerData[" to Regex("""\.slayerData\s*\["""),
+            ".playerPotato" to Regex("""\.playerPotato\b"""),
+            ".chestEvent" to Regex("""\.chestEvent\b"""),
+            ".chestEventOccur" to Regex("""\.chestEventOccur\b"""),
+            ".canPreformAction" to Regex("""\.canPreformAction\b"""),
+            ".randomed" to Regex("""\.randomed\b"""),
+            ".random_skill" to Regex("""\.random_skill\b"""),
+        )
+
+        val roots = listOf(skillsRoot, skillRoutingRoot)
+        val violations =
+            roots.flatMap { root ->
+                Files.walk(root).use { paths ->
+                    paths.iterator().asSequence()
+                        .filter { Files.isRegularFile(it) }
+                        .filter { it.extension == "kt" || it.extension == "java" }
+                        .flatMap { file ->
+                            val content = Files.readString(file)
+                            forbiddenPatterns
+                                .filter { (_, pattern) -> pattern.containsMatchIn(content) }
+                                .map { (token, _) -> "${file}: references forbidden legacy token `$token`" }
+                                .asSequence()
+                        }
+                        .toList()
+                }
+            }
+
+        assertTrue(
+            violations.isEmpty(),
+            "Skill modules/routes must use typed runtime state adapters, not direct legacy player fields.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `skill modules avoid direct legacy field writes`() {
+        val forbiddenWritePatterns = listOf(
+            ".UsingAgility =" to Regex("""\.UsingAgility\s*[+\-*/]?="""),
+            ".agilityCourseStage =" to Regex("""\.agilityCourseStage\s*[+\-*/]?="""),
+            ".playerPotato =" to Regex("""\.playerPotato\s*[+\-*/]?="""),
+            ".chestEvent =" to Regex("""\.chestEvent\s*[+\-*/]?="""),
+            ".chestEventOccur =" to Regex("""\.chestEventOccur\s*[+\-*/]?="""),
+            ".canPreformAction =" to Regex("""\.canPreformAction\s*[+\-*/]?="""),
+            ".randomed =" to Regex("""\.randomed\s*[+\-*/]?="""),
+            ".random_skill =" to Regex("""\.random_skill\s*[+\-*/]?="""),
+        )
+
+        val roots = listOf(skillsRoot, skillRoutingRoot)
+        val violations =
+            roots.flatMap { root ->
+                Files.walk(root).use { paths ->
+                    paths.iterator().asSequence()
+                        .filter { Files.isRegularFile(it) }
+                        .filter { it.extension == "kt" || it.extension == "java" }
+                        .flatMap { file ->
+                            val content = Files.readString(file)
+                            forbiddenWritePatterns
+                                .filter { (_, pattern) -> pattern.containsMatchIn(content) }
+                                .map { (token, _) -> "${file}: writes forbidden legacy field token `$token`" }
+                                .asSequence()
+                        }
+                        .toList()
+                }
+            }
+
+        assertTrue(
+            violations.isEmpty(),
+            "Skill modules/routes must not directly mutate legacy player fields.\n${violations.joinToString("\n")}",
+        )
+    }
+
+    @Test
+    fun `skill dsl exposes session lifecycle helpers`() {
+        val dslPath = kotlinSourceRoot.resolve("net/dodian/uber/game/api/plugin/skills/SkillPluginDsl.kt")
+        val source = Files.readString(dslPath)
+
+        val missing = buildList {
+            if (!source.contains("fun startSession(")) add("startSession")
+            if (!source.contains("fun requireSession(")) add("requireSession")
+            if (!source.contains("fun endSession(")) add("endSession")
+        }
+
+        assertTrue(
+            missing.isEmpty(),
+            "SkillPlugin DSL missing required lifecycle helper(s): ${missing.joinToString(", ")}",
         )
     }
 }

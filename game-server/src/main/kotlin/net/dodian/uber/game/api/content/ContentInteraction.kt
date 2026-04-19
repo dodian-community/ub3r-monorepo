@@ -5,8 +5,11 @@ import net.dodian.uber.game.engine.systems.interaction.DispatchTiming
 import net.dodian.uber.game.engine.systems.interaction.ObjectInteractionPolicy
 import net.dodian.uber.game.engine.systems.interaction.PlayerInteractionGuardService
 import net.dodian.uber.game.engine.systems.interaction.PlayerTickThrottleService
+import net.dodian.uber.game.engine.systems.interaction.ObjectInteractionDistance
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
 import net.dodian.uber.game.engine.systems.action.UnifiedPolicyDsl
+import net.dodian.cache.objects.GameObjectData
+import net.dodian.uber.game.model.Position
 
 typealias ContentObjectInteractionPolicy = ObjectInteractionPolicy
 typealias ContentDispatchTiming = DispatchTiming
@@ -65,4 +68,22 @@ object ContentInteraction {
 
     @JvmStatic
     fun blockingInteractionMessage(player: Client): String? = PlayerInteractionGuardService.blockingInteractionMessage(player)
+
+    @JvmStatic
+    fun withinNearestBoundaryCardinal(
+        player: Client,
+        objectId: Int,
+        objectPosition: Position,
+        obj: GameObjectData?,
+    ): Boolean {
+        val playerPlanePosition = Position(objectPosition.x, objectPosition.y, player.position.z)
+        return ObjectInteractionDistance.resolveDistancePosition(
+            client = player,
+            walkTo = playerPlanePosition,
+            objectId = objectId,
+            objectData = obj,
+            def = null,
+            mode = ObjectInteractionDistance.DistanceMode.POLICY_NEAREST_BOUNDARY_CARDINAL,
+        ) != null
+    }
 }

@@ -13,6 +13,9 @@ import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancellationService
 import net.dodian.uber.game.engine.systems.follow.FollowService
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
+import net.dodian.uber.game.engine.systems.interaction.ui.TradeDuelSessionService
+import net.dodian.uber.game.engine.state.GroundItemIntentStateAdapter
+import net.dodian.uber.game.engine.state.TeleportIntentStateAdapter
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicLong
 
@@ -32,7 +35,7 @@ object PacketWalkingService {
         ) {
             return
         }
-        if (player.doingTeleport() || PyramidPlunder.isLooting(player)) {
+        if (TeleportIntentStateAdapter.isTeleporting(player) || PyramidPlunder.isLooting(player)) {
             return
         }
         if (player.isVerticalTransitionActive) {
@@ -42,9 +45,9 @@ object PacketWalkingService {
 
         if (request.opcode == 164 || request.opcode == 248) {
             if (player.inTrade) {
-                player.declineTrade()
+                TradeDuelSessionService.closeOpenTrade(player)
             } else if (player.inDuel && !player.duelFight) {
-                player.declineDuel()
+                TradeDuelSessionService.closeOpenDuel(player)
             }
         }
 
@@ -54,7 +57,7 @@ object PacketWalkingService {
         if (player.antique) {
             player.antique = false
         }
-        player.playerPotato.clear()
+        player.clearPlayerPotatoState()
         with(player.farming) {
             player.updateCompost()
             player.updateFarmPatch()
@@ -73,9 +76,8 @@ object PacketWalkingService {
             player.checkInv = false
             player.resetItems(3214)
         }
-        if (player.pickupWanted) {
-            player.pickupWanted = false
-            player.attemptGround = null
+        if (GroundItemIntentStateAdapter.wantsPickup(player)) {
+            GroundItemIntentStateAdapter.clearPickup(player)
             PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(player)
         }
 
@@ -159,8 +161,8 @@ object PacketWalkingService {
             ),
         )
 
-        if (player.chestEventOccur && request.opcode != 98) {
-            player.chestEventOccur = false
+        if (player.skillingEventState.isChestEventPendingMove && request.opcode != 98) {
+            player.skillingEventState = player.skillingEventState.withChestEventPendingMove(false)
         }
         player.convoId = -1
         if (DialogueService.hasBlockingDialogue(player)) {

@@ -5,6 +5,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancellationService
+import net.dodian.uber.game.engine.state.GroundItemIntentStateAdapter
 import net.dodian.uber.game.engine.systems.world.item.Ground
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -47,16 +48,17 @@ object PacketPickupService {
             PlayerActionCancelReason.GROUND_ITEM_INTERACTION,
             false, false, false, true
         )
-        client.attemptGround = Ground.findGroundItem(client, itemId, itemX, itemY, client.position.getZ())
-        if (client.attemptGround == null) {
-            client.pickupWanted = false
+        val target = Ground.findGroundItem(client, itemId, itemX, itemY, client.position.getZ())
+        if (target == null) {
+            GroundItemIntentStateAdapter.clearPickup(client)
             PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(client)
             return
         }
         if (client.position.getX() != itemX || client.position.getY() != itemY) {
-            client.pickupWanted = true
-            PlayerDeferredLifecycleService.scheduleGroundPickupArrivalWatch(client, client.attemptGround)
+            GroundItemIntentStateAdapter.beginPickup(client, target)
+            PlayerDeferredLifecycleService.scheduleGroundPickupArrivalWatch(client, target)
         } else {
+            GroundItemIntentStateAdapter.beginPickup(client, target)
             PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(client)
             client.pickUpItem(itemX, itemY)
         }

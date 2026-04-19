@@ -5,6 +5,8 @@ import net.dodian.uber.game.skill.herblore.GrimyHerbItems
 import net.dodian.uber.game.skill.herblore.HerbloreSuppliesItems
 import net.dodian.uber.game.skill.slayer.SlayerGemItems
 import net.dodian.uber.game.skill.slayer.SlayerMaskItems
+import net.dodian.uber.game.skill.prayer.BuryBonesItems
+import net.dodian.uber.game.skill.thieving.ThievingObjectComponents
 import net.dodian.uber.game.api.plugin.ContentModuleIndex
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
 import net.dodian.uber.game.api.plugin.skills.SkillPluginDefinition
@@ -216,6 +218,21 @@ object SkillDoctor {
     private fun scanMappedRouteOwnership(skillSnapshot: SkillPluginSnapshot): List<SkillDoctorFinding> {
         val findings = mutableListOf<SkillDoctorFinding>()
 
+        BuryBonesItems.itemIds.forEach { itemId ->
+            if (skillSnapshot.itemBinding(option = 1, itemId = itemId) == null) {
+                findings += SkillDoctorFinding(
+                    code = "missing-route-ownership",
+                    message = "Prayer route ownership missing bone click option=1 binding for itemId=$itemId.",
+                )
+            }
+            if (skillSnapshot.itemOnObjectBinding(objectId = 409, itemId = itemId) == null) {
+                findings += SkillDoctorFinding(
+                    code = "missing-route-ownership",
+                    message = "Prayer route ownership missing altar item-on-object binding for objectId=409 itemId=$itemId.",
+                )
+            }
+        }
+
         cookingRangeObjectIds.forEach { objectId ->
             if (skillSnapshot.itemOnObjectBinding(objectId = objectId, itemId = -1) == null) {
                 findings += SkillDoctorFinding(
@@ -257,6 +274,32 @@ object SkillDoctor {
                 findings += SkillDoctorFinding(
                     code = "missing-route-ownership",
                     message = "Slayer route ownership missing mask click option=3 binding for itemId=$itemId.",
+                )
+            }
+        }
+
+        val thievingOptionOneObjectIds =
+            (ThievingObjectComponents.chestObjects + ThievingObjectComponents.plunderObjects).distinct()
+        thievingOptionOneObjectIds.forEach { objectId ->
+            if (skillSnapshot.objectBinding(option = 1, objectId = objectId) == null) {
+                findings += SkillDoctorFinding(
+                    code = "missing-route-ownership",
+                    message = "Thieving route ownership missing object click option=1 binding for objectId=$objectId.",
+                )
+            }
+        }
+
+        val thievingOptionTwoObjectIds =
+            (
+                ThievingObjectComponents.stallObjects +
+                    ThievingObjectComponents.chestObjects +
+                    ThievingObjectComponents.plunderObjects
+            ).distinct()
+        thievingOptionTwoObjectIds.forEach { objectId ->
+            if (skillSnapshot.objectBinding(option = 2, objectId = objectId) == null) {
+                findings += SkillDoctorFinding(
+                    code = "missing-route-ownership",
+                    message = "Thieving route ownership missing object click option=2 binding for objectId=$objectId.",
                 )
             }
         }

@@ -1,6 +1,7 @@
 package net.dodian.uber.game.engine.systems.action
 
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
+import net.dodian.uber.game.engine.state.TeleportIntentStateAdapter
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.engine.tasking.GameTask
 
@@ -30,7 +31,7 @@ class PlayerActionContext internal constructor(
         if (policy.cancelOnDeath && player.isDeathSequenceActive) {
             return PlayerActionCancelReason.DEATH
         }
-        if (policy.cancelOnTeleport && player.doingTeleport() && player.activeActionType != PlayerActionType.TELEPORT) {
+        if (policy.cancelOnTeleport && TeleportIntentStateAdapter.isTeleporting(player) && player.activeActionType != PlayerActionType.TELEPORT) {
             return PlayerActionCancelReason.TELEPORT
         }
         if (policy.cancelOnCombatEntry && player.isInCombat) {
@@ -53,7 +54,9 @@ class PlayerActionContext internal constructor(
 
     companion object {
         private fun hasMovedSinceLastProcess(player: Client): Boolean {
-            return player.currentX != player.position.x || player.currentY != player.position.y || player.didTeleport()
+            return player.currentX != player.position.x ||
+                player.currentY != player.position.y ||
+                TeleportIntentStateAdapter.didTeleport(player)
         }
     }
 }

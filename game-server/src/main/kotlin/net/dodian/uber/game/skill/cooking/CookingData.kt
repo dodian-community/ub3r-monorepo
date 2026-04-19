@@ -2,6 +2,7 @@ package net.dodian.uber.game.skill.cooking
 
 import net.dodian.uber.game.skill.runtime.action.SkillActionRequest
 import net.dodian.uber.game.skill.runtime.action.SkillActionState
+import net.dodian.uber.game.skill.runtime.action.ActionStopReason
 
 data class CookingDefinition(
     val rawItemId: Int,
@@ -22,6 +23,10 @@ data class CookingState(
     val itemId: Int,
     val cookIndex: Int,
     val remaining: Int,
+    override val active: Boolean = true,
+    override val startedCycle: Long = 0L,
+    override val stopReason: ActionStopReason? = null,
+    override val targetRef: String? = null,
 ) : SkillActionState
 
 object CookingData {

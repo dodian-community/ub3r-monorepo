@@ -4,11 +4,17 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.objects.travel.LegendsGuildGateService
 import net.dodian.uber.game.events.combat.PlayerAttackEvent
+import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.engine.systems.combat.AttackStartDedupeService
+import net.dodian.uber.game.engine.systems.combat.AttackStartDedupeService.Decision
+import net.dodian.uber.game.engine.systems.combat.CombatCommandService
+import net.dodian.uber.game.engine.systems.combat.CombatIntent
 import net.dodian.uber.game.engine.systems.interaction.AttackPlayerIntent
 import net.dodian.uber.game.engine.systems.interaction.ItemOnNpcIntent
 import net.dodian.uber.game.engine.systems.interaction.NpcInteractionIntent
+import net.dodian.uber.game.engine.systems.interaction.npcs.NpcContentRegistry
 import net.dodian.uber.game.engine.systems.interaction.scheduler.InteractionTaskScheduler
 import net.dodian.uber.game.engine.systems.interaction.scheduler.NpcInteractionTask
 import net.dodian.uber.game.engine.systems.interaction.scheduler.PlayerInteractionTask
@@ -26,12 +32,27 @@ object PacketInteractionService {
     @JvmStatic
     fun handleAttackPlayer(client: Client, opcode: Int, victimSlot: Int) {
         if (client.deathStage >= 1) return
-        PlayerRegistry.getClient(victimSlot) ?: return
+        val victim = PlayerRegistry.getClient(victimSlot) ?: return
         if (client.randomed || client.UsingAgility) return
-        GameEventBus.post(PlayerAttackEvent(client, victimSlot, true))
-
-        val intent = AttackPlayerIntent(opcode, PlayerRegistry.cycle.toLong(), victimSlot)
-        InteractionTaskScheduler.schedule(client, intent, PlayerInteractionTask(client, intent))
+        when (AttackStartDedupeService.shouldAcceptAttackStart(
+            player = client,
+            intent = CombatIntent.ATTACK_PLAYER,
+            targetType = Entity.Type.PLAYER,
+            targetSlot = victimSlot,
+            cycle = PlayerRegistry.cycle.toLong(),
+        )) {
+            Decision.ACCEPT -> {
+                GameEventBus.post(PlayerAttackEvent(client, victimSlot, true))
+                CombatCommandService.requestAttack(client, victim, CombatIntent.ATTACK_PLAYER)
+            }
+            Decision.DUPLICATE_PENDING,
+            Decision.DUPLICATE_WINDOW -> return
+            Decision.DUPLICATE_ACTIVE,
+            Decision.DUPLICATE_COOLDOWN -> {
+                refreshCombatTargetFacing(client, victim)
+                return
+            }
+        }
     }
 
     /**
@@ -64,8 +85,8 @@ object PacketInteractionService {
         if (client.randomed || client.UsingAgility) {
             return
         }
-        if (client.playerPotato.isNotEmpty()) {
-            client.playerPotato.clear()
+        if (client.playerPotatoState != null) {
+            client.clearPlayerPotatoState()
         }
         if (option in 1..4) {
             LegendsGuildGateService.primeGuardApproach(client, npc)
@@ -94,10 +115,30 @@ object PacketInteractionService {
         if (client.randomed || client.UsingAgility) {
             return
         }
-
-        GameEventBus.post(PlayerAttackEvent(client, npcIndex, false))
-        val intent = NpcInteractionIntent(opcode, PlayerRegistry.cycle.toLong(), npcIndex, 5)
-        InteractionTaskScheduler.schedule(client, intent, NpcInteractionTask(client, intent))
+        when (AttackStartDedupeService.shouldAcceptAttackStart(
+            player = client,
+            intent = CombatIntent.ATTACK_NPC,
+            targetType = Entity.Type.NPC,
+            targetSlot = npcIndex,
+            cycle = PlayerRegistry.cycle.toLong(),
+        )) {
+            Decision.ACCEPT -> {
+                GameEventBus.post(PlayerAttackEvent(client, npcIndex, false))
+                if (NpcContentRegistry.hasAttackHandler(npc.id)) {
+                    val intent = NpcInteractionIntent(opcode, PlayerRegistry.cycle.toLong(), npcIndex, 5)
+                    InteractionTaskScheduler.schedule(client, intent, NpcInteractionTask(client, intent))
+                } else {
+                    CombatCommandService.requestAttack(client, npc, CombatIntent.ATTACK_NPC)
+                }
+            }
+            Decision.DUPLICATE_PENDING,
+            Decision.DUPLICATE_WINDOW -> return
+            Decision.DUPLICATE_ACTIVE,
+            Decision.DUPLICATE_COOLDOWN -> {
+                refreshCombatTargetFacing(client, npc)
+                return
+            }
+        }
     }
 
     internal fun shouldClearRedundantWalkForNpcInteraction(client: Client, npc: Npc, option: Int): Boolean {
@@ -108,5 +149,14 @@ object PacketInteractionService {
             return false
         }
         return client.goodDistanceEntity(npc, 1)
+    }
+
+    private fun refreshCombatTargetFacing(client: Client, target: Entity) {
+        client.target = target
+        if (target is Npc) {
+            client.faceNpc(target.slot)
+        } else {
+            client.facePlayer(target.slot)
+        }
     }
 }

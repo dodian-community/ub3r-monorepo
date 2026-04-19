@@ -1,6 +1,6 @@
 package net.dodian.uber.game.ui
 
-import net.dodian.uber.game.engine.event.GameEventBus
+import net.dodian.uber.game.api.content.ContentEvents
 import net.dodian.uber.game.events.widget.DialogueOptionEvent
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
@@ -60,7 +60,7 @@ object DialogueInterface : InterfaceButtonContent {
             handleHerbMenu(client, optionIndex)
             return true
         }
-        if (GameEventBus.postWithResult(DialogueOptionEvent(client, optionIndex))) {
+        if (ContentEvents.postWithResult(DialogueOptionEvent(client, optionIndex))) {
             return true
         }
         if (DialogueService.onOption(client, optionIndex)) {
