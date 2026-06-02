@@ -5515,13 +5515,13 @@ public class Client extends GameApplet {
 						updateChatbox = true;
 						break;
 
-					case 42501:
-						frameMode(ScreenMode.FIXED);
-						break;
+				case 44501:
+					frameMode(ScreenMode.FIXED);
+					break;
 
-					case 42504:
-						frameMode(ScreenMode.RESIZABLE);
-						break;
+				case 44504:
+					frameMode(ScreenMode.RESIZABLE);
+					break;
 
 					case 40500:
 					case 40501:
