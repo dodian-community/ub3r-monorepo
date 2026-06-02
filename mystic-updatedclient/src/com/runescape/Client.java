@@ -174,6 +174,14 @@ public class Client extends GameApplet {
 	}
 
 	public void savePlayerData() {
+		if (Configuration.web_bridge_enabled) {
+			try {
+				com.runescape.web.CheerpJWs.setLocalStorage("remember_username", rememberMe ? "true" : "false");
+				com.runescape.web.CheerpJWs.setLocalStorage("username", rememberMe ? myUsername : "");
+			} catch (Throwable t) {
+				// Prevent crashes if running outside CheerpJ (e.g. desktop)
+			}
+		}
 		try {
 			File file = new File(SignLink.findcachedir() + "/settings.dat");
 			if (!file.exists()) {
@@ -211,15 +219,10 @@ public class Client extends GameApplet {
 
 
 	private void loadPlayerData() throws IOException {
-
 		File file = new File(SignLink.findcachedir() + "/settings.dat");
-		if (!file.exists()) {
-			return;
-		}
-
-		DataInputStream stream = new DataInputStream(new FileInputStream(file));
-
-		try {
+		if (file.exists()) {
+			DataInputStream stream = new DataInputStream(new FileInputStream(file));
+			try {
 
 			rememberMe = stream.readBoolean();
 			myUsername = stream.readUTF();
@@ -260,10 +263,33 @@ public class Client extends GameApplet {
 			settings[166] = brightnessState;
 
 
-		} catch (IOException e) {
-			file.delete();
-		} finally {
-			stream.close();
+			} catch (IOException e) {
+				file.delete();
+			} finally {
+				stream.close();
+			}
+		}
+
+		if (Configuration.web_bridge_enabled) {
+			try {
+				String rem = com.runescape.web.CheerpJWs.getLocalStorage("remember_username");
+				String user = com.runescape.web.CheerpJWs.getLocalStorage("username");
+				if (rem != null && !rem.isEmpty()) {
+					rememberMe = rem.equals("true");
+				}
+				if (rememberMe) {
+					if (user != null) {
+						myUsername = user;
+					}
+				} else {
+					myUsername = "";
+				}
+				if (rememberMe && myUsername.length() > 0) {
+					loginScreenCursorPos = 1;
+				}
+			} catch (Throwable t) {
+				// Prevent crashes if running outside CheerpJ
+			}
 		}
 	}
 
@@ -8942,6 +8968,7 @@ public class Client extends GameApplet {
 				anInt1226 = 0;
 				// sendConfiguration(429, 1);
 				this.stopMidi();
+				savePlayerData();
 				setupGameplayScreen();
 
 				return;

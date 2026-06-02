@@ -16,4 +16,8 @@ public final class CheerpJWs {
     public static native void writeBase64(int id, String base64);
 
     public static native void close(int id);
+
+    public static native String getLocalStorage(String key);
+
+    public static native void setLocalStorage(String key, String value);
 }

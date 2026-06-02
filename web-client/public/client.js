@@ -244,6 +244,13 @@ function nativeMethods() {
   const writeBase64 = async (_lib, id, base64) => bridge.writeBase64(id, base64);
   const close = async (_lib, id) => bridge.close(id);
 
+  const getLocalStorage = async (_lib, key) => {
+    return localStorage.getItem(key) || "";
+  };
+  const setLocalStorage = async (_lib, key, value) => {
+    localStorage.setItem(key, value);
+  };
+
   return {
     Java_com_runescape_web_CheerpJWs_open: open,
     Java_com_runescape_web_CheerpJWs_readByte: readByte,
@@ -251,19 +258,22 @@ function nativeMethods() {
     Java_com_runescape_web_CheerpJWs_available: available,
     Java_com_runescape_web_CheerpJWs_writeBase64: writeBase64,
     Java_com_runescape_web_CheerpJWs_close: close,
+    Java_com_runescape_web_CheerpJWs_getLocalStorage: getLocalStorage,
+    Java_com_runescape_web_CheerpJWs_setLocalStorage: setLocalStorage,
     Java_CheerpJWs_open: open,
     Java_CheerpJWs_readByte: readByte,
     Java_CheerpJWs_readBase64: readBase64,
     Java_CheerpJWs_available: available,
     Java_CheerpJWs_writeBase64: writeBase64,
-    Java_CheerpJWs_close: close
+    Java_CheerpJWs_close: close,
+    Java_CheerpJWs_getLocalStorage: getLocalStorage,
+    Java_CheerpJWs_setLocalStorage: setLocalStorage
   };
 }
 
 async function main() {
   try {
     console.log("boot", "initializing CheerpJ runtime");
-    setStatus("Starting CheerpJ runtime...");
     await cheerpjInit({
       natives: nativeMethods(),
       status: "none",
@@ -272,7 +282,6 @@ async function main() {
     console.log("boot", "CheerpJ initialized");
     cheerpjCreateDisplay(clientWidth, clientHeight, displayEl);
     console.log("boot", "display created", `${clientWidth}x${clientHeight}`);
-    setStatus("Launching Mystic client...");
     console.log("boot", "running main", jarPath);
     const exitCode = await cheerpjRunMain(
       "com.runescape.web.CheerpJClientLauncher",
