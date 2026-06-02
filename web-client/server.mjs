@@ -108,25 +108,35 @@ function ensureTlsFiles() {
 
   fs.mkdirSync(path.dirname(tlsCertPath), { recursive: true });
   fs.mkdirSync(path.dirname(tlsKeyPath), { recursive: true });
-  childProcess.execFileSync(
-    "openssl",
-    [
-      "req",
-      "-x509",
-      "-nodes",
-      "-newkey",
-      "rsa:2048",
-      "-keyout",
-      tlsKeyPath,
-      "-out",
-      tlsCertPath,
-      "-subj",
-      `/CN=${publicHost}`,
-      "-days",
-      "30"
-    ],
-    { stdio: "ignore" }
-  );
+  try {
+    childProcess.execFileSync(
+      "openssl",
+      [
+        "req",
+        "-x509",
+        "-nodes",
+        "-newkey",
+        "rsa:2048",
+        "-keyout",
+        tlsKeyPath,
+        "-out",
+        tlsCertPath,
+        "-subj",
+        `/CN=${publicHost}`,
+        "-days",
+        "30"
+      ],
+      { stdio: "ignore" }
+    );
+  } catch (error) {
+    console.error(`[web-client] ERROR: Failed to automatically generate self-signed TLS certificates using 'openssl'.`);
+    if (error && error.code === "ENOENT") {
+      console.error(`[web-client] ERROR: 'openssl' executable was not found in your system's PATH.\n  - Windows users: please install OpenSSL (e.g. via winget or git-bash) and add it to your system PATH.\n  - Or disable TLS_AUTO_GENERATE in your .env and place pre-generated certs at:\n    Cert: ${tlsCertPath}\n    Key: ${tlsKeyPath}`);
+    } else {
+      console.error("[web-client] ERROR:", error.message || error);
+    }
+    process.exit(1);
+  }
 }
 
 function validateGeneratedAssets() {

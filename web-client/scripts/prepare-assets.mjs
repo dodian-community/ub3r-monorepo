@@ -9,7 +9,6 @@ const publicDir = path.resolve(__dirname, "..", "public");
 const cacheTargetDir = path.join(publicDir, "cache");
 const clientTargetDir = path.join(publicDir, "client");
 
-const cacheSourceDir = process.env.MYSTIC_CACHE_SOURCE || "/Users/alexismaneely/Dodian-Exorth317";
 const explicitJarSource = process.env.MYSTIC_JAR_SOURCE;
 const requiredCacheFiles = [
   "main_file_cache.dat",
@@ -35,7 +34,7 @@ async function listFiles(rootDir) {
   const result = [];
 
   async function walk(currentDir) {
-    const entries = await fs.readdir(currentDir, { withFileTypes: true });
+    const entries = await fs.readdir(currentDir, { withFileTypes: true }).catch(() => []);
     for (const entry of entries) {
       if (entry.name.startsWith(".")) {
         continue;
@@ -51,16 +50,6 @@ async function listFiles(rootDir) {
 
   await walk(rootDir);
   return result.sort();
-}
-
-async function validateCacheSource() {
-  const cacheFiles = await listFiles(cacheSourceDir);
-  for (const requiredFile of requiredCacheFiles) {
-    if (!cacheFiles.includes(requiredFile)) {
-      throw new Error(`Missing required cache file: ${requiredFile}`);
-    }
-  }
-  return cacheFiles;
 }
 
 async function resolveJarSource() {
@@ -85,16 +74,28 @@ async function resolveJarSource() {
 async function main() {
   await ensureDir(publicDir);
   await ensureDir(clientTargetDir);
-  await fs.rm(cacheTargetDir, { recursive: true, force: true });
-  await ensureDir(cacheTargetDir);
 
-  const cacheFiles = await validateCacheSource();
-  for (const relativeFile of cacheFiles) {
-    const sourceFile = path.join(cacheSourceDir, relativeFile);
-    const targetFile = path.join(cacheTargetDir, relativeFile);
-    await ensureDir(path.dirname(targetFile));
-    await fs.copyFile(sourceFile, targetFile);
+  if (!(await fs.stat(cacheTargetDir).catch(() => null))?.isDirectory()) {
+    throw new Error(
+      `Cache directory not found at ${cacheTargetDir}.\n` +
+      `Please manually create this directory and place your cache files in it.`
+    );
   }
+
+  const allFiles = await listFiles(cacheTargetDir);
+  // Exclude packed_sprites files from manifest indexing
+  const cacheFiles = allFiles.filter((file) => !file.startsWith("packed_sprites/"));
+
+  // Validate that required files exist
+  for (const requiredFile of requiredCacheFiles) {
+    if (!cacheFiles.includes(requiredFile)) {
+      throw new Error(
+        `Missing required cache file in public/cache: ${requiredFile}\n` +
+        `Please ensure all cache files are placed in ${cacheTargetDir}.`
+      );
+    }
+  }
+
   await fs.writeFile(
     path.join(publicDir, "cache-manifest.json"),
     JSON.stringify({ files: cacheFiles, generatedAt: new Date().toISOString() }, null, 2) + "\n"
@@ -105,7 +106,7 @@ async function main() {
   const jarTarget = path.join(clientTargetDir, "mystic-updatedclient.jar");
   await fs.copyFile(jarSource, jarTarget);
 
-  console.log(`[prepare-assets] copied cache from ${cacheSourceDir}`);
+  console.log(`[prepare-assets] validated manual cache in ${cacheTargetDir} (excluded packed_sprites)`);
   console.log(`[prepare-assets] copied jar from ${jarSource}`);
 }
 
