@@ -263,6 +263,7 @@ WindowListener {
 		if (graphics == null) {
 			graphics = g;
 		}
+		Client.paintGameScreen(g);
 		shouldClearScreen = true;
 		raiseWelcomeScreen();
 	}

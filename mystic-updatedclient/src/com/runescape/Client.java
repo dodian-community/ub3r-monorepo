@@ -707,12 +707,14 @@ public class Client extends GameApplet {
 
 	public void refreshFrameSize() {
 		if (frameMode == ScreenMode.RESIZABLE) {
+			boolean resized = false;
 			if (frameWidth != (appletClient() ? getGameComponent().getWidth()
 					: gameFrame.getFrameWidth())) {
 				frameWidth = (appletClient() ? getGameComponent().getWidth()
 						: gameFrame.getFrameWidth());
 				screenAreaWidth = frameWidth;
 				setBounds();
+				resized = true;
 			}
 			if (frameHeight != (appletClient() ? getGameComponent().getHeight()
 					: gameFrame.getFrameHeight())) {
@@ -720,6 +722,10 @@ public class Client extends GameApplet {
 						: gameFrame.getFrameHeight());
 				screenAreaHeight = frameHeight;
 				setBounds();
+				resized = true;
+			}
+			if (resized && gameFrame != null) {
+				graphics = gameFrame.getGraphics();
 			}
 		}
 	}
@@ -16830,6 +16836,16 @@ public class Client extends GameApplet {
 	private ProducingGraphicsBuffer minimapImageProducer;
 	private static ProducingGraphicsBuffer gameScreenImageProducer;
 	private static ProducingGraphicsBuffer chatboxImageProducer;
+
+	static void paintGameScreen(Graphics g) {
+		if (gameScreenImageProducer != null) {
+			gameScreenImageProducer.drawGraphics(
+					frameMode == ScreenMode.FIXED ? 4 : 0, g,
+					frameMode == ScreenMode.FIXED ? 4 : 0);
+		} else if (instance != null && instance.fullGameScreen != null) {
+			instance.fullGameScreen.drawGraphics(0, g, 0);
+		}
+	}
 	private int daysSinceRecovChange;
 	private BufferedConnection socketStream;
 	private int privateMessageCount;
