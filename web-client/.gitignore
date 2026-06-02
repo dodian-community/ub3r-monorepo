@@ -1,0 +1,7 @@
+node_modules
+.env
+.runtime-certs
+public/cache
+public/client
+public/cache-manifest.json
+public/cache-manifest.txt

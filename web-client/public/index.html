@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mystic Web Client</title>
+  <script src="https://cjrtnc.leaningtech.com/4.3/loader.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #000;
+      color: #d7d7d7;
+      font: 14px/1.4 "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    main {
+      width: min(820px, calc(100vw - 24px));
+      margin: 12px auto;
+    }
+
+    #status {
+      padding: 8px 0;
+      color: #9f9f9f;
+    }
+
+    #status.is-error {
+      color: #ff6b6b;
+    }
+
+    #display-shell {
+      width: 100%;
+      min-height: 503px;
+      border: 1px solid #252525;
+      background: #000;
+      overflow: hidden;
+    }
+
+    #display {
+      width: 765px;
+      min-height: 503px;
+      margin: 0 auto;
+    }
+
+    .meta {
+      padding: 8px 0 10px;
+      color: #777;
+    }
+
+    .meta code {
+      color: #bcbcbc;
+    }
+
+    #console {
+      height: 220px;
+      padding: 10px;
+      border: 1px solid #252525;
+      background: #000;
+      color: #d7d7d7;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .log-error {
+      color: #ff7d7d;
+    }
+
+    .log-warn {
+      color: #f1cf65;
+    }
+
+    .log-info {
+      color: #a6a6a6;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div id="status">Starting...</div>
+    <section id="display-shell">
+      <div id="display"></div>
+    </section>
+    <div class="meta">
+      Bridge routes: <code>/gamews/game</code> and <code>/gamews/ondemand</code><br>
+      Bundled cache path: <code>/app/cache</code> -> <code>~/Dodian-Exorth317</code>
+    </div>
+    <pre id="console" aria-live="polite"></pre>
+  </main>
+
+  <script type="module" src="/client.js"></script>
+</body>
+</html>

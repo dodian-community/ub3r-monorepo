@@ -117,6 +117,27 @@ public final class Configuration {
 	public static final String CLIENT_BUILD = "3.0 BETA";
 
 	/**
+	 * Enables browser-only socket transport through a WebSocket bridge.
+	 */
+	public static boolean web_bridge_enabled = false;
+
+	/**
+	 * Bridge URL for game/login traffic.
+	 */
+	public static String web_bridge_game_url = "/gamews/game";
+
+	/**
+	 * Bridge URL for on-demand/jaggrab traffic.
+	 */
+	public static String web_bridge_ondemand_url = "/gamews/ondemand";
+
+	/**
+	 * Game and on-demand ports that should be routed to dedicated bridge paths.
+	 */
+	public static int web_bridge_game_port = server_port;
+	public static int web_bridge_ondemand_port = 43596;
+
+	/**
 	 * Enables the use of run energy
 	 */
 	public static boolean runEnergy = true;
@@ -168,5 +189,34 @@ public final class Configuration {
 	public static boolean bountyHunterInterface = true;
 
 	public static int xpPosition;
+
+	public static void enableWebBridge(String gameUrl, String ondemandUrl, int gamePort, int ondemandPort) {
+		web_bridge_enabled = true;
+		web_bridge_game_url = normalizeBridgeUrl(gameUrl, "/gamews/game");
+		web_bridge_ondemand_url = normalizeBridgeUrl(ondemandUrl, "/gamews/ondemand");
+		web_bridge_game_port = gamePort;
+		web_bridge_ondemand_port = ondemandPort;
+	}
+
+	public static String resolveBridgeUrlForPort(int port) {
+		if (!web_bridge_enabled) {
+			return null;
+		}
+		if (port == web_bridge_ondemand_port) {
+			return web_bridge_ondemand_url;
+		}
+		return web_bridge_game_url;
+	}
+
+	private static String normalizeBridgeUrl(String value, String fallback) {
+		if (value == null || value.trim().isEmpty()) {
+			return fallback;
+		}
+		String cleaned = value.trim();
+		if (!cleaned.startsWith("/")) {
+			cleaned = "/" + cleaned;
+		}
+		return cleaned;
+	}
 
 }

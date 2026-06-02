@@ -104,6 +104,7 @@ import com.runescape.util.PacketConstants;
 import com.runescape.util.SecondsTimer;
 import com.runescape.util.SkillConstants;
 import com.runescape.util.StringUtils;
+import com.runescape.web.WebBridgeSocket;
 import java.awt.event.KeyEvent;
 
 public class Client extends GameApplet {
@@ -1267,6 +1268,12 @@ public class Client extends GameApplet {
 	}
 
 	public Socket openSocket(int port) throws IOException {
+		if (Configuration.web_bridge_enabled) {
+			String bridgeUrl = Configuration.resolveBridgeUrlForPort(port);
+			if (bridgeUrl != null) {
+				return new WebBridgeSocket(bridgeUrl);
+			}
+		}
 		return new Socket(InetAddress.getByName(server), port);
 	}
 
@@ -4251,6 +4258,22 @@ public class Client extends GameApplet {
 		ObjectDefinition.lowMemory = false;
 	}
 
+	public static void launchWebClient() {
+		try {
+			nodeID = 10;
+			portOffset = 0;
+			setHighMem();
+			isMembers = true;
+			SignLink.storeid = 32;
+			frameMode(ScreenMode.FIXED);
+			instance = new Client();
+			SignLink.startpriv(InetAddress.getLoopbackAddress());
+			instance.createClientFrame(frameWidth, frameHeight);
+		} catch (Exception exception) {
+			throw new IllegalStateException("Failed to launch Mystic web client", exception);
+		}
+	}
+
 	public static void main(String args[]) {
 		try {
 			nodeID = 10;
@@ -5127,7 +5150,7 @@ public class Client extends GameApplet {
 		}
 
 		// Retry cache download once (no recursion) for local-cache mode.
-		if(buffer == null && !Configuration.JAGCACHED_ENABLED) {
+		if(buffer == null && !Configuration.JAGCACHED_ENABLED && !Configuration.web_bridge_enabled) {
 			CacheDownloader.init(false);
 			try {
 				if (indices[0] != null) {
@@ -9624,7 +9647,7 @@ public class Client extends GameApplet {
 
 			if (Configuration.JAGCACHED_ENABLED) {
 				JagGrab.onStart();
-			} else {
+			} else if (!Configuration.web_bridge_enabled) {
 				CacheDownloader.init(false);
 			}
 

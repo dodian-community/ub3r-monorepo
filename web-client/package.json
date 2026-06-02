@@ -1,0 +1,14 @@
+{
+  "name": "mystic-web-client",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "prepare-assets": "node ./scripts/prepare-assets.mjs",
+    "build": "npm run prepare-assets",
+    "start": "node ./server.mjs"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

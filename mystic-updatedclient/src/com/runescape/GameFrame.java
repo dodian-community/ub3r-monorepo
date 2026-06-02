@@ -37,7 +37,7 @@ public final class GameFrame extends Frame {
 		      }
 		    });
 		setResizable(resizable);
-		setUndecorated(fullscreen);
+		setUndecorated(fullscreen || Configuration.web_bridge_enabled);
 		setVisible(true); 
 		insets = getInsets();
 		if (resizable) {

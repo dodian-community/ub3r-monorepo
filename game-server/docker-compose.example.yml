@@ -68,6 +68,29 @@ services:
       - '43594:43594'
       - '8080:8080'
 
+  web-client:
+    build:
+      context: ../web-client
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - game-server
+    networks:
+      front:
+        ipv4_address: 172.16.238.30
+    environment:
+      WEB_BIND_HOST: 0.0.0.0
+      WEB_HTTPS_PORT: 8443
+      TLS_CERT_PATH: /certs/tls.crt
+      TLS_KEY_PATH: /certs/tls.key
+      GAME_UPSTREAM_HOST: 172.16.238.20
+      GAME_UPSTREAM_PORT: 43594
+      ONDEMAND_UPSTREAM_PORT: 43596
+    ports:
+      - '8443:8443'
+    volumes:
+      - ./certs:/certs:ro
+
 volumes:
   dev-db:
 
