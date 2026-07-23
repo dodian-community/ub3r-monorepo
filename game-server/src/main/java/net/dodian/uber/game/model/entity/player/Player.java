@@ -1,6 +1,6 @@
 package net.dodian.uber.game.model.entity.player;
 
-import net.dodian.uber.game.Constants;
+import net.dodian.uber.game.engine.config.DotEnvKt;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.model.EntityType;
@@ -127,17 +127,24 @@ public abstract class Player extends Entity {
     public int[] playerItems = new int[28];
     public int[] playerItemsN = new int[28];
     public int playerBankSize = 1300;
-    public int[] bankItems = new int[playerBankSize];
-    public int[] bankItemsN = new int[playerBankSize];
+    // Sized to bankSize() (= playerBankSize / 2), matching every other bank structure
+    // (bankSlotTabs, bankContainerSlotMap in PlayerBankService) - the raw playerBankSize was
+    // double what the bank system actually ever uses (nothing indexes these beyond bankSize(),
+    // and every access site already bounds itself off .length, not a hardcoded constant).
+    public int[] bankItems = new int[bankSize()];
+    public int[] bankItemsN = new int[bankSize()];
     public int pHairC, pTorsoC, pLegsC, pFeetC, pSkinC;
     private final int[] playerEquipment = new int[14];
     private final int[] playerEquipmentN = new int[14];
     public int maxHealth = 10, currentHealth = 10;
     public int maxPrayer = 1, currentPrayer = 1;
-    public final static int maxPlayerListSize = Constants.maxPlayers;
-    public Player[] playerList = new Player[maxPlayerListSize]; // To remove -Dashboard
+    // Protocol cap on simultaneous local players a viewer can track (matches
+    // StagedPlayerSynchronizationService.MAX_LOCALS) - not the total server player cap, so this
+    // must stay a fixed wire-protocol constant, never sized off the configured player capacity.
+    public final static int maxPlayerListSize = 255;
+    public Player[] playerList = new Player[maxPlayerListSize];
     public int playerListSize = 0;
-    public PlayerSlotMembershipSet playersUpdating = new PlayerSlotMembershipSet(Constants.maxPlayers + 1);
+    public PlayerSlotMembershipSet playersUpdating = new PlayerSlotMembershipSet(DotEnvKt.getGameMaxPlayers() + 1);
     private final Npc[] localNpcs = new Npc[255];
     private int localNpcSize = 0;
     private long localPlayerMembershipRevision = 0L;
@@ -595,7 +602,7 @@ public abstract class Player extends Entity {
                 && isActive
                 && !disconnected
                 && getSlot() > 0
-                && getSlot() <= Constants.maxPlayers
+                && getSlot() <= DotEnvKt.getGameMaxPlayers()
                 && getPosition() != null;
     }
 
@@ -825,7 +832,7 @@ public abstract class Player extends Entity {
      * Fresh (all-zero) per login session, matching the client clearing its cache only at
      * login/world-reset; tickets are globally unique and start at 1, so zero never matches.
      */
-    private final long[] appearanceTicketsSeen = new long[Constants.maxPlayers + 1];
+    private final long[] appearanceTicketsSeen = new long[DotEnvKt.getGameMaxPlayers() + 1];
 
     public boolean hasSeenCurrentAppearance(Player other) {
         int slot = other.getSlot();

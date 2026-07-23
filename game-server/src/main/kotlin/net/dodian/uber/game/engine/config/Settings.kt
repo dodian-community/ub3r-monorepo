@@ -72,6 +72,9 @@ object SettingsLoader {
     lateinit var settings: Settings
         private set
 
+    val isLoaded: Boolean
+        get() = ::settings.isInitialized
+
     fun load() {
         val path = System.getenv("SETTINGS_PATH") ?: "Settings.toml"
         val file = File(path)

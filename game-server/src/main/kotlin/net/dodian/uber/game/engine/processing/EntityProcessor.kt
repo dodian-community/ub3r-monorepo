@@ -37,6 +37,7 @@ class EntityProcessor : Runnable {
     private val activeNpcsForTick = ArrayList<Npc>()
     private val activeNpcChunks = LongHashSet(128)
     private val activeNpcSlots = IntHashSet(256)
+    private val nearbyPlayersScratch = ArrayList<Client>(16)
 
     override fun run() {
         GameThreadContext.bindCurrentThread()
@@ -186,9 +187,8 @@ class EntityProcessor : Runnable {
             val npcX = npc.position.x
             val npcY = npc.position.y
             val npcZ = npc.position.z
-            for (client in PlayerRegistry.playersOnline.values) {
-                if (!client.isActive || client.disconnected || client.currentHealth < 1) continue
-                if (client.position.z != npcZ) continue
+            for (client in collectNearbyPlayers(npcX, npcY, npcZ, 4)) {
+                if (client.currentHealth < 1) continue
                 val dx = Math.abs(client.position.x - npcX)
                 if (dx > 4) continue
                 val dy = Math.abs(client.position.y - npcY)
@@ -211,10 +211,9 @@ class EntityProcessor : Runnable {
                 var finalTarget = target
                 if (Utils.random(9) <= 2) {
                     val candidates = ArrayList<Client>()
-                    for (client in PlayerRegistry.playersOnline.values) {
+                    for (client in collectNearbyPlayers(npc.position.x, npc.position.y, npc.position.z, npc.effectiveAttackRange)) {
                         if (client == target) continue
-                        if (!client.isActive || client.disconnected || client.currentHealth < 1) continue
-                        if (client.position.z != npc.position.z) continue
+                        if (client.currentHealth < 1) continue
                         val dist = Math.max(Math.abs(client.position.x - npc.position.x), Math.abs(client.position.y - npc.position.y))
                         if (dist > npc.effectiveAttackRange) continue
                         if (npc.isEligibleNpcAttackTarget(client, true)) {
@@ -315,6 +314,40 @@ class EntityProcessor : Runnable {
         }
         val position = npc.position ?: return false
         return activeNpcChunks.contains(packChunkKey(position.chunkX, position.chunkY))
+    }
+
+    /**
+     * Active, non-disconnected players on plane [z] within chunk range of ([x], [y]) for the
+     * given [radius] (tiles). Reuses [nearbyPlayersScratch] - the returned list is only valid
+     * until the next call. Replaces an O(all online players) scan per aggressive/retargeting NPC
+     * with an O(players in nearby chunks) one; falls back to a full scan if chunk data isn't
+     * available yet (matches ZoneSubscriberIndex's same fallback).
+     */
+    private fun collectNearbyPlayers(x: Int, y: Int, z: Int, radius: Int): List<Client> {
+        nearbyPlayersScratch.clear()
+        val chunkManager = Server.chunkManager
+        if (chunkManager == null) {
+            for (client in PlayerRegistry.playersOnline.values) {
+                if (client.isActive && !client.disconnected && client.position.z == z) {
+                    nearbyPlayersScratch.add(client)
+                }
+            }
+            return nearbyPlayersScratch
+        }
+        val centerChunkX = x shr 3
+        val centerChunkY = y shr 3
+        val chunkRadius = (radius shr 3) + 1
+        for (chunkX in (centerChunkX - chunkRadius)..(centerChunkX + chunkRadius)) {
+            for (chunkY in (centerChunkY - chunkRadius)..(centerChunkY + chunkRadius)) {
+                val repo = chunkManager.getLoaded(chunkX, chunkY) ?: continue
+                for (client in repo.getAll<Client>(EntityType.PLAYER)) {
+                    if (client.isActive && !client.disconnected && client.position.z == z) {
+                        nearbyPlayersScratch.add(client)
+                    }
+                }
+            }
+        }
+        return nearbyPlayersScratch
     }
 
     private fun handleNpcRoaming(npc: Npc) {

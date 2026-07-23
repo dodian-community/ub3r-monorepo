@@ -1,6 +1,6 @@
 package net.dodian.uber.game.engine.systems.net
 
-import net.dodian.uber.game.Constants
+import net.dodian.uber.game.engine.config.gameMaxPlayers
 import net.dodian.uber.game.engine.util.Misc
 import net.dodian.uber.game.events.item.ItemOnPlayerEvent
 import net.dodian.uber.game.model.entity.player.Client
@@ -103,7 +103,7 @@ object PacketItemActionService {
      */
     @JvmStatic
     fun handleUseItemOnPlayer(client: Client, playerSlot: Int, itemId: Int, crackerSlot: Int) {
-        val target: Client? = if (playerSlot >= 0 && playerSlot < Constants.maxPlayers)
+        val target: Client? = if (playerSlot >= 0 && playerSlot < gameMaxPlayers)
             PlayerRegistry.players[playerSlot] as? Client
         else null
         if (target == null || !client.playerHasItem(itemId)) return

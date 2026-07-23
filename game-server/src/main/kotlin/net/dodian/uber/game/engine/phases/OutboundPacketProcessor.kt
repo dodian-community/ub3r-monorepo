@@ -1,6 +1,5 @@
 package net.dodian.uber.game.engine.phases
 
-import net.dodian.uber.game.Constants
 import net.dodian.uber.game.engine.sync.WorldSynchronizationService
 
 open class OutboundPacketProcessor(

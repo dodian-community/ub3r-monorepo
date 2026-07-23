@@ -61,15 +61,8 @@ object SkillProgressionService {
                 else -> baseLevel + client.boostedLevel[skill.id]
             }
 
-        setSkillLevel(client, skill, level, client.getExperience(skill))
         client.setLevel(level, skill)
         client.send(RefreshSkill(skill, level, baseLevel, client.getExperience(skill)))
-    }
-
-    @JvmStatic
-    fun setSkillLevel(client: Client, skill: Skill, currentLevel: Int, xp: Int) {
-        client.sendCachedString(maxOf(currentLevel, 0).toString(), skill.currentComponent)
-        client.sendCachedString(maxOf(Skills.getLevelForExperience(xp), 1).toString(), skill.levelComponent)
     }
 
     private fun applyGainXp(client: Client, request: SkillProgressionRequest): SkillProgressionResult {

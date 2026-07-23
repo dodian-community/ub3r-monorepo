@@ -1,6 +1,5 @@
 package net.dodian.uber.game.skill.skillguide
 
-import net.dodian.uber.game.Constants
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.skill.fletching.FletchingData

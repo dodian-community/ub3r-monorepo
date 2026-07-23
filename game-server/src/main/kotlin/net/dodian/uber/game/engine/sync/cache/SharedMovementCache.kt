@@ -1,6 +1,6 @@
 package net.dodian.uber.game.engine.sync.cache
 
-import net.dodian.uber.game.Constants
+import net.dodian.uber.game.engine.config.gameMaxPlayers
 import net.dodian.uber.game.engine.sync.protocol.PackedBitSlice
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.npc.NpcUpdating
@@ -20,9 +20,9 @@ class SharedPlayerMovementCache {
     }
 
     private companion object {
-        private val blocks = arrayOfNulls<PackedBitSlice>(Constants.maxPlayers + 1)
-        private val owners = arrayOfNulls<Player>(Constants.maxPlayers + 1)
-        private val ticks = LongArray(Constants.maxPlayers + 1) { -1L }
+        private val blocks = arrayOfNulls<PackedBitSlice>(gameMaxPlayers + 1)
+        private val owners = arrayOfNulls<Player>(gameMaxPlayers + 1)
+        private val ticks = LongArray(gameMaxPlayers + 1) { -1L }
     }
 }
 

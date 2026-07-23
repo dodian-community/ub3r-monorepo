@@ -1,7 +1,7 @@
 package net.dodian.uber.game.engine.sync
 
 import kotlin.system.measureNanoTime
-import net.dodian.uber.game.Constants
+import net.dodian.uber.game.engine.config.gameMaxPlayers
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.npc.NpcUpdating
 import net.dodian.uber.game.model.entity.player.Client
@@ -22,7 +22,7 @@ class WorldSynchronizationService {
     private val logger = LoggerFactory.getLogger(WorldSynchronizationService::class.java)
     private val playerUpdating = PlayerUpdating.getInstance()
     private val npcUpdating = NpcUpdating.getInstance()
-    private val activePlayerBuffer = ArrayList<Client>(Constants.maxPlayers + 1)
+    private val activePlayerBuffer = ArrayList<Client>(gameMaxPlayers + 1)
     private val stagedPlayerSynchronization = StagedPlayerSynchronizationService()
     private val stagedNpcSynchronization = StagedNpcSynchronizationService()
     private var tick = 0L

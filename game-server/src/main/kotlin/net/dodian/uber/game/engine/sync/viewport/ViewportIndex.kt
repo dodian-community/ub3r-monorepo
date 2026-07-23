@@ -1,7 +1,7 @@
 package net.dodian.uber.game.engine.sync.viewport
 
-import net.dodian.uber.game.Constants
 import net.dodian.uber.game.Server
+import net.dodian.uber.game.engine.config.gameMaxPlayers
 import net.dodian.uber.game.model.EntityType
 import net.dodian.uber.game.model.chunk.ChunkEntityIndex
 import net.dodian.uber.game.model.entity.npc.Npc
@@ -50,7 +50,7 @@ class ViewportIndex private constructor(
         fun build(viewers: List<Client>, distance: Int): ViewportIndex? {
             val chunkManager = Server.chunkManager ?: return null
             val neighborhoodCache = LongObjectMap<ViewportSnapshot>(viewers.size.coerceAtLeast(16))
-            val snapshots = arrayOfNulls<ViewportSnapshot>(Constants.maxPlayers + 1)
+            val snapshots = arrayOfNulls<ViewportSnapshot>(gameMaxPlayers + 1)
             val relevantNpcSeen = LongArray((1 shl NpcUpdating.NPC_SLOT_BITS) ushr 6)
             val relevantNpcs = ArrayList<Npc>()
             val uniqueSnapshots = ArrayList<ViewportSnapshot>()

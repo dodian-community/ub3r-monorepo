@@ -2,7 +2,7 @@ package net.dodian.uber.game.model.entity.player;
 import net.dodian.uber.game.api.content.ContentInteraction;
 import net.dodian.uber.game.api.content.ContentActions;
 import net.dodian.uber.game.combat.AncientSpellRegistry;
-import net.dodian.uber.game.Constants;
+import net.dodian.uber.game.engine.config.DotEnvKt;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.engine.event.GameEventBus;
 import net.dodian.uber.game.engine.systems.follow.FollowRouting;
@@ -144,8 +144,13 @@ public class Client extends Player implements Runnable {
     public long session_start = 0;
     public boolean pickupWanted = false, duelWin = false;
     public GroundItem attemptGround = null;
-    public CopyOnWriteArrayList<Friend> friends = new CopyOnWriteArrayList<>();
-    public CopyOnWriteArrayList<Friend> ignores = new CopyOnWriteArrayList<>();
+    // Game-thread-only: mutated by friend/ignore-list packet handlers, read during login
+    // (AccountLoginMapper) and periodic save-snapshot building (WorldMaintenanceService), all of
+    // which run on the game thread. The async DB save worker only ever touches the already-copied
+    // snapshot data, never these live lists, so CopyOnWriteArrayList's per-write full-array-copy
+    // cost was pure overhead with no concurrency to guard against.
+    public ArrayList<Friend> friends = new ArrayList<>();
+    public ArrayList<Friend> ignores = new ArrayList<>();
     public boolean tradeLocked = false;
     public boolean officialClient = true;
     public String[] UUID = null;
@@ -1936,6 +1941,19 @@ public class Client extends Player implements Runnable {
      * changed successfully.
      */
     public void equipmentChanged(int... changedSlots) {
+        applyEquipmentSideEffects(changedSlots, true);
+    }
+
+    /**
+     * Shared by {@link #equipmentChanged} and {@link #refreshEquipmentState}.
+     * {@code sendIndividualSlotPackets} is false for the login/full-refresh path:
+     * Tarnish's reference {@code Equipment.login()} fires the same weapon/bonus/
+     * appearance side effects per slot but with its container's {@code refresh}
+     * flag off, then sends exactly one full-container packet - individual
+     * per-slot packets right before a full snapshot of the same widget are
+     * immediately superseded and never visible to the client.
+     */
+    private void applyEquipmentSideEffects(int[] changedSlots, boolean sendIndividualSlotPackets) {
         boolean weaponChanged = false;
         boolean[] sent = new boolean[getEquipment().length];
         if (changedSlots != null) {
@@ -1944,7 +1962,9 @@ public class Client extends Player implements Runnable {
                     continue;
                 }
                 sent[slot] = true;
-                setEquipment(getEquipment()[slot], getEquipmentN()[slot], slot);
+                if (sendIndividualSlotPackets) {
+                    setEquipment(getEquipment()[slot], getEquipmentN()[slot], slot);
+                }
                 weaponChanged |= slot == Equipment.Slot.WEAPON.getId();
             }
         }
@@ -1965,12 +1985,7 @@ public class Client extends Player implements Runnable {
         for (int slot = 0; slot < slots.length; slot++) {
             slots[slot] = slot;
         }
-        equipmentChanged(slots);
-        // The original Tarnish server finishes login with a complete opcode 53
-        // refresh for widget 1688. Keep the slot updates used by live equipment
-        // changes, then publish the canonical full snapshot so every view that
-        // reuses the equipment widgets (including Equipment Bonuses) starts from
-        // one coherent container.
+        applyEquipmentSideEffects(slots, false);
         send(new SendItemOnInterface(
                 1688,
                 java.util.Arrays.copyOf(getEquipment(), getEquipment().length),
@@ -3378,7 +3393,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void UpdatePlayerShop() {
-        for (int i = 1; i < Constants.maxPlayers; i++) {
+        for (int i = 1; i < DotEnvKt.getGameMaxPlayers(); i++) {
             if (net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[i] != null) {
                 if (net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[i].isShopping() && net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[i].MyShopID == MyShopID
                         && i != getSlot()) {

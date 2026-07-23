@@ -1,6 +1,6 @@
 package net.dodian.uber.game.engine.systems.world.player
 
-import net.dodian.uber.game.Constants
+import net.dodian.uber.game.engine.config.gameMaxPlayers
 import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.uber.game.engine.loop.GameThreadTaskQueue
 import net.dodian.uber.game.engine.loop.GameThreadContext
@@ -21,7 +21,7 @@ object PlayerRegistry {
     val slotLock: Any = Any()
 
     @JvmField
-    val usedSlots: BitSet = BitSet(Constants.maxPlayers + 1)
+    val usedSlots: BitSet = BitSet(gameMaxPlayers + 1)
 
     @JvmField
     val playersOnline: ConcurrentHashMap<Long, Client> = ConcurrentHashMap()
@@ -30,7 +30,7 @@ object PlayerRegistry {
     val allOnline: ConcurrentHashMap<Long, Int> = ConcurrentHashMap()
 
     @JvmField
-    val players: Array<Player?> = arrayOfNulls(Constants.maxPlayers + 1)
+    val players: Array<Player?> = arrayOfNulls(gameMaxPlayers + 1)
 
     @JvmField
     var cycle: Int = 1
@@ -57,7 +57,7 @@ object PlayerRegistry {
 
     @JvmStatic
     fun initializeSlots() {
-        for (i in 1..Constants.maxPlayers) {
+        for (i in 1..gameMaxPlayers) {
             players[i] = null
         }
     }
@@ -156,7 +156,7 @@ object PlayerRegistry {
         )
 
         val slot = client.slot
-        if (slot in 1..Constants.maxPlayers) {
+        if (slot in 1..gameMaxPlayers) {
             synchronized(slotLock) {
                 // A delayed disconnect task must never clear a newer occupant that reused
                 // this slot after the original channel died.

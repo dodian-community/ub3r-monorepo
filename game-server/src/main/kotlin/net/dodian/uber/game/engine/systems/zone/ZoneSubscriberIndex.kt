@@ -1,7 +1,7 @@
 package net.dodian.uber.game.engine.systems.zone
 
-import net.dodian.uber.game.Constants
 import net.dodian.uber.game.Server
+import net.dodian.uber.game.engine.config.gameMaxPlayers
 import net.dodian.uber.game.engine.sync.util.SlotBitSet
 import net.dodian.uber.game.model.EntityType
 import net.dodian.uber.game.model.entity.player.Client
@@ -12,7 +12,7 @@ import net.dodian.uber.game.model.entity.player.Client
  * the parallel per-viewer encode fan-out, so the reused scratch fields below need no locking.
  */
 class ZoneSubscriberIndex {
-    private val seen = SlotBitSet(Constants.maxPlayers + 1)
+    private val seen = SlotBitSet(gameMaxPlayers + 1)
     private val candidates = ArrayList<Client>()
 
     /** Candidate viewers for [delta], deduped by chunk membership but not yet filtered by [ZoneDelta.appliesTo]. */

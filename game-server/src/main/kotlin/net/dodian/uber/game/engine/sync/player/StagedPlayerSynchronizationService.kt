@@ -2,7 +2,7 @@ package net.dodian.uber.game.engine.sync.player
 
 import io.netty.buffer.ByteBuf
 import java.util.Arrays
-import net.dodian.uber.game.Constants
+import net.dodian.uber.game.engine.config.gameMaxPlayers
 import net.dodian.uber.game.engine.metrics.OperationalTelemetry
 import net.dodian.uber.game.engine.sync.SynchronizationContext
 import net.dodian.uber.game.engine.sync.protocol.PackedUpdateBlock
@@ -369,7 +369,7 @@ class StagedPlayerSynchronizationService {
         val result = Result()
         val candidates = arrayOfNulls<Player>(MAX_PLAN_CAPACITY)
         private val candidateDistances = IntArray(MAX_PLAN_CAPACITY)
-        private val membership = SlotBitSet(Constants.maxPlayers + 1)
+        private val membership = SlotBitSet(gameMaxPlayers + 1)
         var candidateCount = 0
             private set
 
@@ -414,6 +414,8 @@ class StagedPlayerSynchronizationService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(StagedPlayerSynchronizationService::class.java)
+        // Wire-protocol cap on simultaneous local players a viewer can track - fixed, unrelated
+        // to server player capacity (matches Player.maxPlayerListSize / MAX_PLAN_CAPACITY below).
         private const val MAX_LOCALS = 255
         private const val MAX_PLAN_CAPACITY = 255
         private const val MAX_VAR_SHORT_PAYLOAD = 65535

@@ -7,7 +7,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.AttributeKey;
 import net.dodian.utilities.ISAACCipher;
 import net.dodian.utilities.Utils;
-import net.dodian.uber.game.Constants;
+import net.dodian.uber.game.engine.config.DotEnvKt;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.model.entity.UpdateFlag;
 import net.dodian.uber.game.model.entity.player.Client;
@@ -392,7 +392,8 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
     /* Slot helpers */
     private int reserveSlot() {
         synchronized (PlayerRegistry.slotLock) {
-            for (int i = 1; i <= Constants.maxPlayers; i++) {
+            int maxPlayers = DotEnvKt.getGameMaxPlayers();
+            for (int i = 1; i <= maxPlayers; i++) {
                 if (!PlayerRegistry.usedSlots.get(i)) {
                     PlayerRegistry.usedSlots.set(i);
                     return i;

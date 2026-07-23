@@ -1,6 +1,6 @@
 package net.dodian.uber.game.engine.sync.cache
 
-import net.dodian.uber.game.Constants
+import net.dodian.uber.game.engine.config.gameMaxPlayers
 import net.dodian.uber.game.engine.sync.protocol.PackedUpdateBlock
 import net.dodian.uber.game.model.entity.player.Player
 
@@ -42,11 +42,11 @@ class SharedPlayerBlockCache {
     }
 
     private companion object {
-        private val addLocalBlocks = arrayOfNulls<PackedUpdateBlock>(Constants.maxPlayers + 1)
-        private val updateLocalBlocks = arrayOfNulls<PackedUpdateBlock>(Constants.maxPlayers + 1)
-        private val addLocalOwners = arrayOfNulls<Player>(Constants.maxPlayers + 1)
-        private val updateLocalOwners = arrayOfNulls<Player>(Constants.maxPlayers + 1)
-        private val addLocalTicks = LongArray(Constants.maxPlayers + 1) { -1L }
-        private val updateLocalTicks = LongArray(Constants.maxPlayers + 1) { -1L }
+        private val addLocalBlocks = arrayOfNulls<PackedUpdateBlock>(gameMaxPlayers + 1)
+        private val updateLocalBlocks = arrayOfNulls<PackedUpdateBlock>(gameMaxPlayers + 1)
+        private val addLocalOwners = arrayOfNulls<Player>(gameMaxPlayers + 1)
+        private val updateLocalOwners = arrayOfNulls<Player>(gameMaxPlayers + 1)
+        private val addLocalTicks = LongArray(gameMaxPlayers + 1) { -1L }
+        private val updateLocalTicks = LongArray(gameMaxPlayers + 1) { -1L }
     }
 }

@@ -74,6 +74,11 @@ val databasePoolMaxLifetime get() = SettingsLoader.settings.databasePool.maxLife
 val runtimePhaseWarnMs = 300L
 
 val gameMultiplierGlobalXp get() = SettingsLoader.settings.world.globalXpMultiplier
+
+// Falls back to 100 when settings haven't been loaded (e.g. unit tests constructing Player/Client
+// directly without bootstrapping Server.main()) rather than throwing - this is read from Player's
+// field initializers, a path exercised by nearly every test in the suite.
+val gameMaxPlayers get() = if (SettingsLoader.isLoaded) SettingsLoader.settings.world.maxPlayers else 100
 val swiftFupPort get() = SettingsLoader.settings.network.swiftfupPort
 val swiftFupConnectionsPerIp get() = SettingsLoader.settings.network.swiftfupConnectionsPerIp
 val swiftFupReadTimeoutSeconds get() = SettingsLoader.settings.network.swiftfupReadTimeoutSeconds
