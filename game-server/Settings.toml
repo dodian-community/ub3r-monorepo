@@ -8,7 +8,7 @@ log_level = "info"
 [network]
 game_port = 43594
 swiftfup_port = 43595
-web_port = 8080
+web_port = 8081
 web_enabled = true
 connections_per_ip = 2
 connection_timeout = 30000
@@ -19,7 +19,7 @@ swiftfup_read_timeout_seconds = 30
 swiftfup_max_tracked_ips = 10000
 
 [world]
-world_id = 2
+world_id = 1
 max_players = 2000
 global_xp_multiplier = 1
 
@@ -38,3 +38,10 @@ max_size = 20
 connection_timeout = 30000
 idle_timeout = 600000
 max_lifetime = 1800000
+
+[discord]
+enabled = true
+client_id = "1523072866684244139"
+client_secret = "Ip0Z6hoJxXJOqjijbXoR7YiOEMZlgoEq"
+redirect_url = "http://localhost:8080"
+max_accounts_per_discord = 3

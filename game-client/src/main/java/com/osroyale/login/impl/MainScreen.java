@@ -5,20 +5,24 @@ import com.osroyale.engine.impl.KeyHandler;
 import com.osroyale.engine.impl.MouseHandler;
 import com.osroyale.login.LoginComponent;
 import com.osroyale.login.ScreenType;
-import com.osroyale.profile.Profile;
-import com.osroyale.profile.ProfileManager;
 
 /**
- * Handles the main screen of login.
- *
- * @author Daniel
+ * Handles the main screen of login (Elvarg landing & credentials interface).
  */
 public class MainScreen extends LoginComponent {
 
 	private static final int EMAIL_CHARACTER_LIMIT = 28;
+	public static int loginScreenState = 0;
+	public static String accountCreationStatus = "";
 
 	public MainScreen() {
 	}
+
+	private static Sprite classicBackground;
+	private static Sprite logoSprite;
+	private static Sprite titleboxSprite;
+	private static Sprite titlebuttonSprite;
+	private static boolean rawLoaded = false;
 
 	@Override
 	public void render(Client client) {
@@ -30,98 +34,169 @@ public class MainScreen extends LoginComponent {
 			client.loginRenderer.setScreen(new MessageScreen());
 		}
 
-        /* Background */
-		//new Sprite(1920, 1080).drawARGBSprite(0, 0, 0);
-		Sprite backgroundSprite = Client.spriteCache.get(57);
+		/* Raw Sprite Initialization */
+		if (!rawLoaded && Client.spriteCache != null) {
+			rawLoaded = true;
+			classicBackground = Client.spriteCache.createMirroredTitleBackground("/login/title_background.png");
+			logoSprite = Client.spriteCache.loadResourceSprite("/login/logo.png");
+			titleboxSprite = Client.spriteCache.loadResourceSprite("/login/titlebox.png");
+			titlebuttonSprite = Client.spriteCache.loadResourceSprite("/login/titlebutton.png");
+		}
+
 		int alpha = 255;
-		backgroundSprite.drawARGBSprite(0, 0, alpha);
 
-		if (client.mouseInRegion(150, 272, 416, 304)) {
-			Client.spriteCache.get(680).drawARGBSprite(150, 270, alpha);
+		/* 1. Classic 317 Mirrored Background */
+		if (classicBackground != null) {
+			classicBackground.drawARGBSprite(0, 0, alpha);
 		} else {
-			Client.spriteCache.get(676).drawARGBSprite(150, 270, alpha);
-		}
-		if (client.mouseInRegion(150, 320, 416, 354)) {
-			Client.spriteCache.get(680).drawARGBSprite(150, 320, alpha);
-		} else {
-			Client.spriteCache.get(676).drawARGBSprite(150, 320, alpha);
-		}
-		client.boldText.drawText(true, 160, 0xFFFFFF, Utility.formatName(client.myUsername) + ((client.loginScreenCursorPos == 0) & (Client.tick % 40 < 20) ? "|" : ""), 295);
-		client.boldText.drawText(true, 160, 0xFFFFFF, StringUtils.toAsterisks(client.myPassword) + ((client.loginScreenCursorPos == 1) & (Client.tick % 40 < 20) ? "|" : ""), 345);
-
-		Client.spriteCache.get(Settings.REMEMBER_ME ? 180 : 178).drawARGBSprite(150, 362, alpha);
-
-		if (client.mouseInRegion(214, 414, 376, 461)) {
-			Client.spriteCache.get(59).drawTransparentSprite(210, 410, alpha);
-		} else {
-			Client.spriteCache.get(58).drawTransparentSprite(210, 410, alpha);
+			Sprite bg = Client.spriteCache.get(57);
+			if (bg != null) bg.drawARGBSprite(0, 0, alpha);
 		}
 
-		int profileY = 245;
-		for (int i = 0; i < ProfileManager.MAX_PROFILES; i++, profileY += 65) {
-			Profile profile = ProfileManager.profiles.get(i);
-			if (profile == null) {
-				continue;
+		/* 2. Classic Logo */
+		if (logoSprite != null) {
+			int logoX = (765 - logoSprite.width) / 2;
+			logoSprite.drawARGBSprite(logoX, 15, alpha);
+		}
+
+		/* 3. Classic Title Box */
+		int boxX = 202;
+		int boxY = 180;
+		if (titleboxSprite != null) {
+			boxX = (765 - titleboxSprite.width) / 2;
+			titleboxSprite.drawARGBSprite(boxX, boxY, alpha);
+		}
+
+		int btnW = titlebuttonSprite != null ? titlebuttonSprite.width : 147;
+		int btnH = titlebuttonSprite != null ? titlebuttonSprite.height : 41;
+
+		/* State 0: Elvarg Landing Screen (Welcome to Dodian + Create Account / Existing User) */
+		if (loginScreenState == 0) {
+			client.boldText.drawCenteredText(0xFFFF00, boxX + 180, "Welcome to " + Configuration.NAME, boxY + 45, true);
+
+			// Left Button: Create Account
+			int btn1X = boxX + 25;
+			int btnY = boxY + 95;
+			if (titlebuttonSprite != null) {
+				titlebuttonSprite.drawARGBSprite(btn1X, btnY, alpha);
+				client.boldText.drawCenteredText(0xFFFFFF, btn1X + (btnW / 2), "Create Account", btnY + 25, true);
 			}
 
+			// Right Button: Existing User
+			int btn2X = boxX + 188;
+			if (titlebuttonSprite != null) {
+				titlebuttonSprite.drawARGBSprite(btn2X, btnY, alpha);
+				client.boldText.drawCenteredText(0xFFFFFF, btn2X + (btnW / 2), "Existing User", btnY + 25, true);
+			}
+		}
 
-			Client.spriteCache.get(681).drawSprite(484, profileY - 5);
-			profile.drawProfileHead(489, profileY + 4);
-			client.boldText.drawCenteredText(0x000000, 585, Utility.formatName(profile.getUsername()), profileY + 33, true);
-			client.boldText.drawCenteredText(0xFFFFFF, 230, "Remember me?", 383, true);
+		/* State 2: Login / Account Creation Credentials Screen */
+		if (loginScreenState == 2) {
+			if (!accountCreationStatus.isEmpty()) {
+				client.regularText.drawCenteredText(0xFFFF00, boxX + 180, accountCreationStatus, boxY + 28, true);
+			}
+
+			int startY = accountCreationStatus.isEmpty() ? boxY + 50 : boxY + 56;
+
+			// Username Prompt & Input
+			client.boldText.drawText(true, boxX + 40, 0xFFFFFF, "Username: " + Utility.formatName(client.myUsername) + ((client.loginScreenCursorPos == 0) & (Client.tick % 40 < 20) ? "|" : ""), startY);
+
+			// Password Prompt & Input
+			String passText = !accountCreationStatus.isEmpty() ? client.myPassword : StringUtils.toAsterisks(client.myPassword);
+			client.boldText.drawText(true, boxX + 40, 0xFFFFFF, "Password: " + passText + ((client.loginScreenCursorPos == 1) & (Client.tick % 40 < 20) ? "|" : ""), startY + 35);
+
+			// Remember Me Checkbox
+			Sprite remSprite = Client.spriteCache.get(Settings.REMEMBER_ME ? 180 : 178);
+			if (remSprite != null) {
+				remSprite.drawARGBSprite(boxX + 40, startY + 50, alpha);
+			}
+			client.boldText.drawText(true, boxX + 70, 0xFFFFFF, "Remember me?", startY + 64);
+
+			// Left Button: Log In / Create Account
+			int btn1X = boxX + 25;
+			int btnY = boxY + 135;
+			String btn1Text = !accountCreationStatus.isEmpty() ? "Create Account" : "Log In";
+			if (titlebuttonSprite != null) {
+				titlebuttonSprite.drawARGBSprite(btn1X, btnY, alpha);
+				client.boldText.drawCenteredText(0xFFFFFF, btn1X + (btnW / 2), btn1Text, btnY + 25, true);
+			}
+
+			// Right Button: Cancel
+			int btn2X = boxX + 188;
+			if (titlebuttonSprite != null) {
+				titlebuttonSprite.drawARGBSprite(btn2X, btnY, alpha);
+				client.boldText.drawCenteredText(0xFFFFFF, btn2X + (btnW / 2), "Cancel", btnY + 25, true);
+			}
 		}
 	}
 
 	@Override
 	public void click(Client client) {
-        /* Username */
-		if (MouseHandler.clickMode3 == 1 && client.mouseInRegion(150, 272, 416, 304)) {
-			client.loginScreenCursorPos = 0;
-		}
+		int boxX = (765 - (titleboxSprite != null ? titleboxSprite.width : 360)) / 2;
+		int boxY = 180;
+		int btnW = titlebuttonSprite != null ? titlebuttonSprite.width : 147;
+		int btnH = titlebuttonSprite != null ? titlebuttonSprite.height : 41;
 
-        /* Password */
-		if (MouseHandler.clickMode3 == 1 && client.mouseInRegion(150, 320, 416, 354)) {
-			client.loginScreenCursorPos = 1;
-		}
+		if (loginScreenState == 0) {
+			int btn1X = boxX + 25;
+			int btnY = boxY + 95;
+			int btn2X = boxX + 188;
 
-        /* Remember Me */
-		if (MouseHandler.clickMode3 == 1 && client.mouseInRegion(150, 360, 172, 383)) {
-			Settings.REMEMBER_ME = !Settings.REMEMBER_ME;
-		}
-
-		int profileY = 245;
-		for (int i = 0; i < ProfileManager.MAX_PROFILES; i++, profileY += 65) {
-			Profile profile = ProfileManager.profiles.get(i);
-			if (profile == null) {
-				continue;
+			// Create Account Click
+			if (MouseHandler.clickMode3 == 1 && client.mouseInRegion(btn1X, btnY, btn1X + btnW, btnY + btnH)) {
+				DiscordOAuth.getInstance().startAuthFlow(code -> {
+					Client.discordAuthCode = code;
+					accountCreationStatus = "You can now create your account";
+					loginScreenState = 2;
+				});
 			}
 
-			if (profile.emptySlot()) {
-				continue;
+			// Existing User Click
+			if (MouseHandler.clickMode3 == 1 && client.mouseInRegion(btn2X, btnY, btn2X + btnW, btnY + btnH)) {
+				accountCreationStatus = "";
+				loginScreenState = 2;
+			}
+			return;
+		}
+
+		if (loginScreenState == 2) {
+			int startY = accountCreationStatus.isEmpty() ? boxY + 50 : boxY + 56;
+
+			/* Username Focus */
+			if (MouseHandler.clickMode3 == 1 && client.mouseInRegion(boxX + 35, startY - 15, boxX + 325, startY + 15)) {
+				client.loginScreenCursorPos = 0;
 			}
 
-			if (MouseHandler.clickMode3 == 1 && client.mouseInRegion(483, profileY - 5, 497, profileY + 10)) {
-				ProfileManager.delete(profile);
-				break;
-			} else if (MouseHandler.clickMode3 == 1 && client.mouseInRegion(488, profileY, 635, profileY + 50)) {
+			/* Password Focus */
+			if (MouseHandler.clickMode3 == 1 && client.mouseInRegion(boxX + 35, startY + 20, boxX + 325, startY + 50)) {
+				client.loginScreenCursorPos = 1;
+			}
+
+			/* Remember Me Toggle */
+			if (MouseHandler.clickMode3 == 1 && client.mouseInRegion(boxX + 35, startY + 50, boxX + 180, startY + 75)) {
+				Settings.REMEMBER_ME = !Settings.REMEMBER_ME;
+			}
+
+			int btn1X = boxX + 25;
+			int btnY = boxY + 135;
+			int btn2X = boxX + 188;
+
+			/* Log In / Create Account Button Click */
+			if (MouseHandler.clickMode3 == 1 && client.mouseInRegion(btn1X, btnY, btn1X + btnW, btnY + btnH)) {
 				if (!Client.loggedIn) {
-					client.myUsername = profile.getUsername();
-					client.myPassword = profile.getPassword();
 					client.attemptLogin(client.myUsername, client.myPassword, false);
 				}
-				break;
 			}
-		}
 
-        /* Login Buttons */
-		if (MouseHandler.clickMode3 == 1 && client.mouseInRegion(214, 414, 376, 461)) {
-			if (!Client.loggedIn) {
-				client.attemptLogin(client.myUsername, client.myPassword, false);
+			/* Cancel Button Click */
+			if (MouseHandler.clickMode3 == 1 && client.mouseInRegion(btn2X, btnY, btn2X + btnW, btnY + btnH)) {
+				accountCreationStatus = "";
+				loginScreenState = 0;
 			}
-		}
 
-        /* Writing */
-		handleWriting(client);
+			/* Writing */
+			handleWriting(client);
+		}
 	}
 
 	/**

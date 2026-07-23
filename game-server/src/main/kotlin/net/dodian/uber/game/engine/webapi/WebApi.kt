@@ -307,22 +307,37 @@ object WebApi {
                     }
 
                     rateLimit {
-                        get("/api/hiscores") {
+                        val handleHiscores: suspend (ApplicationCall) -> Unit = { call ->
                             val playerName = call.request.queryParameters["player"]
+                                ?: call.request.queryParameters["username"]
+                                ?: call.request.queryParameters["name"]
+                                ?: call.parameters["player"]
                             if (playerName == null || playerName.isBlank()) {
                                 call.respond(HttpStatusCode.BadRequest, "Missing 'player' query parameter.")
-                                return@get
+                            } else {
+                                val sanitizedPlayerName = playerName.lowercase().trim().replace(" ", "_").replace("%20", "_")
+                                var csvData = hiscoresCache[sanitizedPlayerName]
+                                if (csvData == null) {
+                                    // Fallback: force refresh cache if cache missed
+                                    updateHiscoresCache()
+                                    csvData = hiscoresCache[sanitizedPlayerName]
+                                }
+                                if (csvData == null) {
+                                    call.respond(HttpStatusCode.NotFound, "Player not found.")
+                                } else {
+                                    call.respondText(csvData, ContentType.Text.Plain)
+                                }
                             }
-
-                            val sanitizedPlayerName = playerName.lowercase().trim().replace(" ", "_").replace("%20", "_")
-                            val csvData = hiscoresCache[sanitizedPlayerName]
-                            if (csvData == null) {
-                                call.respond(HttpStatusCode.NotFound, "Player not found.")
-                                return@get
-                            }
-
-                            call.respondText(csvData, ContentType.Text.Plain)
                         }
+
+                        get("/api/hiscores") { handleHiscores(call) }
+                        get("/api/highscores") { handleHiscores(call) }
+                        get("/hiscores") { handleHiscores(call) }
+                        get("/highscores") { handleHiscores(call) }
+                        get("/index_lite.ws") { handleHiscores(call) }
+                        get("/m=hiscore_oldschool/index_lite.ws") { handleHiscores(call) }
+                        get("/api/hiscores/{player}") { handleHiscores(call) }
+                        get("/api/highscores/{player}") { handleHiscores(call) }
                     }
                 }
             }.start(wait = false)

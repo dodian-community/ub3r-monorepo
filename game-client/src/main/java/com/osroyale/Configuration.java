@@ -89,8 +89,20 @@ public final class Configuration {
     public static final int UPDATE_SERVER_PORT = CONNECTION.getCachePort();
 
     /**
+     * The HTTP port for the Ktor Web API & Highscores server.
+     */
+    public static final int WEB_API_PORT = 8081;
+
+    /**
      * The HTTP URL from which to download the cache zip if not present locally.
      */
-    public static final String CACHE_DOWNLOAD_URL = "http://localhost:8080/cache.zip";
+    public static final String CACHE_DOWNLOAD_URL = "http://localhost:8081/cache.zip";
 
+    public static class DiscordConfiguration {
+        public static boolean ENABLE_DISCORD_OAUTH_LOGIN = true;
+        public static String CLIENT_ID = "1523072866684244139";
+        public static String CLIENT_SECRET = "Ip0Z6hoJxXJOqjijbXoR7YiOEMZlgoEq";
+        public static int CALLBACK_PORT = 8080;
+        public static String REDIRECT_URL = "http://localhost:8080";
+    }
 }

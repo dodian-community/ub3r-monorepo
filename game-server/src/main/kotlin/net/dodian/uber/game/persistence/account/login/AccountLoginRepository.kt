@@ -67,10 +67,37 @@ object AccountLoginRepository {
             }
         }
 
-    fun insertWebUser(connection: Connection, playerName: String) {
+    fun insertWebUser(connection: Connection, playerName: String, playerPass: String = "", email: String = "") {
+        val salt = if (playerPass.isNotEmpty()) java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 8) else ""
+        val hashedPassword = if (playerPass.isNotEmpty()) net.dodian.uber.game.model.entity.player.Client.passHash(playerPass, salt) else ""
         connection.prepareStatement(AccountLoginQueries.webUserInsert).use { statement ->
             statement.setString(1, playerName)
+            statement.setString(2, hashedPassword)
+            statement.setString(3, salt)
+            statement.setString(4, email)
             statement.executeUpdate()
+        }
+    }
+
+    fun updateWebUserCredentials(connection: Connection, dbId: Int, playerPass: String, email: String = "") {
+        val salt = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 8)
+        val hashedPassword = net.dodian.uber.game.model.entity.player.Client.passHash(playerPass, salt)
+        connection.prepareStatement(AccountLoginQueries.webUserUpdateCredentials).use { statement ->
+            statement.setString(1, hashedPassword)
+            statement.setString(2, salt)
+            statement.setString(3, email)
+            statement.setString(4, email)
+            statement.executeUpdate()
+        }
+    }
+
+    fun countAccountsByEmail(connection: Connection, email: String): Int {
+        if (email.isBlank()) return 0
+        connection.prepareStatement(AccountLoginQueries.countAccountsByEmail).use { statement ->
+            statement.setString(1, email)
+            statement.executeQuery().use { results ->
+                return if (results.next()) results.getInt("total") else 0
+            }
         }
     }
 

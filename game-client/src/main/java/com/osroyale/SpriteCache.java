@@ -112,6 +112,46 @@ public final class SpriteCache implements Closeable {
         Arrays.fill(cache, null);
     }
 
+    public Sprite loadResourceSprite(String resourcePath) {
+        try (InputStream is = SpriteCache.class.getResourceAsStream(resourcePath)) {
+            if (is == null) {
+                return null;
+            }
+            BufferedImage bimage = ImageIO.read(is);
+            if (bimage == null) {
+                return null;
+            }
+            if (bimage.getType() != BufferedImage.TYPE_INT_ARGB) {
+                bimage = convert(bimage, BufferedImage.TYPE_INT_ARGB);
+            }
+            int[] pixels = ((DataBufferInt) bimage.getRaster().getDataBuffer()).getData();
+            return new Sprite(bimage.getWidth(), bimage.getHeight(), 0, 0, pixels);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public Sprite createMirroredTitleBackground(String resourcePath) {
+        try (InputStream is = SpriteCache.class.getResourceAsStream(resourcePath)) {
+            if (is == null) return null;
+            BufferedImage left = ImageIO.read(is);
+            if (left == null) return null;
+            int w = left.getWidth();
+            int h = left.getHeight();
+            BufferedImage full = new BufferedImage(765, h, BufferedImage.TYPE_INT_ARGB);
+            java.awt.Graphics2D g = full.createGraphics();
+            g.drawImage(left, 0, 0, null);
+            g.drawImage(left, 765, 0, -w, h, null);
+            g.dispose();
+            int[] pixels = ((DataBufferInt) full.getRaster().getDataBuffer()).getData();
+            return new Sprite(765, h, 0, 0, pixels);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     private static BufferedImage convert(BufferedImage bimage, int type) {
         BufferedImage converted = new BufferedImage(bimage.getWidth(), bimage.getHeight(), type);
         converted.getGraphics().drawImage(bimage, 0, 0, null);

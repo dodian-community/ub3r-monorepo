@@ -6,6 +6,7 @@ import net.dodian.utilities.ISAACCipher;
 public final class ParsedLoginRequest {
     private final String username;
     private final String password;
+    private final String discordAuthCode;
     private final ISAACCipher inboundCipher;
     private final ISAACCipher outboundCipher;
     private final long parseDurationMs;
@@ -13,12 +14,14 @@ public final class ParsedLoginRequest {
     ParsedLoginRequest(
             String username,
             String password,
+            String discordAuthCode,
             ISAACCipher inboundCipher,
             ISAACCipher outboundCipher,
             long parseDurationMs
     ) {
         this.username = username;
         this.password = password;
+        this.discordAuthCode = discordAuthCode != null ? discordAuthCode : "";
         this.inboundCipher = inboundCipher;
         this.outboundCipher = outboundCipher;
         this.parseDurationMs = parseDurationMs;
@@ -26,6 +29,7 @@ public final class ParsedLoginRequest {
 
     public String getUsername() { return username; }
     public String getPassword() { return password; }
+    public String getDiscordAuthCode() { return discordAuthCode; }
     public ISAACCipher getInboundCipher() { return inboundCipher; }
     public ISAACCipher getOutboundCipher() { return outboundCipher; }
     public long getParseDurationMs() { return parseDurationMs; }

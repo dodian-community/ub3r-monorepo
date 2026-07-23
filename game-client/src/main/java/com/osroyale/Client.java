@@ -66,6 +66,8 @@ public class Client extends GameEngine
         FileDecompressedListener,
         RSClient {
 
+    public static String discordAuthCode = null;
+
     /**
      * We keep this main method here to support fallback in lanuncher etc.
      *
@@ -7936,6 +7938,9 @@ public class Client extends GameEngine
         LP = value;
     }
 
+    private static Sprite loadingBackgroundSprite;
+    private static Sprite loadingLogoSprite;
+
     void drawLoadingText(int i, String s) {
 
         if (titleStreamLoader == null) {
@@ -7943,9 +7948,25 @@ public class Client extends GameEngine
             return;
         }
 
-        final Sprite sprite = spriteCache.get(62);
-        if (sprite != null) {
-            sprite.drawARGBSprite(0, 0);
+        if (loadingBackgroundSprite == null && spriteCache != null) {
+            loadingBackgroundSprite = spriteCache.createMirroredTitleBackground("/login/title_background.png");
+        }
+        if (loadingLogoSprite == null && spriteCache != null) {
+            loadingLogoSprite = spriteCache.loadResourceSprite("/login/logo.png");
+        }
+
+        if (loadingBackgroundSprite != null) {
+            loadingBackgroundSprite.drawARGBSprite(0, 0);
+        } else {
+            final Sprite sprite = spriteCache.get(62);
+            if (sprite != null) {
+                sprite.drawARGBSprite(0, 0);
+            }
+        }
+
+        if (loadingLogoSprite != null) {
+            int logoX = (canvasWidth - loadingLogoSprite.width) / 2;
+            loadingLogoSprite.drawARGBSprite(logoX, 15);
         }
 
         String message = s + " " + i + "%";
@@ -11827,10 +11848,12 @@ public class Client extends GameEngine
                 outgoing.writeDWord(ai[3]);
                 outgoing.writeDWord(ai[3]);
                 outgoing.writeDWord(0);
-                outgoing.writeString("");
+                System.out.println("[Client Login] Sending discordAuthCode='" + discordAuthCode + "' for username='" + username + "'");
+                outgoing.writeString(discordAuthCode != null ? discordAuthCode : "");
                 outgoing.writeString("");
                 outgoing.writeString(username);
                 outgoing.writeString(password);
+                discordAuthCode = null;
                 outgoing.encodeRSA(NetworkConstants.RSA_EXPONENT, NetworkConstants.RSA_MODULUS);
                 aStream_847.position = 0;
                 if (reconnecting) {

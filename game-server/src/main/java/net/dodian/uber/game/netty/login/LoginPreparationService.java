@@ -86,10 +86,11 @@ public final class LoginPreparationService {
         long serverSeed = rsa.i64();
         require(serverSeed == attempt.getExpectedServerSeed(), 13, "RSA server seed mismatch");
         rsa.i32(); // legacy UID
-        rsa.string(64, "UUID");
+        String discordAuthCode = rsa.string(64, "discordAuthCode").trim();
         rsa.string(64, "MAC address");
         String username = rsa.string(12, "username").trim();
         String password = rsa.string(20, "password").trim();
+        System.out.println("[Server LoginPreparation] Parsed discordAuthCode='" + discordAuthCode + "' for username='" + username + "'");
         require(!username.isEmpty() && !password.isEmpty(), 13, "empty username or password");
         require(rsa.remaining() == 0, 13, "unexpected trailing RSA bytes");
 
@@ -99,7 +100,7 @@ public final class LoginPreparationService {
         ISAACCipher outbound = new ISAACCipher(seed);
         long durationMs = (System.nanoTime() - started) / 1_000_000L;
         OperationalTelemetry.recordPhaseMillis("login.prepare", durationMs);
-        return new ParsedLoginRequest(username, password, inbound, outbound, durationMs);
+        return new ParsedLoginRequest(username, password, discordAuthCode, inbound, outbound, durationMs);
     }
 
     public static void shutdown(Duration timeout) {

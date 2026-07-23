@@ -1,6 +1,7 @@
 package net.dodian.uber.game.engine.sync
 
 import kotlin.system.measureNanoTime
+import net.dodian.uber.game.Constants
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.npc.NpcUpdating
 import net.dodian.uber.game.model.entity.player.Client
@@ -21,7 +22,7 @@ class WorldSynchronizationService {
     private val logger = LoggerFactory.getLogger(WorldSynchronizationService::class.java)
     private val playerUpdating = PlayerUpdating.getInstance()
     private val npcUpdating = NpcUpdating.getInstance()
-    private val activePlayerBuffer = ArrayList<Client>(2048)
+    private val activePlayerBuffer = ArrayList<Client>(Constants.maxPlayers + 1)
     private val stagedPlayerSynchronization = StagedPlayerSynchronizationService()
     private val stagedNpcSynchronization = StagedNpcSynchronizationService()
     private var tick = 0L
@@ -31,6 +32,7 @@ class WorldSynchronizationService {
         val startedNs = System.nanoTime()
         tick++
         val activePlayers = currentActivePlayers()
+        val readyPlayers = activePlayers.filter(Client::isSynchronizationReady)
         val viewportIndex = ViewportIndex.build(activePlayers, VIEW_DISTANCE)
         val relevantNpcs: Collection<Npc> = viewportIndex?.relevantNpcs() ?: emptyList()
         val rootCache = RootSynchronizationCache()
@@ -50,13 +52,13 @@ class WorldSynchronizationService {
                 buildNpcRootCache(relevantNpcs, rootCache)
             }
             measure(cycle, SynchronizationStage.SYNC_PLAYER_ENCODE) {
-                encodePlayers(activePlayers)
+                encodePlayers(readyPlayers)
             }
             measure(cycle, SynchronizationStage.SYNC_NPC_ENCODE) {
                 encodeNpcs(activePlayers)
             }
             measure(cycle, SynchronizationStage.SYNC_FLUSH) {
-                flushActivePlayers(activePlayers)
+                flushActivePlayers(readyPlayers)
             }
             measure(cycle, SynchronizationStage.SYNC_FLAG_CLEAR) {
                 clearFlags(activePlayers, relevantNpcs)
@@ -110,8 +112,7 @@ class WorldSynchronizationService {
         }
     }
 
-    private fun encodePlayers(activePlayers: List<Client>) {
-        val readyPlayers = activePlayers.filter(Client::isSynchronizationReady)
+    private fun encodePlayers(readyPlayers: List<Client>) {
         // Per-viewer encode is independent by construction (PREP caches frozen, thread-local
         // scratch, viewer-own commit state, MPSC outbound enqueue) — see SyncWorker contract.
         SyncWorker.forEachViewer(readyPlayers) { player ->
@@ -153,8 +154,7 @@ class WorldSynchronizationService {
         }
     }
 
-    private fun flushActivePlayers(activePlayers: List<Client>) {
-        val readyPlayers = activePlayers.filter(Client::isSynchronizationReady)
+    private fun flushActivePlayers(readyPlayers: List<Client>) {
         val uiNanos = measureNanoTime { PlayerUiDeltaProcessor.process(readyPlayers) }
         val zoneStatsRef = arrayOfNulls<net.dodian.uber.game.engine.systems.zone.ZoneFlushStats>(1)
         val zoneNanos =

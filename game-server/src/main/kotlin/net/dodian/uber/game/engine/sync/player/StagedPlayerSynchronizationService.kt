@@ -29,8 +29,32 @@ class StagedPlayerSynchronizationService {
     fun synchronize(viewer: Client): Result {
         updating.sendServerUpdateIfNeeded(viewer)
         updating.prepareViewerSynchronization(viewer)
-        val plan = buildPlan(viewer, scratch.get())
         val result = scratch.get().result
+        if (canFastSkip(viewer)) {
+            val localCount = viewer.playerListSize
+            val capacity = maxOf(1024, viewer.playerUpdateCapacity)
+            val pooledBuffer: ByteBuf = viewer.channel?.alloc()?.buffer(capacity) ?: ByteMessage.pooledBuffer(capacity)
+            var message: ByteMessage? = null
+            try {
+                message = ByteMessage.message(81, MessageType.VAR_SHORT, pooledBuffer)
+                encodeIdleFastPath(viewer, localCount, message)
+                val packetBytes = message.content().writerIndex()
+                viewer.updatePlayerUpdateCapacity(packetBytes)
+                OperationalTelemetry.incrementCounter("sync.player.packet_bytes", packetBytes.toLong())
+                OperationalTelemetry.incrementCounter("sync.player.fast_skipped")
+                val accepted = viewer.sendRequiredSynchronization(message)
+                message = null
+                if (!accepted) {
+                    OperationalTelemetry.incrementCounter("sync.player.required_enqueue_rejected")
+                    return result.set(false, packetBytes, localCount, localCount, 0)
+                }
+                return result.set(true, packetBytes, localCount, localCount, 0)
+            } finally {
+                message?.releaseAll()
+            }
+        }
+
+        val plan = buildPlan(viewer, scratch.get())
         val capacity = maxOf(1024, viewer.playerUpdateCapacity)
         val pooledBuffer: ByteBuf = viewer.channel?.alloc()?.buffer(capacity) ?: ByteMessage.pooledBuffer(capacity)
         var message: ByteMessage? = null
@@ -303,6 +327,41 @@ class StagedPlayerSynchronizationService {
             check(updateBlockCount < updateBlocks.size) { "Too many player update blocks" }
             updateBlocks[updateBlockCount++] = block
         }
+    }
+
+    private fun canFastSkip(viewer: Client): Boolean {
+        if (!viewer.loaded || viewer.didTeleport() || viewer.didMapRegionChange()) return false
+        if (viewer.primaryDirection != -1 || viewer.secondaryDirection != -1) return false
+        if (updating.hasSelfUpdate(viewer)) return false
+
+        val localCount = viewer.playerListSize
+        if (localCount <= 0) return true
+
+        for (i in 0 until localCount) {
+            val local = viewer.playerList[i] ?: return false
+            if (!local.isSynchronizationReady) return false
+            if (local.primaryDirection != -1 || local.secondaryDirection != -1) return false
+            if (local.updateFlags.isUpdateRequired) return false
+            if (!viewer.withinDistance(local)) return false
+        }
+        return true
+    }
+
+    private fun encodeIdleFastPath(viewer: Client, localCount: Int, stream: ByteMessage) {
+        updating.updateLocalPlayerMovement(viewer, stream, false)
+        stream.putBits(8, localCount)
+        for (i in 0 until localCount) {
+            val local = viewer.playerList[i] ?: continue
+            val movement = SynchronizationContext.getSharedPlayerMovement(local)
+            if (movement != null) {
+                stream.putBitSlice(movement.bytes, 0, movement.bitCount)
+            } else {
+                stream.putBits(1, 1) // retained
+                stream.putBits(2, 0) // no movement, no block
+            }
+        }
+        stream.putBits(11, PlayerUpdating.LOCAL_LIST_TERMINATOR)
+        stream.endBitAccess()
     }
 
     internal class Scratch {

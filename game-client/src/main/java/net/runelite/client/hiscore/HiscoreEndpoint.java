@@ -55,7 +55,7 @@ public enum HiscoreEndpoint
 
 	public HttpUrl getHiscoreURL()
 	{
-		return HttpUrl.get("http://" + com.osroyale.Configuration.CONNECTION.getGameAddress() + ":8080/api/hiscores");
+		return HttpUrl.get("http://" + com.osroyale.Configuration.CONNECTION.getGameAddress() + ":" + com.osroyale.Configuration.WEB_API_PORT + "/api/hiscores");
 	}
 
 	public static HiscoreEndpoint fromWorldTypes(Set<WorldType> worldTypes)

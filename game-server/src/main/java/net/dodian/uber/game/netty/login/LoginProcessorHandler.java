@@ -170,7 +170,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
 
         current.setStage(LoginAttempt.Stage.ACCOUNT_LOADING);
         final int slotCopy = reservedSlot;
-        AccountPersistenceService.submitLoginLoad(client, username, password, loadResult ->
+        AccountPersistenceService.submitLoginLoad(client, username, password, parsed.getDiscordAuthCode(), loadResult ->
                 ctx.channel().eventLoop().execute(() -> finishLogin(
                         ctx, current, parsed, client, loadResult, slotCopy, slotReserveDurationMs)));
     }

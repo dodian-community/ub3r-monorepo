@@ -10,7 +10,16 @@ data class Settings(
     @JsonProperty("network") val network: NetworkSettings,
     @JsonProperty("world") val world: WorldSettings,
     @JsonProperty("features") val features: FeatureSettings,
-    @JsonProperty("database_pool") val databasePool: DatabasePoolSettings
+    @JsonProperty("database_pool") val databasePool: DatabasePoolSettings,
+    @JsonProperty("discord") val discord: DiscordSettings = DiscordSettings()
+)
+
+data class DiscordSettings(
+    @JsonProperty("enabled") val enabled: Boolean = false,
+    @JsonProperty("client_id") val clientId: String = "1529916683769090078",
+    @JsonProperty("client_secret") val clientSecret: String = "VrY9E_f8G1UKTyc-Kk9kboJ4EywFns9-",
+    @JsonProperty("redirect_url") val redirectUrl: String = "http://localhost:8080/discord/callback",
+    @JsonProperty("max_accounts_per_discord") val maxAccountsPerDiscord: Int = 3
 )
 
 data class ServerSettings(

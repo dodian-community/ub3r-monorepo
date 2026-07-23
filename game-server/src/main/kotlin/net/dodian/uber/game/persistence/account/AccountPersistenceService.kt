@@ -33,10 +33,12 @@ object AccountPersistenceService {
 
     @Suppress("VARIABLE_WITH_REDUNDANT_INITIALIZER")
     @JvmStatic
+    @JvmOverloads
     fun submitLoginLoad(
         client: Client,
         username: String,
         password: String,
+        discordAuthCode: String = "",
         onComplete: Consumer<LoginLoadResult>,
     ) {
         scope.launch {
@@ -44,10 +46,18 @@ object AccountPersistenceService {
             var pendingRetries = 0
             val prepared =
                 try {
+                    val discordUser = if (discordAuthCode.isNotBlank()) net.dodian.uber.game.persistence.account.discord.DiscordApiService.fetchDiscordUser(discordAuthCode) else null
+                    if (discordAuthCode.isNotBlank() && discordUser == null) {
+                        logger.warn("Account creation rejected for {}: Invalid or expired Discord authorization code", username)
+                        val durationMs = (System.nanoTime() - startedAt) / 1_000_000L
+                        onComplete.accept(LoginLoadResult(13, durationMs, 0, null))
+                        return@launch
+                    }
+                    val email = discordUser?.email ?: ""
                     val deadline = System.currentTimeMillis() + 3_000L
                     var finalResult = AccountLoginService.PreparedLogin.failure(13)
                     while (true) {
-                        val loadResult = AccountLoginService.prepareGame(client, username, password)
+                        val loadResult = AccountLoginService.prepareGame(client, username, password, email)
                         if (loadResult.code != AccountLoginService.FINAL_SAVE_PENDING_INTERNAL) {
                             finalResult = loadResult
                             break

@@ -62,7 +62,7 @@ val dodianLogLevel get() = SettingsLoader.settings.server.logLevel
 val webApiEnabled get() = SettingsLoader.settings.network.webEnabled
 val webApiPort get() = SettingsLoader.settings.network.webPort
 
-val gameWorldId get() = SettingsLoader.settings.world.worldId
+val gameWorldId get() = System.getenv("WORLD_ID")?.toIntOrNull() ?: System.getenv("WORLD")?.toIntOrNull() ?: SettingsLoader.settings.world.worldId
 val gameConnectionsPerIp get() = SettingsLoader.settings.network.connectionsPerIp
 
 val databasePoolMinSize get() = SettingsLoader.settings.databasePool.minSize

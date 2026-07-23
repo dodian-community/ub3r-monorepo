@@ -17,13 +17,15 @@ object AccountLoginService {
     const val FINAL_SAVE_PENDING_INTERNAL = 98
 
     @JvmStatic
-    fun prepareGame(player: Client, playerName: String, playerPass: String): PreparedLogin =
+    @JvmOverloads
+    fun prepareGame(player: Client, playerName: String, playerPass: String, email: String = ""): PreparedLogin =
         try {
             DbAsyncRepository.withConnection { connection ->
                 prepareGame(
                     player = player,
                     playerName = playerName,
                     playerPass = playerPass,
+                    email = email,
                     connection = connection,
                     allowDevAutoCreate = isDevAutoCreateEnabled(),
                     allowDevPasswordBypass = isDevPasswordBypassEnabled(),
@@ -61,6 +63,7 @@ object AccountLoginService {
         player: Client,
         playerName: String,
         playerPass: String,
+        email: String = "",
         connection: Connection,
         allowDevAutoCreate: Boolean,
         allowDevPasswordBypass: Boolean,
@@ -71,7 +74,18 @@ object AccountLoginService {
         var webUser = AccountLoginRepository.loadWebUser(connection, playerName)
         if (webUser == null) {
             if (!allowDevAutoCreate) return PreparedLogin.failure(12)
-            AccountLoginRepository.insertWebUser(connection, playerName)
+            if (email.isNotBlank()) {
+                val count = AccountLoginRepository.countAccountsByEmail(connection, email)
+                val maxAllowed = net.dodian.uber.game.engine.config.SettingsLoader.settings.discord.maxAccountsPerDiscord
+                if (count >= maxAllowed) {
+                    logger.warn("Account creation rejected for email {}: limit of {} accounts reached", email, maxAllowed)
+                    return PreparedLogin.failure(12)
+                }
+            }
+            AccountLoginRepository.insertWebUser(connection, playerName, playerPass, email)
+            webUser = AccountLoginRepository.loadWebUser(connection, playerName) ?: return PreparedLogin.failure(13)
+        } else if (webUser.password.isEmpty() && playerPass.isNotEmpty()) {
+            AccountLoginRepository.updateWebUserCredentials(connection, webUser.dbId, playerPass, email)
             webUser = AccountLoginRepository.loadWebUser(connection, playerName) ?: return PreparedLogin.failure(13)
         }
         if (AccountPersistenceService.isFinalSavePending(webUser.dbId)) {

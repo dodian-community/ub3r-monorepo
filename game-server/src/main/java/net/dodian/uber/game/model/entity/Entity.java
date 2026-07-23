@@ -7,7 +7,6 @@ import net.dodian.uber.game.model.entity.CombatStyle;
 import net.dodian.uber.game.engine.routing.WorldRouteService;
 import net.dodian.uber.game.model.entity.npc.Npc;
 
-import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Predicate;
@@ -232,11 +231,14 @@ public abstract class Entity {
     }
 
     public boolean goodDistanceEntity(Entity other, int distance) {
-        Rectangle thisArea = new Rectangle(getPosition().getX() - distance, getPosition().getY() - distance,
-                2 * distance + getSize(), 2 * distance + getSize());
-        Rectangle otherArea = new Rectangle(other.getPosition().getX(), other.getPosition().getY(), other.getSize(),
-                other.getSize());
-        return thisArea.intersects(otherArea);
+        int thisX = getPosition().getX() - distance;
+        int thisY = getPosition().getY() - distance;
+        int thisSpan = 2 * distance + getSize();
+        int otherX = other.getPosition().getX();
+        int otherY = other.getPosition().getY();
+        int otherSize = other.getSize();
+        return thisX < otherX + otherSize && otherX < thisX + thisSpan
+                && thisY < otherY + otherSize && otherY < thisY + thisSpan;
     }
 
     public boolean canMove(int x, int y) {
