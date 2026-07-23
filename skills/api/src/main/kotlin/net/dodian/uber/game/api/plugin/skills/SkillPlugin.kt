@@ -25,6 +25,7 @@ data class SkillPluginDefinition(
     val itemOnObjectBindings: List<SkillItemOnObjectBinding> = emptyList(),
     val magicOnObjectBindings: List<SkillMagicOnObjectBinding> = emptyList(),
     val buttonBindings: List<SkillButtonBinding> = emptyList(),
+    val itemGridBindings: List<SkillItemGridBinding> = emptyList(),
     val lifecycle: SkillPluginLifecycleHooks = SkillPluginLifecycleHooks(),
 )
 
@@ -36,6 +37,7 @@ fun SkillPluginDefinition.routeKeys(): Set<String> = buildSet {
     itemOnObjectBindings.forEach { b -> b.objectIds.forEach { o -> b.itemIds.forEach { add("item-on-object:$o:$it") } } }
     magicOnObjectBindings.forEach { b -> b.objectIds.forEach { o -> b.spellIds.forEach { add("magic-on-object:$o:$it") } } }
     buttonBindings.forEach { b -> b.rawButtonIds.forEach { add("button:$it:${b.opIndex ?: -1}:${b.requiredInterfaceId}") } }
+    itemGridBindings.forEach { add("item-grid:${it.interfaceId}") }
 }
 fun SkillPluginDefinition.manifest(id: String, owner: String, version: String = "1.0.0", featureFlag: String = ContentModuleManifest.ALWAYS_ENABLED, maturity: ContentMaturity = ContentMaturity.BETA) =
     ContentModuleManifest(id, owner, version, featureFlag, maturity, routeKeys())
@@ -48,3 +50,4 @@ data class SkillItemClickBinding(val preset: PolicyPreset, val option: Int, val 
 data class SkillItemOnObjectBinding(val preset: PolicyPreset, val objectIds: IntArray, val itemIds: IntArray, val handler: (SkillItemOnObjectInteraction) -> Boolean)
 data class SkillMagicOnObjectBinding(val preset: PolicyPreset, val objectIds: IntArray, val spellIds: IntArray, val handler: (SkillMagicOnObjectInteraction) -> Boolean)
 data class SkillButtonBinding(val preset: PolicyPreset, val rawButtonIds: IntArray, val requiredInterfaceId: Int = -1, val opIndex: Int? = null, val handler: (SkillButtonInteraction) -> Boolean)
+data class SkillItemGridBinding(val preset: PolicyPreset, val interfaceId: Int, val handler: (SkillItemGridInteraction) -> Boolean)

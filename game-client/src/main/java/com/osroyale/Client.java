@@ -7146,15 +7146,35 @@ public class Client extends GameEngine
 
     private void parsePlayerMasks(Buffer buffer) {
         for (int count = 0; count < mobsAwaitingUpdateCount; count++) {
-            final int index = mobsAwaitingUpdate[count];
-            Player player = playerArray[index];
             int mask = buffer.readUnsignedByte();
             if ((mask & 0x40) != 0) {
                 mask += buffer.readUnsignedByte() << 8;
             }
-            int maskStart = buffer.position;
-            appendPlayerUpdateMask(mask, index, buffer, player);
-            TarnishClientDiagnostics.playerMask(index, mask, maskStart, buffer.position, player);
+            updateMasks[count] = mask;
+        }
+
+        buffer.initBitAccess();
+        for (int count = 0; count < mobsAwaitingUpdateCount; count++) {
+            final int index = mobsAwaitingUpdate[count];
+            Player player = playerArray[index];
+            int fixedStart = buffer.bitPosition;
+            appendPlayerFixedUpdate(updateMasks[count], buffer, player);
+            updateFixedBitLengths[count] = buffer.bitPosition - fixedStart;
+        }
+        buffer.finishBitAccess();
+
+        for (int count = 0; count < mobsAwaitingUpdateCount; count++) {
+            final int index = mobsAwaitingUpdate[count];
+            Player player = playerArray[index];
+            int variableStart = buffer.position;
+            appendPlayerVariableUpdate(updateMasks[count], index, buffer, player);
+            TarnishClientDiagnostics.playerMask(
+                    index,
+                    updateMasks[count],
+                    updateFixedBitLengths[count],
+                    buffer.position - variableStart,
+                    player
+            );
         }
     }
 
@@ -9694,6 +9714,8 @@ public class Client extends GameEngine
         playerArray = null;
         playerIndices = null;
         mobsAwaitingUpdate = null;
+        updateMasks = null;
+        updateFixedBitLengths = null;
         playerSynchronizationBuffers = null;
         removedMobs = null;
         npcs = null;
@@ -12150,147 +12172,111 @@ public class Client extends GameEngine
 
     private void updateNpcs(Buffer stream) {
         for (int slot = 0; slot < mobsAwaitingUpdateCount; slot++) {
+            updateMasks[slot] = stream.readUnsignedByte();
+        }
+
+        stream.initBitAccess();
+        for (int slot = 0; slot < mobsAwaitingUpdateCount; slot++) {
             int index = mobsAwaitingUpdate[slot];
             Npc npc = npcs[index];
-            int mask = stream.readUnsignedByte();
-            if ((mask & 0x10) != 0) {
-                int animation = stream.readLEUShort();
-                if (animation == 65535) {
-                    animation = -1;
-                }
-                int delay = stream.readUnsignedByte();
-                if (animation == npc.primarySeqID && animation != -1) {
-                    int replayMode = Animation.animations[animation].type;
-                    if (replayMode == 1) {
-                        npc.primarySeqFrame = 0;
-                        npc.primarySeqCycle = 0;
-                        npc.primarySeqDelay = delay;
-                        npc.animationLoops = 0;
-                    }
-                    if (replayMode == 2) {
-                        npc.animationLoops = 0;
-                    }
-                } else if (animation == -1 || npc.primarySeqID == -1 || Animation.animations[animation].priority >= Animation.animations[npc.primarySeqID].priority) {
-                    npc.primarySeqID = animation;
+            int fixedStart = stream.bitPosition;
+            appendNpcFixedUpdate(updateMasks[slot], stream, npc);
+            updateFixedBitLengths[slot] = stream.bitPosition - fixedStart;
+        }
+        stream.finishBitAccess();
+
+        for (int slot = 0; slot < mobsAwaitingUpdateCount; slot++) {
+            int index = mobsAwaitingUpdate[slot];
+            Npc npc = npcs[index];
+            appendNpcVariableUpdate(updateMasks[slot], stream, npc);
+        }
+    }
+
+    private void appendNpcFixedUpdate(int mask, Buffer stream, Npc npc) {
+        if ((mask & 0x10) != 0) {
+            int animation = stream.readBits(16);
+            if (animation == 65535) {
+                animation = -1;
+            }
+            int delay = stream.readBits(8);
+            if (animation == npc.primarySeqID && animation != -1) {
+                int replayMode = Animation.animations[animation].type;
+                if (replayMode == 1) {
                     npc.primarySeqFrame = 0;
                     npc.primarySeqCycle = 0;
                     npc.primarySeqDelay = delay;
                     npc.animationLoops = 0;
-                    npc.remainingSteps = npc.waypointIndex;
                 }
-            }
-            if ((mask & 0x80) != 0) {
-                npc.graphicId = stream.readUnsignedShort();
-                int k1 = stream.readUnsignedInt();
-                npc.graphicHeight = k1 >> 16;
-                npc.graphicDelay = tick + (k1 & 0xffff);
-                npc.currentAnimationId = 0;
-                npc.currentAnimationTimeRemaining = 0;
-                if (npc.graphicDelay > tick) {
-                    npc.currentAnimationId = -1;
+                if (replayMode == 2) {
+                    npc.animationLoops = 0;
                 }
-                if (npc.graphicId == 65535) {
-                    npc.graphicId = -1;
-                }
+            } else if (animation == -1 || npc.primarySeqID == -1 || Animation.animations[animation].priority >= Animation.animations[npc.primarySeqID].priority) {
+                npc.primarySeqID = animation;
+                npc.primarySeqFrame = 0;
+                npc.primarySeqCycle = 0;
+                npc.primarySeqDelay = delay;
+                npc.animationLoops = 0;
+                npc.remainingSteps = npc.waypointIndex;
             }
-            if ((mask & 0x20) != 0) {
-                npc.interactingEntity = stream.readUnsignedShort();
-                if (npc.interactingEntity == 65535) {
-                    npc.interactingEntity = -1;
-                }
+        }
+        if ((mask & 0x80) != 0) {
+            npc.graphicId = stream.readBits(16);
+            int info = stream.readBits(32);
+            npc.graphicHeight = info >> 16;
+            npc.graphicDelay = tick + (info & 0xffff);
+            npc.currentAnimationId = 0;
+            npc.currentAnimationTimeRemaining = 0;
+            if (npc.graphicDelay > tick) {
+                npc.currentAnimationId = -1;
             }
-            if ((mask & 0x1) != 0) {
-                npc.textSpoken = stream.readString();
-                npc.textCycle = 100;
-                npc.textColor = 0;
+            if (npc.graphicId == 65535) {
+                npc.graphicId = -1;
             }
-            if ((mask & 0x40) != 0) {
-                boolean multipleHits = stream.readUnsignedByte() == 1;
-
-                if (multipleHits) {
-                    int totalHits = stream.readUnsignedByte();
-
-                    for (int i = 0; i < totalHits; i++) {
-                        int damage = stream.readUnsignedByte();
-                        int type = stream.readUnsignedByte();
-                        int icon = stream.readUnsignedByte();
-                        npc.damage(type, damage, tick, icon);
-                    }
-
-                } else {
-                    int damage = stream.readUnsignedByte();
-                    int type = stream.readUnsignedByte();
-                    int icon = stream.readUnsignedByte();
-                    npc.damage(type, damage, tick, icon);
-                }
-
-                int current = stream.readUnsignedByte();
-                int max = stream.readUnsignedByte();
-                npc.cycleStatus = tick + 300;
-                npc.currentHealth = current;
-                npc.maximumHealth = max;
-
-                /*int damage = stream.readUnsignedByte();
-                int type = stream.readUByteA();
-                int icon = stream.readUnsignedByte();
-                int current = stream.readUnsignedByte();
-                int max = stream.readNegUByte();
-
-                npc.damage(type, damage, tick, icon);
-                npc.cycleStatus = tick + 300;
-                npc.currentHealth = current;
-                npc.maximumHealth = max;*/
+        }
+        if ((mask & 0x20) != 0) {
+            npc.interactingEntity = stream.readBits(16);
+            if (npc.interactingEntity == 65535) {
+                npc.interactingEntity = -1;
             }
-            if ((mask & 0x8) != 0) {
-                boolean multipleHits = stream.readUnsignedByte() == 1;
+        }
+        if ((mask & 0x40) != 0) {
+            appendNpcPackedHit(stream, npc);
+        }
+        if ((mask & 0x8) != 0) {
+            appendNpcPackedHit(stream, npc);
+        }
+        if ((mask & 0x2) != 0) {
+            npc.definition = NpcDefinition.lookup(stream.readBits(16));
+            npc.size = npc.definition.size;
+            npc.rotation = npc.definition.rotation;
+            npc.walkingAnimation = npc.definition.walkingAnimation;
+            npc.halfTurnAnimation = npc.definition.halfTurnAnimation;
+            npc.quarterClockwiseTurnAnimation = npc.definition.quarterClockwiseTurnAnimation;
+            npc.quarterAnticlockwiseTurnAnimation = npc.definition.quarterAnticlockwiseTurnAnimation;
+            npc.seqStandID = npc.definition.standingAnimation;
+        }
+        if ((mask & 0x4) != 0) {
+            npc.faceX = stream.readBits(16);
+            npc.faceY = stream.readBits(16);
+        }
+    }
 
-                if (multipleHits) {
-                    int totalHits = stream.readUnsignedByte();
+    private void appendNpcPackedHit(Buffer stream, Npc npc) {
+        int damage = stream.readBits(8);
+        int type = stream.readBits(3);
+        int current = stream.readBits(8);
+        int max = stream.readBits(1) == 0 ? 100 : 200;
+        npc.damage(type, damage, tick, 0);
+        npc.cycleStatus = tick + 300;
+        npc.currentHealth = current;
+        npc.maximumHealth = max;
+    }
 
-                    for (int i = 0; i < totalHits; i++) {
-                        int damage = stream.readUnsignedByte();
-                        int type = stream.readUnsignedByte();
-                        int icon = stream.readUnsignedByte();
-                        npc.damage(type, damage, tick, icon);
-                    }
-
-                } else {
-                    int damage = stream.readUnsignedByte();
-                    int type = stream.readUnsignedByte();
-                    int icon = stream.readUnsignedByte();
-                    npc.damage(type, damage, tick, icon);
-                }
-
-                int current = stream.readUnsignedByte();
-                int max = stream.readUnsignedByte();
-                npc.cycleStatus = tick + 300;
-                npc.currentHealth = current;
-                npc.maximumHealth = max;
-                /*int damage = stream.readUnsignedByte();
-                int type = stream.readUByteS();
-                int icon = stream.readUnsignedByte();
-                int current = stream.readUnsignedByte();
-                int max = stream.readNegUByte();
-
-                npc.damage(type, damage, tick, icon);
-                npc.cycleStatus = tick + 300;
-                npc.currentHealth = current;
-                npc.maximumHealth = max;*/
-            }
-            if ((mask & 0x2) != 0) {
-                npc.definition = NpcDefinition.lookup(stream.readLEUShortA());
-                npc.size = npc.definition.size;
-                npc.rotation = npc.definition.rotation;
-                npc.walkingAnimation = npc.definition.walkingAnimation;
-                npc.halfTurnAnimation = npc.definition.halfTurnAnimation;
-                npc.quarterClockwiseTurnAnimation = npc.definition.quarterClockwiseTurnAnimation;
-                npc.quarterAnticlockwiseTurnAnimation = npc.definition.quarterAnticlockwiseTurnAnimation;
-                npc.seqStandID = npc.definition.standingAnimation;
-            }
-            if ((mask & 0x4) != 0) {
-                npc.faceX = stream.readLEUShort();
-                npc.faceY = stream.readLEUShort();
-            }
+    private void appendNpcVariableUpdate(int mask, Buffer stream, Npc npc) {
+        if ((mask & 0x1) != 0) {
+            npc.textSpoken = stream.readString();
+            npc.textCycle = 100;
+            npc.textColor = 0;
         }
     }
 
@@ -14659,25 +14645,25 @@ public class Client extends GameEngine
         return new Color(r, g, b).getRGB();
     }
 
-    private void appendPlayerUpdateMask(int mask, int playerIndex, Buffer buffer, Player player) {
+    private void appendPlayerFixedUpdate(int mask, Buffer buffer, Player player) {
 
         // force movement
         if ((mask & 0x400) != 0) {
-            player.initialX = buffer.readUByteS();
-            player.initialY = buffer.readUByteS();
-            player.destinationX = buffer.readUByteS();
-            player.destinationY = buffer.readUByteS();
-            int temp = buffer.readLEUShortA();
-            int temp2 = buffer.readUShortA();
+            player.initialX = buffer.readBits(8);
+            player.initialY = buffer.readBits(8);
+            player.destinationX = buffer.readBits(8);
+            player.destinationY = buffer.readBits(8);
+            int temp = buffer.readBits(16);
+            int temp2 = buffer.readBits(16);
             player.startForceMovement = temp + tick;
             player.endForceMovement = temp2 + tick;
-            player.direction = buffer.readUByteS();
+            player.direction = buffer.readBits(8);
             player.resetPath();
         }
 
         if ((mask & 0x100) != 0) {
-            player.graphicId = buffer.readLEUShort();
-            int info = buffer.readUnsignedInt();
+            player.graphicId = buffer.readBits(16);
+            int info = buffer.readBits(32);
             player.graphicHeight = info >> 16;
             player.graphicDelay = tick + (info & 0xffff);
             player.currentAnimationId = 0;
@@ -14699,11 +14685,11 @@ public class Client extends GameEngine
         }
 
         if ((mask & 0x8) != 0) {
-            int animation = buffer.readLEUShort();
+            int animation = buffer.readBits(16);
             if (animation == 65535) {
                 animation = -1;
             }
-            int delay = buffer.readNegUByte();
+            int delay = buffer.readBits(8);
             if (animation == player.primarySeqID && animation != -1) {
                 int replayMode = Animation.animations[animation].type;
                 if (replayMode == 1) {
@@ -14724,6 +14710,43 @@ public class Client extends GameEngine
                 player.remainingSteps = player.waypointIndex;
             }
         }
+        if ((mask & 0x1) != 0) {
+            int interacting = buffer.readBits(16);
+            player.interactingEntity = interacting;
+            if (player.interactingEntity == 65535) {
+                player.interactingEntity = -1;
+            }
+        }
+
+        if ((mask & 0x2) != 0) {
+            player.faceX = buffer.readBits(16);
+            player.faceY = buffer.readBits(16);
+        }
+
+        if ((mask & 0x20) != 0) {
+            int damage = buffer.readBits(8);
+            int type = buffer.readBits(3);
+            int current = buffer.readBits(8);
+            int max = buffer.readBits(1) == 0 ? 100 : 200;
+            player.damage(type, damage, tick, 0);
+            player.cycleStatus = tick + 300;
+            player.currentHealth = current;
+            player.maximumHealth = max;
+        }
+
+        if ((mask & 0x200) != 0) {
+            int damage = buffer.readBits(8);
+            int type = buffer.readBits(3);
+            int current = buffer.readBits(8);
+            int max = buffer.readBits(1) == 0 ? 100 : 200;
+            player.damage(type, damage, tick, 0);
+            player.cycleStatus = tick + 300;
+            player.currentHealth = current;
+            player.maximumHealth = max;
+        }
+    }
+
+    private void appendPlayerVariableUpdate(int mask, int playerIndex, Buffer buffer, Player player) {
         if ((mask & 0x4) != 0) {
             player.textSpoken = buffer.readString();
             if (player.textSpoken.charAt(0) == '~') {
@@ -14760,105 +14783,36 @@ public class Client extends GameEngine
                         chatBuffer.position = 0;
                         buffer.readReverseData(offset, 0, chatBuffer.array);
                         chatBuffer.position = 0;
-                        String message = TextInput.decode(offset, chatBuffer);
+                        String decodedMessage = TextInput.decode(offset, chatBuffer);
                         if (Settings.PROFANITY_FILTER) {
-//                            message = Censor.doCensor(message);
+//                            decodedMessage = Censor.doCensor(decodedMessage);
                         }
-                        player.textSpoken = message;
+                        player.textSpoken = decodedMessage;
                         player.textColor = packed >> 8;
                         player.privelage = privelage;
                         player.textEffect = packed & 0xff;
                         player.textCycle = 150;
                         if (privelage >= 1) {
-                            pushMessage(message, 1, "@cr" + privelage + "@" + player.name, player.title, player.titleColor, false);
+                            pushMessage(decodedMessage, 1, "@cr" + privelage + "@" + player.name, player.title, player.titleColor, false);
                         } else {
-                            pushMessage(message, 2, player.name, player.title, player.titleColor, false);
+                            pushMessage(decodedMessage, 2, player.name, player.title, player.titleColor, false);
                         }
                     } catch (Exception ex) {
-                        System.err.println(String.format("error receiving chat message: %s error=%s", message, ex.getMessage()));
+                        System.err.println(String.format("error receiving chat message: %s", ex.getMessage()));
                     }
                 }
             }
-
             buffer.position = off + offset;
-        }
-
-        if ((mask & 0x1) != 0) {
-            int interacting = buffer.readLEUShort();
-            player.interactingEntity = interacting;
-            if (player.interactingEntity == 65535) {
-                player.interactingEntity = -1;
-            }
         }
 
         if ((mask & 0x10) != 0) {
             int length = buffer.readNegUByte();
-            byte data[] = new byte[length];
+            byte[] data = new byte[length];
             Buffer appearanceBuffer = new Buffer(data);
             buffer.readBytes(length, 0, data);
             playerSynchronizationBuffers[playerIndex] = appearanceBuffer;
             player.updateAppearance(appearanceBuffer);
             TarnishClientDiagnostics.appearance(playerIndex, length, data, player);
-        }
-
-        if ((mask & 0x2) != 0) {
-            player.faceX = buffer.readLEUShortA();
-            player.faceY = buffer.readLEUShort();
-        }
-
-        if ((mask & 0x20) != 0) {
-            boolean multipleHits = buffer.readUnsignedByte() == 1;
-
-            if (multipleHits) {
-                int totalHits = buffer.readUnsignedByte();
-
-                for (int index = 0; index < totalHits; index++) {
-                    int damage = buffer.readUnsignedByte();
-                    int type = buffer.readUByteA();
-                    int icon = buffer.readUnsignedByte();
-
-                    player.damage(type, damage, tick, icon);
-                }
-
-            } else {
-                int damage = buffer.readUnsignedByte();
-                int type = buffer.readUByteA();
-                int icon = buffer.readUnsignedByte();
-                player.damage(type, damage, tick, icon);
-            }
-
-            int current = buffer.readUnsignedByte();
-            int max = buffer.readNegUByte();
-            player.cycleStatus = tick + 300;
-            player.currentHealth = current;
-            player.maximumHealth = max;
-        }
-
-        if ((mask & 0x200) != 0) {
-            boolean multipleHits = buffer.readUnsignedByte() == 1;
-
-            if (multipleHits) {
-                int totalHits = buffer.readUnsignedByte();
-
-                for (int index = 0; index < totalHits; index++) {
-                    int damage = buffer.readUnsignedByte();
-                    int type = buffer.readUByteA();
-                    int icon = buffer.readUnsignedByte();
-
-                    player.damage(type, damage, tick, icon);
-                }
-            } else {
-                int damage = buffer.readUnsignedByte();
-                int type = buffer.readUByteS();
-                int icon = buffer.readUnsignedByte();
-                player.damage(type, damage, tick, icon);
-            }
-
-            int current = buffer.readUnsignedByte();
-            int max = buffer.readNegUByte();
-            player.cycleStatus = tick + 300;
-            player.currentHealth = current;
-            player.maximumHealth = max;
         }
     }
 
@@ -19201,6 +19155,8 @@ public class Client extends GameEngine
         playerArray = new Player[maxPlayers];
         playerIndices = new int[maxPlayers];
         mobsAwaitingUpdate = new int[maxPlayers];
+        updateMasks = new int[maxPlayers];
+        updateFixedBitLengths = new int[maxPlayers];
         playerSynchronizationBuffers = new Buffer[maxPlayers];
         anInt897 = 1;
         pathDirections = new int[104][104];
@@ -19387,6 +19343,8 @@ public class Client extends GameEngine
     private int[] playerIndices;
     private int mobsAwaitingUpdateCount;
     private int[] mobsAwaitingUpdate;
+    private int[] updateMasks;
+    private int[] updateFixedBitLengths;
     private Buffer[] playerSynchronizationBuffers;
     private int cameraRotation;
     public int anInt897;

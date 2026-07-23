@@ -9,6 +9,8 @@ import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.engine.sync.scratch.ThreadLocalSyncScratch;
+import net.dodian.uber.game.engine.sync.protocol.PackedUpdateBlock;
+import net.dodian.uber.game.engine.sync.protocol.PackedBitSlice;
 import net.dodian.utilities.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,23 +94,21 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         }
     }
 
-    @Override
-    public void appendBlockUpdate(Npc npc, ByteMessage buf) {
-        BLOCK_SET.encode(this, npc, buf);
+    public PackedUpdateBlock buildSharedBlock(Npc npc) {
+        return buildPackedBlock(npc);
     }
 
-    public byte[] buildSharedBlock(Npc npc) {
-        ByteMessage block = withSharedBlock();
-        try {
-            appendBlockUpdate(npc, block);
-            return block.toByteArray();
-        } finally {
-            releaseScratch(block);
-        }
+    public PackedUpdateBlock buildPackedBlock(Npc npc) {
+        return BLOCK_SET.encode(this, npc);
     }
 
-    private ByteMessage withSharedBlock() {
-        return ThreadLocalSyncScratch.sharedBlock();
+    public PackedBitSlice buildLocalMovement(Npc npc) {
+        ByteMessage movement = ThreadLocalSyncScratch.packedFixedBlock();
+        movement.startBitAccess();
+        updateNPCMovement(npc, movement);
+        int bitCount = movement.getBitIndex();
+        movement.endBitAccess();
+        return new PackedBitSlice(movement.toByteArray(), bitCount);
     }
 
     private static void releaseScratch(ByteMessage message) {
@@ -120,14 +120,14 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     }
 
     public void appendGfxUpdate(Npc npc, ByteMessage buf) {
-        buf.putShort(npc.getGfxId());
-        buf.putInt(npc.getGfxHeight() << 16);
+        buf.putBits(16, npc.getGfxId());
+        buf.putBits(32, npc.getGfxHeight() << 16);
     }
 
     @Override
     public void appendAnimationRequest(Npc npc, ByteMessage buf) {
-        buf.putShort(npc.getAnimationId(), ByteOrder.LITTLE); // writeWordBigEndian
-        buf.put(npc.getAnimationDelay());
+        buf.putBits(16, npc.getAnimationId());
+        buf.putBits(8, npc.getAnimationDelay());
     }
 
     @Override
@@ -140,8 +140,8 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     }
     @Override
     public void appendFaceCoordinates(Npc npc, ByteMessage buf) {
-        buf.putShort(npc.getFaceCoordinateX(), ByteOrder.LITTLE); // writeWordBigEndian
-        buf.putShort(npc.getFaceCoordinateY(), ByteOrder.LITTLE); // writeWordBigEndian
+        buf.putBits(16, npc.getFaceCoordinateX());
+        buf.putBits(16, npc.getFaceCoordinateY());
     }
 
     @Override
@@ -150,26 +150,24 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         if (faceTarget < 0 || faceTarget > 0xFFFF) {
             faceTarget = 0xFFFF;
         }
-        buf.putShort(faceTarget);
+        buf.putBits(16, faceTarget);
     }
 
     public void appendAppearanceUpdate(Npc npc, ByteMessage buf) {
         int transformedNpcId = npc.getTransformedNpcId();
         int definitionId = transformedNpcId >= 0 ? transformedNpcId : npc.getId();
         validateNpcDefinitionId(definitionId);
-        buf.putShort(definitionId, ByteOrder.LITTLE, ValueType.ADD);
+        buf.putBits(16, definitionId);
     }
 
     private static void appendTarnishNpcHit(ByteMessage buf, int damage, Entity.hitType hitType, Npc npc) {
         int maximum = npc.getMaxHealth() >= 500 ? 200 : 100;
         int health = Math.max(0, Math.min(maximum,
                 npc.getCurrentHealth() * maximum / Math.max(1, npc.getMaxHealth())));
-        buf.put(0); // single hit
-        buf.put(Math.max(0, Math.min(255, damage)));
-        buf.put(tarnishHitType(damage, hitType));
-        buf.put(0);
-        buf.put(health);
-        buf.put(maximum);
+        buf.putBits(8, Math.max(0, Math.min(255, damage)));
+        buf.putBits(3, tarnishHitType(damage, hitType));
+        buf.putBits(8, health);
+        buf.putBits(1, maximum == 200 ? 1 : 0);
     }
 
     private static int tarnishHitType(int damage, Entity.hitType hitType) {

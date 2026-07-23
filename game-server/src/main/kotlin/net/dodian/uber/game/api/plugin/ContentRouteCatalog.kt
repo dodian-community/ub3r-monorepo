@@ -55,6 +55,9 @@ object ContentRouteCatalog {
                 plugin.definition.itemOnObjectBindings.forEach { binding -> binding.objectIds.forEach { objectId -> binding.itemIds.forEach { itemId -> add(ContentRouteEntry(manifest.id, "skill-item-on-object", "$objectId:$itemId", binding.preset.name)) } } }
                 plugin.definition.magicOnObjectBindings.forEach { binding -> binding.objectIds.forEach { objectId -> binding.spellIds.forEach { spellId -> add(ContentRouteEntry(manifest.id, "skill-magic-on-object", "$objectId:$spellId", binding.preset.name)) } } }
                 plugin.definition.buttonBindings.forEach { binding -> binding.rawButtonIds.forEach { add(ContentRouteEntry(manifest.id, "skill-button", "$it:${binding.opIndex ?: -1}:${binding.requiredInterfaceId}", binding.preset.name)) } }
+                plugin.definition.itemGridBindings.forEach { binding ->
+                    add(ContentRouteEntry(manifest.id, "skill-item-grid", binding.interfaceId.toString(), binding.preset.name))
+                }
             }
         }.sortedWith(compareBy(ContentRouteEntry::moduleId, ContentRouteEntry::routeType, ContentRouteEntry::key))
     }

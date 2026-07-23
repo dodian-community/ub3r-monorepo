@@ -3,6 +3,8 @@ package net.dodian.uber.game.engine.sync
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.engine.sync.viewport.ViewportSnapshot
+import net.dodian.uber.game.engine.sync.protocol.PackedUpdateBlock
+import net.dodian.uber.game.engine.sync.protocol.PackedBitSlice
 
 object SynchronizationContext {
     private val cycleHolder = ThreadLocal<SynchronizationCycle?>()
@@ -21,11 +23,20 @@ object SynchronizationContext {
     fun current(): SynchronizationCycle? = cycleHolder.get()
 
     @JvmStatic
-    fun getSharedPlayerBlock(player: Player, phase: String): ByteArray? =
-        current()?.rootCache?.playerBlocks?.get(player, phase)
+    fun getSharedPlayerBlock(player: Player, phase: String): PackedUpdateBlock? =
+        current()?.let { cycle -> cycle.rootCache.playerBlocks.get(player, phase, cycle.tick) }
 
     @JvmStatic
-    fun getSharedNpcBlock(npc: Npc): ByteArray? = current()?.rootCache?.npcBlocks?.get(npc)
+    fun getSharedNpcBlock(npc: Npc): PackedUpdateBlock? =
+        current()?.let { cycle -> cycle.rootCache.npcBlocks.get(npc, cycle.tick) }
+
+    @JvmStatic
+    fun getSharedPlayerMovement(player: Player): PackedBitSlice? =
+        current()?.let { cycle -> cycle.rootCache.playerMovements.get(player, cycle.tick) }
+
+    @JvmStatic
+    fun getSharedNpcMovement(npc: Npc): PackedBitSlice? =
+        current()?.let { cycle -> cycle.rootCache.npcMovements.get(npc, cycle.tick) }
 
     @JvmStatic
     fun getViewportSnapshot(viewer: Player): ViewportSnapshot? = current()?.viewportIndex?.snapshotFor(viewer)

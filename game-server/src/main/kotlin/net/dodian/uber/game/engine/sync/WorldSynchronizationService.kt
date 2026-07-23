@@ -7,11 +7,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.model.entity.player.PlayerUpdating
 import net.dodian.uber.game.engine.sync.cache.RootSynchronizationCache
-import net.dodian.uber.game.engine.sync.npc.NpcChunkActivityIndex
 import net.dodian.uber.game.engine.sync.npc.StagedNpcSynchronizationService
-import net.dodian.uber.game.engine.sync.npc.RootNpcDeltaIndex
-import net.dodian.uber.game.engine.sync.player.PlayerChunkActivityIndex
-import net.dodian.uber.game.engine.sync.player.PlayerSyncRevisionIndex
 import net.dodian.uber.game.engine.sync.player.StagedPlayerSynchronizationService
 import net.dodian.uber.game.ui.PlayerUiDeltaProcessor
 import net.dodian.uber.game.engine.sync.viewport.ViewportIndex
@@ -25,12 +21,6 @@ class WorldSynchronizationService {
     private val logger = LoggerFactory.getLogger(WorldSynchronizationService::class.java)
     private val playerUpdating = PlayerUpdating.getInstance()
     private val npcUpdating = NpcUpdating.getInstance()
-    private val playerRevisionIndex = PlayerSyncRevisionIndex()
-    private val npcRevisionIndex = RootNpcDeltaIndex()
-    // Kept for future idle-skip work on the staged path (see sync-consolidation-plan.md Phase C-3),
-    // not currently consumed by STAGED sync itself.
-    private val sharedPlayerActivityIndex = PlayerChunkActivityIndex()
-    private val sharedNpcActivityIndex = NpcChunkActivityIndex()
     private val activePlayerBuffer = ArrayList<Client>(2048)
     private val stagedPlayerSynchronization = StagedPlayerSynchronizationService()
     private val stagedNpcSynchronization = StagedNpcSynchronizationService()
@@ -44,19 +34,11 @@ class WorldSynchronizationService {
         val viewportIndex = ViewportIndex.build(activePlayers, VIEW_DISTANCE)
         val relevantNpcs: Collection<Npc> = viewportIndex?.relevantNpcs() ?: emptyList()
         val rootCache = RootSynchronizationCache()
-        val playerActivityIndex = sharedPlayerActivityIndex.apply { clear() }
-        val npcActivityIndex = sharedNpcActivityIndex.apply { clear() }
-        playerRevisionIndex.rebuild(activePlayers, tick, playerActivityIndex)
-        npcRevisionIndex.rebuild(relevantNpcs, tick, npcActivityIndex)
         val cycle =
             SynchronizationCycle(
                 tick = tick,
                 rootCache = rootCache,
                 viewportIndex = viewportIndex,
-                playerRevisionIndex = playerRevisionIndex,
-                playerActivityIndex = playerActivityIndex,
-                npcRevisionIndex = npcRevisionIndex,
-                npcActivityIndex = npcActivityIndex,
             )
 
         SynchronizationContext.setCurrent(cycle)
@@ -107,9 +89,10 @@ class WorldSynchronizationService {
         activePlayers.forEach { player ->
             if (!player.isSynchronizationReady) return@forEach
             try {
-                rootCache.playerBlocks.put(player, PHASE_ADD_LOCAL, playerUpdating.buildSharedBlock(player, PHASE_ADD_LOCAL))
+                rootCache.playerMovements.put(player, playerUpdating.buildLocalMovement(player), tick)
+                rootCache.playerBlocks.put(player, PHASE_ADD_LOCAL, playerUpdating.buildSharedBlock(player, PHASE_ADD_LOCAL), tick)
                 if (player.updateFlags.isUpdateRequired) {
-                    rootCache.playerBlocks.put(player, PHASE_UPDATE_LOCAL, playerUpdating.buildSharedBlock(player, PHASE_UPDATE_LOCAL))
+                    rootCache.playerBlocks.put(player, PHASE_UPDATE_LOCAL, playerUpdating.buildSharedBlock(player, PHASE_UPDATE_LOCAL), tick)
                 }
             } catch (throwable: Throwable) {
                 OperationalTelemetry.incrementCounter("sync.player.subject_prep_failure")
@@ -120,8 +103,9 @@ class WorldSynchronizationService {
 
     private fun buildNpcRootCache(activeNpcs: Collection<Npc>, rootCache: RootSynchronizationCache) {
         activeNpcs.forEach { npc ->
+            rootCache.npcMovements.put(npc, npcUpdating.buildLocalMovement(npc), tick)
             if (npc.updateFlags.isUpdateRequired) {
-                rootCache.npcBlocks.put(npc, npcUpdating.buildSharedBlock(npc))
+                rootCache.npcBlocks.put(npc, npcUpdating.buildSharedBlock(npc), tick)
             }
         }
     }

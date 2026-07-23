@@ -136,9 +136,9 @@ class SyncGoldenBytesTest {
         PlayerRegistry.players[2] = subject
 
         assertEquals(
-            "00002c01ffe030bb00ffffff00000000011200011a012601030122012a010e" +
-                "020e05040003280333033303330333033303380000000bb0b4ea280a000000" +
-                "000a0a0a3ff0000000000000000000000a8100009c",
+            "00002c01ffe0300a2000bb00ffffff00000000011200011a012601030122012a" +
+                "010e020e05040003280333033303330333033303380000000bb0b4ea280a000" +
+                "000000a0a0a3ff0000000000000000000",
             encodePlayer(viewer),
         )
     }
@@ -167,6 +167,16 @@ class SyncGoldenBytesTest {
         Server.npcManager.npcMap[npc.slot] = npc
 
         assertEquals("00000100400020", encodeNpc(viewer))
+    }
+
+    @Test
+    fun `npc hit splat is encoded in the fixed bit plane`() {
+        val viewer = client(1, "npc-viewer", 3200, 3200)
+        val npc = Npc(1, 1, Position(3201, 3200, 0), 0)
+        npc.dealDamage(viewer, 10, Entity.hitType.STANDARD)
+        Server.npcManager.npcMap[npc.slot] = npc
+
+        assertEquals("0000010040003ffff050090000072000", encodeNpc(viewer))
     }
 
     @Test

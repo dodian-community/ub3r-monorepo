@@ -1,10 +1,11 @@
 package net.dodian.uber.game.engine.sync.viewport
 
-import java.util.IdentityHashMap
+import net.dodian.uber.game.Constants
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.EntityType
 import net.dodian.uber.game.model.chunk.ChunkEntityIndex
 import net.dodian.uber.game.model.entity.npc.Npc
+import net.dodian.uber.game.model.entity.npc.NpcUpdating
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.engine.sync.util.LongObjectMap
@@ -30,11 +31,12 @@ object ViewportSnapshotPool {
 }
 
 class ViewportIndex private constructor(
-    private val snapshots: IdentityHashMap<Player, ViewportSnapshot>,
+    private val snapshots: Array<ViewportSnapshot?>,
     private val relevantNpcs: List<Npc>,
     private val uniqueSnapshots: List<ViewportSnapshot>,
 ) {
-    fun snapshotFor(viewer: Player): ViewportSnapshot? = snapshots[viewer]
+    fun snapshotFor(viewer: Player): ViewportSnapshot? =
+        viewer.slot.takeIf { it in snapshots.indices }?.let(snapshots::get)
     fun relevantNpcs(): List<Npc> = relevantNpcs
 
     fun release() {
@@ -48,8 +50,8 @@ class ViewportIndex private constructor(
         fun build(viewers: List<Client>, distance: Int): ViewportIndex? {
             val chunkManager = Server.chunkManager ?: return null
             val neighborhoodCache = LongObjectMap<ViewportSnapshot>(viewers.size.coerceAtLeast(16))
-            val snapshots = IdentityHashMap<Player, ViewportSnapshot>(viewers.size)
-            val relevantNpcSeen = IdentityHashMap<Npc, Boolean>()
+            val snapshots = arrayOfNulls<ViewportSnapshot>(Constants.maxPlayers + 1)
+            val relevantNpcSeen = LongArray((1 shl NpcUpdating.NPC_SLOT_BITS) ushr 6)
             val relevantNpcs = ArrayList<Npc>()
             val uniqueSnapshots = ArrayList<ViewportSnapshot>()
             viewers.forEach { viewer ->
@@ -63,9 +65,15 @@ class ViewportIndex private constructor(
                         uniqueSnapshots.add(newSnapshot)
                         newSnapshot
                     }
-                snapshots[viewer] = snapshot
+                if (viewer.slot in snapshots.indices) {
+                    snapshots[viewer.slot] = snapshot
+                }
                 snapshot.npcs.forEach { npc ->
-                    if (relevantNpcSeen.put(npc, true) == null) {
+                    val slot = npc.slot
+                    val word = slot ushr 6
+                    val bit = 1L shl (slot and 63)
+                    if (word in relevantNpcSeen.indices && relevantNpcSeen[word] and bit == 0L) {
+                        relevantNpcSeen[word] = relevantNpcSeen[word] or bit
                         relevantNpcs += npc
                     }
                 }

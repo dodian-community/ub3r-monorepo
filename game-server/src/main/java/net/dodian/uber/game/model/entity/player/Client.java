@@ -1950,7 +1950,6 @@ public class Client extends Player implements Runnable {
         }
         GetBonus(true);
         markAppearanceDirty();
-        invalidateCachedUpdateBlock();
         getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
     }
 

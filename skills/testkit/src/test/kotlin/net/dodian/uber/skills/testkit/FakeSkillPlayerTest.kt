@@ -4,6 +4,7 @@ import net.dodian.uber.game.api.content.ContentAttributeKey
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import net.dodian.uber.game.api.plugin.skills.startProduction
 import net.dodian.uber.game.model.player.skills.Skill
@@ -13,6 +14,19 @@ import net.dodian.uber.skills.api.SkillMultiSelection
 import net.dodian.uber.skills.api.skillRecipe
 
 class FakeSkillPlayerTest {
+
+    @Test
+    fun `amount prompt records and completes a module callback once`() {
+        val player = FakeSkillPlayer()
+        var submitted = 0
+
+        assertTrue(player.amountPrompt.request("How many?") { amount -> submitted = amount; true })
+        assertEquals("How many?", player.amountPromptTitle)
+        assertTrue(player.submitAmount(12))
+        assertEquals(12, submitted)
+        assertNull(player.amountPromptTitle)
+        assertFalse(player.submitAmount(1))
+    }
     @Test
     fun `plugin attributes are available to isolated module tests`() {
         val player = FakeSkillPlayer()

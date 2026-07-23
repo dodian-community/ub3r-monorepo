@@ -2,20 +2,12 @@ package net.dodian.uber.game.engine.sync
 
 import java.util.EnumMap
 import net.dodian.uber.game.engine.sync.cache.RootSynchronizationCache
-import net.dodian.uber.game.engine.sync.npc.NpcChunkActivityIndex
-import net.dodian.uber.game.engine.sync.npc.RootNpcDeltaIndex
-import net.dodian.uber.game.engine.sync.player.PlayerChunkActivityIndex
-import net.dodian.uber.game.engine.sync.player.PlayerSyncRevisionIndex
 import net.dodian.uber.game.engine.sync.viewport.ViewportIndex
 
 class SynchronizationCycle(
     val tick: Long,
     val rootCache: RootSynchronizationCache,
     val viewportIndex: ViewportIndex?,
-    val playerRevisionIndex: PlayerSyncRevisionIndex? = null,
-    val playerActivityIndex: PlayerChunkActivityIndex? = null,
-    val npcRevisionIndex: RootNpcDeltaIndex? = null,
-    val npcActivityIndex: NpcChunkActivityIndex? = null,
 ) {
     private val stageDurationsNanos = EnumMap<SynchronizationStage, Long>(SynchronizationStage::class.java)
 

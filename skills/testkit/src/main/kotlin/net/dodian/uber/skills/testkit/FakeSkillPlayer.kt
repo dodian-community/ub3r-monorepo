@@ -17,6 +17,8 @@ import net.dodian.uber.game.api.plugin.skills.SkillObjectRef
 import net.dodian.uber.game.api.plugin.skills.SkillProfile
 import net.dodian.uber.game.api.plugin.skills.SkillRandom
 import net.dodian.uber.game.api.plugin.skills.SkillClock
+import net.dodian.uber.game.api.plugin.skills.SkillModuleState
+import net.dodian.uber.game.api.plugin.skills.SkillAmountPrompt
 import net.dodian.uber.game.api.plugin.skills.SkillVitals
 import net.dodian.uber.game.api.plugin.skills.SkillItemGridEntry
 import net.dodian.uber.game.api.plugin.skills.SkillValidationResult
@@ -44,6 +46,8 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
     val chatboxInterfaces = mutableListOf<Int>()
     val itemModels = mutableListOf<Triple<Int, Int, Int>>()
     val itemGrids = mutableMapOf<Int, List<SkillItemGridEntry>>()
+    val componentVisibility = mutableMapOf<Int, Boolean>()
+    var menuGrid: List<SkillItemGridEntry> = emptyList()
     val varbits = mutableMapOf<Int, Int>()
     val replacedObjects = mutableListOf<Pair<SkillObjectRef, Int>>()
     val spawnedObjects = mutableListOf<Pair<Int, Int>>()
@@ -64,7 +68,11 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
     private var sessionKey: String? = null
     private var activeAction: FakeAction? = null
     private var pendingProduction: Pair<SkillMultiConfig, (SkillMultiSelection) -> Unit>? = null
+    var amountPromptTitle: String? = null
+        private set
+    private var pendingAmountPrompt: ((Int) -> Boolean)? = null
     private val attributesByKey = mutableMapOf<String, Any>()
+    private val moduleStateValues = mutableMapOf<String, String>()
     private class PendingExpiry(var ticksRemaining: Int, val onExpire: () -> Unit)
     private val pendingExpiries = mutableListOf<PendingExpiry>()
 
@@ -88,6 +96,12 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
             xp[skill] = experience(skill) + amount
             return true
         }
+    }
+    override val moduleState = object : SkillModuleState {
+        private fun id(moduleId: String, key: String) = "$moduleId:$key"
+        override fun get(moduleId: String, key: String): String? = moduleStateValues[id(moduleId, key)]
+        override fun put(moduleId: String, key: String, value: String) { moduleStateValues[id(moduleId, key)] = value }
+        override fun remove(moduleId: String, key: String) { moduleStateValues.remove(id(moduleId, key)) }
     }
     override val inventory = object : SkillInventory {
         override fun contains(itemId: Int, amount: Int) = this@FakeSkillPlayer.amount(itemId) >= amount
@@ -169,6 +183,8 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
         override fun chatbox(interfaceId: Int) { chatboxInterfaces += interfaceId }
         override fun itemModel(componentId: Int, zoom: Int, itemId: Int) { itemModels += Triple(componentId, zoom, itemId) }
         override fun itemGrid(componentId: Int, entries: List<SkillItemGridEntry>) { itemGrids[componentId] = entries }
+        override fun componentVisible(componentId: Int, visible: Boolean) { componentVisibility[componentId] = visible }
+        override fun menuGrid(entries: List<SkillItemGridEntry>) { this@FakeSkillPlayer.menuGrid = entries }
         override fun npcDialogue(dialogueId: Int, npcId: Int) = Unit
         override fun varbit(id: Int, value: Int) { varbits[id] = value }
     }
@@ -204,6 +220,19 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
         }
         override fun pending(): SkillMultiConfig? = pendingProduction?.first
         override fun clear() { pendingProduction = null }
+    }
+    override val amountPrompt = object : SkillAmountPrompt {
+        override fun request(title: String, maxDigits: Int, onEntered: (Int) -> Boolean): Boolean {
+            require(maxDigits in 1..10)
+            amountPromptTitle = title
+            pendingAmountPrompt = onEntered
+            return true
+        }
+
+        override fun cancel() {
+            amountPromptTitle = null
+            pendingAmountPrompt = null
+        }
     }
     override val equipment = object : SkillEquipment {
         override fun item(slot: Int) = equipmentItems[slot]?.first ?: -1
@@ -243,6 +272,12 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
     }
 
     fun amount(itemId: Int): Int = itemAmounts[itemId].orZero()
+    fun submitAmount(amount: Int): Boolean {
+        val prompt = pendingAmountPrompt ?: return false
+        amountPromptTitle = null
+        pendingAmountPrompt = null
+        return prompt(amount)
+    }
     fun setLevel(skill: Skill, level: Int) { levels[skill] = level.coerceAtLeast(1) }
     fun equip(slot: Int, itemId: Int, amount: Int = 1) { equipmentItems[slot] = itemId to amount }
     fun activeActionName(): String? = activeAction?.spec?.name

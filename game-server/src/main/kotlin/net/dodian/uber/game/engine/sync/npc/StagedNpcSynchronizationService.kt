@@ -5,7 +5,8 @@ import java.util.Arrays
 import net.dodian.uber.game.engine.metrics.OperationalTelemetry
 import net.dodian.uber.game.engine.sync.SynchronizationContext
 import net.dodian.uber.game.engine.sync.scratch.ThreadLocalSyncScratch
-import net.dodian.uber.game.engine.sync.util.IntHashSet
+import net.dodian.uber.game.engine.sync.protocol.PackedUpdateBlock
+import net.dodian.uber.game.engine.sync.util.SlotBitSet
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.npc.NpcUpdating
 import net.dodian.uber.game.model.entity.player.Client
@@ -65,7 +66,7 @@ class StagedNpcSynchronizationService {
             if (plan.additionCount >= MAX_ADDITIONS_PER_CYCLE || plan.nextCount >= MAX_LOCALS) break
             if (!isRetained(viewer, npc) || plan.contains(npc)) continue
             val sharedBlock = SynchronizationContext.getSharedNpcBlock(npc)
-            val additionBytes = ADD_NPC_BIT_BYTES + (sharedBlock?.size ?: MAX_NPC_BLOCK_ESTIMATE)
+            val additionBytes = ADD_NPC_BIT_BYTES + (sharedBlock?.estimatedWireBytes(false) ?: MAX_NPC_BLOCK_ESTIMATE)
             if (estimatedBytes + additionBytes > MAX_STAGED_NPC_PAYLOAD_BUDGET) break
             estimatedBytes += additionBytes
             plan.addAddition(npc)
@@ -76,10 +77,7 @@ class StagedNpcSynchronizationService {
 
     internal fun encode(viewer: Client, plan: Plan, stream: ByteMessage) {
         plan.requireFrozen()
-        // Thread-local reused buffer instead of a fresh pooled allocation per viewer per tick.
-        // Safe because encode() runs to completion for one viewer before the next begins on this
-        // thread (see WorldSynchronizationService.encodeNpcs' sequential loop).
-        val updateBlock = ThreadLocalSyncScratch.npcUpdateBlock()
+        plan.resetUpdateBlocks()
         stream.startBitAccess()
         stream.putBits(8, plan.previousCount)
         for (index in 0 until plan.previousCount) {
@@ -87,32 +85,52 @@ class StagedNpcSynchronizationService {
             if (!plan.retainPrevious[index] || npc == null) {
                 updating.writeLocalRemoval(stream)
             } else {
-                updating.updateNPCMovement(npc, stream)
-                appendSharedOrEncode(npc, updateBlock)
+                val movement = SynchronizationContext.getSharedNpcMovement(npc)
+                if (movement != null) {
+                    stream.putBitSlice(movement.bytes, 0, movement.bitCount)
+                } else {
+                    updating.updateNPCMovement(npc, stream)
+                }
+                if (npc.updateFlags.isUpdateRequired) {
+                    plan.queueUpdate(sharedOrEncode(npc))
+                }
             }
         }
         for (index in 0 until plan.additionCount) {
             val npc = plan.additions[index] ?: continue
             updating.addNpc(viewer, npc, stream)
-            appendSharedOrEncode(npc, updateBlock)
+            if (npc.updateFlags.isUpdateRequired) {
+                plan.queueUpdate(sharedOrEncode(npc))
+            }
             SynchronizationContext.recordNpcAdd()
         }
-        if (updateBlock.buffer.writerIndex() > 0) {
+        if (plan.updateBlockCount > 0) {
             stream.putBits(NpcUpdating.NPC_SLOT_BITS, NpcUpdating.NPC_SLOT_TERMINATOR)
             stream.endBitAccess()
-            stream.putBytes(updateBlock)
+            writePackedUpdatePlanes(plan, stream)
         } else {
             stream.endBitAccess()
         }
     }
 
-    private fun appendSharedOrEncode(npc: Npc, updateBlock: ByteMessage) {
+    private fun sharedOrEncode(npc: Npc): PackedUpdateBlock {
         val sharedBlock = SynchronizationContext.getSharedNpcBlock(npc)
-        if (sharedBlock != null) {
-            updateBlock.putBytes(sharedBlock)
-            SynchronizationContext.recordNpcBlockCacheHit(true)
-        } else {
-            updating.appendBlockUpdate(npc, updateBlock)
+        SynchronizationContext.recordNpcBlockCacheHit(sharedBlock != null)
+        return sharedBlock ?: requireNotNull(updating.buildPackedBlock(npc))
+    }
+
+    private fun writePackedUpdatePlanes(plan: Plan, stream: ByteMessage) {
+        for (index in 0 until plan.updateBlockCount) {
+            stream.put(requireNotNull(plan.updateBlocks[index]).mask)
+        }
+        stream.startBitAccess()
+        for (index in 0 until plan.updateBlockCount) {
+            val block = requireNotNull(plan.updateBlocks[index])
+            stream.putBitSlice(block.fixedBytes, 0, block.fixedBitCount)
+        }
+        stream.endBitAccess()
+        for (index in 0 until plan.updateBlockCount) {
+            stream.putBytes(requireNotNull(plan.updateBlocks[index]).variableBytes)
         }
     }
 
@@ -166,10 +184,13 @@ class StagedNpcSynchronizationService {
         val nextSlots = IntArray(MAX_LOCALS)
         // O(1) membership instead of an O(n) linear scan of nextSlots per candidate per viewer per
         // tick (mirrors the player-side Scratch.membership pattern).
-        private val membership = IntHashSet(MAX_LOCALS)
+        private val membership = SlotBitSet(1 shl NpcUpdating.NPC_SLOT_BITS)
+        val updateBlocks = arrayOfNulls<PackedUpdateBlock>(MAX_LOCALS)
         var previousCount = 0
         var additionCount = 0
         var nextCount = 0
+        var updateBlockCount = 0
+            private set
         private var frozen = false
 
         fun reset() {
@@ -181,6 +202,7 @@ class StagedNpcSynchronizationService {
             previousCount = 0
             additionCount = 0
             nextCount = 0
+            resetUpdateBlocks()
             frozen = false
         }
 
@@ -201,6 +223,16 @@ class StagedNpcSynchronizationService {
 
         fun freeze() { frozen = true }
         fun requireFrozen() = check(frozen) { "NPC synchronization plan is not frozen" }
+
+        fun resetUpdateBlocks() {
+            Arrays.fill(updateBlocks, 0, updateBlockCount, null)
+            updateBlockCount = 0
+        }
+
+        fun queueUpdate(block: PackedUpdateBlock) {
+            check(updateBlockCount < updateBlocks.size) { "Too many NPC update blocks" }
+            updateBlocks[updateBlockCount++] = block
+        }
     }
 
     companion object {

@@ -7,8 +7,6 @@ import net.dodian.uber.game.netty.codec.ByteMessage;
  */
 public abstract class EntityUpdating<T extends Entity> {
 
-    public abstract void appendBlockUpdate(T t, ByteMessage buffer);
-
     public abstract void appendAnimationRequest(T t, ByteMessage buffer);
 
     public abstract void appendFaceCoordinates(T t, ByteMessage buffer);

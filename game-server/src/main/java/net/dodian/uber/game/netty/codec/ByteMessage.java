@@ -261,6 +261,7 @@ public final class ByteMessage extends DefaultByteBufHolder {
      */
     public ByteMessage putBits(int amount, int value) {
         checkState(amount >= 1 && amount <= 32, "Number of bits must be between 1 and 32 inclusive.");
+        checkState(bitIndex != -1, "This ByteMessage instance is not in bit access mode.");
 
         int bytePos = bitIndex >> 3;
         int bitOffset = 8 - (bitIndex & 7);
@@ -292,6 +293,39 @@ public final class ByteMessage extends DefaultByteBufHolder {
             tmp &= (byte) ~(BIT_MASK[amount] << (bitOffset - amount));
             tmp |= (byte) ((value & BIT_MASK[amount]) << (bitOffset - amount));
             buf.setByte(bytePos, tmp);
+        }
+        return this;
+    }
+
+    /**
+     * Appends an MSB-first packed bit slice without introducing byte padding.
+     *
+     * @param source source bytes containing the packed bits
+     * @param sourceBitOffset first source bit, where bit zero is the MSB of {@code source[0]}
+     * @param bitCount number of bits to append
+     * @return this message
+     */
+    public ByteMessage putBitSlice(byte[] source, int sourceBitOffset, int bitCount) {
+        checkState(bitIndex != -1, "This ByteMessage instance is not in bit access mode.");
+        checkState(source != null, "Source bit slice cannot be null.");
+        checkState(sourceBitOffset >= 0, "Source bit offset cannot be negative.");
+        checkState(bitCount >= 0, "Bit count cannot be negative.");
+        checkState(sourceBitOffset + bitCount <= source.length * Byte.SIZE,
+                "Source bit slice exceeds the source array.");
+
+        int remaining = bitCount;
+        int offset = sourceBitOffset;
+        while (remaining > 0) {
+            int chunkSize = Math.min(Integer.SIZE, remaining);
+            int value = 0;
+            for (int index = 0; index < chunkSize; index++) {
+                int absoluteBit = offset + index;
+                int sourceByte = source[absoluteBit >>> 3] & 0xFF;
+                value = (value << 1) | ((sourceByte >>> (7 - (absoluteBit & 7))) & 1);
+            }
+            putBits(chunkSize, value);
+            offset += chunkSize;
+            remaining -= chunkSize;
         }
         return this;
     }

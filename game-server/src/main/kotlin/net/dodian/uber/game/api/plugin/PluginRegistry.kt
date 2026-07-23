@@ -5,6 +5,10 @@ import net.dodian.uber.game.api.plugin.ContentModuleIndex
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
 import net.dodian.uber.game.api.plugin.skills.SkillPluginRegistryEngine
 import net.dodian.uber.game.api.plugin.skills.SkillPluginSnapshot
+import net.dodian.uber.game.api.plugin.skills.SkillSupportModule
+import net.dodian.uber.game.api.plugin.skills.SkillSupportRegistryEngine
+import net.dodian.uber.game.api.plugin.skills.SkillSupportSnapshot
+import net.dodian.uber.game.api.plugin.skills.routeKeys
 
 object PluginRegistry : ContentBootstrap {
     override val id: String = "plugins.registry"
@@ -17,11 +21,14 @@ object PluginRegistry : ContentBootstrap {
     }
 
     private val skills = SkillPluginRegistryEngine()
+    private val support = SkillSupportRegistryEngine()
     private val lock = Any()
     @Volatile
     private var lifecycle: Lifecycle = Lifecycle.DISCOVER
     @Volatile
     private var discoveredSkillPlugins: List<SkillPlugin> = emptyList()
+    @Volatile
+    private var discoveredSkillSupportModules: List<SkillSupportModule> = emptyList()
 
     fun discover() {
         if (lifecycle != Lifecycle.DISCOVER) return
@@ -30,6 +37,10 @@ object PluginRegistry : ContentBootstrap {
             val discoveredFromIndex = ContentModuleIndex.skillPlugins
             discoveredSkillPlugins =
                 (discoveredSkillPlugins + discoveredFromIndex)
+                    .distinctBy { it::class.java.name }
+                    .sortedBy { it::class.java.name }
+            discoveredSkillSupportModules =
+                (discoveredSkillSupportModules + ContentModuleIndex.skillSupportModules)
                     .distinctBy { it::class.java.name }
                     .sortedBy { it::class.java.name }
             lifecycle = Lifecycle.VALIDATE
@@ -42,6 +53,9 @@ object PluginRegistry : ContentBootstrap {
         synchronized(lock) {
             if (lifecycle == Lifecycle.FROZEN || lifecycle == Lifecycle.BOOTSTRAP) return
             skills.validate(discoveredSkillPlugins)
+            val gameplayRoutes = discoveredSkillPlugins.flatMap { it.definition.routeKeys() }.toSet()
+            val supportRoutes = discoveredSkillSupportModules.flatMap { it.definition.routeKeys() }
+            require(supportRoutes.none { it in gameplayRoutes }) { "A skill support route is also owned by gameplay: ${supportRoutes.first { it in gameplayRoutes }}" }
             lifecycle = Lifecycle.BOOTSTRAP
         }
     }
@@ -52,6 +66,7 @@ object PluginRegistry : ContentBootstrap {
         synchronized(lock) {
             if (lifecycle == Lifecycle.FROZEN) return
             skills.bootstrap(discoveredSkillPlugins)
+            support.bootstrap(discoveredSkillSupportModules)
             skills.freeze()
             lifecycle = Lifecycle.FROZEN
         }
@@ -60,6 +75,11 @@ object PluginRegistry : ContentBootstrap {
     fun currentSkills(): SkillPluginSnapshot {
         bootstrap()
         return skills.current()
+    }
+
+    fun currentSkillSupport(): SkillSupportSnapshot {
+        bootstrap()
+        return support.current()
     }
 
     fun registerSkill(plugin: SkillPlugin) {
@@ -77,7 +97,9 @@ object PluginRegistry : ContentBootstrap {
         synchronized(lock) {
             lifecycle = Lifecycle.FROZEN
             discoveredSkillPlugins = emptyList()
+            discoveredSkillSupportModules = emptyList()
             skills.clearForTests()
+            support.resetForTests()
         }
     }
 
@@ -85,7 +107,9 @@ object PluginRegistry : ContentBootstrap {
         synchronized(lock) {
             lifecycle = Lifecycle.DISCOVER
             discoveredSkillPlugins = emptyList()
+            discoveredSkillSupportModules = emptyList()
             skills.resetForTests()
+            support.resetForTests()
         }
     }
 }

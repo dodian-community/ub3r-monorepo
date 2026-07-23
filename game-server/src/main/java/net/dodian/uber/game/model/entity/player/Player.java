@@ -342,7 +342,6 @@ public abstract class Player extends Entity {
 
     void destruct() {
         clearDamageAttribution();
-        updateState.releaseCachedUpdateBlock();
         interactionState.terminatePlayerTasks();
         interactionState.clearPluginAttributes();
         removeFromChunk();
@@ -781,46 +780,6 @@ public abstract class Player extends Entity {
             return -1;
         }
         return Utils.xlateDirectionToClient[direction];
-    }
-
-    public void addNewPlayer(Player plr, ByteMessage str, ByteMessage updateBlock) {
-        if (plr == null || playerListSize >= 255 || playerListSize >= playerList.length) {
-            return;
-        }
-        int id = plr.getSlot();
-        playerList[playerListSize++] = plr;
-        playersUpdating.add(plr);
-        bumpLocalPlayerMembershipRevision();
-        str.putBits(11, id);
-        str.putBits(1, 1);// Requires update?
-        PlayerUpdating.getInstance().appendAddLocalBlockUpdate(plr, updateBlock);
-        str.putBits(1, 1); // set to true, if we want to discard the
-        // (clientside) walking queue
-        // no idea what this might be useful for yet
-        int z = plr.getPosition().getY() - getPosition().getY();
-        if (z < 0)
-            z += 32;
-        str.putBits(5, z); // y coordinate relative to thisPlayer
-        z = plr.getPosition().getX() - getPosition().getX();
-        if (z < 0)
-            z += 32;
-        str.putBits(5, z); // x coordinate relative to thisPlayer
-    }
-
-    public boolean isCachedUpdateBlockValid() {
-        return updateState.isCachedUpdateBlockValid();
-    }
-
-    public void writeCachedUpdateBlock(ByteMessage dst) {
-        updateState.writeCachedUpdateBlock(dst);
-    }
-
-    public void cacheUpdateBlock(ByteMessage src) {
-        updateState.cacheUpdateBlock(src);
-    }
-
-    public void invalidateCachedUpdateBlock() {
-        updateState.invalidateCachedUpdateBlock();
     }
 
     public void markAppearanceDirty() {

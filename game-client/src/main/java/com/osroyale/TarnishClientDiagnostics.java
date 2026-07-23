@@ -38,9 +38,10 @@ final class TarnishClientDiagnostics {
                 " tick=" + tick + " base=" + baseX + ',' + baseY + " local=" + position(local));
     }
 
-    static void playerMask(int playerIndex, int mask, int start, int end, Player player) {
+    static void playerMask(int playerIndex, int mask, int fixedBits, int variableBytes, Player player) {
         add("player-mask index=" + playerIndex + " mask=0x" + Integer.toHexString(mask) +
-                " bytes=" + (end - start) + " range=" + start + ".." + end + " subject=" + summary(player));
+                " fixedBits=" + fixedBits + " variableBytes=" + variableBytes +
+                " subject=" + summary(player));
     }
 
     static void appearance(int playerIndex, int length, byte[] bytes, Player player) {

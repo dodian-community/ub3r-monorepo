@@ -17,8 +17,6 @@ final class PlayerUpdateState {
             new java.util.concurrent.atomic.AtomicLong();
 
     private final Player owner;
-    private ByteMessage cachedUpdateBlock = null;
-    private boolean cachedUpdateBlockValid = false;
     private volatile long appearanceRevision = 0L;
     private volatile long cachedAppearanceRevision = -1L;
     private volatile int cachedAppearanceSignature = Integer.MIN_VALUE;
@@ -36,30 +34,6 @@ final class PlayerUpdateState {
 
     PlayerUpdateState(Player owner) {
         this.owner = owner;
-    }
-
-    boolean isCachedUpdateBlockValid() {
-        return cachedUpdateBlockValid && cachedUpdateBlock != null && cachedUpdateBlock.getBuffer().refCnt() > 0;
-    }
-
-    void writeCachedUpdateBlock(ByteMessage dst) {
-        dst.putBytes(cachedUpdateBlock);
-    }
-
-    void cacheUpdateBlock(ByteMessage src) {
-        releaseCachedUpdateBlock();
-        if (src != null) {
-            src.retain();
-            cachedUpdateBlock = src;
-            cachedUpdateBlockValid = true;
-            return;
-        }
-        cachedUpdateBlockValid = false;
-    }
-
-    void invalidateCachedUpdateBlock() {
-        cachedUpdateBlockValid = false;
-        releaseCachedUpdateBlock();
     }
 
     void markAppearanceDirty() {
@@ -130,16 +104,6 @@ final class PlayerUpdateState {
         return result;
     }
 
-    void releaseCachedUpdateBlock() {
-        if (cachedUpdateBlock == null) {
-            return;
-        }
-        if (cachedUpdateBlock.getBuffer().refCnt() > 0) {
-            cachedUpdateBlock.release();
-        }
-        cachedUpdateBlock = null;
-    }
-
     byte[] getChatText() {
         return chatText;
     }
@@ -182,7 +146,6 @@ final class PlayerUpdateState {
         chatTextSize = 0;
         chatTextColor = 0;
         chatTextEffects = 0;
-        invalidateCachedUpdateBlock();
     }
 
     void faceTarget(int index) {
@@ -215,12 +178,12 @@ final class PlayerUpdateState {
     }
 
     void appendMask400Update(ByteMessage buf) {
-        buf.put(owner.m4001, ValueType.SUBTRACT);
-        buf.put(owner.m4002, ValueType.SUBTRACT);
-        buf.put(owner.m4003, ValueType.SUBTRACT);
-        buf.put(owner.m4004, ValueType.SUBTRACT);
-        buf.putShort(owner.m4006, ByteOrder.BIG, ValueType.ADD);
-        buf.putShort(owner.m4005, ValueType.ADD);
-        buf.put(owner.m4007, ValueType.SUBTRACT);
+        buf.putBits(8, owner.m4001);
+        buf.putBits(8, owner.m4002);
+        buf.putBits(8, owner.m4003);
+        buf.putBits(8, owner.m4004);
+        buf.putBits(16, owner.m4006);
+        buf.putBits(16, owner.m4005);
+        buf.putBits(8, owner.m4007);
     }
 }

@@ -2,59 +2,55 @@ package net.dodian.uber.game.model.entity.player;
 
 import net.dodian.uber.game.model.entity.UpdateFlag;
 import net.dodian.uber.game.netty.codec.ByteMessage;
-import net.dodian.uber.game.engine.sync.SynchronizationContext;
+import net.dodian.uber.game.engine.sync.protocol.PackedUpdateBlock;
+import net.dodian.uber.game.engine.sync.scratch.ThreadLocalSyncScratch;
 
 /**
  * Stateless Luna-style player update block encoder.
  */
 final class PlayerUpdateBlockSet {
 
-    /** Set on the low mask byte when the mask needs a second (high) byte. */
-    private static final int MASK_OVERFLOW_FLAG = 0x40;
-    /** Masks at or above this value don't fit in a single byte alongside {@link #MASK_OVERFLOW_FLAG}. */
-    private static final int MASK_OVERFLOW_THRESHOLD = 0x100;
-
-    void encode(PlayerUpdating updating, Player player, ByteMessage out, PlayerUpdating.UpdatePhase phase) {
-        boolean cacheablePhase = phase == PlayerUpdating.UpdatePhase.UPDATE_LOCAL;
+    PackedUpdateBlock encode(PlayerUpdating updating, Player player, PlayerUpdating.UpdatePhase phase) {
         boolean includeChat = phase != PlayerUpdating.UpdatePhase.UPDATE_SELF;
         boolean forceAppearance = phase == PlayerUpdating.UpdatePhase.ADD_LOCAL;
         boolean includeAddLocalFacingSnapshot = shouldIncludeAddLocalFacingSnapshot(player, phase);
-        boolean sharedCacheablePhase = phase != PlayerUpdating.UpdatePhase.UPDATE_SELF;
         int updateMask = computeUpdateMask(player, includeChat, forceAppearance, includeAddLocalFacingSnapshot);
-
-        if (sharedCacheablePhase && updateMask != 0) {
-            byte[] sharedBlock = SynchronizationContext.getSharedPlayerBlock(player, phase.name());
-            if (sharedBlock != null) {
-                out.putBytes(sharedBlock);
-                SynchronizationContext.recordPlayerBlockCacheHit(true);
-                return;
-            }
-            SynchronizationContext.recordPlayerBlockCacheHit(false);
+        if (updateMask == 0) {
+            return null;
         }
 
-        if (cacheablePhase && player.isCachedUpdateBlockValid()) {
-            player.writeCachedUpdateBlock(out);
-            return;
+        ByteMessage fixed = ThreadLocalSyncScratch.packedFixedBlock();
+        fixed.startBitAccess();
+        if (player.getUpdateFlags().isRequired(UpdateFlag.FORCED_MOVEMENT)) player.appendMask400Update(fixed);
+        if (player.getUpdateFlags().isRequired(UpdateFlag.GRAPHICS)) updating.appendGraphic(player, fixed);
+        if (player.getUpdateFlags().isRequired(UpdateFlag.ANIM)) updating.appendAnimationRequest(player, fixed);
+        if (player.getUpdateFlags().isRequired(UpdateFlag.FACE_CHARACTER)) updating.appendFaceCharacter(player, fixed);
+        if (player.getUpdateFlags().isRequired(UpdateFlag.FACE_COORDINATE)) {
+            updating.appendFaceCoordinates(player, fixed);
+        } else if (includeAddLocalFacingSnapshot) {
+            appendAddLocalFacingSnapshot(player, fixed);
         }
+        if (player.getUpdateFlags().isRequired(UpdateFlag.HIT)) updating.appendPrimaryHit(player, fixed);
+        if (player.getUpdateFlags().isRequired(UpdateFlag.HIT2)) updating.appendPrimaryHit2(player, fixed);
+        int fixedBitCount = fixed.getBitIndex();
+        fixed.endBitAccess();
 
-        ByteMessage blockBuf = cacheablePhase ? ByteMessage.raw(256) : out;
-        try {
-            if (updateMask == 0) {
-                return;
-            }
-
-            writeMask(blockBuf, updateMask);
-            encodeBlocks(updating, player, blockBuf, includeChat, forceAppearance, includeAddLocalFacingSnapshot);
-
-            if (cacheablePhase) {
-                out.putBytes(blockBuf);
-                player.cacheUpdateBlock(blockBuf);
-            }
-        } finally {
-            if (cacheablePhase) {
-                blockBuf.release();
-            }
+        ByteMessage variable = ThreadLocalSyncScratch.packedVariableBlock();
+        if (player.getUpdateFlags().isRequired(UpdateFlag.FORCED_CHAT)) {
+            PlayerUpdating.appendForcedChatText(player, variable);
         }
+        if (includeChat && player.getUpdateFlags().isRequired(UpdateFlag.CHAT)) {
+            PlayerUpdating.appendPlayerChatText(player, variable);
+        }
+        if (forceAppearance || player.getUpdateFlags().isRequired(UpdateFlag.APPEARANCE)) {
+            PlayerUpdating.appendPlayerAppearance(player, variable);
+        }
+        return new PackedUpdateBlock(
+                updateMask,
+                fixed.toByteArray(),
+                fixedBitCount,
+                variable.toByteArray()
+        );
     }
 
     private int computeUpdateMask(Player player,
@@ -75,38 +71,6 @@ final class PlayerUpdateBlockSet {
         if (player.getUpdateFlags().isRequired(UpdateFlag.HIT)) updateMask |= UpdateFlag.HIT.getMask(player.getType());
         if (player.getUpdateFlags().isRequired(UpdateFlag.HIT2)) updateMask |= UpdateFlag.HIT2.getMask(player.getType());
         return updateMask;
-    }
-
-    private void writeMask(ByteMessage blockBuf, int updateMask) {
-        if (updateMask >= MASK_OVERFLOW_THRESHOLD) {
-            int overflowMask = updateMask | MASK_OVERFLOW_FLAG;
-            blockBuf.put(overflowMask & 0xFF);
-            blockBuf.put(overflowMask >> 8);
-            return;
-        }
-        blockBuf.put(updateMask);
-    }
-
-    private void encodeBlocks(PlayerUpdating updating,
-                              Player player,
-                              ByteMessage blockBuf,
-                              boolean includeChat,
-                              boolean forceAppearance,
-                              boolean includeAddLocalFacingSnapshot) {
-        if (player.getUpdateFlags().isRequired(UpdateFlag.FORCED_MOVEMENT)) player.appendMask400Update(blockBuf);
-        if (player.getUpdateFlags().isRequired(UpdateFlag.GRAPHICS)) updating.appendGraphic(player, blockBuf);
-        if (player.getUpdateFlags().isRequired(UpdateFlag.ANIM)) updating.appendAnimationRequest(player, blockBuf);
-        if (player.getUpdateFlags().isRequired(UpdateFlag.FORCED_CHAT)) PlayerUpdating.appendForcedChatText(player, blockBuf);
-        if (includeChat && player.getUpdateFlags().isRequired(UpdateFlag.CHAT)) PlayerUpdating.appendPlayerChatText(player, blockBuf);
-        if (player.getUpdateFlags().isRequired(UpdateFlag.FACE_CHARACTER)) updating.appendFaceCharacter(player, blockBuf);
-        if (forceAppearance || player.getUpdateFlags().isRequired(UpdateFlag.APPEARANCE)) PlayerUpdating.appendPlayerAppearance(player, blockBuf);
-        if (player.getUpdateFlags().isRequired(UpdateFlag.FACE_COORDINATE)) {
-            updating.appendFaceCoordinates(player, blockBuf);
-        } else if (includeAddLocalFacingSnapshot) {
-            appendAddLocalFacingSnapshot(player, blockBuf);
-        }
-        if (player.getUpdateFlags().isRequired(UpdateFlag.HIT)) updating.appendPrimaryHit(player, blockBuf);
-        if (player.getUpdateFlags().isRequired(UpdateFlag.HIT2)) updating.appendPrimaryHit2(player, blockBuf);
     }
 
     private boolean shouldIncludeAddLocalFacingSnapshot(Player player, PlayerUpdating.UpdatePhase phase) {
@@ -139,7 +103,7 @@ final class PlayerUpdateBlockSet {
         int focusY = player.getPosition().getY() + deltaY;
         int encodedX = (focusX * 2) + 1;
         int encodedY = (focusY * 2) + 1;
-        blockBuf.putShort(encodedX, net.dodian.uber.game.netty.codec.ByteOrder.LITTLE, net.dodian.uber.game.netty.codec.ValueType.ADD);
-        blockBuf.putShort(encodedY, net.dodian.uber.game.netty.codec.ByteOrder.LITTLE);
+        blockBuf.putBits(16, encodedX);
+        blockBuf.putBits(16, encodedY);
     }
 }

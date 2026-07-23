@@ -455,6 +455,9 @@ object PacketBankingService {
             }
             if (client.enterAmountId > 0) {
                 client.send(RemoveInterfaces())
+                if (net.dodian.uber.game.engine.systems.skills.SkillAmountPromptService.tryComplete(client, enteredAmount)) {
+                    return
+                }
                 if (client.enterAmountId == 2) {
                     client.send(RemoveInterfaces())
                     SmithingInterface.startFromPending(client, enteredAmount)

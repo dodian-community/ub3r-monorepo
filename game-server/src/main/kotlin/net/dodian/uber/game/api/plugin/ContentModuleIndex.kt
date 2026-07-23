@@ -4,6 +4,8 @@ import com.google.common.reflect.ClassPath
 import net.dodian.uber.game.api.plugin.dsl.PluginMetadata as DslPluginMetadata
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
 import net.dodian.uber.game.api.plugin.skills.SkillContentModule
+import net.dodian.uber.game.api.plugin.skills.SkillSupportModule
+import net.dodian.uber.game.api.plugin.skills.routeKeys as supportRouteKeys
 import net.dodian.uber.game.api.plugin.skills.routeKeys
 import net.dodian.uber.game.item.ItemContent
 import net.dodian.uber.game.npc.NpcContentDefinition
@@ -75,6 +77,7 @@ object ContentModuleIndex {
     @JvmField val npcContents: List<NpcContentDefinition>
     @JvmField val npcModules: List<NpcModule>
     @JvmField val skillPlugins: List<SkillPlugin>
+    @JvmField val skillSupportModules: List<SkillSupportModule>
     @JvmField val shopPlugins: List<ShopPlugin>
     @JvmField val eventBootstraps: List<() -> Unit>
     @JvmField val contentBootstraps: List<ContentBootstrap>
@@ -96,6 +99,7 @@ object ContentModuleIndex {
         val discoveredNpcs = mutableListOf<Pair<String, NpcContentDefinition>>()
         val discoveredNpcModules = mutableListOf<Pair<String, NpcModule>>()
         val discoveredSkills = mutableListOf<Pair<String, SkillPlugin>>()
+        val discoveredSkillSupport = mutableListOf<Pair<String, SkillSupportModule>>()
         val discoveredShops = mutableListOf<Pair<String, ShopPlugin>>()
         val discoveredEvents = mutableListOf<Pair<String, () -> Unit>>()
         val discoveredBootstraps = mutableListOf<Pair<String, ContentBootstrap>>()
@@ -118,6 +122,12 @@ object ContentModuleIndex {
                 require(manifest.declaredRouteKeys == actualRoutes) {
                     "Content module ${manifest.id} declared routes ${manifest.declaredRouteKeys.sorted()} " +
                         "but registry routes are ${actualRoutes.sorted()}"
+                }
+            }
+            if (instance is SkillSupportModule) {
+                val actualRoutes = instance.definition.supportRouteKeys()
+                require(manifest.declaredRouteKeys == actualRoutes) {
+                    "Content module ${manifest.id} declared routes ${manifest.declaredRouteKeys.sorted()} but registry routes are ${actualRoutes.sorted()}"
                 }
             }
             val enabled = ContentModuleFeatureState.isEnabled(manifest)
@@ -144,6 +154,10 @@ object ContentModuleIndex {
                 is SkillPlugin -> {
                     if (enabled) discoveredSkills += className to instance
                     pluginKind = "skill-plugin"
+                }
+                is SkillSupportModule -> {
+                    if (enabled) discoveredSkillSupport += className to instance
+                    pluginKind = "skill-support"
                 }
                 is ShopPlugin -> {
                     if (enabled) discoveredShops += className to instance
@@ -205,6 +219,7 @@ object ContentModuleIndex {
         npcContents = discoveredNpcs.sortedBy { it.first }.map { it.second }
         npcModules = discoveredNpcModules.sortedBy { it.first }.map { it.second }
         skillPlugins = discoveredSkills.sortedBy { it.first }.map { it.second }
+        skillSupportModules = discoveredSkillSupport.sortedBy { it.first }.map { it.second }
         shopPlugins = discoveredShops.sortedBy { it.first }.map { it.second }
         eventBootstraps = discoveredEvents.sortedBy { it.first }.map { it.second }
         contentBootstraps = discoveredBootstraps.sortedBy { it.first }.map { it.second }

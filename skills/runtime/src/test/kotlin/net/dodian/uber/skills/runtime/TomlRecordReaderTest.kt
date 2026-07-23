@@ -24,4 +24,16 @@ class TomlRecordReaderTest {
             TomlRecordReader.readRecords("broken.toml", "record", loader)
         }
     }
+
+    @Test
+    fun `missing or unsupported schema version fails with an actionable message`() {
+        val loader = object : ClassLoader() {
+            override fun getResourceAsStream(name: String) =
+                if (name == "old.toml") ByteArrayInputStream("[[record]]\nvalue = 1".toByteArray()) else null
+        }
+        val error = assertThrows(IllegalArgumentException::class.java) {
+            TomlRecordReader.readRecords("old.toml", "record", loader)
+        }
+        assertEquals(true, error.message!!.contains("schema_version"))
+    }
 }

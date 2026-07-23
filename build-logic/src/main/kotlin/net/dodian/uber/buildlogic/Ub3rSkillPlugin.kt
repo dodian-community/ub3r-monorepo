@@ -68,8 +68,12 @@ abstract class VerifySkillModule : DefaultTask() {
         check(tests.isNotEmpty() && tests.any { it.readText().contains("@Test") }) {
             "${project.path} must contain at least one JUnit runtime test."
         }
-        check(!source.contains("project(\":game-server\")") && !source.contains("net.dodian.uber.game.model.entity.player.Client")) {
-            "${project.path} must remain independent of :game-server and Client."
+        check(
+            !source.contains("project(\":game-server\")") &&
+                !source.contains("net.dodian.uber.game.model.entity.player.Client") &&
+                !source.contains("SkillEngineAccess"),
+        ) {
+            "${project.path} must remain independent of :game-server, Client, and SkillEngineAccess."
         }
         check(source.contains(implementationClass.get().substringAfterLast('.'))) {
             "${project.path} does not contain ${implementationClass.get()}."

@@ -11,6 +11,8 @@ import net.dodian.uber.game.netty.codec.ByteMessage;
 import net.dodian.uber.game.netty.codec.ByteOrder;
 import net.dodian.uber.game.netty.codec.ValueType;
 import net.dodian.uber.game.engine.sync.SynchronizationContext;
+import net.dodian.uber.game.engine.sync.protocol.PackedUpdateBlock;
+import net.dodian.uber.game.engine.sync.protocol.PackedBitSlice;
 import net.dodian.uber.game.engine.sync.player.PlayerVisibilityRules;
 import net.dodian.uber.game.engine.sync.scratch.ThreadLocalSyncScratch;
 import net.dodian.uber.game.engine.systems.interaction.StaticObjectOverrides;
@@ -113,24 +115,11 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         stream.putBits(2, LOCAL_REMOVE_TYPE);
     }
 
-    /** Writes the active client's add-local wire shape without mutating viewer state. */
-    public void writeStagedLocalAdd(Player viewer, Player other, ByteMessage stream, ByteMessage updateBlock) {
-        writeStagedLocalAdd(viewer, other, stream, updateBlock, null);
-    }
-
-    /** Writes add-local bits and reuses the cycle's immutable appearance block when available. */
-    public void writeStagedLocalAdd(Player viewer, Player other, ByteMessage stream, ByteMessage updateBlock,
-                                    byte[] sharedBlock) {
+    /** Writes the active client's add-local movement shape without mutating viewer state. */
+    public void writeStagedLocalAdd(Player viewer, Player other, ByteMessage stream, boolean hasBlock) {
         int id = other.getSlot();
         stream.putBits(11, id);
-        stream.putBits(1, 1);
-        if (sharedBlock != null) {
-            updateBlock.putBytes(sharedBlock);
-            SynchronizationContext.recordPlayerBlockCacheHit(true);
-        } else {
-            appendAddLocalBlockUpdate(other, updateBlock);
-            SynchronizationContext.recordPlayerBlockCacheHit(false);
-        }
+        stream.putBits(1, hasBlock ? 1 : 0);
         stream.putBits(1, 1);
         int delta = other.getPosition().getY() - viewer.getPosition().getY();
         if (delta < 0) delta += 32;
@@ -148,68 +137,30 @@ public class PlayerUpdating extends EntityUpdating<Player> {
      * sent, using the ordinary UPDATE_LOCAL block layout.
      */
     public void writeStagedLocalAddWithoutAppearance(Player viewer, Player other, ByteMessage stream,
-                                                     ByteMessage updateBlock) {
-        writeStagedLocalAddWithoutAppearance(viewer, other, stream, updateBlock, null);
-    }
-
-    /**
-     * Add-with-position for a subject whose appearance this viewer has already seen. The block
-     * payload is UPDATE_LOCAL — identical bytes to the shared per-tick cache — so callers pass
-     * {@code sharedUpdateBlock} when available and only fall back to a per-viewer re-encode on
-     * a cache miss (mirrors rsprot's observer-independent block sharing).
-     */
-    public void writeStagedLocalAddWithoutAppearance(Player viewer, Player other, ByteMessage stream,
-                                                     ByteMessage updateBlock, byte[] sharedUpdateBlock) {
-        stream.putBits(11, other.getSlot());
-        boolean hasBlock = other.getUpdateFlags().isUpdateRequired();
-        stream.putBits(1, hasBlock ? 1 : 0);
-        if (hasBlock) {
-            if (sharedUpdateBlock != null) {
-                updateBlock.putBytes(sharedUpdateBlock);
-            } else {
-                appendBlockUpdate(other, updateBlock, UpdatePhase.UPDATE_LOCAL);
-            }
-        }
-        stream.putBits(1, 1);
-        int delta = other.getPosition().getY() - viewer.getPosition().getY();
-        if (delta < 0) delta += 32;
-        stream.putBits(5, delta);
-        delta = other.getPosition().getX() - viewer.getPosition().getX();
-        if (delta < 0) delta += 32;
-        stream.putBits(5, delta);
-    }
-
-    public void appendSelfBlockUpdate(Player player, ByteMessage buf) {
-        appendBlockUpdate(player, buf, UpdatePhase.UPDATE_SELF);
+                                                     boolean hasBlock) {
+        writeStagedLocalAdd(viewer, other, stream, hasBlock);
     }
 
     public boolean hasSelfUpdate(Player player) {
         return hasUpdatesForPhase(player, UpdatePhase.UPDATE_SELF);
     }
 
-
-    @Override
-    public void appendBlockUpdate(Player player, ByteMessage buf) {
-        appendBlockUpdate(player, buf, UpdatePhase.UPDATE_LOCAL);
-    }
-
-    void appendBlockUpdate(Player player, ByteMessage buf, UpdatePhase phase) {
-        BLOCK_SET.encode(this, player, buf, phase);
-    }
-
-    public void appendAddLocalBlockUpdate(Player player, ByteMessage buf) {
-        appendBlockUpdate(player, buf, UpdatePhase.ADD_LOCAL);
-    }
-
-    public byte[] buildSharedBlock(Player player, String phaseName) {
+    public PackedUpdateBlock buildSharedBlock(Player player, String phaseName) {
         UpdatePhase phase = UpdatePhase.valueOf(phaseName);
-        ByteMessage block = withSharedBlock();
-        try {
-            appendBlockUpdate(player, block, phase);
-            return block.toByteArray();
-        } finally {
-            releaseScratch(block);
-        }
+        return buildPackedBlock(player, phase);
+    }
+
+    public PackedUpdateBlock buildPackedBlock(Player player, UpdatePhase phase) {
+        return BLOCK_SET.encode(this, player, phase);
+    }
+
+    public PackedBitSlice buildLocalMovement(Player player) {
+        ByteMessage movement = ThreadLocalSyncScratch.packedFixedBlock();
+        movement.startBitAccess();
+        player.updatePlayerMovement(movement);
+        int bitCount = movement.getBitIndex();
+        movement.endBitAccess();
+        return new PackedBitSlice(movement.toByteArray(), bitCount);
     }
 
     private boolean hasUpdatesForPhase(Player player, UpdatePhase phase) {
@@ -231,14 +182,14 @@ public class PlayerUpdating extends EntityUpdating<Player> {
     }
 
     public void appendGraphic(Player player, ByteMessage buf) {
-        buf.putShort(player.getGraphicId(), ByteOrder.LITTLE); // writeWordBigEndian
-        buf.putInt(player.getGraphicHeight()); // writeDWord
+        buf.putBits(16, player.getGraphicId());
+        buf.putBits(32, player.getGraphicHeight());
     }
 
     @Override
     public void appendAnimationRequest(Player player, ByteMessage buf) {
-        buf.putShort(player.getAnimationId(), ByteOrder.LITTLE);
-        buf.put(player.getAnimationDelay(), ValueType.NEGATE); // writeByteC = -value, not 128-value
+        buf.putBits(16, player.getAnimationId());
+        buf.putBits(8, player.getAnimationDelay());
     }
 
     public static void appendForcedChatText(Player player, ByteMessage buf) {
@@ -262,7 +213,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         if (faceTarget < 0 || faceTarget > 0xFFFF) {
             faceTarget = 0xFFFF;
         }
-        buf.putShort(faceTarget, ByteOrder.LITTLE); // writeWordBigEndian
+        buf.putBits(16, faceTarget);
     }
 
     public static void appendPlayerAppearance(Player player, ByteMessage buf) {
@@ -422,19 +373,9 @@ public class PlayerUpdating extends EntityUpdating<Player> {
         }
     }
 
-    public ByteMessage withScratchUpdateBlock() {
-        SynchronizationContext.recordPlayerScratchReuse();
-        return ThreadLocalSyncScratch.playerUpdateBlock();
-    }
-
     private ByteMessage withAppearanceScratch() {
         SynchronizationContext.recordPlayerScratchReuse();
         return ThreadLocalSyncScratch.appearanceBlock();
-    }
-
-    private ByteMessage withSharedBlock() {
-        SynchronizationContext.recordPlayerScratchReuse();
-        return ThreadLocalSyncScratch.sharedBlock();
     }
 
     private static void releaseScratch(ByteMessage message) {
@@ -461,30 +402,28 @@ public class PlayerUpdating extends EntityUpdating<Player> {
 
     @Override
     public void appendFaceCoordinates(Player player, ByteMessage buf) {
-        buf.putShort(player.getFaceCoordinateX(), ByteOrder.LITTLE, ValueType.ADD); // writeWordBigEndianA
-        buf.putShort(player.getFaceCoordinateY(), ByteOrder.LITTLE); // writeWordBigEndian
+        buf.putBits(16, player.getFaceCoordinateX());
+        buf.putBits(16, player.getFaceCoordinateY());
     }
 
     @Override
     public void appendPrimaryHit(Player player, ByteMessage buf) {
-        appendTarnishPlayerHit(buf, player.getDamageDealt(), player.getHitType(), player, ValueType.ADD);
+        appendTarnishPlayerHit(buf, player.getDamageDealt(), player.getHitType(), player);
     }
 
     public void appendPrimaryHit2(Player player, ByteMessage buf) {
-        appendTarnishPlayerHit(buf, player.getDamageDealt2(), player.getHitType2(), player, ValueType.SUBTRACT);
+        appendTarnishPlayerHit(buf, player.getDamageDealt2(), player.getHitType2(), player);
     }
 
     private static void appendTarnishPlayerHit(ByteMessage buf, int damage, Entity.hitType hitType,
-                                                Player player, ValueType typeTransform) {
+                                                Player player) {
         int maximum = player.getMaxHealth() >= 500 ? 200 : 100;
         int health = Math.max(0, Math.min(maximum,
                 player.getCurrentHealth() * maximum / Math.max(1, player.getMaxHealth())));
-        buf.put(0); // single hit
-        buf.put(Math.max(0, Math.min(255, damage)));
-        buf.put(tarnishHitType(damage, hitType), typeTransform);
-        buf.put(0); // no separate hit icon in the current combat model
-        buf.put(health);
-        buf.put(maximum, ValueType.NEGATE);
+        buf.putBits(8, Math.max(0, Math.min(255, damage)));
+        buf.putBits(3, tarnishHitType(damage, hitType));
+        buf.putBits(8, health);
+        buf.putBits(1, maximum == 200 ? 1 : 0);
     }
 
     private static int tarnishHitType(int damage, Entity.hitType hitType) {

@@ -39,6 +39,10 @@ object TomlRecordReader {
             }
         } ?: throw IllegalStateException("Missing required skill TOML resource: $resource")
 
+        require(root.path("schema_version").asInt(-1) == 1) {
+            "Unsupported or missing schema_version in skill TOML $resource; expected 1"
+        }
+
         val records = root.path(table)
         require(records.isArray) { "Skill TOML $resource must declare [[$table]] records" }
         require(records.size() > 0) { "Skill TOML $resource has no [[$table]] records" }

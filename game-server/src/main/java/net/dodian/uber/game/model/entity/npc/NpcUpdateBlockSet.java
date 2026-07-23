@@ -1,7 +1,8 @@
 package net.dodian.uber.game.model.entity.npc;
 
 import net.dodian.uber.game.netty.codec.ByteMessage;
-import net.dodian.uber.game.engine.sync.SynchronizationContext;
+import net.dodian.uber.game.engine.sync.protocol.PackedUpdateBlock;
+import net.dodian.uber.game.engine.sync.scratch.ThreadLocalSyncScratch;
 import net.dodian.uber.game.model.entity.UpdateFlag;
 
 /**
@@ -9,29 +10,30 @@ import net.dodian.uber.game.model.entity.UpdateFlag;
  */
 final class NpcUpdateBlockSet {
 
-    void encode(NpcUpdating updating, Npc npc, ByteMessage out) {
-        byte[] sharedBlock = SynchronizationContext.getSharedNpcBlock(npc);
-        if (sharedBlock != null) {
-            out.putBytes(sharedBlock);
-            SynchronizationContext.recordNpcBlockCacheHit(true);
-            return;
-        }
-        SynchronizationContext.recordNpcBlockCacheHit(false);
-
+    PackedUpdateBlock encode(NpcUpdating updating, Npc npc) {
         int mask = NpcUpdateMaskCalculator.computeMask(npc);
         if (mask == 0) {
-            return;
+            // Nothing pending this tick: skip the shared-block cache entirely rather than
+            // risk replaying a stale hit from a slot that isn't re-written every tick (the
+            // slot-indexed cache is persistent across ticks, unlike the old per-tick map).
+            return null;
         }
 
-        out.put(mask);
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.ANIM)) updating.appendAnimationRequest(npc, out);
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.GRAPHICS)) updating.appendGfxUpdate(npc, out);
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.FACE_CHARACTER)) updating.appendFaceCharacter(npc, out);
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.FORCED_CHAT)) updating.appendTextUpdate(npc, out);
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.HIT)) updating.appendPrimaryHit(npc, out);
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.HIT2)) updating.appendPrimaryHit2(npc, out);
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.APPEARANCE)) updating.appendAppearanceUpdate(npc, out);
-        if (npc.getUpdateFlags().isRequired(UpdateFlag.FACE_COORDINATE)) updating.appendFaceCoordinates(npc, out);
+        ByteMessage fixed = ThreadLocalSyncScratch.packedFixedBlock();
+        fixed.startBitAccess();
+        if (npc.getUpdateFlags().isRequired(UpdateFlag.ANIM)) updating.appendAnimationRequest(npc, fixed);
+        if (npc.getUpdateFlags().isRequired(UpdateFlag.GRAPHICS)) updating.appendGfxUpdate(npc, fixed);
+        if (npc.getUpdateFlags().isRequired(UpdateFlag.FACE_CHARACTER)) updating.appendFaceCharacter(npc, fixed);
+        if (npc.getUpdateFlags().isRequired(UpdateFlag.HIT)) updating.appendPrimaryHit(npc, fixed);
+        if (npc.getUpdateFlags().isRequired(UpdateFlag.HIT2)) updating.appendPrimaryHit2(npc, fixed);
+        if (npc.getUpdateFlags().isRequired(UpdateFlag.APPEARANCE)) updating.appendAppearanceUpdate(npc, fixed);
+        if (npc.getUpdateFlags().isRequired(UpdateFlag.FACE_COORDINATE)) updating.appendFaceCoordinates(npc, fixed);
+        int fixedBitCount = fixed.getBitIndex();
+        fixed.endBitAccess();
+
+        ByteMessage variable = ThreadLocalSyncScratch.packedVariableBlock();
+        if (npc.getUpdateFlags().isRequired(UpdateFlag.FORCED_CHAT)) updating.appendTextUpdate(npc, variable);
+        return new PackedUpdateBlock(mask, fixed.toByteArray(), fixedBitCount, variable.toByteArray());
     }
 
 }

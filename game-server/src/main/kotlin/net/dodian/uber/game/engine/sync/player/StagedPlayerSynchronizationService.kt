@@ -5,6 +5,7 @@ import java.util.Arrays
 import net.dodian.uber.game.Constants
 import net.dodian.uber.game.engine.metrics.OperationalTelemetry
 import net.dodian.uber.game.engine.sync.SynchronizationContext
+import net.dodian.uber.game.engine.sync.protocol.PackedUpdateBlock
 import net.dodian.uber.game.engine.sync.player.PlayerVisibilityRules
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.model.entity.UpdateFlag
@@ -14,6 +15,7 @@ import net.dodian.uber.game.model.entity.player.PlayerUpdating
 import net.dodian.uber.game.model.entity.player.TarnishAppearanceValidator
 import net.dodian.uber.game.netty.codec.ByteMessage
 import net.dodian.uber.game.netty.codec.MessageType
+import net.dodian.uber.game.engine.sync.util.SlotBitSet
 import org.slf4j.LoggerFactory
 
 /**
@@ -95,7 +97,9 @@ class StagedPlayerSynchronizationService {
             if (plan.nextCount >= minOf(MAX_LOCALS, viewer.playerList.size)) break
             val candidate = reusable.candidates[index] ?: continue
             val sharedBlock = SynchronizationContext.getSharedPlayerBlock(candidate, "ADD_LOCAL")
-            val additionBytes = ADD_LOCAL_BIT_BYTES + (sharedBlock?.size ?: MAX_APPEARANCE_BLOCK_ESTIMATE)
+            val additionBytes =
+                ADD_LOCAL_BIT_BYTES +
+                    (sharedBlock?.estimatedWireBytes(true) ?: MAX_APPEARANCE_BLOCK_ESTIMATE)
             if (estimatedBytes + additionBytes > MAX_STAGED_PAYLOAD_BUDGET) break
             estimatedBytes += additionBytes
             plan.addAddition(candidate)
@@ -107,25 +111,28 @@ class StagedPlayerSynchronizationService {
 
     internal fun encode(viewer: Client, plan: Plan, stream: ByteMessage) {
         plan.requireFrozen()
-        // Thread-local reused buffer instead of a fresh pooled allocation per viewer per tick.
-        // Safe because encode() runs to completion for one viewer before the next begins on this
-        // thread (see WorldSynchronizationService.encodePlayers' sequential loop).
-        val updateBlock = updating.withScratchUpdateBlock()
-        updating.updateLocalPlayerMovement(viewer, stream, updating.hasSelfUpdate(viewer))
-        updating.appendSelfBlockUpdate(viewer, updateBlock)
+        plan.resetUpdateBlocks()
+        val hasSelfBlock = updating.hasSelfUpdate(viewer)
+        updating.updateLocalPlayerMovement(viewer, stream, hasSelfBlock)
+        if (hasSelfBlock) {
+            plan.queueUpdate(requireNotNull(updating.buildSharedBlock(viewer, "UPDATE_SELF")))
+        }
         stream.putBits(8, plan.previousCount)
         for (index in 0 until plan.previousCount) {
             val local = plan.previous[index]
             if (!plan.retainPrevious[index] || local == null) {
                 updating.writeLocalRemoval(stream)
             } else {
-                local.updatePlayerMovement(stream)
-                val sharedBlock = SynchronizationContext.getSharedPlayerBlock(local, "UPDATE_LOCAL")
-                if (sharedBlock != null) {
-                    updateBlock.putBytes(sharedBlock)
-                    SynchronizationContext.recordPlayerBlockCacheHit(true)
+                val movement = SynchronizationContext.getSharedPlayerMovement(local)
+                if (movement != null) {
+                    stream.putBitSlice(movement.bytes, 0, movement.bitCount)
                 } else {
-                    updating.appendBlockUpdate(local, updateBlock)
+                    local.updatePlayerMovement(stream)
+                }
+                if (local.updateFlags.isUpdateRequired) {
+                    val sharedBlock = SynchronizationContext.getSharedPlayerBlock(local, "UPDATE_LOCAL")
+                    SynchronizationContext.recordPlayerBlockCacheHit(sharedBlock != null)
+                    plan.queueUpdate(sharedBlock ?: requireNotNull(updating.buildSharedBlock(local, "UPDATE_LOCAL")))
                 }
             }
         }
@@ -133,17 +140,48 @@ class StagedPlayerSynchronizationService {
             val addition = plan.additions[index]!!
             if (viewer.hasSeenCurrentAppearance(addition)) {
                 val sharedUpdate = SynchronizationContext.getSharedPlayerBlock(addition, "UPDATE_LOCAL")
-                SynchronizationContext.recordPlayerBlockCacheHit(sharedUpdate != null)
-                updating.writeStagedLocalAddWithoutAppearance(viewer, addition, stream, updateBlock, sharedUpdate)
+                val hasBlock = addition.updateFlags.isUpdateRequired
+                updating.writeStagedLocalAddWithoutAppearance(viewer, addition, stream, hasBlock)
+                if (hasBlock) {
+                    SynchronizationContext.recordPlayerBlockCacheHit(sharedUpdate != null)
+                    plan.queueUpdate(sharedUpdate ?: requireNotNull(updating.buildSharedBlock(addition, "UPDATE_LOCAL")))
+                }
             } else {
                 val sharedBlock = SynchronizationContext.getSharedPlayerBlock(addition, "ADD_LOCAL")
-                updating.writeStagedLocalAdd(viewer, addition, stream, updateBlock, sharedBlock)
+                SynchronizationContext.recordPlayerBlockCacheHit(sharedBlock != null)
+                val block = sharedBlock ?: requireNotNull(updating.buildSharedBlock(addition, "ADD_LOCAL"))
+                updating.writeStagedLocalAdd(viewer, addition, stream, true)
+                plan.queueUpdate(block)
             }
             SynchronizationContext.recordPlayerAdd()
         }
         stream.putBits(11, PlayerUpdating.LOCAL_LIST_TERMINATOR)
         stream.endBitAccess()
-        if (updateBlock.buffer.writerIndex() > 0) stream.putBytes(updateBlock)
+        writePackedUpdatePlanes(plan, stream)
+    }
+
+    private fun writePackedUpdatePlanes(plan: Plan, stream: ByteMessage) {
+        if (plan.updateBlockCount == 0) return
+        for (index in 0 until plan.updateBlockCount) {
+            val block = requireNotNull(plan.updateBlocks[index])
+            var mask = block.mask
+            if (mask >= 0x100) {
+                mask = mask or 0x40
+                stream.put(mask and 0xFF)
+                stream.put(mask ushr 8)
+            } else {
+                stream.put(mask)
+            }
+        }
+        stream.startBitAccess()
+        for (index in 0 until plan.updateBlockCount) {
+            val block = requireNotNull(plan.updateBlocks[index])
+            stream.putBitSlice(block.fixedBytes, 0, block.fixedBitCount)
+        }
+        stream.endBitAccess()
+        for (index in 0 until plan.updateBlockCount) {
+            stream.putBytes(requireNotNull(plan.updateBlocks[index]).variableBytes)
+        }
     }
 
     internal fun commit(viewer: Client, plan: Plan) {
@@ -220,9 +258,12 @@ class StagedPlayerSynchronizationService {
         val additions = arrayOfNulls<Player>(capacity)
         val next = arrayOfNulls<Player>(capacity)
         val nextGenerations = LongArray(capacity)
+        val updateBlocks = arrayOfNulls<PackedUpdateBlock>(capacity + 1)
         var previousCount = 0
         var additionCount = 0
         var nextCount = 0
+        var updateBlockCount = 0
+            private set
         private var frozen = false
 
         fun reset() {
@@ -233,6 +274,7 @@ class StagedPlayerSynchronizationService {
             previousCount = 0
             additionCount = 0
             nextCount = 0
+            resetUpdateBlocks()
             frozen = false
         }
 
@@ -251,6 +293,16 @@ class StagedPlayerSynchronizationService {
 
         fun freeze() { frozen = true }
         fun requireFrozen() = check(frozen) { "Player synchronization plan is not frozen" }
+
+        fun resetUpdateBlocks() {
+            Arrays.fill(updateBlocks, 0, updateBlockCount, null)
+            updateBlockCount = 0
+        }
+
+        fun queueUpdate(block: PackedUpdateBlock) {
+            check(updateBlockCount < updateBlocks.size) { "Too many player update blocks" }
+            updateBlocks[updateBlockCount++] = block
+        }
     }
 
     internal class Scratch {
@@ -258,9 +310,7 @@ class StagedPlayerSynchronizationService {
         val result = Result()
         val candidates = arrayOfNulls<Player>(MAX_PLAN_CAPACITY)
         private val candidateDistances = IntArray(MAX_PLAN_CAPACITY)
-        private val membership = BooleanArray(Constants.maxPlayers + 1)
-        private val touchedMembership = IntArray(Constants.maxPlayers + 1)
-        private var touchedCount = 0
+        private val membership = SlotBitSet(Constants.maxPlayers + 1)
         var candidateCount = 0
             private set
 
@@ -268,14 +318,13 @@ class StagedPlayerSynchronizationService {
             plan.reset()
             Arrays.fill(candidates, null)
             candidateCount = 0
-            for (index in 0 until touchedCount) membership[touchedMembership[index]] = false
-            touchedCount = 0
+            membership.clear()
         }
 
         fun offerCandidate(viewer: Client, candidate: Player?, plan: Plan) {
             candidate ?: return
             if (!PlayerVisibilityRules.isVisibleTo(viewer, candidate)) return
-            if (candidate.slot !in membership.indices || membership[candidate.slot]) return
+            if (membership.contains(candidate.slot)) return
             markMember(candidate.slot)
             val distance = maxOf(
                 kotlin.math.abs(viewer.position.x - candidate.position.x),
@@ -300,9 +349,7 @@ class StagedPlayerSynchronizationService {
         }
 
         fun markMember(slot: Int) {
-            if (slot !in membership.indices || membership[slot]) return
-            membership[slot] = true
-            touchedMembership[touchedCount++] = slot
+            membership.add(slot)
         }
     }
 

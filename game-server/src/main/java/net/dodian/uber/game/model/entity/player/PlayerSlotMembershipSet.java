@@ -1,6 +1,6 @@
 package net.dodian.uber.game.model.entity.player;
 
-import java.util.BitSet;
+import java.util.Arrays;
 
 /**
  * Slot-indexed membership set for local player sync state.
@@ -9,11 +9,11 @@ import java.util.BitSet;
  * allocation/iterator churn in synchronization hot paths.
  */
 public final class PlayerSlotMembershipSet {
-    private final BitSet slots;
+    private final long[] slots;
     private int size;
 
     public PlayerSlotMembershipSet(int capacity) {
-        this.slots = new BitSet(Math.max(1, capacity));
+        this.slots = new long[(Math.max(1, capacity) + 63) >>> 6];
         this.size = 0;
     }
 
@@ -25,10 +25,15 @@ public final class PlayerSlotMembershipSet {
         if (slot < 0) {
             return false;
         }
-        if (slots.get(slot)) {
+        int word = slot >>> 6;
+        if (word >= slots.length) {
             return false;
         }
-        slots.set(slot);
+        long bit = 1L << (slot & 63);
+        if ((slots[word] & bit) != 0L) {
+            return false;
+        }
+        slots[word] |= bit;
         size++;
         return true;
     }
@@ -38,10 +43,15 @@ public final class PlayerSlotMembershipSet {
             return false;
         }
         int slot = player.getSlot();
-        if (slot < 0 || !slots.get(slot)) {
+        int word = slot >>> 6;
+        if (slot < 0 || word >= slots.length) {
             return false;
         }
-        slots.clear(slot);
+        long bit = 1L << (slot & 63);
+        if ((slots[word] & bit) == 0L) {
+            return false;
+        }
+        slots[word] &= ~bit;
         size--;
         return true;
     }
@@ -51,11 +61,12 @@ public final class PlayerSlotMembershipSet {
             return false;
         }
         int slot = player.getSlot();
-        return slot >= 0 && slots.get(slot);
+        int word = slot >>> 6;
+        return slot >= 0 && word < slots.length && (slots[word] & (1L << (slot & 63))) != 0L;
     }
 
     public void clear() {
-        slots.clear();
+        Arrays.fill(slots, 0L);
         size = 0;
     }
 

@@ -12,6 +12,7 @@ import net.dodian.uber.game.api.plugin.skills.SkillButtonInteraction
 import net.dodian.uber.game.api.plugin.skills.SkillItemInteraction
 import net.dodian.uber.game.api.plugin.skills.SkillItemOnItemInteraction
 import net.dodian.uber.game.api.plugin.skills.SkillItemOnObjectInteraction
+import net.dodian.uber.game.api.plugin.skills.SkillItemGridInteraction
 import net.dodian.uber.game.api.plugin.skills.SkillMagicOnObjectInteraction
 import net.dodian.uber.game.api.plugin.skills.SkillNpcInteraction
 import net.dodian.uber.game.api.plugin.skills.SkillObjectInteraction
@@ -104,7 +105,9 @@ object SkillInteractionDispatcher {
     @JvmStatic
     fun tryHandleItemClick(client: Client, option: Int, itemId: Int, itemSlot: Int, interfaceId: Int): Boolean {
         validateThread("item")
-        val binding = PluginRegistry.currentSkills().itemBinding(option, itemId) ?: return false
+        val binding = PluginRegistry.currentSkills().itemBinding(option, itemId)
+            ?: PluginRegistry.currentSkillSupport().itemBinding(option, itemId)
+            ?: return false
         return ContentErrorPolicy.runBoolean(client, "skill.item.click", bindingKey = "skill.item:$option:$itemId") {
             val handled = binding.handler(SkillItemInteraction(client.asSkillPlayer(), option, itemId, itemSlot, interfaceId))
             SkillPolicyMetrics.record(
@@ -208,7 +211,9 @@ object SkillInteractionDispatcher {
     @JvmStatic
     fun tryHandleButton(client: Client, rawButtonId: Int, opIndex: Int): Boolean {
         validateThread("button")
-        val binding = PluginRegistry.currentSkills().buttonBinding(rawButtonId, opIndex, client.activeInterfaceId) ?: return false
+        val binding = PluginRegistry.currentSkills().buttonBinding(rawButtonId, opIndex, client.activeInterfaceId)
+            ?: PluginRegistry.currentSkillSupport().buttonBinding(rawButtonId, opIndex, client.activeInterfaceId)
+            ?: return false
         return ContentErrorPolicy.runBoolean(client, "skill.button.click", bindingKey = "skill.button:$rawButtonId:$opIndex:${client.activeInterfaceId}") {
             val handled = binding.handler(SkillButtonInteraction(client.asSkillPlayer(), rawButtonId, opIndex, client.activeInterfaceId))
             SkillPolicyMetrics.record(
@@ -217,6 +222,17 @@ object SkillInteractionDispatcher {
                 if (handled) SkillPolicyResult.HANDLED else SkillPolicyResult.POLICY_REJECT,
             )
             handled
+        }
+    }
+
+    @JvmStatic
+    fun tryHandleItemGrid(client: Client, interfaceId: Int, itemId: Int, slot: Int, amount: Int): Boolean {
+        validateThread("item-grid")
+        val binding = PluginRegistry.currentSkills().itemGridBinding(interfaceId)
+            ?: PluginRegistry.currentSkillSupport().itemGridBinding(interfaceId)
+            ?: return false
+        return ContentErrorPolicy.runBoolean(client, "skill.item.grid", bindingKey = "skill.item-grid:$interfaceId") {
+            binding.handler(SkillItemGridInteraction(client.asSkillPlayer(), interfaceId, itemId, slot, amount))
         }
     }
 

@@ -23,6 +23,8 @@ import net.dodian.uber.game.api.plugin.skills.SkillObjectRef
 import net.dodian.uber.game.api.plugin.skills.SkillProfile
 import net.dodian.uber.game.api.plugin.skills.SkillRandom
 import net.dodian.uber.game.api.plugin.skills.SkillClock
+import net.dodian.uber.game.api.plugin.skills.SkillModuleState
+import net.dodian.uber.game.api.plugin.skills.SkillAmountPrompt
 import net.dodian.uber.game.api.plugin.skills.SkillVitals
 import net.dodian.uber.game.engine.config.FeatureStateService
 import net.dodian.uber.game.engine.event.GameEventScheduler
@@ -36,6 +38,7 @@ import net.dodian.uber.game.model.objects.WorldObject
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SetSmithing
+import net.dodian.uber.game.netty.listener.out.SendFrame27
 import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.uber.game.skill.runtime.action.SkillStateCoordinator
 import net.dodian.uber.game.skill.runtime.action.ActionSpec
@@ -52,6 +55,26 @@ import net.dodian.uber.game.model.entity.Entity
 
 /** Engine-only protocol adapter. Public content receives [SkillPlayer], never [Client]. */
 internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlayer {
+    override val amountPrompt = object : SkillAmountPrompt {
+        override fun request(title: String, maxDigits: Int, onEntered: (Int) -> Boolean): Boolean {
+            require(maxDigits in 1..10) { "Amount prompt maxDigits must be between 1 and 10" }
+            client.contentRuntimeState.putPluginAttribute(AMOUNT_PROMPT_KEY, PendingSkillAmountPrompt(onEntered))
+            client.enterAmountId = ENTER_AMOUNT_SKILL_MODULE
+            client.send(SendFrame27(title, maxDigits))
+            return true
+        }
+
+        override fun cancel() {
+            client.contentRuntimeState.removePluginAttribute(AMOUNT_PROMPT_KEY)
+            if (client.enterAmountId == ENTER_AMOUNT_SKILL_MODULE) client.enterAmountId = 0
+        }
+    }
+    override val moduleState = object : SkillModuleState {
+        private fun id(moduleId: String, key: String): String = "$moduleId:$key"
+        override fun get(moduleId: String, key: String): String? = client.contentRuntimeState.getPluginAttribute(id(moduleId, key))
+        override fun put(moduleId: String, key: String, value: String) { client.contentRuntimeState.putPluginAttribute(id(moduleId, key), value) }
+        override fun remove(moduleId: String, key: String) { client.contentRuntimeState.removePluginAttribute(id(moduleId, key)) }
+    }
     override val skills = object : SkillLevels {
         override fun current(skill: Skill) = client.getLevel(skill)
         override fun base(skill: Skill) = client.getSkillLevel(skill)
@@ -133,6 +156,9 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
         override fun itemModel(componentId: Int, zoom: Int, itemId: Int) = client.sendInterfaceModel(componentId, zoom, itemId)
         override fun itemGrid(componentId: Int, entries: List<net.dodian.uber.game.api.plugin.skills.SkillItemGridEntry>) =
             client.send(SetSmithing(componentId, entries.map { intArrayOf(it.itemId, it.amount) }.toTypedArray()))
+        override fun componentVisible(componentId: Int, visible: Boolean) = client.changeInterfaceStatus(componentId, visible)
+        override fun menuGrid(entries: List<net.dodian.uber.game.api.plugin.skills.SkillItemGridEntry>) =
+            client.setMenuItems(entries.map { it.itemId }.toIntArray(), entries.map { it.amount }.toIntArray())
         override fun npcDialogue(dialogueId: Int, npcId: Int) = client.startNpcDialogue(dialogueId, npcId)
         override fun varbit(id: Int, value: Int) = client.varbit(id, value)
     }
@@ -266,6 +292,24 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
         override fun remove(key: ContentAttributeKey<*>) {
             client.contentRuntimeState.removePluginAttribute(key.id)
         }
+    }
+}
+
+private const val AMOUNT_PROMPT_KEY = "skill-module:pending-amount-prompt"
+/** Reserved legacy syntax-input marker for protocol-free skill module prompts. */
+internal const val ENTER_AMOUNT_SKILL_MODULE = 4
+private class PendingSkillAmountPrompt(val onEntered: (Int) -> Boolean)
+
+/** Bridges the existing syntax packet to a module-owned amount prompt. */
+internal object SkillAmountPromptService {
+    fun tryComplete(client: Client, amount: Int): Boolean {
+        if (client.enterAmountId != ENTER_AMOUNT_SKILL_MODULE) return false
+        client.enterAmountId = 0
+        val prompt = client.contentRuntimeState.getPluginAttribute<PendingSkillAmountPrompt>(AMOUNT_PROMPT_KEY)
+            ?: return false
+        client.contentRuntimeState.removePluginAttribute(AMOUNT_PROMPT_KEY)
+        prompt.onEntered(amount)
+        return true
     }
 }
 

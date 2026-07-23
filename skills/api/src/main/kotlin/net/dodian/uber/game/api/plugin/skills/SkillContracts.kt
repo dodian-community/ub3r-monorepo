@@ -28,12 +28,14 @@ interface SkillPlayer {
     val ui: SkillUi
     val world: SkillWorld
     val production: SkillProduction
+    val amountPrompt: SkillAmountPrompt
     val profile: SkillProfile
     val random: SkillRandom
     val clock: SkillClock
     val vitals: SkillVitals
     /** Plugin-owned temporary state; cleared when the player logs out. */
     val attributes: ContentAttributes
+    val moduleState: SkillModuleState
 }
 
 interface SkillLevels {
@@ -41,6 +43,13 @@ interface SkillLevels {
     fun base(skill: Skill): Int
     fun experience(skill: Skill): Int
     fun gainXp(amount: Int, skill: Skill): Boolean
+}
+
+/** Module-keyed transient state. Values are scoped to the declaring module and cleared on logout. */
+interface SkillModuleState {
+    fun get(moduleId: String, key: String): String?
+    fun put(moduleId: String, key: String, value: String)
+    fun remove(moduleId: String, key: String)
 }
 
 interface SkillInventory {
@@ -134,6 +143,8 @@ interface SkillUi {
     fun itemModel(componentId: Int, zoom: Int, itemId: Int)
     /** Renders an item/amount grid into a legacy component without exposing packets to content modules. */
     fun itemGrid(componentId: Int, entries: List<SkillItemGridEntry>)
+    fun componentVisible(componentId: Int, visible: Boolean)
+    fun menuGrid(entries: List<SkillItemGridEntry>)
     fun npcDialogue(dialogueId: Int, npcId: Int)
     fun varbit(id: Int, value: Int)
 }
@@ -161,6 +172,16 @@ interface SkillProduction {
     fun select(selection: SkillMultiSelection): Boolean
     fun pending(): SkillMultiConfig?
     fun clear()
+}
+
+/**
+ * A protocol-free numeric input request. The engine keeps the callback only
+ * for the current player session and routes the legacy syntax packet back to
+ * it. Content must not retain a prompt after requesting it.
+ */
+interface SkillAmountPrompt {
+    fun request(title: String = "Enter amount:", maxDigits: Int = 10, onEntered: (Int) -> Boolean): Boolean
+    fun cancel()
 }
 
 interface SkillProfile { val name: String; val premium: Boolean }
@@ -195,3 +216,4 @@ class SkillMagicOnObjectInteraction(val player: SkillPlayer, val target: SkillOb
     val definition get() = target
 }
 class SkillButtonInteraction(val player: SkillPlayer, val rawButtonId: Int, val opIndex: Int, val activeInterfaceId: Int)
+class SkillItemGridInteraction(val player: SkillPlayer, val interfaceId: Int, val itemId: Int, val slot: Int, val amount: Int)

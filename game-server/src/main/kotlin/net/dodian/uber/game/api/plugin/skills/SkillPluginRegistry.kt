@@ -137,6 +137,7 @@ internal class SkillPluginRegistryEngine {
         val itemOnObjectBindings = HashMap<Long, SkillItemOnObjectBinding>()
         val magicOnObjectBindings = HashMap<Long, SkillMagicOnObjectBinding>()
         val buttonBindings = HashMap<Long, MutableList<SkillButtonBinding>>()
+        val itemGridBindings = HashMap<Int, SkillItemGridBinding>()
         val objectPresetById = HashMap<Int, MutableSet<net.dodian.uber.game.engine.systems.action.PolicyPreset>>()
 
         source.forEach { plugin ->
@@ -228,6 +229,11 @@ internal class SkillPluginRegistryEngine {
                     siblings += binding
                 }
             }
+            definition.itemGridBindings.forEach { binding ->
+                require(itemGridBindings.putIfAbsent(binding.interfaceId, binding) == null) {
+                    "Duplicate skill item-grid binding interfaceId=${binding.interfaceId} for plugin=${definition.name}"
+                }
+            }
         }
 
         return SkillPluginSnapshot(
@@ -238,6 +244,7 @@ internal class SkillPluginRegistryEngine {
             itemOnObjectBindings = itemOnObjectBindings,
             magicOnObjectBindings = magicOnObjectBindings,
             buttonBindings = buttonBindings.mapValues { it.value.toList() },
+            itemGridBindings = itemGridBindings,
             objectPresetById = objectPresetById,
         )
     }
@@ -251,6 +258,7 @@ data class SkillPluginSnapshot(
     private val itemOnObjectBindings: Map<Long, SkillItemOnObjectBinding>,
     private val magicOnObjectBindings: Map<Long, SkillMagicOnObjectBinding>,
     private val buttonBindings: Map<Long, List<SkillButtonBinding>>,
+    private val itemGridBindings: Map<Int, SkillItemGridBinding>,
     private val objectPresetById: Map<Int, Set<net.dodian.uber.game.engine.systems.action.PolicyPreset>>,
 ) {
     val objectBindingCount: Int get() = objectBindings.size
@@ -260,6 +268,7 @@ data class SkillPluginSnapshot(
     val itemOnObjectBindingCount: Int get() = itemOnObjectBindings.size
     val magicOnObjectBindingCount: Int get() = magicOnObjectBindings.size
     val buttonBindingCount: Int get() = buttonBindings.values.sumOf { it.size }
+    val itemGridBindingCount: Int get() = itemGridBindings.size
 
     fun objectBinding(option: Int, objectId: Int): SkillObjectClickBinding? =
         objectBindings[SkillPluginKeys.objectKey(option, objectId)]
@@ -285,6 +294,7 @@ data class SkillPluginSnapshot(
         return resolveButtonBinding(rawButtonId, opIndex, activeInterfaceId)
             ?: resolveButtonBinding(rawButtonId, -1, activeInterfaceId)
     }
+    fun itemGridBinding(interfaceId: Int): SkillItemGridBinding? = itemGridBindings[interfaceId]
 
     fun ownsObjectId(objectId: Int): Boolean = objectPresetById.containsKey(objectId)
 
@@ -294,7 +304,7 @@ data class SkillPluginSnapshot(
     companion object {
         @JvmStatic
         fun empty(): SkillPluginSnapshot =
-            SkillPluginSnapshot(emptyMap(), emptyMap(), emptyMap(), emptyMap(), emptyMap(), emptyMap(), emptyMap(), emptyMap())
+            SkillPluginSnapshot(emptyMap(), emptyMap(), emptyMap(), emptyMap(), emptyMap(), emptyMap(), emptyMap(), emptyMap(), emptyMap())
     }
 
     private fun resolveButtonBinding(rawButtonId: Int, opIndex: Int, activeInterfaceId: Int): SkillButtonBinding? {

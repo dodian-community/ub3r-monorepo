@@ -12,9 +12,8 @@ import net.dodian.uber.game.persistence.audit.ChatLog
 
 /**
  *
- * Moves all [Client.setChatText*], [Client.invalidateCachedUpdateBlock] and
- * guard-message sends out of ChatListener, leaving the listener as a
- * pure decode / bounds-check / delegate adapter.
+ * Moves chat-state mutation and guard-message sends out of ChatListener, leaving the listener as
+ * a pure decode / bounds-check / delegate adapter.
  */
 object PacketChatService {
 
@@ -53,7 +52,6 @@ object PacketChatService {
         }
         client.chatTextMessage = chat
         GameEventBus.post(ChatMessageEvent(client, chat))
-        client.invalidateCachedUpdateBlock()
         client.updateFlags.setRequired(UpdateFlag.CHAT, true)
         ChatLog.recordPublicChat(client, chat)
     }
