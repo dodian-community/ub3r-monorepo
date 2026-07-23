@@ -1,23 +1,38 @@
 package net.dodian.uber.game.engine.systems.zone
 
-import java.util.LinkedHashSet
+import net.dodian.uber.game.Constants
 import net.dodian.uber.game.Server
+import net.dodian.uber.game.engine.sync.util.SlotBitSet
 import net.dodian.uber.game.model.EntityType
 import net.dodian.uber.game.model.entity.player.Client
 
+/**
+ * Game-thread-only: called exclusively from [ZoneUpdateBus.flush] inside
+ * [net.dodian.uber.game.engine.sync.WorldSynchronizationService]'s SYNC_FLUSH stage, never from
+ * the parallel per-viewer encode fan-out, so the reused scratch fields below need no locking.
+ */
 class ZoneSubscriberIndex {
-    fun viewersFor(
+    private val seen = SlotBitSet(Constants.maxPlayers + 1)
+    private val candidates = ArrayList<Client>()
+
+    /** Candidate viewers for [delta], deduped by chunk membership but not yet filtered by [ZoneDelta.appliesTo]. */
+    fun candidatesFor(
         delta: ZoneDelta,
         activePlayers: List<Client>,
     ): List<Client> {
-        val chunkManager = Server.chunkManager ?: return activePlayers.filter(delta::appliesTo)
-        val candidates = LinkedHashSet<Client>()
-        delta.candidateChunkKeys().forEach { key ->
-            val chunkX = (key shr 32).toInt()
-            val chunkY = key.toInt()
-            val repo = chunkManager.getLoaded(chunkX, chunkY) ?: return@forEach
-            repo.getAll<Client>(EntityType.PLAYER).forEach(candidates::add)
+        val chunkManager = Server.chunkManager ?: return activePlayers
+        seen.clear()
+        candidates.clear()
+        for (chunkX in delta.minChunkX..delta.maxChunkX) {
+            for (chunkY in delta.minChunkY..delta.maxChunkY) {
+                val repo = chunkManager.getLoaded(chunkX, chunkY) ?: continue
+                for (client in repo.getAll<Client>(EntityType.PLAYER)) {
+                    if (seen.add(client.slot)) {
+                        candidates.add(client)
+                    }
+                }
+            }
         }
-        return candidates.filter(delta::appliesTo)
+        return candidates
     }
 }

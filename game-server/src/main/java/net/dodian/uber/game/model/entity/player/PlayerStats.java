@@ -25,14 +25,17 @@ final class PlayerStats {
 
     void addExperience(int experience, Skill skill) {
         playerXP[skill.getId()] += experience;
+        cachedCombatLevel = -1;
     }
 
     void setLevel(int level, Skill skill) {
         playerLevel[skill.getId()] = level;
+        cachedCombatLevel = -1;
     }
 
     void setExperience(int experience, Skill skill) {
         playerXP[skill.getId()] = experience;
+        cachedCombatLevel = -1;
     }
 
     int getCurrentHealth() {
@@ -115,7 +118,19 @@ final class PlayerStats {
         ProgressionService.refresh(c, Skill.PRAYER);
     }
 
+    private int cachedCombatLevel = -1;
+
+    void invalidateCombatLevel() {
+        this.cachedCombatLevel = -1;
+    }
+
     int determineCombatLevel() {
+        if (owner.customCombat != -1) {
+            return owner.customCombat;
+        }
+        if (cachedCombatLevel != -1) {
+            return cachedCombatLevel;
+        }
         int magLvl = Skills.getLevelForExperience(getExperience(Skill.MAGIC));
         int ranLvl = Skills.getLevelForExperience(getExperience(Skill.RANGED));
         int attLvl = Skills.getLevelForExperience(getExperience(Skill.ATTACK));
@@ -134,7 +149,8 @@ final class PlayerStats {
         } else {
             combatLevel = ((double) defLvl * 0.25) + ((double) hitLvl * 0.25) + ((double) (prayLvl / 2) * 0.25) + ((double) attLvl * 0.325) + ((double) strLvl * 0.325);
         }
-        return owner.customCombat != -1 ? owner.customCombat : (int) combatLevel;
+        this.cachedCombatLevel = (int) combatLevel;
+        return this.cachedCombatLevel;
     }
 
     int getSkillLevel(Skill skill) {

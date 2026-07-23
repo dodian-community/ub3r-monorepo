@@ -112,7 +112,10 @@ object ZoneUpdateBus {
         private val excludeDbId: Int? = null,
         private val sender: (Client) -> Unit,
     ) : ZoneDelta() {
-        private val candidateChunks = candidateChunkKeys(position, radius)
+        override val minChunkX: Int = (position.x - radius) shr 3
+        override val maxChunkX: Int = (position.x + radius) shr 3
+        override val minChunkY: Int = (position.y - radius) shr 3
+        override val maxChunkY: Int = (position.y + radius) shr 3
 
         override fun appliesTo(viewer: Client): Boolean {
             if (!viewer.isActive || viewer.disconnected) {
@@ -133,24 +136,5 @@ object ZoneUpdateBus {
         override fun deliver(viewer: Client) {
             sender(viewer)
         }
-
-        override fun candidateChunkKeys(): LongArray = candidateChunks
-
-        private fun candidateChunkKeys(position: Position, radius: Int): LongArray {
-            val minChunkX = (position.x - radius) shr 3
-            val maxChunkX = (position.x + radius) shr 3
-            val minChunkY = (position.y - radius) shr 3
-            val maxChunkY = (position.y + radius) shr 3
-            val keys = LongArray((maxChunkX - minChunkX + 1) * (maxChunkY - minChunkY + 1))
-            var index = 0
-            for (chunkX in minChunkX..maxChunkX) {
-                for (chunkY in minChunkY..maxChunkY) {
-                    keys[index++] = packChunkKey(chunkX, chunkY)
-                }
-            }
-            return keys
-        }
-
-        private fun packChunkKey(chunkX: Int, chunkY: Int): Long = (chunkX.toLong() shl 32) xor (chunkY.toLong() and 0xffffffffL)
     }
 }

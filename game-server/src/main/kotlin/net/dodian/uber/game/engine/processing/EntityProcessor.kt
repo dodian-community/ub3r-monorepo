@@ -182,14 +182,17 @@ class EntityProcessor : Runnable {
             npc.lastAttack = npc.lastAttack - 1
         }
 
-        if (npc.alive && !npc.isFighting && npc.isAggressive) {
+        if (npc.alive && !npc.isFighting && npc.isAggressive && PlayerRegistry.getPlayerCount() > 0) {
+            val npcX = npc.position.x
+            val npcY = npc.position.y
+            val npcZ = npc.position.z
             for (client in PlayerRegistry.playersOnline.values) {
                 if (!client.isActive || client.disconnected || client.currentHealth < 1) continue
-                if (client.position.z != npc.position.z) continue
-                val dx = Math.abs(client.position.x - npc.position.x)
-                val dy = Math.abs(client.position.y - npc.position.y)
-                val dist = Math.max(dx, dy)
-                if (dist > 4) continue
+                if (client.position.z != npcZ) continue
+                val dx = Math.abs(client.position.x - npcX)
+                if (dx > 4) continue
+                val dy = Math.abs(client.position.y - npcY)
+                if (dy > 4) continue
                 if (client.position.x in 3200..3225 && client.position.y in 3200..3230) continue
                 if (!npc.isAlwaysAggressive && System.currentTimeMillis() > client.toleranceTimer) continue
                 if (!client.inWildy() && client.determineCombatLevel() >= npc.combatLevel * 2 + 1) continue

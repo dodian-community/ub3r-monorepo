@@ -20,6 +20,12 @@ class Position @JvmOverloads constructor(x: Int = 2611, y: Int = 3093, z: Int = 
         get() = getZ()
         set(value) = setZ(value)
 
+    val packedTileKey: Int
+        get() = packed
+
+    val packedChunkKey: Int
+        get() = (getZ() shl 28) or ((getX() shr 3) shl 14) or (getY() shr 3)
+
     fun getX(): Int = unpackCoordinate(packed shr X_SHIFT)
 
     fun getY(): Int = unpackCoordinate(packed shr Y_SHIFT)

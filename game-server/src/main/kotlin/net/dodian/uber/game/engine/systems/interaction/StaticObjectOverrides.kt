@@ -66,9 +66,13 @@ object StaticObjectOverrides {
 
     @JvmStatic
     fun replayTo(viewer: Client) {
+        val pos = viewer.position ?: return
         for (override in overrides) {
+            val oPos = override.position
+            if (oPos.z != pos.z) continue
+            if (kotlin.math.abs(oPos.x - pos.x) > 32 || kotlin.math.abs(oPos.y - pos.y) > 32) continue
             viewer.ReplaceObject2(
-                override.position,
+                oPos,
                 override.replacementObjectId,
                 override.replacementFace,
                 override.replacementType,

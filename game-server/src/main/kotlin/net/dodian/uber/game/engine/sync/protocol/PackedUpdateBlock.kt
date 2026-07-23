@@ -19,8 +19,12 @@ class PackedUpdateBlock(
         }
     }
 
-    fun estimatedWireBytes(extendedPlayerMask: Boolean): Int {
-        val maskBytes = if (extendedPlayerMask && mask >= 0x100) 2 else 1
-        return maskBytes + ((fixedBitCount + 7) ushr 3) + variableBytes.size
-    }
+    val maskBytesPlayer: Int = if (mask >= 0x100) 2 else 1
+    val maskBytesNpc: Int = 1
+    val fixedByteCount: Int = (fixedBitCount + 7) ushr 3
+    val totalWireBytesPlayer: Int = maskBytesPlayer + fixedByteCount + variableBytes.size
+    val totalWireBytesNpc: Int = maskBytesNpc + fixedByteCount + variableBytes.size
+
+    fun estimatedWireBytes(extendedPlayerMask: Boolean): Int =
+        if (extendedPlayerMask) totalWireBytesPlayer else totalWireBytesNpc
 }

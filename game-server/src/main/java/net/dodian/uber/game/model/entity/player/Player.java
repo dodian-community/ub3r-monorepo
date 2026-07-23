@@ -469,12 +469,23 @@ public abstract class Player extends Entity {
     /**
      * @return The username of the player.
      */
+    private long cachedNameAsLong = -1L;
+
     public String getPlayerName() {
         return accountState.getPlayerName();
     }
 
+    public long getPlayerNameAsLong() {
+        if (cachedNameAsLong == -1L) {
+            String name = getPlayerName();
+            cachedNameAsLong = name != null ? net.dodian.utilities.Utils.playerNameToInt64(name) : 0L;
+        }
+        return cachedNameAsLong;
+    }
+
     public void setPlayerName(String playerName) {
         accountState.setPlayerName(playerName);
+        cachedNameAsLong = -1L;
     }
 
     public String getPlayerPass() {

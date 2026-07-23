@@ -344,7 +344,7 @@ public class PlayerUpdating extends EntityUpdating<Player> {
             playerProps.putShort(turn90CCW); // turn90CCWAnimIndex, 822 default
             playerProps.putShort(runAnim); // runAnimIndex
 
-            playerProps.putLong(Utils.playerNameToInt64(player.getPlayerName()));
+            playerProps.putLong(player.getPlayerNameAsLong());
             playerProps.putString(""); // title
             playerProps.putInt(0); // title color
             playerProps.putString(""); // clan channel

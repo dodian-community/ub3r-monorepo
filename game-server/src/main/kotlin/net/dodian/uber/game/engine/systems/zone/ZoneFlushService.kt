@@ -18,9 +18,12 @@ internal class ZoneFlushService(
         var candidateViewers = 0
         var deliveries = 0
         deltas.forEach { delta ->
-            val viewers = subscriberIndex.viewersFor(delta, activePlayers)
-            candidateViewers += viewers.size
-            viewers.forEach { viewer ->
+            val candidates = subscriberIndex.candidatesFor(delta, activePlayers)
+            for (viewer in candidates) {
+                if (!delta.appliesTo(viewer)) {
+                    continue
+                }
+                candidateViewers++
                 try {
                     delta.deliver(viewer)
                     deliveries++

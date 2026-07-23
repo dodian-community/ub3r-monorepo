@@ -100,7 +100,7 @@ class PlayerCombatState {
                 && !CombatReachService.hasProjectileLineOfSight(attacker, owner)) {
             return;
         }
-        Npc npc = (Npc) attacker;
+        Npc npc = attacker instanceof Npc ? (Npc) attacker : null;
         int originalAmt = amt;
         String mitigationBranch = "none";
         if (damageType.equals(Entity.damageType.FIRE_BREATH)) {

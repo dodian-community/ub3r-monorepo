@@ -7,5 +7,8 @@ abstract class ZoneDelta {
 
     abstract fun deliver(viewer: Client)
 
-    abstract fun candidateChunkKeys(): LongArray
+    abstract val minChunkX: Int
+    abstract val maxChunkX: Int
+    abstract val minChunkY: Int
+    abstract val maxChunkY: Int
 }

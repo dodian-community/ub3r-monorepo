@@ -169,6 +169,9 @@ public class Client extends Player implements Runnable {
     public int duel_with = 0;
     public int duelApproachPendingSlot = -1;
     public int duelApproachTicks = 0;
+    /** Target coordinates the currently-staged duel approach route was computed toward. */
+    public int duelApproachTargetX = -1;
+    public int duelApproachTargetY = -1;
     public boolean tradeRequested = false, inTrade = false, canOffer = true, tradeConfirmed = false,
             tradeConfirmed2 = false, tradeResetNeeded = false;
     public int trade_reqId = 0;
@@ -180,6 +183,9 @@ public class Client extends Player implements Runnable {
     public long tradeSettledSessionId = -1L;
     public int tradeApproachPendingSlot = -1;
     public int tradeApproachTicks = 0;
+    /** Target coordinates the currently-staged trade approach route was computed toward. */
+    public int tradeApproachTargetX = -1;
+    public int tradeApproachTargetY = -1;
     public CopyOnWriteArrayList<GameItem> offeredItems = new CopyOnWriteArrayList<>();
     public CopyOnWriteArrayList<GameItem> otherOfferedItems = new CopyOnWriteArrayList<>();
     public CopyOnWriteArrayList<GameItem> priceCheckerItems = new CopyOnWriteArrayList<>();
@@ -2574,18 +2580,18 @@ public class Client extends Player implements Runnable {
         writeOsrsBonuses();
     }
 
-    public void writeOsrsBonuses() {
-        String[] OSRS_BONUS_NAMES = {
-            "Stab", "Slash", "Crush", "Magic", "Range",
-            "Stab", "Slash", "Crush", "Magic", "Range",
-            "Strength", "Ranged Strength", "Magic Strength", "Prayer"
-        };
-        int[] OSRS_BONUS_IDS = {
-            15130, 15131, 15132, 15133, 15134,
-            15135, 15136, 15137, 15138, 15139,
-            15140, 15141, 15142, 15143
-        };
+    private static final String[] OSRS_BONUS_NAMES = {
+        "Stab", "Slash", "Crush", "Magic", "Range",
+        "Stab", "Slash", "Crush", "Magic", "Range",
+        "Strength", "Ranged Strength", "Magic Strength", "Prayer"
+    };
+    private static final int[] OSRS_BONUS_IDS = {
+        15130, 15131, 15132, 15133, 15134,
+        15135, 15136, 15137, 15138, 15139,
+        15140, 15141, 15142, 15143
+    };
 
+    public void writeOsrsBonuses() {
         for (int i = 0; i < 14; i++) {
             int val = playerBonus[i];
             String bonusStr;
@@ -4092,11 +4098,21 @@ public class Client extends Player implements Runnable {
         if (!goodDistanceEntity(other, 1)) {
             tradeApproachPendingSlot = id;
             tradeApproachTicks = 0;
+            tradeApproachTargetX = other.getPosition().getX();
+            tradeApproachTargetY = other.getPosition().getY();
             resetWalkingQueue();
-            FollowRouting.routeToEntityBoundary(
+            // resetWalkingQueue() sets walkingBlock=true, which makes PlayerMovementState.postProcessing()
+            // skip queue processing entirely for this cycle. Since we're about to stage a fresh route
+            // right below, clear it back so that route isn't silently dropped for a tick.
+            walkingBlock = false;
+            if (!FollowRouting.routeToEntityBoundary(
                 this, other.getPosition().getX(), other.getPosition().getY(),
                 1, getPosition().getZ(), null, false
-            );
+            )) {
+                tradeApproachPendingSlot = -1;
+                tradeApproachTicks = 0;
+                send(new SendMessage("I can't reach " + other.getPlayerName() + "!"));
+            }
             return;
         }
         tradeApproachPendingSlot = -1;
@@ -4104,10 +4120,17 @@ public class Client extends Player implements Runnable {
         if (getPosition().getX() == other.getPosition().getX() && getPosition().getY() == other.getPosition().getY()) {
             tradeApproachPendingSlot = id;
             tradeApproachTicks = 0;
-            FollowRouting.routeToEntityBoundary(
+            tradeApproachTargetX = other.getPosition().getX();
+            tradeApproachTargetY = other.getPosition().getY();
+            walkingBlock = false;
+            if (!FollowRouting.routeToEntityBoundary(
                 this, other.getPosition().getX(), other.getPosition().getY(),
                 1, getPosition().getZ(), null, false
-            );
+            )) {
+                tradeApproachPendingSlot = -1;
+                tradeApproachTicks = 0;
+                send(new SendMessage("I can't reach " + other.getPlayerName() + "!"));
+            }
             return;
         }
         String tradeBlockMessage = net.dodian.uber.game.engine.systems.interaction.PlayerInteractionGuardService.tradeBlockMessage(this, other);
@@ -4253,11 +4276,21 @@ public class Client extends Player implements Runnable {
         if (!goodDistanceEntity(other, 1)) {
             duelApproachPendingSlot = pid;
             duelApproachTicks = 0;
+            duelApproachTargetX = other.getPosition().getX();
+            duelApproachTargetY = other.getPosition().getY();
             resetWalkingQueue();
-            FollowRouting.routeToEntityBoundary(
+            // resetWalkingQueue() sets walkingBlock=true, which makes PlayerMovementState.postProcessing()
+            // skip queue processing entirely for this cycle. Since we're about to stage a fresh route
+            // right below, clear it back so that route isn't silently dropped for a tick.
+            walkingBlock = false;
+            if (!FollowRouting.routeToEntityBoundary(
                 this, other.getPosition().getX(), other.getPosition().getY(),
                 1, getPosition().getZ(), null, false
-            );
+            )) {
+                duelApproachPendingSlot = -1;
+                duelApproachTicks = 0;
+                send(new SendMessage("I can't reach " + other.getPlayerName() + "!"));
+            }
             return;
         }
         duelApproachPendingSlot = -1;
@@ -4265,10 +4298,17 @@ public class Client extends Player implements Runnable {
         if (getPosition().getX() == other.getPosition().getX() && getPosition().getY() == other.getPosition().getY()) {
             duelApproachPendingSlot = pid;
             duelApproachTicks = 0;
-            FollowRouting.routeToEntityBoundary(
+            duelApproachTargetX = other.getPosition().getX();
+            duelApproachTargetY = other.getPosition().getY();
+            walkingBlock = false;
+            if (!FollowRouting.routeToEntityBoundary(
                 this, other.getPosition().getX(), other.getPosition().getY(),
                 1, getPosition().getZ(), null, false
-            );
+            )) {
+                duelApproachPendingSlot = -1;
+                duelApproachTicks = 0;
+                send(new SendMessage("I can't reach " + other.getPlayerName() + "!"));
+            }
             return;
         }
         String duelBlockMessage = net.dodian.uber.game.engine.systems.interaction.PlayerInteractionGuardService.duelBlockMessage(this, other);
@@ -4469,16 +4509,35 @@ public class Client extends Player implements Runnable {
             }
             if (goodDistanceEntity(other, 1)) {
                 if (getPosition().getX() == other.getPosition().getX() && getPosition().getY() == other.getPosition().getY()) {
-                    FollowRouting.routeToEntityBoundary(
+                    if (!FollowRouting.routeToEntityBoundary(
                         this, other.getPosition().getX(), other.getPosition().getY(),
                         1, getPosition().getZ(), null, false
-                    );
+                    )) {
+                        duelApproachPendingSlot = -1;
+                        duelApproachTicks = 0;
+                        send(new SendMessage("I can't reach " + other.getPlayerName() + "!"));
+                    }
                     return;
                 }
                 int pending = duelApproachPendingSlot;
                 duelApproachPendingSlot = -1;
                 duelApproachTicks = 0;
                 duelReq(pending);
+            } else if (other.getPosition().getX() != duelApproachTargetX
+                    || other.getPosition().getY() != duelApproachTargetY
+                    || (wQueueReadPtr == wQueueWritePtr && newWalkCmdSteps == 0)) {
+                // Target moved since the route was staged, or we've exhausted the previously staged
+                // route without getting close (e.g. it walked away) - re-route toward where they are now.
+                duelApproachTargetX = other.getPosition().getX();
+                duelApproachTargetY = other.getPosition().getY();
+                if (!FollowRouting.routeToEntityBoundary(
+                    this, other.getPosition().getX(), other.getPosition().getY(),
+                    1, getPosition().getZ(), null, false
+                )) {
+                    duelApproachPendingSlot = -1;
+                    duelApproachTicks = 0;
+                    send(new SendMessage("I can't reach " + other.getPlayerName() + "!"));
+                }
             }
         }
         if (tradeApproachPendingSlot != -1) {
@@ -4496,16 +4555,35 @@ public class Client extends Player implements Runnable {
             }
             if (goodDistanceEntity(other, 1)) {
                 if (getPosition().getX() == other.getPosition().getX() && getPosition().getY() == other.getPosition().getY()) {
-                    FollowRouting.routeToEntityBoundary(
+                    if (!FollowRouting.routeToEntityBoundary(
                         this, other.getPosition().getX(), other.getPosition().getY(),
                         1, getPosition().getZ(), null, false
-                    );
+                    )) {
+                        tradeApproachPendingSlot = -1;
+                        tradeApproachTicks = 0;
+                        send(new SendMessage("I can't reach " + other.getPlayerName() + "!"));
+                    }
                     return;
                 }
                 int pending = tradeApproachPendingSlot;
                 tradeApproachPendingSlot = -1;
                 tradeApproachTicks = 0;
                 tradeReq(pending);
+            } else if (other.getPosition().getX() != tradeApproachTargetX
+                    || other.getPosition().getY() != tradeApproachTargetY
+                    || (wQueueReadPtr == wQueueWritePtr && newWalkCmdSteps == 0)) {
+                // Target moved since the route was staged, or we've exhausted the previously staged
+                // route without getting close (e.g. it walked away) - re-route toward where they are now.
+                tradeApproachTargetX = other.getPosition().getX();
+                tradeApproachTargetY = other.getPosition().getY();
+                if (!FollowRouting.routeToEntityBoundary(
+                    this, other.getPosition().getX(), other.getPosition().getY(),
+                    1, getPosition().getZ(), null, false
+                )) {
+                    tradeApproachPendingSlot = -1;
+                    tradeApproachTicks = 0;
+                    send(new SendMessage("I can't reach " + other.getPlayerName() + "!"));
+                }
             }
         }
     }
