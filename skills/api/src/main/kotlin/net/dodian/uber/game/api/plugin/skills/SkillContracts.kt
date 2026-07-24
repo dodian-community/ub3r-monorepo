@@ -166,6 +166,27 @@ interface SkillWorld {
     fun spawnTemporaryObject(objectId: Int, durationTicks: Int, onExpire: () -> Unit = {})
     /** Drops [amount] of [itemId] on the ground at the player's current position, initially visible only to them. */
     fun dropItem(itemId: Int, amount: Int = 1)
+    /**
+     * Animates a scripted traversal (e.g. crossing an agility obstacle): walks a relative offset
+     * over [durationMs] using [movementAnimationId] as the walk animation (when given), optionally
+     * playing [startAnimationId] immediately and [arrivalAnimationId] on arrival, then invokes
+     * [onComplete]. Grants temporary passage across the straight-line path so normally-blocked
+     * tiles can be crossed.
+     */
+    fun traverse(
+        deltaX: Int,
+        deltaY: Int,
+        durationMs: Int,
+        movementAnimationId: Int? = null,
+        startAnimationId: Int? = null,
+        arrivalAnimationId: Int? = null,
+        onComplete: () -> Unit = {},
+    )
+    /**
+     * Plays [animationId] immediately, then after [delayMs] teleports to [destination] and
+     * invokes [onComplete] (e.g. climbing over/through an obstacle rather than walking across it).
+     */
+    fun climb(destination: SkillPosition, animationId: Int, delayMs: Int, onComplete: () -> Unit = {})
 }
 
 /** View of the player's persisted slayer assignment. */

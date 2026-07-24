@@ -53,6 +53,7 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
     val replacedObjects = mutableListOf<Pair<SkillObjectRef, Int>>()
     val spawnedObjects = mutableListOf<Pair<Int, Int>>()
     val groundItems = mutableListOf<Pair<Int, Int>>()
+    val traversals = mutableListOf<Triple<Int, Int, Int>>()
     /** No real cache/object-shape data in tests; tests toggle this to simulate moving out of range. */
     var withinBoundaryOverride = true
     var anchor: SkillPosition? = null
@@ -203,6 +204,31 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
             pendingExpiries += PendingExpiry(durationTicks, onExpire)
         }
         override fun dropItem(itemId: Int, amount: Int) { groundItems += itemId to amount }
+        override fun traverse(
+            deltaX: Int,
+            deltaY: Int,
+            durationMs: Int,
+            movementAnimationId: Int?,
+            startAnimationId: Int?,
+            arrivalAnimationId: Int?,
+            onComplete: () -> Unit,
+        ) {
+            startAnimationId?.let { animations += it to 0 }
+            movementAnimationId?.let { animations += it to 0 }
+            traversals += Triple(deltaX, deltaY, durationMs)
+            positionValue = SkillPosition(positionValue.x + deltaX, positionValue.y + deltaY, positionValue.z)
+            pendingExpiries += PendingExpiry((durationMs / 600).coerceAtLeast(1)) {
+                arrivalAnimationId?.let { animations += it to 0 }
+                onComplete()
+            }
+        }
+        override fun climb(destination: SkillPosition, animationId: Int, delayMs: Int, onComplete: () -> Unit) {
+            animations += animationId to 0
+            pendingExpiries += PendingExpiry((delayMs / 600).coerceAtLeast(1)) {
+                positionValue = destination
+                onComplete()
+            }
+        }
     }
     override val production = object : SkillProduction {
         override fun open(config: SkillMultiConfig, onSelected: (SkillMultiSelection) -> Unit): Boolean {

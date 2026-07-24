@@ -191,6 +191,41 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
         override fun dropItem(itemId: Int, amount: Int) {
             Ground.addItem(GroundItem(client.position, itemId, amount, client.slot, -1))
         }
+        override fun traverse(
+            deltaX: Int,
+            deltaY: Int,
+            durationMs: Int,
+            movementAnimationId: Int?,
+            startAnimationId: Int?,
+            arrivalAnimationId: Int?,
+            onComplete: () -> Unit,
+        ) {
+            net.dodian.uber.game.skill.agility.runtime.AgilityPassageOverlayService.grantForDelta(
+                client, deltaX, deltaY, durationMs.toLong(),
+            )
+            startAnimationId?.let { client.performAnimation(it, 0) }
+            movementAnimationId?.let { client.walkAnim = it }
+            client.AddToWalkCords(deltaX, deltaY, durationMs.toLong())
+            GameEventScheduler.runLaterMs(durationMs) {
+                if (client.disconnected) return@runLaterMs
+                client.requestWeaponAnims()
+                arrivalAnimationId?.let { client.performAnimation(it, 0) }
+                onComplete()
+            }
+        }
+        override fun climb(destination: SkillPosition, animationId: Int, delayMs: Int, onComplete: () -> Unit) {
+            client.performAnimation(animationId, 0)
+            client.setMovementLocked(true)
+            GameEventScheduler.runLaterMs(delayMs) {
+                if (client.disconnected) {
+                    client.setMovementLocked(false)
+                    return@runLaterMs
+                }
+                client.transport(destination.toPosition())
+                client.setMovementLocked(false)
+                onComplete()
+            }
+        }
     }
     override val production = object : SkillProduction {
         override fun open(config: SkillMultiConfig, onSelected: (SkillMultiSelection) -> Unit): Boolean {
