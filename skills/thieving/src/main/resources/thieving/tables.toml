@@ -1,0 +1,28 @@
+schema_version = 1
+
+[[target]]
+name = "man"
+target_type = "npc"
+id = 3243
+level = 1
+experience = 80
+loot_item = 995
+loot_amount = 500
+
+[[target]]
+name = "baker_stall"
+target_type = "stall"
+id = 2309
+level = 10
+experience = 160
+loot_item = 2309
+loot_amount = 1
+
+[[target]]
+name = "silver_stall"
+target_type = "stall"
+id = 2349
+level = 65
+experience = 500
+loot_item = 440
+loot_amount = 1

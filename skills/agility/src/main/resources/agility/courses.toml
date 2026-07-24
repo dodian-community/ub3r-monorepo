@@ -1,0 +1,50 @@
+schema_version = 1
+
+[[obstacle]]
+course = "gnome"
+name = "log_balance"
+object_id = 23145
+required_level = 1
+experience = 280
+
+[[obstacle]]
+course = "gnome"
+name = "net_one"
+object_id = 23134
+required_level = 1
+experience = 150
+
+[[obstacle]]
+course = "gnome"
+name = "tree_branch"
+object_id = 23559
+required_level = 1
+experience = 50
+
+[[obstacle]]
+course = "gnome"
+name = "rope_swing"
+object_id = 23557
+required_level = 1
+experience = 250
+
+[[obstacle]]
+course = "barbarian"
+name = "rope_swing"
+object_id = 23131
+required_level = 40
+experience = 400
+
+[[obstacle]]
+course = "barbarian"
+name = "log_balance"
+object_id = 23144
+required_level = 40
+experience = 600
+
+[[obstacle]]
+course = "wilderness"
+name = "pipe"
+object_id = 2288
+required_level = 70
+experience = 1000

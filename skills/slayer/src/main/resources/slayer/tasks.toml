@@ -1,0 +1,37 @@
+schema_version = 1
+
+[[task]]
+name = "Crawling Hands"
+slayer_only = true
+level_min = 1
+level_max = 40
+amount_min = 20
+amount_max = 100
+npc_ids = [448, 449]
+
+[[task]]
+name = "Pyrefiends"
+slayer_only = true
+level_min = 20
+level_max = 60
+amount_min = 20
+amount_max = 60
+npc_ids = [433]
+
+[[task]]
+name = "Hill Giants"
+slayer_only = false
+level_min = 1
+level_max = 50
+amount_min = 20
+amount_max = 40
+npc_ids = [2098]
+
+[[task]]
+name = "Abyssal Demons"
+slayer_only = true
+level_min = 85
+level_max = 200
+amount_min = 30
+amount_max = 60
+npc_ids = [415]

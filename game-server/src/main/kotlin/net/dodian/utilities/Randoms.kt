@@ -1,10 +1,6 @@
 package net.dodian.utilities
 
-import java.util.Random
-
 object Randoms {
-    private val random = Random()
-
     @JvmStatic
     fun random(range: Int): Int {
         val number = (Math.random() * (range + 1)).toInt()
@@ -28,7 +24,4 @@ object Randoms {
 
     @JvmStatic
     fun dRandom2(range: Double): Double = Math.random() * range + 1
-
-    @JvmStatic
-    fun getRandom(): Random = random
 }

@@ -145,7 +145,9 @@ class StagedNpcSynchronizationService {
                 }
             }
         }
-        Arrays.fill(viewer.localNpcs, null)
+        // viewer.localNpcs is only ever read for index < viewer.localNpcSize, and that bound is
+        // about to become plan.nextCount below - every slot up to nextCount is rewritten in the
+        // loop right after, so a full-array clear here is unnecessary.
         for (index in 0 until plan.nextCount) viewer.localNpcs[index] = plan.next[index]
         viewer.localNpcSize = plan.nextCount
         if (changed) viewer.bumpLocalNpcMembershipRevision()
@@ -193,11 +195,12 @@ class StagedNpcSynchronizationService {
             private set
         private var frozen = false
 
+        // previous/retainPrevious/additions/next are never read past their respective counts
+        // (previousCount/additionCount/nextCount), and every index up to those counts is
+        // rewritten before being read on each buildPlan() call - so clearing the backing
+        // arrays here would be pure waste (they were sized for MAX_LOCALS regardless of how
+        // many locals a viewer actually has).
         fun reset() {
-            Arrays.fill(previous, null)
-            Arrays.fill(retainPrevious, false)
-            Arrays.fill(additions, null)
-            Arrays.fill(next, null)
             membership.clear()
             previousCount = 0
             additionCount = 0

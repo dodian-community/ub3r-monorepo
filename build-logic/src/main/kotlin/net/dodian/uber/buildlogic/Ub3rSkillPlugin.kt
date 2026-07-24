@@ -78,12 +78,12 @@ abstract class VerifySkillModule : DefaultTask() {
         check(source.contains(implementationClass.get().substringAfterLast('.'))) {
             "${project.path} does not contain ${implementationClass.get()}."
         }
-        val requiredContract = if (kind.get() == SkillModuleKind.GAMEPLAY) "SkillPlugin" else "SkillContentModule"
+        val requiredContract = if (kind.get() == SkillModuleKind.GAMEPLAY) "SkillPlugin" else "SkillSupportModule"
         check(source.contains(requiredContract)) {
             "${project.path} ${implementationClass.get()} must implement $requiredContract."
         }
         if (kind.get() == SkillModuleKind.GAMEPLAY) {
-            val routeRegistration = Regex("""\b(objectClick|npcClick|itemClick|itemOnItem|itemOnObject|magicOnObject|button)\s*\(""")
+            val routeRegistration = Regex("""\b(objectClick|npcClick|itemClick|itemOnItem|itemOnObject|magicOnObject|button|gatheringSpots|objectOption|npcOption)\s*\(""")
             check(routeRegistration.containsMatchIn(source)) {
                 "${project.path} is descriptor-only: gameplay modules must register at least one route."
             }

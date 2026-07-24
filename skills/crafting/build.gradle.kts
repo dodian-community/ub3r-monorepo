@@ -1,2 +1,4 @@
-plugins { kotlin("jvm"); `java-library` }
-dependencies { implementation(project(":skills:api")); implementation(project(":skills:runtime")); testImplementation(project(":skills:testkit")) }
+plugins { id("ub3r.skill-plugin") }
+skillModule {
+    implementationClass.set("net.dodian.uber.skills.crafting.CraftingModule")
+}

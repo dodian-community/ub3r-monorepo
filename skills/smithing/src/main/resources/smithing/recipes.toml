@@ -1,0 +1,57 @@
+schema_version = 1
+
+[[smelt]]
+bar_id = 2349
+level = 1
+experience = 120
+ores = [436, 438]
+ore_amounts = [1, 1]
+
+[[smelt]]
+bar_id = 2351
+level = 15
+experience = 260
+ores = [440]
+ore_amounts = [1]
+
+[[smelt]]
+bar_id = 2355
+level = 20
+experience = 280
+ores = [442]
+ore_amounts = [1]
+
+[[smelt]]
+bar_id = 2353
+level = 30
+experience = 360
+ores = [440, 453]
+ore_amounts = [1, 2]
+
+[[smelt]]
+bar_id = 2357
+level = 40
+experience = 460
+ores = [444]
+ore_amounts = [1]
+
+[[smelt]]
+bar_id = 2359
+level = 55
+experience = 600
+ores = [447, 453]
+ore_amounts = [1, 3]
+
+[[smelt]]
+bar_id = 2361
+level = 70
+experience = 760
+ores = [449, 453]
+ore_amounts = [1, 4]
+
+[[smelt]]
+bar_id = 2363
+level = 85
+experience = 1000
+ores = [451, 453]
+ore_amounts = [1, 6]

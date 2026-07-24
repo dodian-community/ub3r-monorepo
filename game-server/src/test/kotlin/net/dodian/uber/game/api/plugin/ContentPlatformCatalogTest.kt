@@ -47,7 +47,7 @@ class ContentPlatformCatalogTest {
         assertTrue(ContentModuleFeatureState.isEnabled(manifest("content.always", ContentModuleManifest.ALWAYS_ENABLED)))
     }
 
-    private fun manifest(id: String, featureFlag: String = "content") = ContentModuleManifest(
+    private fun manifest(id: String, featureFlag: String = id) = ContentModuleManifest(
         id = id,
         owner = "test",
         version = "1.0.0",

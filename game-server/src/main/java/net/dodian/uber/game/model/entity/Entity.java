@@ -74,8 +74,12 @@ public abstract class Entity {
     }
 
     public boolean isWithinDistance(int entityX, int entityY, int otherX, int otherY, int distance) {
-        int dist = (int) Math.sqrt(Math.pow(entityX - otherX, 2) + Math.pow(entityY - otherY, 2));
-        return dist <= distance;
+        int dx = entityX - otherX;
+        int dy = entityY - otherY;
+        // Equivalent to (int) Math.sqrt(dx*dx + dy*dy) <= distance without the sqrt call:
+        // floor(sqrt(sum)) <= distance iff sum < (distance + 1)^2.
+        int bound = distance + 1;
+        return dx * dx + dy * dy < bound * bound;
     }
 
     public boolean isWithinDistance(Position otherPosition, int distance) {

@@ -1,0 +1,66 @@
+schema_version = 1
+
+[[guide]]
+skill_name = "Attack"
+skill_id = 0
+sections = ["Attack", "Defence", "Range", "Magic"]
+
+[[guide]]
+skill_name = "Defence"
+skill_id = 1
+sections = ["Attack", "Defence", "Range", "Magic"]
+
+[[guide]]
+skill_name = "Strength"
+skill_id = 2
+sections = ["Strength"]
+
+[[guide]]
+skill_name = "Hitpoints"
+skill_id = 3
+sections = ["Hitpoints"]
+
+[[guide]]
+skill_name = "Prayer"
+skill_id = 5
+sections = ["Prayer"]
+
+[[guide]]
+skill_name = "Cooking"
+skill_id = 7
+sections = ["Cooking"]
+
+[[guide]]
+skill_name = "Woodcutting"
+skill_id = 8
+sections = ["Axes", "Logs", "Misc"]
+
+[[guide]]
+skill_name = "Fishing"
+skill_id = 10
+sections = ["Fishing"]
+
+[[guide]]
+skill_name = "Mining"
+skill_id = 14
+sections = ["Pickaxes", "Ores", "Misc"]
+
+[[guide]]
+skill_name = "Agility"
+skill_id = 16
+sections = ["Agility"]
+
+[[guide]]
+skill_name = "Thieving"
+skill_id = 17
+sections = ["Thieving"]
+
+[[guide]]
+skill_name = "Slayer"
+skill_id = 18
+sections = ["Master", "Monsters", "Misc"]
+
+[[guide]]
+skill_name = "Farming"
+skill_id = 19
+sections = ["Allotment", "Flower", "Bush", "Herb", "Tree", "Fruit tree", "Misc"]

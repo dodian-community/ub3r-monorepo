@@ -17,8 +17,10 @@ object Geometry {
     ): Boolean {
         val deltaX = objectX - playerX
         val deltaY = objectY - playerY
-        val trueDistance = kotlin.math.sqrt((deltaX * deltaX + deltaY * deltaY).toDouble()).toInt()
-        return trueDistance <= distance
+        // Equivalent to (int) sqrt(deltaX^2 + deltaY^2) <= distance without the sqrt call:
+        // floor(sqrt(sum)) <= distance iff sum < (distance + 1)^2.
+        val bound = distance + 1
+        return deltaX * deltaX + deltaY * deltaY < bound * bound
     }
 
     @JvmStatic

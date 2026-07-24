@@ -1,0 +1,104 @@
+schema_version = 1
+
+[[gem]]
+uncut_id = 1623
+cut_id = 1607
+required_level = 20
+experience = 50
+animation_id = 888
+
+[[gem]]
+uncut_id = 1621
+cut_id = 1605
+required_level = 27
+experience = 68
+animation_id = 889
+
+[[gem]]
+uncut_id = 1619
+cut_id = 1603
+required_level = 34
+experience = 85
+animation_id = 887
+
+[[gem]]
+uncut_id = 1617
+cut_id = 1601
+required_level = 43
+experience = 108
+animation_id = 886
+
+[[gem]]
+uncut_id = 1631
+cut_id = 1615
+required_level = 55
+experience = 137
+animation_id = 885
+
+[[gem]]
+uncut_id = 6571
+cut_id = 6573
+required_level = 67
+experience = 168
+animation_id = 2717
+
+[[gem]]
+uncut_id = 1625
+cut_id = 1609
+required_level = 1
+experience = 15
+animation_id = 890
+
+[[gem]]
+uncut_id = 1627
+cut_id = 1611
+required_level = 13
+experience = 20
+animation_id = 891
+
+[[gem]]
+uncut_id = 1629
+cut_id = 1613
+required_level = 16
+experience = 25
+animation_id = 892
+
+[[hide]]
+item_id = 1745
+experience = 97
+gloves_id = 1065
+gloves_level = 50
+chaps_id = 1099
+chaps_level = 54
+body_id = 1135
+body_level = 58
+
+[[hide]]
+item_id = 2505
+experience = 158
+gloves_id = 2487
+gloves_level = 62
+chaps_id = 2493
+chaps_level = 66
+body_id = 2499
+body_level = 70
+
+[[hide]]
+item_id = 2507
+experience = 246
+gloves_id = 2489
+gloves_level = 73
+chaps_id = 2495
+chaps_level = 76
+body_id = 2501
+body_level = 79
+
+[[hide]]
+item_id = 2509
+experience = 372
+gloves_id = 2491
+gloves_level = 82
+chaps_id = 2497
+chaps_level = 85
+body_id = 2503
+body_level = 88

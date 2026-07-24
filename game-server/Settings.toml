@@ -14,9 +14,6 @@ connections_per_ip = 2
 connection_timeout = 30000
 packet_limit = 100
 leak_detection = "disabled"
-swiftfup_connections_per_ip = 8
-swiftfup_read_timeout_seconds = 30
-swiftfup_max_tracked_ips = 10000
 
 [world]
 world_id = 1

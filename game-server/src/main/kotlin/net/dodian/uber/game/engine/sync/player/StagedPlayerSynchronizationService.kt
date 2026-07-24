@@ -219,7 +219,9 @@ class StagedPlayerSynchronizationService {
                 }
             }
         }
-        Arrays.fill(viewer.playerList, null)
+        // viewer.playerList is only ever read for index < viewer.playerListSize, and that bound
+        // is about to become plan.nextCount below - every slot up to nextCount is rewritten in
+        // the loop right after, so a full-array clear here is unnecessary.
         viewer.playersUpdating.clear()
         for (index in 0 until plan.nextCount) {
             val local = plan.next[index] ?: continue
@@ -290,11 +292,12 @@ class StagedPlayerSynchronizationService {
             private set
         private var frozen = false
 
+        // previous/retainPrevious/additions/next are never read past their respective counts
+        // (previousCount/additionCount/nextCount), and every index up to those counts is
+        // rewritten before being read on each buildPlan() call - so clearing the backing
+        // arrays here would be pure waste (they were sized for MAX_LOCALS regardless of how
+        // many locals a viewer actually has).
         fun reset() {
-            Arrays.fill(previous, null)
-            Arrays.fill(retainPrevious, false)
-            Arrays.fill(additions, null)
-            Arrays.fill(next, null)
             previousCount = 0
             additionCount = 0
             nextCount = 0
@@ -375,7 +378,8 @@ class StagedPlayerSynchronizationService {
 
         fun reset() {
             plan.reset()
-            Arrays.fill(candidates, null)
+            // candidates is only ever read for index < candidateCount (see buildPlan), and
+            // that range is fully rewritten by offerCandidate before being read - no fill needed.
             candidateCount = 0
             membership.clear()
         }

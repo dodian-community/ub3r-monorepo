@@ -20,6 +20,16 @@ import net.dodian.uber.game.engine.util.Misc
 import net.dodian.utilities.Utils
 import net.dodian.uber.game.engine.systems.cache.CacheSpotAnimDefinitions
 
+private val arrowGfxNames = mapOf(
+    882 to listOf("bronze_arrow_travel", "bronze_arrow_launch"),
+    884 to listOf("iron_arrow_travel", "iron_arrow_launch"),
+    886 to listOf("steel_arrow_travel", "steel_arrow_launch"),
+    888 to listOf("mithril_arrow_travel", "mithril_arrow_launch"),
+    890 to listOf("adamant_arrow_travel", "adamant_arrow_launch"),
+    892 to listOf("rune_arrow_travel", "rune_arrow_launch"),
+    11212 to listOf("ii_dragon_arrow_normal_projanim", "dragon_arrow_launch")
+)
+
 fun Client.handleRangedAttack(): CombatAttackResult? {
     if (stunTimer > 0 || target == null)
         return null
@@ -33,19 +43,10 @@ fun Client.handleRangedAttack(): CombatAttackResult? {
         return null
     }
 
-    val arrows = mapOf(
-        882 to listOf("bronze_arrow_travel", "bronze_arrow_launch"),
-        884 to listOf("iron_arrow_travel", "iron_arrow_launch"),
-        886 to listOf("steel_arrow_travel", "steel_arrow_launch"),
-        888 to listOf("mithril_arrow_travel", "mithril_arrow_launch"),
-        890 to listOf("adamant_arrow_travel", "adamant_arrow_launch"),
-        892 to listOf("rune_arrow_travel", "rune_arrow_launch"),
-        11212 to listOf("ii_dragon_arrow_normal_projanim", "dragon_arrow_launch")
-    )
     //obby ring, 442 + 443
     val equippedArrow = equipment[Equipment.Slot.ARROWS.id]
-    var arrowGfx = arrows[equippedArrow]?.get(0) ?: "bronze_arrow_travel"
-    var arrowPullGfx: String? = arrows[equippedArrow]?.get(1) ?: "bronze_arrow_launch"
+    var arrowGfx = arrowGfxNames[equippedArrow]?.get(0) ?: "bronze_arrow_travel"
+    var arrowPullGfx: String? = arrowGfxNames[equippedArrow]?.get(1) ?: "bronze_arrow_launch"
     val emote = net.dodian.uber.game.engine.systems.animation.AttackAnimationService.resolve(this)
     // TODO: Ranged special attacks — magic shortbow (anim 1074, gfx 256, 2 hits),
     // dark bow (2 hits, 1.3x/1.5x dmg), dragon thrownaxe (anim 7521, instant),
@@ -182,10 +183,10 @@ fun landHitRanged(p: Client, t: Entity): Boolean {
         val defBonus = t.playerBonus[9]
         var defLevel = t.getLevel(Skill.DEFENCE)
         val prayerDefBonus = if(t.prayerManager.isPrayerOn(PrayerManager.Prayer.THICK_SKIN)) 1.05
-        else if(p.prayerManager.isPrayerOn(PrayerManager.Prayer.ROCK_SKIN)) 1.1
-        else if(p.prayerManager.isPrayerOn(PrayerManager.Prayer.STEEL_SKIN)) 1.15
-        else if(p.prayerManager.isPrayerOn(PrayerManager.Prayer.CHIVALRY)) 1.18
-        else if(p.prayerManager.isPrayerOn(PrayerManager.Prayer.PIETY)) 1.22
+        else if(t.prayerManager.isPrayerOn(PrayerManager.Prayer.ROCK_SKIN)) 1.1
+        else if(t.prayerManager.isPrayerOn(PrayerManager.Prayer.STEEL_SKIN)) 1.15
+        else if(t.prayerManager.isPrayerOn(PrayerManager.Prayer.CHIVALRY)) 1.18
+        else if(t.prayerManager.isPrayerOn(PrayerManager.Prayer.PIETY)) 1.22
         else 1.0
         /* Various bonuses for styles! */
         if(p.fightType == 0) atkLevel += 3

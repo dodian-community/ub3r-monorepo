@@ -364,11 +364,15 @@ public class Client extends Player implements Runnable {
     }
 
     public int distanceToPoint(int pointX, int pointY) {
-        return (int) Math.sqrt(Math.pow(getPosition().getX() - pointX, 2) + Math.pow(getPosition().getY() - pointY, 2));
+        int dx = getPosition().getX() - pointX;
+        int dy = getPosition().getY() - pointY;
+        return (int) Math.sqrt(dx * dx + dy * dy);
     }
 
     public int distanceToPoint(Position checkOne, Position checkTwo) {
-        return (int) Math.sqrt(Math.pow(checkOne.getX() - checkTwo.getX(), 2) + Math.pow(checkOne.getY() - checkTwo.getY(), 2));
+        int dx = checkOne.getX() - checkTwo.getX();
+        int dy = checkOne.getY() - checkTwo.getY();
+        return (int) Math.sqrt(dx * dx + dy * dy);
     }
 
     public void animation(int id, Position pos) {

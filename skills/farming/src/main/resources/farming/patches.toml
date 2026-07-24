@@ -1,0 +1,46 @@
+schema_version = 1
+
+[[crop]]
+type = "allotment"
+name = "potato"
+level = 1
+seed_id = 5318
+plant_xp = 32
+harvest_xp = 36
+harvest_item = 1942
+
+[[crop]]
+type = "allotment"
+name = "onion"
+level = 5
+seed_id = 5319
+plant_xp = 38
+harvest_xp = 42
+harvest_item = 1957
+
+[[crop]]
+type = "herb"
+name = "guam"
+level = 8
+seed_id = 5291
+plant_xp = 44
+harvest_xp = 50
+harvest_item = 199
+
+[[crop]]
+type = "herb"
+name = "ranarr"
+level = 34
+seed_id = 5295
+plant_xp = 108
+harvest_xp = 122
+harvest_item = 207
+
+[[crop]]
+type = "flower"
+name = "marigold"
+level = 3
+seed_id = 5096
+plant_xp = 36
+harvest_xp = 180
+harvest_item = 6010
