@@ -281,6 +281,46 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
         override fun restorePrayer(amount: Int) { client.currentPrayer = (client.currentPrayer + amount).coerceAtMost(client.maxPrayer) }
         override fun stun(ticks: Int) { client.stunTimer = ticks.coerceAtLeast(0) }
     }
+    override val slayerTask = object : net.dodian.uber.game.api.plugin.skills.SkillSlayerTask {
+        override val masterNpcId: Int get() = client.slayerTaskState.masterNpcId
+        override val taskName: String get() =
+            net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forOrdinal(client.slayerTaskState.taskOrdinal)?.textRepresentation ?: ""
+        override val remainingAmount: Int get() = client.slayerTaskState.remainingAmount
+        override val streak: Int get() = client.slayerTaskState.streak
+
+        // Mirrors the legacy SlayerMasterDialogue.resetCurrentTaskCount/monster-log kill tally,
+        // which tracks kills per monster name in client.monsterName/monsterCount rather than a
+        // single counter on the task state itself.
+        private fun currentTask() =
+            net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forOrdinal(client.slayerTaskState.taskOrdinal)
+
+        override fun killCount(): Int {
+            val task = currentTask() ?: return -1
+            var total = 0
+            for (npcId in task.npcId) {
+                val npcName = net.dodian.uber.game.Server.npcManager.getName(npcId)
+                for (slot in 0 until client.monsterName.size) {
+                    if (client.monsterName[slot].equals(npcName, ignoreCase = true)) {
+                        total += client.monsterCount[slot]
+                    }
+                }
+            }
+            return total
+        }
+
+        override fun resetKillCount(): Boolean {
+            val task = currentTask() ?: return false
+            for (npcId in task.npcId) {
+                val npcName = net.dodian.uber.game.Server.npcManager.getName(npcId)
+                for (slot in 0 until client.monsterName.size) {
+                    if (client.monsterName[slot].equals(npcName, ignoreCase = true)) {
+                        client.monsterCount[slot] = 0
+                    }
+                }
+            }
+            return true
+        }
+    }
     override val attributes = object : ContentAttributes {
         override fun <T : Any> get(key: ContentAttributeKey<T>): T? =
             client.contentRuntimeState.getPluginAttribute(key.id)

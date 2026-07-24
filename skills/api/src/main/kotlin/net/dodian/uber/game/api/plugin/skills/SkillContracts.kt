@@ -33,6 +33,7 @@ interface SkillPlayer {
     val random: SkillRandom
     val clock: SkillClock
     val vitals: SkillVitals
+    val slayerTask: SkillSlayerTask
     /** Plugin-owned temporary state; cleared when the player logs out. */
     val attributes: ContentAttributes
     val moduleState: SkillModuleState
@@ -79,7 +80,7 @@ interface SkillEquipment {
     fun refresh()
 }
 
-object SkillEquipmentSlot { const val WEAPON = 3 }
+object SkillEquipmentSlot { const val HEAD = 0; const val WEAPON = 3 }
 
 fun interface SkillRequirement {
     fun validate(player: SkillPlayer): SkillValidationResult
@@ -165,6 +166,20 @@ interface SkillWorld {
     fun spawnTemporaryObject(objectId: Int, durationTicks: Int, onExpire: () -> Unit = {})
     /** Drops [amount] of [itemId] on the ground at the player's current position, initially visible only to them. */
     fun dropItem(itemId: Int, amount: Int = 1)
+}
+
+/** View of the player's persisted slayer assignment. */
+interface SkillSlayerTask {
+    /** NPC id of the slayer master who assigned the current task, or -1 if none. */
+    val masterNpcId: Int
+    /** Display name of the assigned task, or an empty string when no task is active. */
+    val taskName: String
+    val remainingAmount: Int
+    val streak: Int
+    /** Kills logged against the assigned task's monsters this task, or -1 if no task is active. */
+    fun killCount(): Int
+    /** Resets the assigned task's kill counter. Returns false if there's no active task. */
+    fun resetKillCount(): Boolean
 }
 
 interface SkillProduction {

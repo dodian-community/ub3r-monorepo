@@ -3,12 +3,15 @@ package net.dodian.uber.skills.crafting
 import net.dodian.uber.game.api.plugin.ContentMaturity
 import net.dodian.uber.game.api.plugin.ContentModuleManifest
 import net.dodian.uber.game.api.plugin.skills.SkillItemOnItemInteraction
+import net.dodian.uber.game.api.plugin.skills.SkillObjectInteraction
+import net.dodian.uber.game.api.plugin.skills.SkillPlayer
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
 import net.dodian.uber.game.api.plugin.skills.SkillPluginDefinition
 import net.dodian.uber.game.api.plugin.skills.manifest
 import net.dodian.uber.game.api.plugin.skills.skillPlugin
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.skill.runtime.action.productionAction
 import net.dodian.uber.skills.api.SkillModuleDescriptor
 import net.dodian.uber.skills.runtime.TomlRecordReader
 
@@ -39,12 +42,26 @@ object CraftingModule : SkillPlugin {
     private const val CHISEL_ITEM_ID = 1755
     private const val NEEDLE_ITEM_ID = 1733
 
+    // Legacy spinning wheel objects (skill.crafting.Crafting.performSpin/spinDelayMs, orphaned by
+    // the old content.objects.impl.crafting.SpinningWheelObjects registration that used to wire
+    // these up). Flax takes priority over wool when both are carried, matching that behavior.
+    private val spinningWheelObjectIds = intArrayOf(14889, 25824)
+    private const val FLAX_ITEM_ID = 1779
+    private const val BOW_STRING_ITEM_ID = 1777
+    private const val FLAX_SPIN_EXPERIENCE = 50
+    private const val WOOL_ITEM_ID = 1737
+    private const val BALL_OF_WOOL_ITEM_ID = 1759
+    private const val WOOL_SPIN_EXPERIENCE = 100
+
     override val definition: SkillPluginDefinition = skillPlugin("Crafting", Skill.CRAFTING) {
         gems.forEach { gem ->
             itemOnItem(PolicyPreset.PRODUCTION, CHISEL_ITEM_ID, gem.uncutId) { cutGem(it, gem) }
         }
         hides.forEach { hide ->
             itemOnItem(PolicyPreset.PRODUCTION, NEEDLE_ITEM_ID, hide.itemId) { craftHide(it, hide) }
+        }
+        objectClick(preset = PolicyPreset.PRODUCTION, option = 1, *spinningWheelObjectIds) { interaction ->
+            startSpinning(interaction)
         }
     }
 
@@ -77,6 +94,38 @@ object CraftingModule : SkillPlugin {
             return true
         }
         return true
+    }
+
+    private fun startSpinning(interaction: SkillObjectInteraction): Boolean {
+        val player = interaction.player
+        productionAction("spinning") {
+            delay { spinDelayTicks(player) }
+            onCycleSignal { performSpin(player) }
+        }.start(player)
+        return true
+    }
+
+    private fun spinDelayTicks(player: SkillPlayer): Int =
+        when {
+            player.skills.current(Skill.CRAFTING) >= 70 -> 1
+            player.skills.current(Skill.CRAFTING) >= 40 -> 2
+            else -> 3
+        }
+
+    // Mirrors legacy Crafting.performSpin exactly: flax takes priority over wool, and there is
+    // no crafting-level gate on either (a quirk of the original implementation, kept as-is).
+    private fun performSpin(player: SkillPlayer): net.dodian.uber.game.skill.runtime.action.CycleSignal {
+        if (player.inventory.transaction { remove(FLAX_ITEM_ID, 1); add(BOW_STRING_ITEM_ID, 1) }) {
+            player.skills.gainXp(FLAX_SPIN_EXPERIENCE, Skill.CRAFTING)
+            player.actions.triggerRandomEvent(FLAX_SPIN_EXPERIENCE)
+        } else if (player.inventory.transaction { remove(WOOL_ITEM_ID, 1); add(BALL_OF_WOOL_ITEM_ID, 1) }) {
+            player.skills.gainXp(WOOL_SPIN_EXPERIENCE, Skill.CRAFTING)
+            player.actions.triggerRandomEvent(WOOL_SPIN_EXPERIENCE)
+        } else {
+            player.ui.message("You do not have anything to spin!")
+            return net.dodian.uber.game.skill.runtime.action.CycleSignal.stop()
+        }
+        return net.dodian.uber.game.skill.runtime.action.CycleSignal.success()
     }
 
     private fun loadGems(): List<CraftingGemDef> =

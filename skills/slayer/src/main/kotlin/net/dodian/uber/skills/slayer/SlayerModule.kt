@@ -2,6 +2,7 @@ package net.dodian.uber.skills.slayer
 
 import net.dodian.uber.game.api.plugin.ContentMaturity
 import net.dodian.uber.game.api.plugin.ContentModuleManifest
+import net.dodian.uber.game.api.plugin.skills.SkillItemInteraction
 import net.dodian.uber.game.api.plugin.skills.SkillNpcInteraction
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
 import net.dodian.uber.game.api.plugin.skills.SkillPluginDefinition
@@ -27,10 +28,24 @@ object SlayerModule : SkillPlugin {
     val tasks: List<SlayerTaskDef> by lazy { loadTasks() }
 
     private val masterNpcIds = intArrayOf(402, 403, 404)
+    private const val ENCHANTED_GEM_ID = 4155
+    private val slayerMaskIds = intArrayOf(11784, 11864, 11865)
 
     override val definition: SkillPluginDefinition = skillPlugin("Slayer", Skill.SLAYER) {
         npcClick(preset = PolicyPreset.GATHERING, option = 1, *masterNpcIds) { interaction ->
             talkToMaster(interaction)
+        }
+        itemClick(preset = PolicyPreset.DIALOGUE, option = 1, ENCHANTED_GEM_ID) { interaction ->
+            checkGemTask(interaction)
+        }
+        itemClick(preset = PolicyPreset.DIALOGUE, option = 2, ENCHANTED_GEM_ID) { interaction ->
+            resetGemKillCount(interaction)
+        }
+        itemClick(preset = PolicyPreset.DIALOGUE, option = 3, ENCHANTED_GEM_ID) { interaction ->
+            showGemKillLog(interaction)
+        }
+        itemClick(preset = PolicyPreset.DIALOGUE, option = 3, *slayerMaskIds) { interaction ->
+            disassembleOrSellMask(interaction)
         }
     }
 
@@ -45,6 +60,102 @@ object SlayerModule : SkillPlugin {
         val player = interaction.player
         player.ui.message("Slayer masters can assign you tasks.")
         return true
+    }
+
+    private fun checkGemTask(interaction: SkillItemInteraction): Boolean {
+        val task = interaction.player.slayerTask
+        if (task.remainingAmount <= 0) {
+            interaction.player.ui.message("You have yet to get a task. Talk to a slayer master!")
+        } else {
+            interaction.player.ui.message(
+                "You're currently assigned to ${task.taskName}; you have ${task.remainingAmount} more to go. " +
+                    "Your current streak is ${task.streak}.",
+            )
+        }
+        return true
+    }
+
+    // Legacy behavior (SlayerGemItems.onSecondClick -> SlayerMasterDialogue.showResetCountPrompt):
+    // resets the kill counter tracked against the current task's monsters. The legacy version
+    // gates this behind a Yes/No confirmation dialogue; the clean content API has no generic
+    // confirm-prompt primitive yet, so this resets immediately and reports the outcome instead.
+    private fun resetGemKillCount(interaction: SkillItemInteraction): Boolean {
+        val player = interaction.player
+        val task = player.slayerTask
+        if (task.remainingAmount <= 0) {
+            player.ui.message("You do not have a task currently. Talk to me to get one.")
+            return true
+        }
+        if (task.resetKillCount()) {
+            player.ui.message("Your kill count for ${task.taskName} has been reset.")
+        }
+        return true
+    }
+
+    // Legacy behavior (SlayerGemItems.onThirdClick -> QuestSend.showMonsterLog) opens a full
+    // kill-log interface; simplified here to a text summary since that interface isn't part of
+    // the clean content API.
+    private fun showGemKillLog(interaction: SkillItemInteraction): Boolean {
+        val player = interaction.player
+        val task = player.slayerTask
+        val kills = task.killCount()
+        if (task.remainingAmount <= 0 || kills < 0) {
+            player.ui.message("You have no task assigned.")
+        } else {
+            player.ui.message("You have killed $kills ${task.taskName} this task.")
+        }
+        return true
+    }
+
+    // Legacy behavior (SlayerMaskItems.onThirdClick): 11864/11865 disassemble back into their
+    // component parts (gem, mirror shield, face mask, earmuffs, nosepeg, spiny helm, gloves,
+    // witchwood icon, and the base mask/helm); 11784 (uncharged helm) sells back for a 70% coin
+    // refund of the 2,000,000gp imbue cost, downgrading to a plain black mask.
+    private fun disassembleOrSellMask(interaction: SkillItemInteraction): Boolean {
+        val player = interaction.player
+        return when (interaction.itemId) {
+            11864, 11865 -> {
+                val needed = 8 - player.inventory.freeSlots()
+                if (needed > 0) {
+                    player.ui.message(
+                        "You need $needed empty inventory slots to disassemble the " +
+                            "${player.inventory.itemName(interaction.itemId).lowercase()}.",
+                    )
+                    true
+                } else {
+                    val baseItem = if (interaction.itemId == 11865) 11784 else 8921
+                    val disassembled = player.inventory.transaction {
+                        remove(interaction.itemId, 1)
+                        add(baseItem, 1)
+                        add(4155, 1)
+                        add(4156, 1)
+                        add(4164, 1)
+                        add(4166, 1)
+                        add(4168, 1)
+                        add(4551, 1)
+                        add(6720, 1)
+                        add(8923, 1)
+                    }
+                    if (disassembled) {
+                        player.ui.message("You disassemble the ${player.inventory.itemName(interaction.itemId).lowercase()}.")
+                    }
+                    true
+                }
+            }
+            11784 -> {
+                val refund = (2_000_000.0 * 0.7).toInt()
+                val sold = player.inventory.transaction {
+                    remove(11784, 1)
+                    add(995, refund)
+                    add(8921, 1)
+                }
+                if (!sold) {
+                    player.ui.message("You either need one free space or coins to not go beyond 2147million!")
+                }
+                true
+            }
+            else -> false
+        }
     }
 
     private fun loadTasks(): List<SlayerTaskDef> =

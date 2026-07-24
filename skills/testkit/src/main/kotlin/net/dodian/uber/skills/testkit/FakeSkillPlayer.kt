@@ -20,6 +20,7 @@ import net.dodian.uber.game.api.plugin.skills.SkillClock
 import net.dodian.uber.game.api.plugin.skills.SkillModuleState
 import net.dodian.uber.game.api.plugin.skills.SkillAmountPrompt
 import net.dodian.uber.game.api.plugin.skills.SkillVitals
+import net.dodian.uber.game.api.plugin.skills.SkillSlayerTask
 import net.dodian.uber.game.api.plugin.skills.SkillItemGridEntry
 import net.dodian.uber.game.api.plugin.skills.SkillValidationResult
 import net.dodian.uber.game.model.player.skills.Skill
@@ -263,6 +264,23 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
             prayerRestored += restored
         }
         override fun stun(ticks: Int) { stunTicks = ticks.coerceAtLeast(0) }
+    }
+    var slayerMasterNpcId = -1
+    var slayerTaskName = ""
+    var slayerRemainingAmount = 0
+    var slayerStreak = 0
+    var slayerKillCountValue = -1
+    override val slayerTask = object : SkillSlayerTask {
+        override val masterNpcId: Int get() = slayerMasterNpcId
+        override val taskName: String get() = slayerTaskName
+        override val remainingAmount: Int get() = slayerRemainingAmount
+        override val streak: Int get() = slayerStreak
+        override fun killCount(): Int = slayerKillCountValue
+        override fun resetKillCount(): Boolean {
+            if (slayerTaskName.isEmpty()) return false
+            slayerKillCountValue = 0
+            return true
+        }
     }
     override val attributes = object : ContentAttributes {
         @Suppress("UNCHECKED_CAST")

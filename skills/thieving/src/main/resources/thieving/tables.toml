@@ -12,17 +12,80 @@ loot_amount = 500
 [[target]]
 name = "baker_stall"
 target_type = "stall"
-id = 2309
+id = 11730
 level = 10
-experience = 160
+experience = 1000
 loot_item = 2309
+loot_amount = 1
+
+[[target]]
+name = "fur_stall"
+target_type = "stall"
+id = 11732
+level = 40
+experience = 1800
+loot_item = 1751
 loot_amount = 1
 
 [[target]]
 name = "silver_stall"
 target_type = "stall"
-id = 2349
+id = 11734
 level = 65
-experience = 500
-loot_item = 440
+experience = 2500
+loot_item = 2351
 loot_amount = 1
+
+[[target]]
+name = "spice_stall"
+target_type = "stall"
+id = 11733
+level = 80
+experience = 4800
+loot_item = 215
+loot_amount = 1
+
+[[target]]
+name = "gem_stall"
+target_type = "stall"
+id = 11731
+level = 90
+experience = 5800
+loot_item = 1617
+loot_amount = 1
+
+[[target]]
+name = "tea_stall"
+target_type = "market_stall"
+id = 4877
+level = 5
+experience = 160
+loot_item = 712
+loot_amount = 1
+
+[[target]]
+name = "cage"
+target_type = "chest"
+id = 20873
+level = 1
+experience = 500
+loot_item = 995
+loot_amount = 25
+
+[[target]]
+name = "chest"
+target_type = "chest"
+id = 6847
+level = 1
+experience = 40
+loot_item = 995
+loot_amount = 50
+
+[[target]]
+name = "crate"
+target_type = "chest"
+id = 11729
+level = 1
+experience = 40
+loot_item = 995
+loot_amount = 50
