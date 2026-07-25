@@ -4718,7 +4718,7 @@ public class Client extends Player implements Runnable {
         }
         if (PlayerRegistry.playersOnline.containsKey(friend)) {
             Client to = PlayerRegistry.playersOnline.get(friend);
-            boolean specialRights = to.playerGroup == 6 || to.playerGroup == 10 || to.playerGroup == 35;
+            boolean specialRights = net.dodian.uber.game.engine.config.DotEnvKt.getRankAdminGroupIds().contains(to.playerGroup);
             if (specialRights && to.busy && playerRights < 1) {
                 send(new SendMessage("<col=FF0000>This player is busy and did not receive your message."));
                 return;

@@ -274,7 +274,6 @@ object WebApi {
                             "pluginBootstrap" to net.dodian.uber.game.engine.lifecycle.EnginePluginBootstrap.currentPhase().name,
                             "players" to PlayerRegistry.getPlayerCount(),
                             "telemetry" to net.dodian.uber.game.engine.metrics.OperationalTelemetry.snapshot(),
-                            "swiftFup" to mapOf("status" to "DISABLED"),
                             "contentFaults" to net.dodian.uber.game.api.content.ContentFaultCircuitBreaker.snapshot(),
                             "contentPlatform" to linkedMapOf(
                                 "fingerprint" to contentPlatform.fingerprint,

@@ -29,14 +29,7 @@ object SyncWorker {
     private val parallelEnabled: Boolean =
         System.getenv().getOrDefault("SYNC_PARALLEL_ENCODE", "true").equals("true", ignoreCase = true)
 
-    init {
-        logger.info(
-            "sync_worker_ready parallel={} threshold={} poolParallelism={}",
-            parallelEnabled,
-            asynchronousThreshold,
-            ForkJoinPool.commonPool().parallelism,
-        )
-    }
+
 
     /**
      * Runs [action] for every element of [viewers]; inline when below the threshold or

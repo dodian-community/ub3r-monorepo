@@ -30,8 +30,8 @@ object SmithingModule : SkillPlugin {
     val descriptor = SkillModuleDescriptor("skill.smithing", "Smithing")
     val smeltingRecipes: List<SmeltingRecipeDef> by lazy { loadSmeltingRecipes() }
 
-    private val furnaceObjectIds = intArrayOf(26814, 11666)
-    private val anvilObjectIds = intArrayOf(2097, 4306)
+    private val furnaceObjectIds = intArrayOf(2150, 2151, 2152, 2153, 3994, 11666, 16469, 26814, 29662)
+    private val anvilObjectIds = intArrayOf(2097, 2783, 4306, 6150, 26813)
 
     override val definition: SkillPluginDefinition = skillPlugin("Smithing", Skill.SMITHING) {
         itemOnObject(PolicyPreset.PRODUCTION, *furnaceObjectIds) { interaction ->

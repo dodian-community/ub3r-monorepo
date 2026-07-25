@@ -30,7 +30,7 @@ class FletchingModuleRuntimeTest {
 
     @Test
     fun `ammo and stringing routes are plugin owned and transactional`() {
-        val dart = FletchingModule.definition.itemOnItemBindings.single { setOf(it.leftItemId, it.rightItemId) == setOf(314, 819) }
+        val dart = FletchingModule.definition.itemOnItemBindings.first { setOf(it.leftItemId, it.rightItemId) == setOf(314, 819) }
         val player = FakeSkillPlayer(mapOf(314 to 2, 819 to 2)).apply { setLevel(Skill.FLETCHING, 99) }
         assertTrue(dart.handler(SkillItemOnItemInteraction(player, 314, 819)))
         val menu = player.production.pending()!!

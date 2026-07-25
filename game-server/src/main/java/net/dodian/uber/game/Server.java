@@ -80,7 +80,6 @@ public class Server {
             " / /_/ / /_/ / /_/ / / /_/ / / / /",
             "/_____/\\____/\\____/_/\\____/_/ /_/",
             "",
-            "Dodian 3000",
             "Maintained by Dodian.net");
 
     static String startupBanner() {
@@ -88,6 +87,8 @@ public class Server {
     }
 
     public static void main(String[] args) throws Exception {
+        logger.info("\n{}", STARTUP_BANNER);
+
         serverStartup = System.currentTimeMillis();
         net.dodian.uber.game.engine.config.SettingsLoader.INSTANCE.load();
         net.dodian.uber.game.engine.config.FeatureStateService.INSTANCE.initialize(
@@ -96,8 +97,6 @@ public class Server {
         StartupValidationService.validateOrThrow();
         net.dodian.uber.game.netty.listener.PacketListenerManager.initialize();
         net.dodian.uber.game.rscm.RSCM.load(new java.io.File("data/mappings"));
-
-        logger.info("\n{}", STARTUP_BANNER);
 
         if (getDatabaseInitialize() && !isDatabaseInitialized()) {
             initializeDatabase();
@@ -121,9 +120,9 @@ public class Server {
         login = new Login();
         GameObjectData.init();
         net.dodian.uber.game.engine.systems.objectexamines.ObjectExamines.load();
-        // Verifies the cache both CacheBootstrapService (below) and SwiftFUP (further down) read
-        // from matches its known-good fingerprint, so a substituted or corrupted cache directory
-        // fails loudly at boot instead of silently serving bad terrain/objects to clients.
+        // Verifies the cache CacheBootstrapService (below) reads from matches its known-good
+        // fingerprint, so a substituted or corrupted cache directory fails loudly at boot instead
+        // of silently serving bad terrain/objects to clients.
         new CacheBootstrapService().bootstrap();
         loadObjects();
         new DoorRegistry();
@@ -141,9 +140,7 @@ public class Server {
         System.gc();
 
         nettyServer = new NettyGameServer(DotEnvKt.getServerPort());
-        logger.info("Starting Netty game server...");
         nettyServer.start();
-
 
         /* Processor for various stuff */
         net.dodian.uber.game.persistence.audit.CustomInterfaceRegistry.startBackgroundLoad();
@@ -161,20 +158,29 @@ public class Server {
             if (item != null) itemDefinitionCount++;
         }
         logger.info(
-                "server_ready world={} game_port={} swiftfup_port={} transport={} startup_ms={} " +
-                        "packet_listeners={} npcs={} items={} objects={} web={} discord={}",
+                "server_ready world={} transport={} startup_ms={} " +
+                        "packet_listeners={} npcs={} items={} objects={}",
                 getGameWorldId(),
-                DotEnvKt.getServerPort(),
-                DotEnvKt.getSwiftFupPort(),
                 nettyServer.getTransportName(),
                 startupMillis,
                 net.dodian.uber.game.netty.listener.PacketListenerManager.getRepository().getRegisteredCount(),
                 npcManager.getNpcs().size(),
                 itemDefinitionCount,
-                objects.size(),
-                DotEnvKt.getWebApiEnabled() ? "enabled" : "disabled",
-                net.dodian.uber.game.discord.DiscordService.status().name().toLowerCase(Locale.ROOT)
+                objects.size()
         );
+
+        logPortsSummary();
+    }
+
+    /** Always the last thing logged at startup, so the ports an operator needs are easy to find at the bottom of the boot log. */
+    private static void logPortsSummary() {
+        boolean webEnabled = DotEnvKt.getWebApiEnabled();
+        boolean discordEnabled = DotEnvKt.getDiscordApiEnabled();
+        logger.info("Server & Ports overview [env={}, world={}, xp={}x, max_conn/ip={}]:",
+                DotEnvKt.getServerEnv(), DotEnvKt.getGameWorldId(), DotEnvKt.getGameMultiplierGlobalXp(), DotEnvKt.getGameConnectionsPerIp());
+        logger.info("  game     {}  - RS317 client connections", DotEnvKt.getServerPort());
+        logger.info("  web api  {}  - REST health/status/hiscores API ({})", DotEnvKt.getWebApiPort(), webEnabled ? "enabled" : "disabled");
+        logger.info("  discord  {}  - Discord OAuth authentication ({})", DotEnvKt.getDiscordRedirectUrl(), discordEnabled ? "enabled" : "disabled");
     }
 
 
@@ -272,12 +278,6 @@ public class Server {
             WebApi.stop();
         } catch (Exception exception) {
             logger.warn("Failed to shutdown web API", exception);
-        }
-
-        try {
-            net.dodian.uber.game.discord.DiscordService.stop();
-        } catch (Exception exception) {
-            logger.warn("Failed to shutdown Discord bot", exception);
         }
 
         GameThreadTimers.clearAll();

@@ -2,9 +2,6 @@ package net.dodian.uber.game.engine.systems.world
 
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.world.WorldPollResult
-import net.dodian.uber.game.discord.DiscordAlert
-import net.dodian.uber.game.discord.DiscordAlertKind
-import net.dodian.uber.game.discord.DiscordService
 
 class TargetedWorldPollApplier {
     private var cachedLatestNewsId: Int? = null
@@ -62,27 +59,11 @@ class TargetedWorldPollApplier {
             val client = playerIndex.byDbId(dbId) ?: return@forEach
             if (client.mutedTill != muteTime) {
                 client.mutedTill = muteTime
-                DiscordService.publishAlert(
-                    DiscordAlert(
-                        DiscordAlertKind.MODERATION,
-                        "Player muted",
-                        "${client.playerName} (id=$dbId) muted until $muteTime.",
-                        "mute:$dbId:$muteTime",
-                    ),
-                )
             }
         }
         result.bannedPlayerIds.forEach { dbId ->
             playerIndex.byDbId(dbId)?.let { client ->
                 client.disconnected = true
-                DiscordService.publishAlert(
-                    DiscordAlert(
-                        DiscordAlertKind.MODERATION,
-                        "Player banned",
-                        "${client.playerName} (id=$dbId) was disconnected after a ban update.",
-                        "ban:$dbId",
-                    ),
-                )
             }
         }
     }

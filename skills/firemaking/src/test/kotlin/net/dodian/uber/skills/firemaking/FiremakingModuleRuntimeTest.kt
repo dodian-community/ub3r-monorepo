@@ -36,7 +36,7 @@ class FiremakingModuleRuntimeTest {
     fun `lighting a log consumes it, animates and spawns a temporary fire`() {
         val log = FiremakingModule.logs.single { it.itemId == NORMAL_LOG }
         val binding = FiremakingModule.definition.itemOnItemBindings.single {
-            it.leftItemId == minOf(TINDERBOX, NORMAL_LOG) && it.rightItemId == maxOf(TINDERBOX, NORMAL_LOG)
+            it.leftItemId == TINDERBOX && it.rightItemId == NORMAL_LOG
         }
         val player = FakeSkillPlayer(mapOf(TINDERBOX to 1, NORMAL_LOG to 1)).apply { setLevel(Skill.FIREMAKING, 1) }
 
@@ -52,7 +52,7 @@ class FiremakingModuleRuntimeTest {
     fun `fire burns out and drops ashes after its duration`() {
         val log = FiremakingModule.logs.single { it.itemId == NORMAL_LOG }
         val binding = FiremakingModule.definition.itemOnItemBindings.single {
-            it.leftItemId == minOf(TINDERBOX, NORMAL_LOG) && it.rightItemId == maxOf(TINDERBOX, NORMAL_LOG)
+            it.leftItemId == TINDERBOX && it.rightItemId == NORMAL_LOG
         }
         val player = FakeSkillPlayer(mapOf(TINDERBOX to 1, NORMAL_LOG to 1)).apply { setLevel(Skill.FIREMAKING, 1) }
 
@@ -69,7 +69,7 @@ class FiremakingModuleRuntimeTest {
     fun `insufficient level refuses to light the log`() {
         val magicLog = FiremakingModule.logs.single { it.name == "magic logs" }
         val binding = FiremakingModule.definition.itemOnItemBindings.single {
-            it.leftItemId == minOf(TINDERBOX, magicLog.itemId) && it.rightItemId == maxOf(TINDERBOX, magicLog.itemId)
+            it.leftItemId == TINDERBOX && it.rightItemId == magicLog.itemId
         }
         val player = FakeSkillPlayer(mapOf(TINDERBOX to 1, magicLog.itemId to 1)).apply { setLevel(Skill.FIREMAKING, 1) }
 

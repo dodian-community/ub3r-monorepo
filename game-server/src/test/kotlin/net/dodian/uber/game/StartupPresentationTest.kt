@@ -14,7 +14,6 @@ class StartupPresentationTest {
                 " / /_/ / /_/ / /_/ / / /_/ / / / /",
                 "/_____/\\____/\\____/_/\\____/_/ /_/",
                 "",
-                "Dodian 3000",
                 "Maintained by Dodian.net",
             ).joinToString("\n"),
             Server.startupBanner(),

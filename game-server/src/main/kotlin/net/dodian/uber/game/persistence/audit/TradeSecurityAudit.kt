@@ -1,8 +1,5 @@
 package net.dodian.uber.game.persistence.audit
 
-import net.dodian.uber.game.discord.DiscordAlert
-import net.dodian.uber.game.discord.DiscordAlertKind
-import net.dodian.uber.game.discord.DiscordService
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.GameItem
 import org.slf4j.LoggerFactory
@@ -32,16 +29,6 @@ object TradeSecurityAudit {
                 if (second == null) "none" else fingerprint(secondItems),
                 result,
                 reason,
-            )
-        }
-        if (result == "rejected") {
-            DiscordService.publishAlert(
-                DiscordAlert(
-                    kind = DiscordAlertKind.TRADE_SECURITY,
-                    title = "Trade security rejection",
-                    detail = "session=$sessionId first=${playerRef(first)} second=${second?.let(::playerRef) ?: "none"} reason=$reason offers=${fingerprint(firstItems)}|${fingerprint(secondItems)}",
-                    deduplicationKey = "trade:$sessionId:$reason",
-                ),
             )
         }
     }

@@ -18,7 +18,7 @@ class HerbloreModuleRuntimeTest {
         assertTrue(clean.handler(SkillItemInteraction(player, 1, 199, 0, -1)))
         assertEquals(2, player.amount(249))
 
-        val mix = HerbloreModule.definition.itemOnItemBindings.single { setOf(it.leftItemId, it.rightItemId) == setOf(249, 227) }
+        val mix = HerbloreModule.definition.itemOnItemBindings.first { setOf(it.leftItemId, it.rightItemId) == setOf(249, 227) }
         assertTrue(mix.handler(SkillItemOnItemInteraction(player, 249, 227)))
         val menu = player.production.pending()!!
         assertTrue(player.production.select(SkillMultiSelection(menu.key, menu.entries.single().recipe.key, 1)))
@@ -29,7 +29,7 @@ class HerbloreModuleRuntimeTest {
     @Test
     fun `premium recipes refuse non premium players`() {
         val player = FakeSkillPlayer(mapOf(259 to 1, 227 to 1)).apply { setLevel(Skill.HERBLORE, 99) }
-        val binding = HerbloreModule.definition.itemOnItemBindings.single { setOf(it.leftItemId, it.rightItemId) == setOf(259, 227) }
+        val binding = HerbloreModule.definition.itemOnItemBindings.first { setOf(it.leftItemId, it.rightItemId) == setOf(259, 227) }
         assertTrue(binding.handler(SkillItemOnItemInteraction(player, 259, 227)))
         val menu = player.production.pending()!!
         assertTrue(player.production.select(SkillMultiSelection(menu.key, menu.entries.single().recipe.key, 1)))

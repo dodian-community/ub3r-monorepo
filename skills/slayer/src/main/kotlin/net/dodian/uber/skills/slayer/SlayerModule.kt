@@ -47,6 +47,14 @@ object SlayerModule : SkillPlugin {
         itemClick(preset = PolicyPreset.DIALOGUE, option = 3, *slayerMaskIds) { interaction ->
             disassembleOrSellMask(interaction)
         }
+        val helmComponents = intArrayOf(4155, 4156, 4164, 4166, 4168, 4551, 6720, 8923, 8921, 11784)
+        for (i in helmComponents.indices) {
+            for (j in i + 1 until helmComponents.size) {
+                itemOnItem(PolicyPreset.PRODUCTION, helmComponents[i], helmComponents[j]) { interaction ->
+                    assembleSlayerHelm(interaction.player)
+                }
+            }
+        }
     }
 
     override val contentManifest: ContentModuleManifest = definition.manifest(
@@ -156,6 +164,32 @@ object SlayerModule : SkillPlugin {
             }
             else -> false
         }
+    }
+
+    private fun assembleSlayerHelm(player: net.dodian.uber.game.api.plugin.skills.SkillPlayer): Boolean {
+        val components = intArrayOf(4155, 4156, 4164, 4166, 4168, 4551, 6720, 8923)
+        val missingComponent = components.any { player.inventory.amount(it) <= 0 }
+        val hasBlackMask = player.inventory.amount(8921) > 0
+        val hasBlackMaskI = player.inventory.amount(11784) > 0
+        if (missingComponent || (!hasBlackMask && !hasBlackMaskI)) {
+            player.ui.message("You need an enchanted gem, mirror shield, face mask, earmuffs, nosepeg, spiny helm, slayer gloves, witchwood icon and black mask to assemble.")
+            return true
+        }
+        if (player.skills.current(Skill.CRAFTING) < 70) {
+            player.ui.message("You need level 70 crafting to assemble these items together.")
+            return true
+        }
+        val targetHelm = if (hasBlackMaskI) 11865 else 11864
+        val maskId = if (hasBlackMaskI) 11784 else 8921
+        val committed = player.inventory.transaction {
+            components.forEach { remove(it, 1) }
+            remove(maskId, 1)
+            add(targetHelm, 1)
+        }
+        if (committed) {
+            player.ui.message("You assemble the items together and make a ${player.inventory.itemName(targetHelm).lowercase()}.")
+        }
+        return true
     }
 
     private fun loadTasks(): List<SlayerTaskDef> =

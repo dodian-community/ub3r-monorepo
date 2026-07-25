@@ -3,11 +3,191 @@ schema_version = 1
 [[target]]
 name = "man"
 target_type = "npc"
+id = 1
+level = 1
+experience = 80
+loot_item = 995
+loot_amount = 500
+
+[[target]]
+name = "man"
+target_type = "npc"
+id = 2
+level = 1
+experience = 80
+loot_item = 995
+loot_amount = 500
+
+[[target]]
+name = "man"
+target_type = "npc"
+id = 3
+level = 1
+experience = 80
+loot_item = 995
+loot_amount = 500
+
+[[target]]
+name = "man"
+target_type = "npc"
+id = 4
+level = 1
+experience = 80
+loot_item = 995
+loot_amount = 500
+
+[[target]]
+name = "man"
+target_type = "npc"
+id = 5
+level = 1
+experience = 80
+loot_item = 995
+loot_amount = 500
+
+[[target]]
+name = "man"
+target_type = "npc"
+id = 6
+level = 1
+experience = 80
+loot_item = 995
+loot_amount = 500
+
+[[target]]
+name = "man"
+target_type = "npc"
+id = 7
+level = 1
+experience = 80
+loot_item = 995
+loot_amount = 500
+
+[[target]]
+name = "man"
+target_type = "npc"
+id = 3078
+level = 1
+experience = 80
+loot_item = 995
+loot_amount = 500
+
+[[target]]
+name = "man"
+target_type = "npc"
+id = 3079
+level = 1
+experience = 80
+loot_item = 995
+loot_amount = 500
+
+[[target]]
+name = "man"
+target_type = "npc"
+id = 3080
+level = 1
+experience = 80
+loot_item = 995
+loot_amount = 500
+
+[[target]]
+name = "man"
+target_type = "npc"
 id = 3243
 level = 1
 experience = 80
 loot_item = 995
 loot_amount = 500
+
+[[target]]
+name = "man"
+target_type = "npc"
+id = 3244
+level = 1
+experience = 80
+loot_item = 995
+loot_amount = 500
+
+[[target]]
+name = "farmer"
+target_type = "npc"
+id = 3086
+level = 10
+experience = 145
+loot_item = 995
+loot_amount = 750
+
+[[target]]
+name = "master_farmer"
+target_type = "npc"
+id = 3257
+level = 38
+experience = 430
+loot_item = 5291
+loot_amount = 1
+
+[[target]]
+name = "master_farmer"
+target_type = "npc"
+id = 3258
+level = 38
+experience = 430
+loot_item = 5291
+loot_amount = 1
+
+[[target]]
+name = "guard"
+target_type = "npc"
+id = 3010
+level = 40
+experience = 468
+loot_item = 995
+loot_amount = 1200
+
+[[target]]
+name = "guard"
+target_type = "npc"
+id = 3011
+level = 40
+experience = 468
+loot_item = 995
+loot_amount = 1200
+
+[[target]]
+name = "guard"
+target_type = "npc"
+id = 3267
+level = 40
+experience = 468
+loot_item = 995
+loot_amount = 1200
+
+[[target]]
+name = "knight"
+target_type = "npc"
+id = 3108
+level = 55
+experience = 843
+loot_item = 995
+loot_amount = 2500
+
+[[target]]
+name = "paladin"
+target_type = "npc"
+id = 3104
+level = 70
+experience = 1517
+loot_item = 995
+loot_amount = 4000
+
+[[target]]
+name = "hero"
+target_type = "npc"
+id = 3106
+level = 80
+experience = 2733
+loot_item = 995
+loot_amount = 8000
 
 [[target]]
 name = "baker_stall"

@@ -12578,6 +12578,19 @@ public class Client extends GameEngine
             e.printStackTrace();
         }
 
+        // "Remember me": pre-fill the login fields from the most recently saved profile.
+        // ProfileManager.save() has always written credentials to profiles.dat, but nothing
+        // read them back into the login screen - this closes that loop.
+        if (Settings.REMEMBER_ME) {
+            for (Profile profile : ProfileManager.profiles) {
+                if (!profile.emptySlot()) {
+                    myUsername = profile.getUsername();
+                    myPassword = profile.getPassword();
+                    break;
+                }
+            }
+        }
+
         keybindManager.load();
 
         for (int index = 0; index < 25; index++) {

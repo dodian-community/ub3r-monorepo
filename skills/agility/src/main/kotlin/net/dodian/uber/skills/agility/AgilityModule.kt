@@ -53,6 +53,9 @@ object AgilityModule : SkillPlugin {
         objectClick(preset = PolicyPreset.GATHERING, option = 1, *obstacleObjectIds) { interaction ->
             crossObstacle(interaction)
         }
+        itemClick(preset = PolicyPreset.DIALOGUE, option = 1, AGILITY_TICKET_ID) { interaction ->
+            exchangeTickets(interaction.player)
+        }
     }
 
     override val contentManifest: ContentModuleManifest = definition.manifest(
@@ -142,6 +145,20 @@ object AgilityModule : SkillPlugin {
                 player.ui.message(msg)
             }
         }
+    }
+
+    private fun exchangeTickets(player: SkillPlayer): Boolean {
+        val amount = player.inventory.amount(AGILITY_TICKET_ID)
+        if (amount < 10) {
+            player.ui.message("You must hand in at least 10 tickets at once.")
+            return true
+        }
+        if (player.inventory.transaction { remove(AGILITY_TICKET_ID, amount) }) {
+            val xp = amount * 700
+            player.skills.gainXp(xp, Skill.AGILITY)
+            player.ui.message("You exchange your $amount agility tickets.")
+        }
+        return true
     }
 
     private fun loadObstacles(): List<AgilityObstacleDef> {

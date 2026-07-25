@@ -4,19 +4,19 @@ schema_version = 1
 # adds the total crafted amount and grants experiencePerEssence * essenceCount xp.
 
 [[altar]]
-objectId = 2460
+objectIds = "2460, 14905"
 runeId = 561
 requiredLevel = 1
 experiencePerEssence = 60
 
 [[altar]]
-objectId = 27978
+objectIds = "27978"
 runeId = 565
 requiredLevel = 50
 experiencePerEssence = 85
 
 [[altar]]
-objectId = 2458
+objectIds = "2458, 14903"
 runeId = 564
 requiredLevel = 75
 experiencePerEssence = 120

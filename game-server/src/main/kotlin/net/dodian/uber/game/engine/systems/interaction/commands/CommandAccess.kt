@@ -4,7 +4,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.engine.config.gameWorldId
 
 internal fun isSpecialRights(client: Client): Boolean =
-    client.playerGroup == 6 || client.playerGroup == 10 || client.playerGroup == 35
+    net.dodian.uber.game.engine.config.rankAdminGroupIds.contains(client.playerGroup)
 
 internal fun isBetaWorld(): Boolean = gameWorldId > 1
 

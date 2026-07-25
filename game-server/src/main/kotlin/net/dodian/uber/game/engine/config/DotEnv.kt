@@ -22,13 +22,16 @@ val databaseUsername = requiredNonBlankEnv("DATABASE_USERNAME")
 val databasePassword = dotenv["DATABASE_PASSWORD"] ?: ""
 val databaseInitialize = dotenv["DATABASE_INITIALIZE"]?.toBoolean() ?: false
 
-val discordToken = dotenv["DISCORD_TOKEN"] ?: ""
-val discordChannelId = dotenv["DISCORD_CHANNEL_ID"] ?: ""
-val discordGuildId = dotenv["DISCORD_GUILD_ID"] ?: ""
-val discordStaffAlertChannelId = dotenv["DISCORD_STAFF_ALERT_CHANNEL_ID"] ?: ""
-
 val clientVersion = dotenv["CLIENT_VERSION"]?.toInt() ?: 12
 val gameClientCustomVersion = dotenv["CLIENT_CUSTOM_VERSION"] ?: "dodian_client"
+
+// Discord OAuth (gates new account creation - see AccountLoginService/DiscordApiService). Secrets,
+// so these live in .env (gitignored), not Settings.toml (git-tracked).
+val discordApiEnabled = dotenv["DISCORD_ENABLED"]?.toBoolean() ?: false
+val discordClientId = dotenv["DISCORD_CLIENT_ID"] ?: ""
+val discordClientSecret = dotenv["DISCORD_CLIENT_SECRET"] ?: ""
+val discordRedirectUrl = dotenv["DISCORD_REDIRECT_URL"] ?: "http://localhost:8080/discord/callback"
+val discordMaxAccountsPerDiscord = dotenv["DISCORD_MAX_ACCOUNTS_PER_DISCORD"]?.toIntOrNull() ?: 3
 
 val rsaModulus = run {
     val str = dotenv["RSA_MODULUS"] ?: throw IllegalStateException("Missing required environment variable: RSA_MODULUS")
@@ -53,7 +56,6 @@ val _rsaValidation = run {
 }
 
 // Delegation getters for Settings.toml
-val serverName get() = SettingsLoader.settings.server.name
 val serverPort get() = SettingsLoader.settings.network.gamePort
 val serverDebugMode get() = SettingsLoader.settings.server.debug
 val serverEnv get() = SettingsLoader.settings.server.environment
@@ -62,7 +64,7 @@ val dodianLogLevel get() = SettingsLoader.settings.server.logLevel
 val webApiEnabled get() = SettingsLoader.settings.network.webEnabled
 val webApiPort get() = SettingsLoader.settings.network.webPort
 
-val gameWorldId get() = System.getenv("WORLD_ID")?.toIntOrNull() ?: System.getenv("WORLD")?.toIntOrNull() ?: SettingsLoader.settings.world.worldId
+val gameWorldId get() = SettingsLoader.settings.world.worldId
 val gameConnectionsPerIp get() = SettingsLoader.settings.network.connectionsPerIp
 
 val databasePoolMinSize get() = SettingsLoader.settings.databasePool.minSize
@@ -79,7 +81,10 @@ val gameMultiplierGlobalXp get() = SettingsLoader.settings.world.globalXpMultipl
 // directly without bootstrapping Server.main()) rather than throwing - this is read from Player's
 // field initializers, a path exercised by nearly every test in the suite.
 val gameMaxPlayers get() = if (SettingsLoader.isLoaded) SettingsLoader.settings.world.maxPlayers else 100
-val swiftFupPort get() = SettingsLoader.settings.network.swiftfupPort
-val swiftFupConnectionsPerIp get() = SettingsLoader.settings.network.swiftfupConnectionsPerIp
-val swiftFupReadTimeoutSeconds get() = SettingsLoader.settings.network.swiftfupReadTimeoutSeconds
-val swiftFupMaxTrackedIps get() = SettingsLoader.settings.network.swiftfupMaxTrackedIps
+
+val rankBannedGroupId get() = if (SettingsLoader.isLoaded) SettingsLoader.settings.ranks.bannedGroupId else 3
+val rankModGroupIds get() = if (SettingsLoader.isLoaded) SettingsLoader.settings.ranks.modGroupIds else listOf(5, 9)
+val rankAdminGroupIds get() = if (SettingsLoader.isLoaded) SettingsLoader.settings.ranks.adminGroupIds else listOf(6, 10, 18, 35)
+val rankDebugBypassGroupIds get() = if (SettingsLoader.isLoaded) SettingsLoader.settings.ranks.debugBypassGroupIds else listOf(11, 34, 40)
+
+

@@ -384,8 +384,8 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
     }
 
     private static int rightsForGroup(int playerGroup) {
-        if (playerGroup == 9 || playerGroup == 5) return 1;
-        if (playerGroup == 6 || playerGroup == 18 || playerGroup == 10) return 2;
+        if (net.dodian.uber.game.engine.config.DotEnvKt.getRankAdminGroupIds().contains(playerGroup)) return 2;
+        if (net.dodian.uber.game.engine.config.DotEnvKt.getRankModGroupIds().contains(playerGroup)) return 1;
         return 0;
     }
 

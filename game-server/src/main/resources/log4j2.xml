@@ -58,6 +58,15 @@
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] %highlight{%-5p} [%c{1}] %msg%n" disableAnsi="false"/>
+            <Filters>
+                <!-- Ktor's embedded-server lifecycle chatter (autoreload/startup-time/"Responding at")
+                     logs under its own "Application" logger, breaking the [ComponentName] convention
+                     everywhere else - and level/name-based suppression of that logger didn't take
+                     effect (its exact registered SLF4J name doesn't match "Application"/"io.ktor" as
+                     expected), so this filters by message content instead. WebApi logs its own
+                     structured web_api_ready line in place of it. -->
+                <RegexFilter regex="(?s).*(Autoreload is (enabled|disabled)|Application started in|Responding at http).*" onMatch="DENY" onMismatch="NEUTRAL"/>
+            </Filters>
         </Console>
         <Console name="ConsoleAuditConsole" target="SYSTEM_OUT">
             <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] ConsoleAudit %-5level [%c{1}] %msg%n" disableAnsi="false"/>
@@ -101,6 +110,9 @@
         </Root>
         <Logger name="io.netty" level="info" additivity="false"/>
         <Logger name="org.pf4j" level="info" additivity="false"/>
+        <!-- Other io.ktor.* framework loggers (unrelated to the "Application" lifecycle chatter,
+             which the Console appender's RegexFilter above handles instead). -->
+        <Logger name="io.ktor" level="warn" additivity="false"/>
         <Logger name="net.dodian" level="${dodianLogLevel}" additivity="true"/>
         <Logger name="net.dodian.consoleaudit.chat" level="${consoleAuditChatLevel}" additivity="false">
             <AppenderRef ref="AsyncConsoleAudit"/>

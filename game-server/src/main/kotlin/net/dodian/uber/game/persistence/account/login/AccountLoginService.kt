@@ -7,6 +7,9 @@ import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.persistence.account.AccountPersistenceService
 import net.dodian.uber.game.persistence.account.Login
 import net.dodian.uber.game.persistence.repository.DbAsyncRepository
+import net.dodian.uber.game.engine.config.discordMaxAccountsPerDiscord
+import net.dodian.uber.game.engine.config.rankBannedGroupId
+import net.dodian.uber.game.engine.config.rankDebugBypassGroupIds
 import net.dodian.uber.game.engine.config.serverDebugMode
 import net.dodian.uber.game.engine.config.serverEnv
 import net.dodian.uber.game.engine.loop.GameThreadContext
@@ -74,13 +77,18 @@ object AccountLoginService {
         var webUser = AccountLoginRepository.loadWebUser(connection, playerName)
         if (webUser == null) {
             if (!allowDevAutoCreate) return PreparedLogin.failure(12)
-            if (email.isNotBlank()) {
-                val count = AccountLoginRepository.countAccountsByEmail(connection, email)
-                val maxAllowed = net.dodian.uber.game.engine.config.SettingsLoader.settings.discord.maxAccountsPerDiscord
-                if (count >= maxAllowed) {
-                    logger.warn("Account creation rejected for email {}: limit of {} accounts reached", email, maxAllowed)
-                    return PreparedLogin.failure(12)
-                }
+            // Mandatory: new accounts require a verified Discord identity (a non-blank email means
+            // AccountPersistenceService already exchanged a valid discordAuthCode for it). A blank/missing/
+            // invalid code must never be able to create an account, in any environment.
+            if (email.isBlank()) {
+                logger.warn("Account creation rejected for {}: no verified Discord account was supplied", playerName)
+                return PreparedLogin.failure(13)
+            }
+            val count = AccountLoginRepository.countAccountsByEmail(connection, email)
+            val maxAllowed = discordMaxAccountsPerDiscord
+            if (count >= maxAllowed) {
+                logger.warn("Account creation rejected for email {}: limit of {} accounts reached", email, maxAllowed)
+                return PreparedLogin.failure(12)
             }
             AccountLoginRepository.insertWebUser(connection, playerName, playerPass, email)
             webUser = AccountLoginRepository.loadWebUser(connection, playerName) ?: return PreparedLogin.failure(13)
@@ -98,7 +106,7 @@ object AccountLoginService {
         ) {
             return PreparedLogin.failure(3)
         }
-        if (webUser.playerGroup == 3) return PreparedLogin.failure(12)
+        if (webUser.playerGroup == rankBannedGroupId) return PreparedLogin.failure(12)
 
         val character = AccountLoginRepository.loadCharacter(connection, webUser.dbId)
         val newCharacter: Boolean
@@ -156,7 +164,7 @@ object AccountLoginService {
             return false
         }
         return player.connectedFrom == "127.0.0.1" ||
-            (serverDebugMode && (playerGroup == 40 || playerGroup == 34 || playerGroup == 11))
+            (serverDebugMode && rankDebugBypassGroupIds.contains(playerGroup))
     }
 
     data class PreparedLogin(

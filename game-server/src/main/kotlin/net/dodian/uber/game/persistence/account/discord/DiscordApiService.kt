@@ -1,7 +1,10 @@
 package net.dodian.uber.game.persistence.account.discord
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import net.dodian.uber.game.engine.config.SettingsLoader
+import net.dodian.uber.game.engine.config.discordApiEnabled
+import net.dodian.uber.game.engine.config.discordClientId
+import net.dodian.uber.game.engine.config.discordClientSecret
+import net.dodian.uber.game.engine.config.discordRedirectUrl
 import org.slf4j.LoggerFactory
 import java.net.URI
 import java.net.URLEncoder
@@ -26,15 +29,14 @@ object DiscordApiService {
     fun fetchDiscordUser(code: String): DiscordUser? {
         if (code.isBlank()) return null
         try {
-            val settings = SettingsLoader.settings.discord
-            if (!settings.enabled || settings.clientId.isEmpty()) return null
+            if (!discordApiEnabled || discordClientId.isEmpty()) return null
 
             val params = mapOf(
-                "client_id" to settings.clientId,
-                "client_secret" to settings.clientSecret,
+                "client_id" to discordClientId,
+                "client_secret" to discordClientSecret,
                 "grant_type" to "authorization_code",
                 "code" to code,
-                "redirect_uri" to settings.redirectUrl
+                "redirect_uri" to discordRedirectUrl
             )
 
             val formBody = params.map { (k, v) ->

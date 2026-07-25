@@ -77,9 +77,14 @@ public class NettyGameServer {
             channelClass = EpollServerSocketChannel.class;
         } else {
             transportName = "nio";
-            Throwable cause = epollChecker.unavailabilityCause();
-            logger.info("[Netty] Epoll transport is unavailable, falling back to NIO. Reason: {}",
-                cause != null ? cause.toString() : "Unsupported platform/OS");
+            String osName = System.getProperty("os.name");
+            if (!osName.toLowerCase().contains("linux")) {
+                logger.info("[Netty] Epoll transport is native to Linux; using NIO transport for {}", osName);
+            } else {
+                Throwable cause = epollChecker.unavailabilityCause();
+                logger.info("[Netty] Epoll transport is unavailable; using NIO transport. Reason: {}",
+                    cause != null && cause.getMessage() != null ? cause.getMessage() : "Native epoll library missing");
+            }
             bossGroup = new NioEventLoopGroup(1);
             workerGroup = new NioEventLoopGroup();
             channelClass = NioServerSocketChannel.class;
@@ -97,10 +102,8 @@ public class NettyGameServer {
                 // of hitting the GC/OS per packet (rsprot uses pooled allocation the same way).
                 .childOption(ChannelOption.ALLOCATOR, io.netty.buffer.PooledByteBufAllocator.DEFAULT);
 
-        logger.info("[Netty] Binding game server on port {}", port);
         ChannelFuture bindFuture = bootstrap.bind(port).syncUninterruptibly();
         serverChannel = bindFuture.channel();
-        logger.info("[Netty] Game server listening on {}", port);
 
     }
 

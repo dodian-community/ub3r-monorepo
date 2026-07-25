@@ -65,7 +65,6 @@ dependencies {
     implementation("org.jctools:jctools-core:4.0.5")
 
     implementation("io.github.cdimascio:dotenv-kotlin:6.3.1")
-    implementation("dev.kord:kord-core:0.14.0")
 
     implementation("com.fasterxml.jackson.core:jackson-databind:2.13.4.1")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.0")

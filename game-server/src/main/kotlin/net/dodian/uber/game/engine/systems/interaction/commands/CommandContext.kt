@@ -16,7 +16,7 @@ class CommandContext(
         }
 
     val specialRights: Boolean
-        get() = client.playerGroup == 6 || client.playerGroup == 10 || client.playerGroup == 35
+        get() = net.dodian.uber.game.engine.config.rankAdminGroupIds.contains(client.playerGroup)
 
     fun reply(message: String) {
         client.sendMessage(message)

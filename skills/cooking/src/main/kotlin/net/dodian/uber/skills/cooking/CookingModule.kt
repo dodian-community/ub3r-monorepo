@@ -44,7 +44,7 @@ object CookingModule : SkillPlugin {
     private const val COOKING_GAUNTLETS_ITEM_ID = 775
     private const val HEAD_SLOT = 0
     private const val HANDS_SLOT = 9
-    private val rangeObjectIds = intArrayOf(26181, 114, 4172)
+    private val rangeObjectIds = intArrayOf(26181, 114, 4172, 5249, 2732, 2728, 9682, 12269, 8750)
 
     private val activeActionKey = ContentAttributeKey<SkillActionHandle>("skill.cooking", "activeAction")
     private val remainingKey = ContentAttributeKey<Int>("skill.cooking", "remaining")

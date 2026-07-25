@@ -4,9 +4,10 @@ import net.dodian.uber.game.engine.config.databasePoolMaxSize
 import net.dodian.uber.game.engine.config.databasePoolMinSize
 import net.dodian.uber.game.engine.config.dodianLogLevel
 import net.dodian.uber.game.engine.config.gameConnectionsPerIp
+import net.dodian.uber.game.engine.config.gameMultiplierGlobalXp
 import net.dodian.uber.game.engine.config.gameWorldId
+import net.dodian.uber.game.engine.config.serverEnv
 import net.dodian.uber.game.engine.config.serverPort
-import net.dodian.uber.game.engine.config.swiftFupPort
 import net.dodian.uber.game.engine.config.webApiEnabled
 import net.dodian.uber.game.engine.config.webApiPort
 import net.dodian.uber.game.netty.NetworkConstants
@@ -29,20 +30,11 @@ object StartupValidationService {
         if (webApiEnabled && webApiPort == serverPort) {
             violations += "WEB_API_PORT must be different from SERVER_PORT"
         }
-        if (swiftFupPort !in 1..65535) {
-            violations += "SWIFTFUP_PORT must be between 1 and 65535"
-        }
-        if (swiftFupPort == serverPort) {
-            violations += "SWIFTFUP_PORT must be different from SERVER_PORT"
-        }
-        if (webApiEnabled && swiftFupPort == webApiPort) {
-            violations += "SWIFTFUP_PORT must be different from WEB_API_PORT"
-        }
         if (gameWorldId <= 0) {
-            violations += "GAME_WORLD_ID must be > 0"
+            violations += "world_id must be > 0"
         }
         if (gameConnectionsPerIp <= 0) {
-            violations += "GAME_CONNECTIONS_PER_IP must be > 0"
+            violations += "connections_per_ip must be > 0"
         }
         if (databasePoolMinSize <= 0) {
             violations += "DATABASE_POOL_MIN_SIZE must be > 0"
@@ -67,10 +59,12 @@ object StartupValidationService {
             "Startup validation failed:\n${violations.joinToString("\n")}"
         }
         logger.info(
-            "Startup validation passed: worldId={} gamePort={} swiftFupPort={} webApiEnabled={} webApiPort={} dbPool={}..{} packetLimits={}/{}",
+            "Startup validation passed: env={} worldId={} xpMultiplier={}x connPerIp={} gamePort={} webApiEnabled={} webApiPort={} dbPool={}..{} packetLimits={}/{}",
+            serverEnv,
             gameWorldId,
+            gameMultiplierGlobalXp,
+            gameConnectionsPerIp,
             serverPort,
-            swiftFupPort,
             webApiEnabled,
             webApiPort,
             databasePoolMinSize,

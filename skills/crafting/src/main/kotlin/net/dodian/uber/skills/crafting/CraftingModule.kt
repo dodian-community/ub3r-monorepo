@@ -9,10 +9,15 @@ import net.dodian.uber.game.api.plugin.skills.SkillPlugin
 import net.dodian.uber.game.api.plugin.skills.SkillPluginDefinition
 import net.dodian.uber.game.api.plugin.skills.manifest
 import net.dodian.uber.game.api.plugin.skills.skillPlugin
+import net.dodian.uber.game.api.plugin.skills.startProduction
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.skill.runtime.action.productionAction
 import net.dodian.uber.skills.api.SkillModuleDescriptor
+import net.dodian.uber.skills.api.SkillMultiAction
+import net.dodian.uber.skills.api.SkillMultiConfig
+import net.dodian.uber.skills.api.SkillMultiEntry
+import net.dodian.uber.skills.api.skillRecipe
 import net.dodian.uber.skills.runtime.TomlRecordReader
 
 data class CraftingGemDef(
@@ -87,13 +92,67 @@ object CraftingModule : SkillPlugin {
         return true
     }
 
+    private const val THREAD_ITEM_ID = 1734
+    private const val SEWING_ANIMATION_ID = 1249
+
     private fun craftHide(interaction: SkillItemOnItemInteraction, hide: CraftingHideDef): Boolean {
         val player = interaction.player
         if (player.skills.current(Skill.CRAFTING) < hide.glovesLevel) {
             player.ui.message("You need level ${hide.glovesLevel} crafting to craft from this leather.")
             return true
         }
-        return true
+        if (player.inventory.amount(THREAD_ITEM_ID) <= 0) {
+            player.ui.message("You need thread to craft with leather.")
+            return true
+        }
+
+        val glovesRecipe = skillRecipe("crafting.hide.${hide.glovesId}", hide.glovesId) {
+            material(hide.itemId, 1)
+            material(THREAD_ITEM_ID, 1)
+            requirement(hide.glovesLevel)
+            experience(hide.experience)
+            animation(SEWING_ANIMATION_ID)
+            delay(3)
+            success("You make a pair of gloves.")
+        }
+        val chapsRecipe = skillRecipe("crafting.hide.${hide.chapsId}", hide.chapsId) {
+            material(hide.itemId, 2)
+            material(THREAD_ITEM_ID, 1)
+            requirement(hide.chapsLevel)
+            experience(hide.experience * 2)
+            animation(SEWING_ANIMATION_ID)
+            delay(3)
+            success("You make a pair of chaps.")
+        }
+        val bodyRecipe = skillRecipe("crafting.hide.${hide.bodyId}", hide.bodyId) {
+            material(hide.itemId, 3)
+            material(THREAD_ITEM_ID, 1)
+            requirement(hide.bodyLevel)
+            experience(hide.experience * 3)
+            animation(SEWING_ANIMATION_ID)
+            delay(3)
+            success("You make a body armor.")
+        }
+
+        val entries = mutableListOf(SkillMultiEntry(glovesRecipe))
+        if (player.skills.current(Skill.CRAFTING) >= hide.chapsLevel) entries.add(SkillMultiEntry(chapsRecipe))
+        if (player.skills.current(Skill.CRAFTING) >= hide.bodyLevel) entries.add(SkillMultiEntry(bodyRecipe))
+
+        return player.production.open(
+            SkillMultiConfig(
+                key = "crafting.hide.${hide.itemId}",
+                verb = "make",
+                action = SkillMultiAction.MAKE,
+                entries = entries,
+            )
+        ) { selection ->
+            val selectedRecipe = when (selection.recipeKey) {
+                chapsRecipe.key -> chapsRecipe
+                bodyRecipe.key -> bodyRecipe
+                else -> glovesRecipe
+            }
+            player.startProduction(selectedRecipe, selection.amount, Skill.CRAFTING)
+        }
     }
 
     private fun startSpinning(interaction: SkillObjectInteraction): Boolean {

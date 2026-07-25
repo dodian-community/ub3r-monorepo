@@ -115,10 +115,10 @@ private fun handlePlayerUtility(context: CommandContext): Boolean {
             if (player != null && player.dbId >= 0) {
                 val title =
                     when {
-                        player.playerRights == 1 && player.playerGroup == 5 -> "@blu@Mod "
-                        player.playerRights == 1 && player.playerGroup == 9 -> "@blu@Trial Mod "
-                        player.playerRights == 2 && player.playerGroup == 10 -> "@yel@Developer "
-                        player.playerRights == 2 -> "@yel@Admin "
+                        player.playerGroup == 9 -> "@blu@Trial Mod "
+                        player.playerGroup == 5 || (player.playerRights == 1 && net.dodian.uber.game.engine.config.rankModGroupIds.contains(player.playerGroup)) -> "@blu@Mod "
+                        player.playerGroup == 10 -> "@yel@Developer "
+                        player.playerRights == 2 || net.dodian.uber.game.engine.config.rankAdminGroupIds.contains(player.playerGroup) -> "@yel@Admin "
                         else -> ""
                     }
                 client.sendString("@bla@$title@dbl@${player.playerName} @bla@(Level-${player.determineCombatLevel()}) @bla@is ${player.positionName}", line)
