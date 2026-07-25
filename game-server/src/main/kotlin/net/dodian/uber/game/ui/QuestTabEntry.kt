@@ -6,6 +6,8 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendString
+import net.dodian.uber.game.engine.systems.quests.asQuestPlayer
+import net.dodian.uber.quests.tutorialisland.TutorialIslandModule
 import kotlin.jvm.JvmName
 
 enum class QuestTabEntry(
@@ -105,6 +107,7 @@ enum class QuestTabEntry(
             if (client.playerRights > 0) {
                 client.sendCachedString("@lre@---------@dre@Moderator@lre@---------", 7346)
                 client.sendCachedString("@gre@Game CP", 7341)
+                client.sendCachedString("@gre@Tutorial Island", 7342)
             }
             return null
         }
@@ -255,6 +258,16 @@ enum class QuestTabEntry(
                             return true
                         }
                         client.openModcpList()
+                        return true
+                    }
+
+                    7342 -> {
+                        if (client.playerRights < 1) {
+                            client.sendMessage("Tutorial Island is still in development.")
+                            return true
+                        }
+                        client.sendMessage("Starting/resuming Tutorial Island...")
+                        TutorialIslandModule.startOrResume(client.asQuestPlayer())
                         return true
                     }
                 }

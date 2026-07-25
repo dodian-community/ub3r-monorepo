@@ -7,6 +7,7 @@ import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.events.npc.NpcClickEvent
 import net.dodian.uber.game.api.content.ContentDispatchTiming
 import net.dodian.uber.game.engine.systems.skills.SkillInteractionDispatcher
+import net.dodian.uber.game.engine.systems.quests.QuestInteractionDispatcher
 import net.dodian.uber.game.npc.*
 
 object NpcContentDispatcher {
@@ -27,6 +28,9 @@ object NpcContentDispatcher {
         }
         if (SkillInteractionDispatcher.tryHandleNpcClick(client, option, npc)) {
             return ContentDispatchTiming(true, 0L, 0L, SkillInteractionDispatcher::class.java.name)
+        }
+        if (QuestInteractionDispatcher.tryHandleNpcClick(client, option, npc)) {
+            return ContentDispatchTiming(true, 0L, 0L, QuestInteractionDispatcher::class.java.name)
         }
         var resolveNs = 0L
         val resolveStart = System.nanoTime()

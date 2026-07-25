@@ -52,6 +52,7 @@ internal object AccountLoginMapper {
         player.agilityCourseStage = row.agilityStage
         player.setTravel(row.travel)
         applyUnlocks(player, row.unlocks)
+        player.questProgressState.loadFromJson(row.questData)
         applyBank(player, row.bank)
         applyPouches(player, row.essencePouch)
         applySongs(player, row.songUnlocked)

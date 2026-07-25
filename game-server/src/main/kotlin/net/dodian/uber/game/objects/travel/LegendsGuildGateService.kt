@@ -13,7 +13,9 @@ import net.dodian.uber.game.api.content.ContentTiming
 import net.dodian.uber.game.engine.systems.follow.FollowService
 import net.dodian.uber.game.engine.systems.interaction.ObjectClipService
 import net.dodian.uber.game.engine.systems.interaction.PersonalPassageService
+import net.dodian.uber.game.engine.routing.RouteRequestLoc
 import net.dodian.uber.game.engine.routing.WorldRouteService
+import net.dodian.uber.game.engine.routing.findRoute
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.npc.LegendsGuard
 import org.slf4j.LoggerFactory
@@ -420,7 +422,17 @@ object LegendsGuildGateService {
             return true
         }
 
-        val route = WorldRouteService.findRoute(destination.z, client.position.x, client.position.y, destination.x, destination.y, client.size, moveNear = false)
+        val route = WorldRouteService.findRoute(
+            RouteRequestLoc(
+                level = destination.z,
+                srcX = client.position.x,
+                srcY = client.position.y,
+                destX = destination.x,
+                destY = destination.y,
+                srcSize = client.size,
+                moveNear = false,
+            ),
+        )
         if (!route.success) {
             return false
         }

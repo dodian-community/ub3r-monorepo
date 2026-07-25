@@ -12,6 +12,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.api.content.ContentActionCancelReason
 import net.dodian.uber.game.api.content.ContentActions
 import net.dodian.uber.game.engine.systems.skills.SkillInteractionDispatcher
+import net.dodian.uber.game.engine.systems.quests.QuestInteractionDispatcher
 
 object ItemCombinationService {
     @JvmStatic
@@ -38,6 +39,10 @@ object ItemCombinationService {
         )
 
         if (SkillInteractionDispatcher.tryHandleItemOnItem(client, itemUsed, useWith)) {
+            return
+        }
+
+        if (QuestInteractionDispatcher.tryHandleItemOnItem(client, itemUsed, useWith)) {
             return
         }
 

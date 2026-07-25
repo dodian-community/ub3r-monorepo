@@ -1,0 +1,25 @@
+schema_version = 1
+
+[[obstacle]]
+course = "shortcuts"
+name = "orange_bar"
+object_id = 23567
+required_level = 1
+experience = 100
+movement_type = "walk"
+delta_x = 0
+delta_y = 6
+duration_ms = 3600
+animation_id = 744
+
+[[obstacle]]
+course = "shortcuts"
+name = "yellow_ledge"
+object_id = 23548
+required_level = 1
+experience = 100
+movement_type = "walk"
+delta_x = 0
+delta_y = 8
+duration_ms = 5400
+animation_id = 756

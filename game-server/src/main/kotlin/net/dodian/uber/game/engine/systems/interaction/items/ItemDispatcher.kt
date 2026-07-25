@@ -5,6 +5,7 @@ import net.dodian.uber.game.events.item.ItemClickEvent
 import net.dodian.uber.game.events.item.ItemOptionClickEvent
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.engine.systems.skills.SkillInteractionDispatcher
+import net.dodian.uber.game.engine.systems.quests.QuestInteractionDispatcher
 
 object ItemDispatcher {
     @JvmStatic
@@ -19,6 +20,10 @@ object ItemDispatcher {
             return true
         }
 
-        return SkillInteractionDispatcher.tryHandleItemClick(client, option, itemId, itemSlot, interfaceId)
+        if (SkillInteractionDispatcher.tryHandleItemClick(client, option, itemId, itemSlot, interfaceId)) {
+            return true
+        }
+
+        return QuestInteractionDispatcher.tryHandleItemClick(client, option, itemId, itemSlot, interfaceId)
     }
 }

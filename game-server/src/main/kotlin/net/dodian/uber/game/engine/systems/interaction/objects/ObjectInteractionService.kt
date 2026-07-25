@@ -11,6 +11,7 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.engine.systems.interaction.DispatchTiming
 import net.dodian.uber.game.engine.systems.skills.SkillInteractionDispatcher
+import net.dodian.uber.game.engine.systems.quests.QuestInteractionDispatcher
 import org.slf4j.LoggerFactory
 
 object ObjectInteractionService {
@@ -110,6 +111,24 @@ object ObjectInteractionService {
                 )
                 return DispatchTiming(true, 0L, 0L, SkillInteractionDispatcher::class.java.name)
             }
+            if (context.type == ObjectInteractionType.CLICK &&
+                QuestInteractionDispatcher.tryHandleObjectClick(
+                    client = context.client,
+                    option = context.option ?: -1,
+                    objectId = context.objectId,
+                    position = context.position,
+                    obj = context.obj,
+                )
+            ) {
+                ObjectClickLoggingService.log(
+                    context,
+                    resolution = null,
+                    handled = true,
+                    handlerSource = QuestInteractionDispatcher::class.java.simpleName,
+                    elapsedNanos = System.nanoTime() - dispatchStartNs,
+                )
+                return DispatchTiming(true, 0L, 0L, QuestInteractionDispatcher::class.java.name)
+            }
             if (context.type == ObjectInteractionType.USE_ITEM &&
                 SkillInteractionDispatcher.tryHandleItemOnObject(
                     client = context.client,
@@ -130,6 +149,26 @@ object ObjectInteractionService {
                 )
                 return DispatchTiming(true, 0L, 0L, SkillInteractionDispatcher::class.java.name)
             }
+            if (context.type == ObjectInteractionType.USE_ITEM &&
+                QuestInteractionDispatcher.tryHandleItemOnObject(
+                    client = context.client,
+                    objectId = context.objectId,
+                    position = context.position,
+                    obj = context.obj,
+                    itemId = context.itemId ?: -1,
+                    itemSlot = context.itemSlot ?: -1,
+                    interfaceId = context.interfaceId ?: -1,
+                )
+            ) {
+                ObjectClickLoggingService.log(
+                    context,
+                    resolution = null,
+                    handled = true,
+                    handlerSource = QuestInteractionDispatcher::class.java.simpleName,
+                    elapsedNanos = System.nanoTime() - dispatchStartNs,
+                )
+                return DispatchTiming(true, 0L, 0L, QuestInteractionDispatcher::class.java.name)
+            }
             if (context.type == ObjectInteractionType.MAGIC &&
                 SkillInteractionDispatcher.tryHandleMagicOnObject(
                     client = context.client,
@@ -147,6 +186,24 @@ object ObjectInteractionService {
                     elapsedNanos = System.nanoTime() - dispatchStartNs,
                 )
                 return DispatchTiming(true, 0L, 0L, SkillInteractionDispatcher::class.java.name)
+            }
+            if (context.type == ObjectInteractionType.MAGIC &&
+                QuestInteractionDispatcher.tryHandleMagicOnObject(
+                    client = context.client,
+                    objectId = context.objectId,
+                    position = context.position,
+                    obj = context.obj,
+                    spellId = context.spellId ?: -1,
+                )
+            ) {
+                ObjectClickLoggingService.log(
+                    context,
+                    resolution = null,
+                    handled = true,
+                    handlerSource = QuestInteractionDispatcher::class.java.simpleName,
+                    elapsedNanos = System.nanoTime() - dispatchStartNs,
+                )
+                return DispatchTiming(true, 0L, 0L, QuestInteractionDispatcher::class.java.name)
             }
 
             val resolveStart = System.nanoTime()

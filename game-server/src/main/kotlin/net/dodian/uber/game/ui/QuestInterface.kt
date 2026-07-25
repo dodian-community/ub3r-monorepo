@@ -11,7 +11,7 @@ object QuestInterface : InterfaceButtonContent {
             QuestTabEntry.VALUES
                 .map { it.clickId }
                 .filter { it != -1 } +
-                listOf(7333, 7383, 7339, 7334, 7338, 7340, 7341)
+                listOf(7333, 7383, 7339, 7334, 7338, 7340, 7341, 7342)
             ).distinct().toIntArray()
 
     override val bindings =

@@ -1,0 +1,150 @@
+schema_version = 1
+
+[[obstacle]]
+course = "barbarian"
+name = "rope_swing"
+object_id = 23131
+required_level = 40
+experience = 400
+movement_type = "walk"
+start_x = 2551
+start_y = 3554
+start_z = 0
+delta_x = 0
+delta_y = -5
+duration_ms = 3000
+animation_id = 1501
+required_stage = 0
+next_stage = 1
+
+[[obstacle]]
+course = "barbarian"
+name = "log_balance"
+object_id = 23144
+required_level = 40
+experience = 600
+movement_type = "walk"
+start_x = 2551
+start_y = 3546
+start_z = 0
+delta_x = -10
+delta_y = 0
+duration_ms = 7200
+animation_id = 762
+required_stage = 1
+next_stage = 2
+
+[[obstacle]]
+course = "barbarian"
+name = "net"
+object_id = 20211
+required_level = 40
+experience = 250
+movement_type = "climb"
+dest_x = 2537
+dest_y = 3546
+dest_z = 1
+duration_ms = 600
+animation_id = 828
+required_stage = 2
+next_stage = 3
+
+[[obstacle]]
+course = "barbarian"
+name = "ledge"
+object_id = 23547
+required_level = 40
+experience = 350
+movement_type = "walk"
+delta_x = -4
+delta_y = 0
+duration_ms = 2400
+animation_id = 756
+required_stage = 3
+next_stage = 4
+
+[[obstacle]]
+course = "barbarian"
+name = "stairs"
+object_id = 16682
+required_level = 40
+experience = 0
+movement_type = "climb"
+dest_x = 2532
+dest_y = 3546
+dest_z = 0
+duration_ms = 600
+animation_id = 828
+required_stage = 4
+next_stage = 4
+
+[[obstacle]]
+course = "barbarian"
+name = "ladder_down"
+object_id = 42487
+required_level = 40
+experience = 0
+movement_type = "climb"
+dest_x = 2532
+dest_y = 3546
+dest_z = 0
+duration_ms = 600
+animation_id = 828
+required_stage = 4
+next_stage = 4
+
+[[obstacle]]
+course = "barbarian"
+name = "crumbling_wall_one"
+object_id = 1948
+required_level = 40
+experience = 100
+movement_type = "run"
+start_x = 2536
+start_y = 3553
+start_z = 0
+delta_x = 2
+delta_y = 0
+duration_ms = 600
+animation_id = 840
+required_stage = 4
+next_stage = 5
+
+[[obstacle]]
+course = "barbarian"
+name = "crumbling_wall_two"
+object_id = 1948
+required_level = 40
+experience = 100
+movement_type = "run"
+start_x = 2539
+start_y = 3553
+start_z = 0
+delta_x = 2
+delta_y = 0
+duration_ms = 600
+animation_id = 840
+required_stage = 5
+next_stage = 6
+
+[[obstacle]]
+course = "barbarian"
+name = "crumbling_wall_finish"
+object_id = 1948
+required_level = 40
+experience = 100
+movement_type = "run"
+start_x = 2542
+start_y = 3553
+start_z = 0
+delta_x = 2
+delta_y = 0
+duration_ms = 600
+animation_id = 840
+required_stage = 6
+next_stage = 0
+is_lap_completion = true
+ticket_base = 2
+ticket_scale_divisor = 22
+bonus_experience = 1300
+lap_message = "You finished a barbarian lap!"

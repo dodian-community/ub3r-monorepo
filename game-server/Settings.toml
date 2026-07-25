@@ -10,13 +10,13 @@ game_port = 43594
 swiftfup_port = 43595
 web_port = 8081
 web_enabled = true
-connections_per_ip = 2
+connections_per_ip = 2000
 connection_timeout = 30000
 packet_limit = 100
 leak_detection = "disabled"
 
 [world]
-world_id = 1
+world_id = 2
 max_players = 2000
 global_xp_multiplier = 1
 

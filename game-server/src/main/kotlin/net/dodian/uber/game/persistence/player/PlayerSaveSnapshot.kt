@@ -143,6 +143,7 @@ data class PlayerSaveSnapshot(
                     ", travel='${client.saveTravelAsString()}'" +
                     ", look='${client.look}'" +
                     ", unlocks='${client.saveUnlocksAsString()}'" +
+                    ", quest_data='${client.questProgressState.saveAsJson()}'" +
                     ", prayer='$prayer', boosted='$boosted'$last" +
                     " WHERE id = ${client.dbId}"
 

@@ -34,6 +34,7 @@ import net.dodian.uber.game.engine.systems.action.PlayerActionCancellationServic
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.engine.systems.interaction.scheduler.InteractionExecutionResult
 import net.dodian.uber.game.engine.systems.skills.SkillInteractionDispatcher
+import net.dodian.uber.game.engine.systems.quests.QuestInteractionDispatcher
 import net.dodian.uber.game.api.plugin.PluginRegistry
 import net.dodian.uber.game.engine.systems.skills.SkillPolicyMetrics
 import net.dodian.uber.game.engine.systems.skills.SkillPolicyResult
@@ -225,6 +226,7 @@ object InteractionProcessor {
                 fallbackDef = intent.objectDef,
             )
         val skillObjectBinding = PluginRegistry.currentSkills().objectBinding(intent.option, intent.objectId)
+        val questObjectBinding = PluginRegistry.currentQuests().objectBinding(intent.option, intent.objectId)
         val clickContext =
             ObjectInteractionContext.click(
                 client = player,
@@ -252,6 +254,7 @@ object InteractionProcessor {
         val cacheActionNoop = isCacheActionNoop(routeSnapshot.objectData)
         val shouldRouteToObject =
             skillObjectBinding != null ||
+                questObjectBinding != null ||
                 hasObjectContent ||
                 cacheActionNoop
 
@@ -266,7 +269,7 @@ object InteractionProcessor {
                     routeSnapshot = routeSnapshot,
                     policy = policy,
                     context = clickContext,
-                    allowClosestCompletion = skillObjectBinding == null && !hasObjectContent && cacheActionNoop,
+                    allowClosestCompletion = skillObjectBinding == null && questObjectBinding == null && !hasObjectContent && cacheActionNoop,
                 ) {
                     skillObjectBinding?.let {
                         SkillPolicyMetrics.record(it.preset, SkillPolicyRoute.OBJECT, SkillPolicyResult.POLICY_REJECT)
@@ -424,6 +427,7 @@ object InteractionProcessor {
                 fallbackDef = intent.objectDef,
             )
         val skillItemOnObjectBinding = PluginRegistry.currentSkills().itemOnObjectBinding(intent.objectId, intent.itemId)
+        val questItemOnObjectBinding = PluginRegistry.currentQuests().itemOnObjectBinding(intent.objectId, intent.itemId)
         val itemOnObjectContext =
             ObjectInteractionContext.useItem(
                 client = player,
@@ -453,6 +457,7 @@ object InteractionProcessor {
         val cacheActionNoop = isCacheActionNoop(routeSnapshot.objectData)
         val shouldRouteToObject =
             skillItemOnObjectBinding != null ||
+                questItemOnObjectBinding != null ||
                 hasObjectContent ||
                 cacheActionNoop
 
@@ -467,7 +472,7 @@ object InteractionProcessor {
                     routeSnapshot = routeSnapshot,
                     policy = policy,
                     context = itemOnObjectContext,
-                    allowClosestCompletion = skillItemOnObjectBinding == null && !hasObjectContent && cacheActionNoop,
+                    allowClosestCompletion = skillItemOnObjectBinding == null && questItemOnObjectBinding == null && !hasObjectContent && cacheActionNoop,
                 ) {
                     skillItemOnObjectBinding?.let {
                         SkillPolicyMetrics.record(it.preset, SkillPolicyRoute.ITEM_ON_OBJECT, SkillPolicyResult.POLICY_REJECT)
@@ -573,6 +578,7 @@ object InteractionProcessor {
                 fallbackDef = intent.objectDef,
             )
         val skillMagicOnObjectBinding = PluginRegistry.currentSkills().magicOnObjectBinding(intent.objectId, intent.spellId)
+        val questMagicOnObjectBinding = PluginRegistry.currentQuests().magicOnObjectBinding(intent.objectId, intent.spellId)
         val magicOnObjectContext =
             ObjectInteractionContext.magic(
                 client = player,
@@ -598,6 +604,7 @@ object InteractionProcessor {
         val cacheActionNoop = isCacheActionNoop(routeSnapshot.objectData)
         val shouldRouteToObject =
             skillMagicOnObjectBinding != null ||
+                questMagicOnObjectBinding != null ||
                 hasObjectContent ||
                 cacheActionNoop
 
@@ -612,7 +619,7 @@ object InteractionProcessor {
                     routeSnapshot = routeSnapshot,
                     policy = policy,
                     context = magicOnObjectContext,
-                    allowClosestCompletion = skillMagicOnObjectBinding == null && !hasObjectContent && cacheActionNoop,
+                    allowClosestCompletion = skillMagicOnObjectBinding == null && questMagicOnObjectBinding == null && !hasObjectContent && cacheActionNoop,
                 ) {
                     skillMagicOnObjectBinding?.let {
                         SkillPolicyMetrics.record(it.preset, SkillPolicyRoute.MAGIC_ON_OBJECT, SkillPolicyResult.POLICY_REJECT)

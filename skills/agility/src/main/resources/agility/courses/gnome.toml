@@ -1,0 +1,167 @@
+schema_version = 1
+
+[[obstacle]]
+course = "gnome"
+name = "log_balance"
+object_id = 23145
+required_level = 1
+experience = 280
+movement_type = "walk"
+start_x = 2474
+start_y = 3436
+start_z = 0
+delta_x = 0
+delta_y = -7
+duration_ms = 4800
+animation_id = 762
+required_stage = 0
+next_stage = 1
+npc_text = "Okay get over that log, quick quick!"
+
+[[obstacle]]
+course = "gnome"
+name = "net_one"
+object_id = 23134
+required_level = 1
+experience = 150
+movement_type = "climb"
+dest_x = 2473
+dest_y = 3424
+dest_z = 1
+duration_ms = 600
+animation_id = 828
+required_stage = 1
+next_stage = 2
+npc_text = "My mom is faster than you!"
+
+[[obstacle]]
+course = "gnome"
+name = "tree_branch"
+object_id = 23559
+required_level = 1
+experience = 50
+movement_type = "climb"
+dest_x = 2473
+dest_y = 3420
+dest_z = 2
+duration_ms = 600
+animation_id = 828
+required_stage = 2
+next_stage = 3
+npc_text = "Haha you suck at this simple obstacle!"
+
+[[obstacle]]
+course = "gnome"
+name = "rope_swing"
+object_id = 23557
+required_level = 1
+experience = 250
+movement_type = "walk"
+start_x = 2477
+start_y = 3420
+start_z = 2
+delta_x = 6
+delta_y = 0
+duration_ms = 4800
+animation_id = 762
+required_stage = 3
+next_stage = 4
+npc_text = "I do not know why you bother. HAHA!"
+
+[[obstacle]]
+course = "gnome"
+name = "tree_branch_down"
+object_id = 23560
+required_level = 1
+experience = 50
+movement_type = "climb"
+dest_x = 2485
+dest_y = 3421
+dest_z = 0
+duration_ms = 600
+animation_id = 828
+required_stage = 4
+next_stage = 5
+npc_text = "To darn easy."
+
+[[obstacle]]
+course = "gnome"
+name = "tree_branch_down_alt"
+object_id = 23561
+required_level = 1
+experience = 50
+movement_type = "climb"
+dest_x = 2485
+dest_y = 3421
+dest_z = 0
+duration_ms = 600
+animation_id = 828
+required_stage = 4
+next_stage = 5
+npc_text = "To darn easy."
+
+[[obstacle]]
+course = "gnome"
+name = "net_two"
+object_id = 23135
+required_level = 1
+experience = 150
+movement_type = "climb"
+dest_x = 2485
+dest_y = 3427
+dest_z = 0
+duration_ms = 600
+animation_id = 828
+required_stage = 5
+next_stage = 6
+npc_text = "net profit of zero effort."
+
+[[obstacle]]
+course = "gnome"
+name = "pipe_one"
+object_id = 23138
+required_level = 1
+experience = 250
+movement_type = "walk"
+start_x = 2484
+start_y = 3430
+start_z = 0
+delta_x = 0
+delta_y = 7
+duration_ms = 4200
+animation_id = 747
+start_animation_id = 746
+arrival_animation_id = 748
+required_stage = 6
+next_stage = 0
+is_lap_completion = true
+ticket_base = 1
+ticket_scale_divisor = 11
+bonus_experience = 1050
+lap_message = "You finished a gnome lap!"
+npc_text = "Pipe it down...You are nothing special!"
+
+[[obstacle]]
+course = "gnome"
+name = "pipe_two"
+object_id = 23139
+required_level = 1
+experience = 250
+movement_type = "walk"
+start_x = 2487
+start_y = 3430
+start_z = 0
+delta_x = 0
+delta_y = 7
+duration_ms = 4200
+animation_id = 747
+start_animation_id = 746
+arrival_animation_id = 748
+required_stage = 6
+next_stage = 0
+is_lap_completion = true
+ticket_base = 1
+ticket_scale_divisor = 11
+bonus_experience = 1050
+lap_message = "You finished a gnome lap!"
+npc_text = "Pipe it down...You are nothing special!"

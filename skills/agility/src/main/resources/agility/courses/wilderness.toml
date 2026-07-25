@@ -1,0 +1,90 @@
+schema_version = 1
+
+[[obstacle]]
+course = "wilderness"
+name = "pipe"
+object_id = 23137
+required_level = 70
+experience = 1000
+movement_type = "walk"
+start_x = 3004
+start_y = 3937
+start_z = 0
+delta_x = 0
+delta_y = 13
+duration_ms = 7800
+animation_id = 747
+start_animation_id = 746
+arrival_animation_id = 748
+required_stage = 0
+next_stage = 1
+
+[[obstacle]]
+course = "wilderness"
+name = "rope"
+object_id = 23132
+required_level = 70
+experience = 500
+movement_type = "walk"
+start_x = 3005
+start_y = 3953
+start_z = 0
+delta_x = 0
+delta_y = 5
+duration_ms = 3000
+animation_id = 1501
+required_stage = 1
+next_stage = 2
+
+[[obstacle]]
+course = "wilderness"
+name = "stepping_stones"
+object_id = 23556
+required_level = 70
+experience = 650
+movement_type = "walk"
+start_x = 3002
+start_y = 3960
+start_z = 0
+delta_x = -6
+delta_y = 0
+duration_ms = 4200
+animation_id = 769
+required_stage = 2
+next_stage = 3
+
+[[obstacle]]
+course = "wilderness"
+name = "log_balance"
+object_id = 23542
+required_level = 70
+experience = 650
+movement_type = "walk"
+start_x = 3002
+start_y = 3945
+start_z = 0
+delta_x = -8
+delta_y = 0
+duration_ms = 5600
+animation_id = 762
+required_stage = 3
+next_stage = 4
+
+[[obstacle]]
+course = "wilderness"
+name = "cliff"
+object_id = 23640
+required_level = 70
+experience = 750
+movement_type = "walk"
+delta_x = 0
+delta_y = -4
+duration_ms = 2400
+animation_id = 737
+required_stage = 4
+next_stage = 0
+is_lap_completion = true
+ticket_base = 3
+ticket_scale_divisor = 33
+bonus_experience = 2700
+lap_message = "You finished a wilderness lap!"

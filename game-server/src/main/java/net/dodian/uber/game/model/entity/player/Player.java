@@ -77,9 +77,14 @@ public abstract class Player extends Entity {
     public boolean saveNeeded = true, lookNeeded = false, discord = false, lockExperience = false;
     private final PlayerAccountState accountState = new PlayerAccountState(this);
     private final PlayerContentRuntimeState interactionState = new PlayerContentRuntimeState();
+    private final PlayerQuestProgressState questProgressState = new PlayerQuestProgressState();
 
     public PlayerContentRuntimeState getContentRuntimeState() {
         return interactionState;
+    }
+
+    public PlayerQuestProgressState getQuestProgressState() {
+        return questProgressState;
     }
     private final PlayerMovementState movementState = new PlayerMovementState(this);
     private final PlayerUpdateState updateState = new PlayerUpdateState(this);

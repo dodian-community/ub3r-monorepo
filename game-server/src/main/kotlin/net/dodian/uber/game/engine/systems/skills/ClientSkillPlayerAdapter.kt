@@ -200,6 +200,7 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
             arrivalAnimationId: Int?,
             onComplete: () -> Unit,
         ) {
+            client.UsingAgility = true
             net.dodian.uber.game.skill.agility.runtime.AgilityPassageOverlayService.grantForDelta(
                 client, deltaX, deltaY, durationMs.toLong(),
             )
@@ -207,22 +208,29 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
             movementAnimationId?.let { client.walkAnim = it }
             client.AddToWalkCords(deltaX, deltaY, durationMs.toLong())
             GameEventScheduler.runLaterMs(durationMs) {
-                if (client.disconnected) return@runLaterMs
+                if (client.disconnected) {
+                    client.UsingAgility = false
+                    return@runLaterMs
+                }
                 client.requestWeaponAnims()
                 arrivalAnimationId?.let { client.performAnimation(it, 0) }
+                client.UsingAgility = false
                 onComplete()
             }
         }
         override fun climb(destination: SkillPosition, animationId: Int, delayMs: Int, onComplete: () -> Unit) {
+            client.UsingAgility = true
             client.performAnimation(animationId, 0)
             client.setMovementLocked(true)
             GameEventScheduler.runLaterMs(delayMs) {
                 if (client.disconnected) {
                     client.setMovementLocked(false)
+                    client.UsingAgility = false
                     return@runLaterMs
                 }
                 client.transport(destination.toPosition())
                 client.setMovementLocked(false)
+                client.UsingAgility = false
                 onComplete()
             }
         }

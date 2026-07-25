@@ -4,7 +4,10 @@ import java.util.function.Predicate
 import java.util.concurrent.ThreadLocalRandom
 import net.dodian.cache.objects.GameObjectData
 import net.dodian.uber.game.Server
+import net.dodian.uber.game.engine.routing.RouteRequestLoc
+import net.dodian.uber.game.engine.routing.RouteRequestPathingEntity
 import net.dodian.uber.game.engine.routing.WorldRouteService
+import net.dodian.uber.game.engine.routing.findRoute
 import net.dodian.uber.game.model.EntityType
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.npc.Npc
@@ -58,20 +61,29 @@ object FollowRouting {
     ): Boolean {
         if (follower.position.z != z) return false
         if (preferredDestination != null && !isTileOccupied(preferredDestination.first, preferredDestination.second, z, targetNpc)) {
-            val preferred = WorldRouteService.findRoute(z, follower.position.x, follower.position.y, preferredDestination.first, preferredDestination.second, follower.size, moveNear = false)
+            val preferred = WorldRouteService.findRoute(
+                RouteRequestLoc(
+                    level = z,
+                    srcX = follower.position.x,
+                    srcY = follower.position.y,
+                    destX = preferredDestination.first,
+                    destY = preferredDestination.second,
+                    srcSize = follower.size,
+                    moveNear = false,
+                ),
+            )
             if (preferred.success && applyRoute(follower, preferred, running)) return true
         }
         val route = WorldRouteService.findRoute(
-            level = z,
-            srcX = follower.position.x,
-            srcY = follower.position.y,
-            destX = targetX,
-            destY = targetY,
-            srcSize = follower.size,
-            destWidth = targetSize.coerceAtLeast(1),
-            destLength = targetSize.coerceAtLeast(1),
-            locShape = -2,
-            moveNear = true,
+            RouteRequestPathingEntity(
+                level = z,
+                srcX = follower.position.x,
+                srcY = follower.position.y,
+                destX = targetX,
+                destY = targetY,
+                srcSize = follower.size,
+                destSize = targetSize.coerceAtLeast(1),
+            ),
         )
         FollowPathfindingTelemetry.recordSearch(0, !route.failed)
         return !route.failed && applyRoute(follower, route, running)
@@ -94,18 +106,20 @@ object FollowRouting {
         }
         val definition = GameObjectData.forId(objectId)
         val route = WorldRouteService.findRoute(
-            level = z,
-            srcX = follower.position.x,
-            srcY = follower.position.y,
-            destX = objX,
-            destY = objY,
-            srcSize = follower.size,
-            destWidth = definition.sizeX,
-            destLength = definition.sizeY,
-            locAngle = rotation,
-            locShape = type,
-            moveNear = true,
-            blockAccessFlags = definition.walkingFlag and 0xF,
+            RouteRequestLoc(
+                level = z,
+                srcX = follower.position.x,
+                srcY = follower.position.y,
+                destX = objX,
+                destY = objY,
+                srcSize = follower.size,
+                destWidth = definition.sizeX,
+                destLength = definition.sizeY,
+                locAngle = rotation,
+                locShape = type,
+                moveNear = true,
+                blockAccessFlags = definition.walkingFlag and 0xF,
+            ),
         )
         if (route.failed) return ObjectRouteResult(ObjectRouteStatus.UNREACHABLE)
         val applied = applyRoute(follower, route, running)
@@ -128,7 +142,17 @@ object FollowRouting {
     @JvmStatic
     fun routeToExactTile(follower: Client, destinationX: Int, destinationY: Int, z: Int, running: Boolean = follower.buttonOnRun): Boolean {
         if (WorldRouteService.isTileBlocked(destinationX, destinationY, z)) return false
-        val route = WorldRouteService.findRoute(z, follower.position.x, follower.position.y, destinationX, destinationY, follower.size, moveNear = false)
+        val route = WorldRouteService.findRoute(
+            RouteRequestLoc(
+                level = z,
+                srcX = follower.position.x,
+                srcY = follower.position.y,
+                destX = destinationX,
+                destY = destinationY,
+                srcSize = follower.size,
+                moveNear = false,
+            ),
+        )
         return route.success && applyRoute(follower, route, running)
     }
 

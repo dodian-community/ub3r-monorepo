@@ -29,6 +29,7 @@ val syncTestSourceSet = sourceSets.create("syncTest") {
 tasks.jar {
     dependsOn(":routefinder:jar")
     dependsOn(":skills:api:jar", ":skills:runtime:jar")
+    dependsOn(":quests:api:jar", ":quests:runtime:jar")
 
     manifest {
         attributes["Main-Class"] = "net.dodian.uber.game.Server"
@@ -53,6 +54,8 @@ dependencies {
     implementation(project(":skills:herblore")); implementation(project(":skills:mining")); implementation(project(":skills:prayer"))
     implementation(project(":skills:runecrafting")); implementation(project(":skills:slayer")); implementation(project(":skills:smithing"))
     implementation(project(":skills:thieving")); implementation(project(":skills:woodcutting")); implementation(project(":skills:skillguide"))
+    implementation(project(":quests:runtime"))
+    implementation(project(":quests:tutorial-island"))
     implementation(kotlin("stdlib"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 

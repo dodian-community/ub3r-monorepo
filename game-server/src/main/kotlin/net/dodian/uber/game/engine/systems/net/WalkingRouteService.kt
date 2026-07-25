@@ -4,7 +4,9 @@ import kotlin.math.hypot
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
+import net.dodian.uber.game.engine.routing.RouteRequestLoc
 import net.dodian.uber.game.engine.routing.WorldRouteService
+import net.dodian.uber.game.engine.routing.findRoute
 import kotlin.math.abs
 import kotlin.math.sign
 
@@ -56,13 +58,15 @@ object WalkingRouteService {
         val requestedDestination = destination(request, player.position.z)
         if (validateClientRoute(player, request)) return RouteDecision(true, requestedDestination)
         val route = WorldRouteService.findRoute(
-            level = player.position.z,
-            srcX = player.position.x,
-            srcY = player.position.y,
-            destX = requestedDestination.x,
-            destY = requestedDestination.y,
-            srcSize = player.size,
-            moveNear = true,
+            RouteRequestLoc(
+                level = player.position.z,
+                srcX = player.position.x,
+                srcY = player.position.y,
+                destX = requestedDestination.x,
+                destY = requestedDestination.y,
+                srcSize = player.size,
+                moveNear = true,
+            ),
         )
         if (route.failed) {
             player.resetWalkingQueue()

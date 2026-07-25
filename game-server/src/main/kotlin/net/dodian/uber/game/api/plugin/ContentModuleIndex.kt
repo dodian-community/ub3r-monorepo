@@ -7,6 +7,8 @@ import net.dodian.uber.game.api.plugin.skills.SkillContentModule
 import net.dodian.uber.game.api.plugin.skills.SkillSupportModule
 import net.dodian.uber.game.api.plugin.skills.routeKeys as supportRouteKeys
 import net.dodian.uber.game.api.plugin.skills.routeKeys
+import net.dodian.uber.game.api.plugin.quests.QuestPlugin
+import net.dodian.uber.game.api.plugin.quests.routeKeys as questRouteKeys
 import net.dodian.uber.game.item.ItemContent
 import net.dodian.uber.game.npc.NpcContentDefinition
 import net.dodian.uber.game.npc.NpcModule
@@ -78,6 +80,7 @@ object ContentModuleIndex {
     @JvmField val npcModules: List<NpcModule>
     @JvmField val skillPlugins: List<SkillPlugin>
     @JvmField val skillSupportModules: List<SkillSupportModule>
+    @JvmField val questPlugins: List<QuestPlugin>
     @JvmField val shopPlugins: List<ShopPlugin>
     @JvmField val eventBootstraps: List<() -> Unit>
     @JvmField val contentBootstraps: List<ContentBootstrap>
@@ -86,7 +89,7 @@ object ContentModuleIndex {
 
     init {
         val classPath = ClassPath.from(Thread.currentThread().contextClassLoader)
-        val descriptorClasses = discoverSkillModuleClasses(classPath)
+        val descriptorClasses = discoverSkillModuleClasses(classPath) + discoverQuestModuleClasses(classPath)
         val scannedClasses = (discoverClasses(classPath) + descriptorClasses)
             .distinctBy { it.name }
             .sortedBy { it.name }
@@ -100,6 +103,7 @@ object ContentModuleIndex {
         val discoveredNpcModules = mutableListOf<Pair<String, NpcModule>>()
         val discoveredSkills = mutableListOf<Pair<String, SkillPlugin>>()
         val discoveredSkillSupport = mutableListOf<Pair<String, SkillSupportModule>>()
+        val discoveredQuests = mutableListOf<Pair<String, QuestPlugin>>()
         val discoveredShops = mutableListOf<Pair<String, ShopPlugin>>()
         val discoveredEvents = mutableListOf<Pair<String, () -> Unit>>()
         val discoveredBootstraps = mutableListOf<Pair<String, ContentBootstrap>>()
@@ -126,6 +130,12 @@ object ContentModuleIndex {
             }
             if (instance is SkillSupportModule) {
                 val actualRoutes = instance.definition.supportRouteKeys()
+                require(manifest.declaredRouteKeys == actualRoutes) {
+                    "Content module ${manifest.id} declared routes ${manifest.declaredRouteKeys.sorted()} but registry routes are ${actualRoutes.sorted()}"
+                }
+            }
+            if (instance is QuestPlugin) {
+                val actualRoutes = instance.definition.questRouteKeys()
                 require(manifest.declaredRouteKeys == actualRoutes) {
                     "Content module ${manifest.id} declared routes ${manifest.declaredRouteKeys.sorted()} but registry routes are ${actualRoutes.sorted()}"
                 }
@@ -158,6 +168,10 @@ object ContentModuleIndex {
                 is SkillSupportModule -> {
                     if (enabled) discoveredSkillSupport += className to instance
                     pluginKind = "skill-support"
+                }
+                is QuestPlugin -> {
+                    if (enabled) discoveredQuests += className to instance
+                    pluginKind = "quest-plugin"
                 }
                 is ShopPlugin -> {
                     if (enabled) discoveredShops += className to instance
@@ -220,6 +234,7 @@ object ContentModuleIndex {
         npcModules = discoveredNpcModules.sortedBy { it.first }.map { it.second }
         skillPlugins = discoveredSkills.sortedBy { it.first }.map { it.second }
         skillSupportModules = discoveredSkillSupport.sortedBy { it.first }.map { it.second }
+        questPlugins = discoveredQuests.sortedBy { it.first }.map { it.second }
         shopPlugins = discoveredShops.sortedBy { it.first }.map { it.second }
         eventBootstraps = discoveredEvents.sortedBy { it.first }.map { it.second }
         contentBootstraps = discoveredBootstraps.sortedBy { it.first }.map { it.second }
@@ -318,6 +333,40 @@ object ContentModuleIndex {
                 (kind == "gameplay" && SkillPlugin::class.java.isAssignableFrom(loaded)) ||
                     (kind == "support" && SkillContentModule::class.java.isAssignableFrom(loaded)),
             ) { "Descriptor ${resource.resourceName} declares $kind but $implementationClass does not implement its contract" }
+            classes += loaded
+        }
+        return classes
+    }
+
+    /** Descriptor-based discovery for `ub3r.quest-plugin` modules - mirrors [discoverSkillModuleClasses]. */
+    private fun discoverQuestModuleClasses(classPath: ClassPath): List<Class<*>> {
+        val prefix = "META-INF/ub3r/quest-modules/"
+        val descriptors = classPath.resources
+            .filter { it.resourceName.startsWith(prefix) && it.resourceName.endsWith(".toml") }
+            .sortedBy { it.resourceName }
+        val ids = mutableSetOf<String>()
+        val classes = mutableListOf<Class<*>>()
+        descriptors.forEach { resource ->
+            val values = resource.asByteSource().openStream().bufferedReader().useLines { lines ->
+                lines.map(String::trim)
+                    .filter { line -> line.isNotEmpty() && !line.startsWith("#") && line.contains('=') }
+                    .associate { line ->
+                        val (key, rawValue) = line.split('=', limit = 2)
+                        key.trim() to rawValue.trim().trim('"')
+                    }
+            }
+            require(values["schema_version"] == "1") { "Unsupported quest module descriptor ${resource.resourceName}" }
+            val moduleId = requireNotNull(values["module_id"]) { "Missing module_id in ${resource.resourceName}" }
+            val implementationClass = requireNotNull(values["implementation_class"]) {
+                "Missing implementation_class in ${resource.resourceName}"
+            }
+            require(ids.add(moduleId)) { "Duplicate Gradle quest module descriptor id $moduleId" }
+            val loaded = runCatching { Class.forName(implementationClass) }.getOrElse { cause ->
+                throw IllegalStateException("Unable to load $implementationClass from ${resource.resourceName}", cause)
+            }
+            require(QuestPlugin::class.java.isAssignableFrom(loaded)) {
+                "Descriptor ${resource.resourceName} declares $implementationClass which does not implement QuestPlugin"
+            }
             classes += loaded
         }
         return classes
