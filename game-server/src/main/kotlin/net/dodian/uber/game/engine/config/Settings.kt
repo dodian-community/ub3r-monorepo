@@ -11,7 +11,14 @@ data class Settings(
     @JsonProperty("world") val world: WorldSettings,
     @JsonProperty("features") val features: FeatureSettings,
     @JsonProperty("database_pool") val databasePool: DatabasePoolSettings,
-    @JsonProperty("ranks") val ranks: RankSettings = RankSettings()
+    @JsonProperty("ranks") val ranks: RankSettings = RankSettings(),
+    @JsonProperty("metrics") val metrics: MetricsSettings = MetricsSettings()
+)
+
+data class MetricsSettings(
+    @JsonProperty("enabled") val enabled: Boolean = true,
+    @JsonProperty("prometheus_endpoint") val prometheusEndpoint: Boolean = true,
+    @JsonProperty("dashboard_enabled") val dashboardEnabled: Boolean = true
 )
 
 data class RankSettings(

@@ -38,3 +38,8 @@ banned_group_id = 3
 mod_group_ids = [5, 9]
 admin_group_ids = [6, 10, 18, 35]
 debug_bypass_group_ids = [11, 34, 40]
+
+[metrics]
+enabled = true
+prometheus_endpoint = true
+dashboard_enabled = true

@@ -305,6 +305,62 @@ object WebApi {
                         )
                     }
 
+                    get("/prometheus") {
+                        if (net.dodian.uber.game.engine.config.metricsEnabled && net.dodian.uber.game.engine.config.metricsPrometheusEndpoint) {
+                            call.respondText(
+                                net.dodian.uber.game.engine.metrics.PrometheusMetricsRegistry.getPrometheusTextFormat(),
+                                ContentType.Text.Plain
+                            )
+                        } else {
+                            call.respond(HttpStatusCode.NotFound, "Prometheus metrics endpoint disabled in Settings.toml")
+                        }
+                    }
+
+                    get("/metrics") {
+                        if (net.dodian.uber.game.engine.config.metricsEnabled && net.dodian.uber.game.engine.config.metricsPrometheusEndpoint) {
+                            call.respondText(
+                                net.dodian.uber.game.engine.metrics.PrometheusMetricsRegistry.getPrometheusTextFormat(),
+                                ContentType.Text.Plain
+                            )
+                        } else {
+                            call.respond(HttpStatusCode.NotFound, "Prometheus metrics endpoint disabled in Settings.toml")
+                        }
+                    }
+
+                    get("/metrics/dashboard") {
+                        if (net.dodian.uber.game.engine.config.metricsEnabled && net.dodian.uber.game.engine.config.metricsDashboardEnabled) {
+                            call.respondText(
+                                net.dodian.uber.game.engine.metrics.MetricsDashboardHtml.renderHtml(),
+                                ContentType.Text.Html
+                            )
+                        } else {
+                            call.respond(HttpStatusCode.NotFound, "Metrics dashboard disabled in Settings.toml")
+                        }
+                    }
+
+                    get("/dashboard") {
+                        if (net.dodian.uber.game.engine.config.metricsEnabled && net.dodian.uber.game.engine.config.metricsDashboardEnabled) {
+                            call.respondText(
+                                net.dodian.uber.game.engine.metrics.MetricsDashboardHtml.renderHtml(),
+                                ContentType.Text.Html
+                            )
+                        } else {
+                            call.respond(HttpStatusCode.NotFound, "Metrics dashboard disabled in Settings.toml")
+                        }
+                    }
+
+                    get("/api/metrics/history") {
+                        if (net.dodian.uber.game.engine.config.metricsEnabled) {
+                            val history = net.dodian.uber.game.engine.metrics.PrometheusMetricsRegistry.getHistorySnapshot()
+                            call.respondText(
+                                mapper.writeValueAsString(history),
+                                ContentType.Application.Json
+                            )
+                        } else {
+                            call.respond(HttpStatusCode.NotFound, "Metrics disabled in Settings.toml")
+                        }
+                    }
+
                     rateLimit {
                         val handleHiscores: suspend (ApplicationCall) -> Unit = { call ->
                             val playerName = call.request.queryParameters["player"]

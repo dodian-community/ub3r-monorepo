@@ -94,6 +94,36 @@ class GameLoopService(
             val elapsedNanos = measureNanoTime { runTick() }
             val elapsedMillis = TimeUnit.NANOSECONDS.toMillis(elapsedNanos)
             OperationalTelemetry.recordTick(elapsedMillis, GAME_TICK_INTERVAL_MS)
+
+            val totalCycleMs = elapsedNanos / 1_000_000.0
+            val playerNanos = (
+                OperationalTelemetry.getLastPhaseNanos("inbound") +
+                OperationalTelemetry.getLastPhaseNanos("player.main") +
+                OperationalTelemetry.getLastPhaseNanos("movement.finalize") +
+                OperationalTelemetry.getLastPhaseNanos("outbound")
+            )
+            val npcNanos = (
+                OperationalTelemetry.getLastPhaseNanos("npc.main") +
+                OperationalTelemetry.getLastPhaseNanos("combat.hitQueue")
+            )
+            val worldNanos = (
+                OperationalTelemetry.getLastPhaseNanos("worldDb.input") +
+                OperationalTelemetry.getLastPhaseNanos("worldDb.read") +
+                OperationalTelemetry.getLastPhaseNanos("worldDb.apply") +
+                OperationalTelemetry.getLastPhaseNanos("plunder") +
+                OperationalTelemetry.getLastPhaseNanos("world.tasks") +
+                OperationalTelemetry.getLastPhaseNanos("groundItems") +
+                OperationalTelemetry.getLastPhaseNanos("shops")
+            )
+
+            net.dodian.uber.game.engine.metrics.PrometheusMetricsRegistry.recordTickMetrics(
+                players = PlayerRegistry.playersOnline.size,
+                npcs = Server.npcManager?.getNpcs()?.size ?: 0,
+                totalCycleMs = totalCycleMs,
+                playerMs = playerNanos / 1_000_000.0,
+                npcMs = npcNanos / 1_000_000.0,
+                worldMs = worldNanos / 1_000_000.0
+            )
             if (elapsedMillis > GAME_TICK_INTERVAL_MS) {
                 logger.warn("Game loop overran tick budget: {}ms", elapsedMillis)
             }
@@ -157,7 +187,7 @@ class GameLoopService(
         block: () -> Unit,
     ) {
         val elapsedNs = measureNanoTime(block)
-        OperationalTelemetry.recordPhaseMillis(name, TimeUnit.NANOSECONDS.toMillis(elapsedNs))
+        OperationalTelemetry.recordPhaseNanos(name, elapsedNs)
     }
 
     private fun maybeLogCycle(elapsedMillis: Long) {

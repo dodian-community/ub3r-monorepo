@@ -18,10 +18,21 @@ object OperationalTelemetry {
     @Volatile private var lastTickAtMs: Long = 0L
 
     @JvmStatic
-    fun recordPhaseMillis(phase: String, elapsedMs: Long) {
+    fun recordPhaseNanos(phase: String, elapsedNs: Long) {
         val samples = phaseSamples.computeIfAbsent(phase) { PhaseSamples(SAMPLE_CAPACITY) }
-        samples.record(max(0L, elapsedMs))
+        samples.record(max(0L, elapsedNs))
     }
+
+    @JvmStatic
+    fun recordPhaseMillis(phase: String, elapsedMs: Long) {
+        recordPhaseNanos(phase, elapsedMs * 1_000_000L)
+    }
+
+    @JvmStatic
+    fun getLastPhaseNanos(phase: String): Long = phaseSamples[phase]?.lastValue() ?: 0L
+
+    @JvmStatic
+    fun getLastPhaseMillis(phase: String): Long = getLastPhaseNanos(phase) / 1_000_000L
 
     @JvmStatic
     fun recordTick(elapsedMs: Long, budgetMs: Long = TICK_BUDGET_MS) {
@@ -91,6 +102,12 @@ object OperationalTelemetry {
         fun record(value: Long) {
             val i = index.getAndIncrement()
             values[i % values.size] = value
+        }
+
+        fun lastValue(): Long {
+            val cur = index.get()
+            if (cur <= 0) return 0L
+            return values[(cur - 1) % values.size]
         }
 
         fun snapshot(): Map<String, Any> {

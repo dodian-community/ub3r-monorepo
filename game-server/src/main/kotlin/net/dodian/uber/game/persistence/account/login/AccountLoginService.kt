@@ -21,8 +21,8 @@ object AccountLoginService {
 
     @JvmStatic
     @JvmOverloads
-    fun prepareGame(player: Client, playerName: String, playerPass: String, email: String = ""): PreparedLogin =
-        try {
+    fun prepareGame(player: Client, playerName: String, playerPass: String, email: String = ""): PreparedLogin {
+        val prepared = try {
             DbAsyncRepository.withConnection { connection ->
                 prepareGame(
                     player = player,
@@ -41,6 +41,14 @@ object AccountLoginService {
             logger.error("Critical runtime error while loading player {}", playerName, exception)
             PreparedLogin.failure(13)
         }
+
+        if (prepared.code == 0) {
+            net.dodian.uber.game.engine.metrics.PrometheusMetricsRegistry.recordLogin("success")
+        } else {
+            net.dodian.uber.game.engine.metrics.PrometheusMetricsRegistry.recordLogin("failed")
+        }
+        return prepared
+    }
 
     @JvmStatic
     fun updatePlayerForumRegistration(player: Client) {

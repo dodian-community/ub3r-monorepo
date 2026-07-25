@@ -76,6 +76,10 @@ dependencies {
     implementation("com.zaxxer:HikariCP:6.3.0")
     implementation("org.mybatis:mybatis:3.5.10")
 
+    implementation("io.prometheus:simpleclient:0.16.0")
+    implementation("io.prometheus:simpleclient_common:0.16.0")
+    implementation("io.prometheus:simpleclient_hotspot:0.16.0")
+
     implementation("com.google.code.gson:gson:2.7")
 
     implementation("io.netty:netty-all:4.1.108.Final")

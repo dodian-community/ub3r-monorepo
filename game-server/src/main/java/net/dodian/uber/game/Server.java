@@ -176,11 +176,16 @@ public class Server {
     private static void logPortsSummary() {
         boolean webEnabled = DotEnvKt.getWebApiEnabled();
         boolean discordEnabled = DotEnvKt.getDiscordApiEnabled();
+        boolean metricsEnabled = DotEnvKt.getMetricsEnabled();
         logger.info("Server & Ports overview [env={}, world={}, xp={}x, max_conn/ip={}]:",
                 DotEnvKt.getServerEnv(), DotEnvKt.getGameWorldId(), DotEnvKt.getGameMultiplierGlobalXp(), DotEnvKt.getGameConnectionsPerIp());
-        logger.info("  game     {}  - RS317 client connections", DotEnvKt.getServerPort());
-        logger.info("  web api  {}  - REST health/status/hiscores API ({})", DotEnvKt.getWebApiPort(), webEnabled ? "enabled" : "disabled");
-        logger.info("  discord  {}  - Discord OAuth authentication ({})", DotEnvKt.getDiscordRedirectUrl(), discordEnabled ? "enabled" : "disabled");
+        logger.info("  game       {}  - RS317 client connections", DotEnvKt.getServerPort());
+        logger.info("  web api    {}  - REST health/status/hiscores API ({})", DotEnvKt.getWebApiPort(), webEnabled ? "enabled" : "disabled");
+        logger.info("  discord    {}  - Discord OAuth authentication ({})", DotEnvKt.getDiscordRedirectUrl(), discordEnabled ? "enabled" : "disabled");
+        if (webEnabled && metricsEnabled) {
+            logger.info("  metrics    http://localhost:{}/prometheus  - Prometheus Text Endpoint ({})", DotEnvKt.getWebApiPort(), DotEnvKt.getMetricsPrometheusEndpoint() ? "enabled" : "disabled");
+            logger.info("  dashboard  http://localhost:{}/dashboard   - Real-time Visual Charts ({})", DotEnvKt.getWebApiPort(), DotEnvKt.getMetricsDashboardEnabled() ? "enabled" : "disabled");
+        }
     }
 
 

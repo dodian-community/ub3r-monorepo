@@ -57,8 +57,8 @@ val _rsaValidation = run {
 
 // Delegation getters for Settings.toml
 val serverPort get() = SettingsLoader.settings.network.gamePort
-val serverDebugMode get() = SettingsLoader.settings.server.debug
-val serverEnv get() = SettingsLoader.settings.server.environment
+val serverDebugMode get() = if (SettingsLoader.isLoaded) SettingsLoader.settings.server.debug else true
+val serverEnv get() = if (SettingsLoader.isLoaded) SettingsLoader.settings.server.environment else "dev"
 val nettyLeakDetection get() = SettingsLoader.settings.network.leakDetection
 val dodianLogLevel get() = SettingsLoader.settings.server.logLevel
 val webApiEnabled get() = SettingsLoader.settings.network.webEnabled
@@ -86,5 +86,9 @@ val rankBannedGroupId get() = if (SettingsLoader.isLoaded) SettingsLoader.settin
 val rankModGroupIds get() = if (SettingsLoader.isLoaded) SettingsLoader.settings.ranks.modGroupIds else listOf(5, 9)
 val rankAdminGroupIds get() = if (SettingsLoader.isLoaded) SettingsLoader.settings.ranks.adminGroupIds else listOf(6, 10, 18, 35)
 val rankDebugBypassGroupIds get() = if (SettingsLoader.isLoaded) SettingsLoader.settings.ranks.debugBypassGroupIds else listOf(11, 34, 40)
+
+val metricsEnabled get() = if (SettingsLoader.isLoaded) SettingsLoader.settings.metrics.enabled else true
+val metricsPrometheusEndpoint get() = if (SettingsLoader.isLoaded) SettingsLoader.settings.metrics.prometheusEndpoint else true
+val metricsDashboardEnabled get() = if (SettingsLoader.isLoaded) SettingsLoader.settings.metrics.dashboardEnabled else true
 
 
