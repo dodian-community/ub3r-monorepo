@@ -48,7 +48,7 @@
         <!-- Economy / inventory flow -->
         <Property name="consoleAuditBankLevel">${sys:dodian.consoleAudit.bank.level:-${env:DODIAN_CONSOLE_AUDIT_BANK_LEVEL:-info}}</Property>
         <Property name="consoleAuditShopLevel">${sys:dodian.consoleAudit.shop.level:-${env:DODIAN_CONSOLE_AUDIT_SHOP_LEVEL:-info}}</Property>
-        <Property name="consoleAuditItemLevel">${sys:dodian.consoleAudit.item.level:-${env:DODIAN_CONSOLE_AUDIT_ITEM_LEVEL:-off}}</Property>
+        <Property name="consoleAuditItemLevel">${sys:dodian.consoleAudit.item.level:-${env:DODIAN_CONSOLE_AUDIT_ITEM_LEVEL:-info}}</Property>
 
         <!-- UI / interaction flow -->
         <Property name="consoleAuditButtonLevel">${sys:dodian.consoleAudit.button.level:-${env:DODIAN_CONSOLE_AUDIT_BUTTON_LEVEL:-info}}</Property>
@@ -69,7 +69,7 @@
             </Filters>
         </Console>
         <Console name="ConsoleAuditConsole" target="SYSTEM_OUT">
-            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] ConsoleAudit %-5level [%c{1}] %msg%n" disableAnsi="false"/>
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] %highlight{%-5p} [%c{1}] %msg%n" disableAnsi="false"/>
         </Console>
         <RollingFile
                 name="ConsoleAuditFile"

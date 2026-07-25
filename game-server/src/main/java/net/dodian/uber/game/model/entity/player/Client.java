@@ -1903,7 +1903,7 @@ public class Client extends Player implements Runnable {
         deleteItem(id, slot, amount);
         checkItemUpdate();
         Ground.addFloorItem(this, id, amount);
-        ItemLog.playerDrop(this, id, amount, getPosition().copy(), "Inventory Drop");
+        ItemLog.playerDrop(this, id, amount, getPosition().copy(), "Inventory Drop", slot, 3214);
     }
 
     public void deleteItem(int id, int amount) {
@@ -2018,7 +2018,7 @@ public class Client extends Player implements Runnable {
 
     private void wearLog(String format, Object... args) {
         if (getGameWorldId() == 2) {
-            logger.info(format, args);
+            logger.debug(format, args);
         }
     }
 
@@ -2098,6 +2098,7 @@ public class Client extends Player implements Runnable {
             markSaveDirty(PlayerSaveSegment.EQUIPMENT.getMask());
             wearing = false;
             equipmentChanged(targetSlot);
+            logger.info("[WEAR] player={} item={} ({}) equipSlot={} invSlot={}", getPlayerName(), wearID, getItemName(wearID), targetSlot, slot);
             wearLog("[WEAR:WEAR] equipped id={} targetSlot={} amount={}", wearID, targetSlot, wearAmount);
         } else {
             wearLog("[WEAR:WEAR] rejected slot/item mismatch playerItems[slot]={} expected={}", playerItems[slot] - 1, wearID);

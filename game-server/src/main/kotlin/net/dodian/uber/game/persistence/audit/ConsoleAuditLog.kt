@@ -183,14 +183,25 @@ object ConsoleAuditLog {
     }
 
     @JvmStatic
-    fun itemDrop(player: Player, itemId: Int, itemAmount: Int, pos: Position, reason: String) {
+    @JvmOverloads
+    fun itemDrop(
+        player: Player,
+        itemId: Int,
+        itemAmount: Int,
+        pos: Position,
+        reason: String,
+        invSlot: Int = -1,
+        interfaceId: Int = 3214
+    ) {
         if (!itemLogger.isInfoEnabled) return
         itemLogger.info(
-            "ITEM DROP | {} | item={} | reason=\"{}\" | pos={}",
+            "ITEM DROP | {} | item={} | invSlot={} | interface={} | pos={} | reason=\"{}\"",
             playerRef(player),
             itemRef(itemId, itemAmount),
-            sanitizeInlineText(reason),
+            if (invSlot >= 0) invSlot else "unknown",
+            interfaceId,
             positionRef(pos),
+            sanitizeInlineText(reason),
         )
     }
 
@@ -248,6 +259,8 @@ object ConsoleAuditLog {
                 append(" | key=")
                 append(sanitizeInlineText(request.componentKey))
             }
+            append(" | pos=")
+            append(positionRef(request.client.position))
             append(" | ")
             append(playerRef(request.client))
         }
@@ -295,8 +308,9 @@ object ConsoleAuditLog {
     fun interfaceOpen(player: Player, interfaceId: Int, via: String) {
         if (interfaceLogger.isDebugEnabled) {
             interfaceLogger.debug(
-                "INTERFACE DETAIL | {} | interface={} | via={} | details={}",
+                "INTERFACE DETAIL | {} | pos={} | interface={} | via={} | details={}",
                 playerRef(player),
+                positionRef(player.position),
                 interfaceId,
                 via,
                 interfaceDetails(player, interfaceId).replace('\n', ' '),
@@ -304,8 +318,9 @@ object ConsoleAuditLog {
         }
         if (!interfaceLogger.isInfoEnabled) return
         interfaceLogger.info(
-            "INTERFACE OPEN | {} | interface={} | via={}",
+            "INTERFACE OPEN | {} | pos={} | interface={} | via={}",
             playerRef(player),
+            positionRef(player.position),
             interfaceId,
             via,
         )
@@ -438,8 +453,9 @@ object ConsoleAuditLog {
     fun interfaceClose(player: Player, interfaceId: Int, via: String) {
         if (!interfaceLogger.isInfoEnabled) return
         interfaceLogger.info(
-            "INTERFACE CLOSE | {} | interface={} | via={}",
+            "INTERFACE CLOSE | {} | pos={} | interface={} | via={}",
             playerRef(player),
+            positionRef(player.position),
             interfaceId,
             via,
         )

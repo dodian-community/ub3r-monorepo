@@ -10,9 +10,18 @@ object ItemLog {
     }
 
     @JvmStatic
-    fun playerDrop(player: Player, itemId: Int, itemAmount: Int, pos: Position, reason: String) {
+    @JvmOverloads
+    fun playerDrop(
+        player: Player,
+        itemId: Int,
+        itemAmount: Int,
+        pos: Position,
+        reason: String,
+        invSlot: Int = -1,
+        interfaceId: Int = 3214
+    ) {
         val dropReason = if (reason.isEmpty()) "player" else reason
-        ConsoleAuditLog.itemDrop(player, itemId, itemAmount, pos, dropReason)
+        ConsoleAuditLog.itemDrop(player, itemId, itemAmount, pos, dropReason, invSlot, interfaceId)
     }
 
     @JvmStatic

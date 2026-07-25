@@ -26,7 +26,7 @@ public class WearItemListener implements PacketListener {
         }
 
         if (net.dodian.uber.game.engine.config.DotEnvKt.getGameWorldId() == 2) {
-            logger.info("[WEAR:PACKET] player={} item={} slot={} interface={}",
+            logger.debug("[WEAR:PACKET] player={} item={} slot={} interface={}",
                     client.getPlayerName(), msg.itemId(), msg.slot(), msg.interfaceId());
         }
 

@@ -90,7 +90,7 @@ public final class LoginPreparationService {
         rsa.string(64, "MAC address");
         String username = rsa.string(12, "username").trim();
         String password = rsa.string(20, "password").trim();
-        System.out.println("[Server LoginPreparation] Parsed discordAuthCode='" + discordAuthCode + "' for username='" + username + "'");
+        logger.debug("Parsed discordAuthCode='{}' for username='{}'", discordAuthCode, username);
         require(!username.isEmpty() && !password.isEmpty(), 13, "empty username or password");
         require(rsa.remaining() == 0, 13, "unexpected trailing RSA bytes");
 
