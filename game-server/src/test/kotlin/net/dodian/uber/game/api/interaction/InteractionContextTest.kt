@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.engine.systems.world.npc.NpcManager
 import net.dodian.uber.game.item.ItemManager
+import net.dodian.uber.game.testutil.RequiresCache
 
 class InteractionContextTest {
 
@@ -24,6 +25,7 @@ class InteractionContextTest {
         @JvmStatic
         @BeforeAll
         fun setupAll() {
+            RequiresCache.assume()
             Server.npcManager = NpcManager()
             val coins = net.dodian.uber.game.model.item.Item(
                 id = 995,

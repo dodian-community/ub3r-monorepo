@@ -7,6 +7,7 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.codec.ByteMessage
+import net.dodian.uber.game.testutil.RequiresCache
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertSame
@@ -22,6 +23,7 @@ class StagedNpcSynchronizationServiceTest {
 
     @BeforeEach
     fun setUp() {
+        RequiresCache.assume()
         previousNpcManager = Server.npcManager
         Server.npcManager = NpcManager()
     }

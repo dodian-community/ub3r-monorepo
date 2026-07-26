@@ -13,12 +13,14 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import net.dodian.uber.game.testutil.RequiresCache
 
 class NpcCombatRegistryTest {
     private var previousNpcManager: NpcManager? = null
 
     @BeforeEach
     fun setUp() {
+        RequiresCache.assume()
         previousNpcManager = Server.npcManager
         Server.npcManager = NpcManager()
     }

@@ -12,6 +12,7 @@ import net.dodian.uber.game.item.ItemManager
 import net.dodian.uber.game.engine.config.SettingsLoader
 import net.dodian.uber.game.engine.systems.net.PacketWalkingService
 import net.dodian.uber.game.engine.systems.net.WalkRequest
+import net.dodian.uber.game.testutil.RequiresCache
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -21,6 +22,7 @@ import org.junit.jupiter.api.Test
 class CombatFollowTest {
     @BeforeEach
     fun setUp() {
+        RequiresCache.assume()
         SettingsLoader.load()
         Server.npcManager = NpcManager()
         Server.itemManager = ItemManager(definitionLoader = { emptyMap() }, globalSpawnBootstrap = {})
