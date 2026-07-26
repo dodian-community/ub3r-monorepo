@@ -2561,7 +2561,6 @@ public class CustomInterface extends RSInterface {
         addText(56510, "Duration:", 0xff981f, true, true, -1, tda, 1);
         addText(56511, "Grouped:", 0xff981f, true, true, -1, tda, 1);
         addText(56512, "Skill Orbs:", 0xff981f, true, true, -1, tda, 1);
-        addText(56513, "Experience Rate:", 0xff981f, true, true, -1, tda, 1);
 
         addDropdownMenu(56514, 125, 0, false, true, Dropdown.COUNTER_PROGRESS, "Enabled", "Disabled");
         addDropdownMenu(56515, 125, 0, false, true, Dropdown.COUNTER_SIZE, "Small", "Regular", "Large");
@@ -2570,8 +2569,7 @@ public class CustomInterface extends RSInterface {
         addDropdownMenu(56518, 125, 0, false, true, Dropdown.COUNTER_SPEED, "Normal", "Slow", "Fast");
         addDropdownMenu(56519, 125, 0, false, true, Dropdown.DEFAULT, "Disabled", "Enabled");
         addDropdownMenu(56520, 125, 0, false, true, Dropdown.SKILL_ORB, "Enabled", "Disabled");
-        addDropdownMenu(56521, 125, 0, false, true, Dropdown.DEFAULT, "1000x (Default)", "4x (Runescape)");
-        rsi.totalChildren(20);
+        rsi.totalChildren(18);
         rsi.child(0, 56501, 45, 70);
         rsi.child(1, 56502, 260, 73);
         rsi.child(2, 56503, 430, 73);
@@ -2582,16 +2580,14 @@ public class CustomInterface extends RSInterface {
         rsi.child(7, 56509, 130, 155);
         rsi.child(8, 56510, 260, 155);
         rsi.child(9, 56511, 385, 155);
-        rsi.child(10, 56512, 190, 105);
-        rsi.child(11, 56513, 320, 105);
-        rsi.child(12, 56514, 64, 225);
-        rsi.child(13, 56515, 194, 225);
-        rsi.child(14, 56516, 325, 225);
-        rsi.child(15, 56517, 64, 174);
-        rsi.child(16, 56518, 194, 174);
-        rsi.child(17, 56519, 325, 174);
-        rsi.child(18, 56520, 129, 123);
-        rsi.child(19, 56521, 261, 123);
+        rsi.child(10, 56512, 260, 105);
+        rsi.child(11, 56514, 64, 225);
+        rsi.child(12, 56515, 194, 225);
+        rsi.child(13, 56516, 325, 225);
+        rsi.child(14, 56517, 64, 174);
+        rsi.child(15, 56518, 194, 174);
+        rsi.child(16, 56519, 325, 174);
+        rsi.child(17, 56520, 198, 123);
     }
 
     public static void prestige(TextDrawingArea[] daniel) {

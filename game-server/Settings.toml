@@ -1,5 +1,4 @@
 [server]
-environment = "dev"
 debug = true
 log_level = "info"
 
@@ -13,7 +12,6 @@ packet_limit = 100
 leak_detection = "disabled"
 
 [world]
-world_id = 2
 max_players = 2000
 global_xp_multiplier = 1
 

@@ -50,14 +50,16 @@ object AccountPersistenceService {
                     if (discordAuthCode.isNotBlank() && discordUser == null) {
                         logger.warn("Account creation rejected for {}: Invalid or expired Discord authorization code", username)
                         val durationMs = (System.nanoTime() - startedAt) / 1_000_000L
-                        onComplete.accept(LoginLoadResult(13, durationMs, 0, null))
+                        onComplete.accept(LoginLoadResult(29, durationMs, 0, null))
                         return@launch
                     }
                     val email = discordUser?.email ?: ""
+                    val discordId = discordUser?.id ?: ""
+                    val discordUsername = discordUser?.username ?: ""
                     val deadline = System.currentTimeMillis() + 3_000L
                     var finalResult = AccountLoginService.PreparedLogin.failure(13)
                     while (true) {
-                        val loadResult = AccountLoginService.prepareGame(client, username, password, email)
+                        val loadResult = AccountLoginService.prepareGame(client, username, password, email, discordId, discordUsername)
                         if (loadResult.code != AccountLoginService.FINAL_SAVE_PENDING_INTERNAL) {
                             finalResult = loadResult
                             break

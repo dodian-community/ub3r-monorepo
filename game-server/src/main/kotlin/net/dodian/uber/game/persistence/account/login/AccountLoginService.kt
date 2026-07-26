@@ -21,7 +21,14 @@ object AccountLoginService {
 
     @JvmStatic
     @JvmOverloads
-    fun prepareGame(player: Client, playerName: String, playerPass: String, email: String = ""): PreparedLogin {
+    fun prepareGame(
+        player: Client,
+        playerName: String,
+        playerPass: String,
+        email: String = "",
+        discordId: String = "",
+        discordUsername: String = "",
+    ): PreparedLogin {
         val prepared = try {
             DbAsyncRepository.withConnection { connection ->
                 prepareGame(
@@ -29,6 +36,8 @@ object AccountLoginService {
                     playerName = playerName,
                     playerPass = playerPass,
                     email = email,
+                    discordId = discordId,
+                    discordUsername = discordUsername,
                     connection = connection,
                     allowDevAutoCreate = isDevAutoCreateEnabled(),
                     allowDevPasswordBypass = isDevPasswordBypassEnabled(),
@@ -75,6 +84,8 @@ object AccountLoginService {
         playerName: String,
         playerPass: String,
         email: String = "",
+        discordId: String = "",
+        discordUsername: String = "",
         connection: Connection,
         allowDevAutoCreate: Boolean,
         allowDevPasswordBypass: Boolean,
@@ -84,21 +95,27 @@ object AccountLoginService {
 
         var webUser = AccountLoginRepository.loadWebUser(connection, playerName)
         if (webUser == null) {
-            if (!allowDevAutoCreate) return PreparedLogin.failure(12)
             // Mandatory: new accounts require a verified Discord identity (a non-blank email means
-            // AccountPersistenceService already exchanged a valid discordAuthCode for it). A blank/missing/
-            // invalid code must never be able to create an account, in any environment.
-            if (email.isBlank()) {
-                logger.warn("Account creation rejected for {}: no verified Discord account was supplied", playerName)
-                return PreparedLogin.failure(13)
+            // AccountPersistenceService already exchanged a valid discordAuthCode for it), in any environment.
+            // The one exception is local dev testing (SERVER_ENV=dev + debug=true), which can create a
+            // throwaway account without going through Discord.
+            if (email.isBlank() && !allowDevAutoCreate) {
+                logger.warn("Account creation rejected for {}: no Discord account was supplied, existing user must create an account first", playerName)
+                return PreparedLogin.failure(26)
             }
-            val count = AccountLoginRepository.countAccountsByEmail(connection, email)
-            val maxAllowed = discordMaxAccountsPerDiscord
-            if (count >= maxAllowed) {
-                logger.warn("Account creation rejected for email {}: limit of {} accounts reached", email, maxAllowed)
-                return PreparedLogin.failure(12)
+            if (playerName.length < 3) {
+                logger.warn("Account creation rejected for {}: username shorter than 3 characters", playerName)
+                return PreparedLogin.failure(23)
             }
-            AccountLoginRepository.insertWebUser(connection, playerName, playerPass, email)
+            if (discordId.isNotBlank()) {
+                val count = AccountLoginRepository.countAccountsByDiscordId(connection, discordId)
+                val maxAllowed = discordMaxAccountsPerDiscord
+                if (count >= maxAllowed) {
+                    logger.warn("Account creation rejected for discord_id {}: limit of {} accounts reached", discordId, maxAllowed)
+                    return PreparedLogin.failure(12)
+                }
+            }
+            AccountLoginRepository.insertWebUser(connection, playerName, playerPass, email, discordId, discordUsername)
             webUser = AccountLoginRepository.loadWebUser(connection, playerName) ?: return PreparedLogin.failure(13)
         } else if (webUser.password.isEmpty() && playerPass.isNotEmpty()) {
             AccountLoginRepository.updateWebUserCredentials(connection, webUser.dbId, playerPass, email)

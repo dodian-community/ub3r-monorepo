@@ -1526,7 +1526,7 @@ public class RSInterface {
 		addConfigButton(identification, parentIdentification, enabledSprite, disabledSprite, width, height, tooltip, configIdentification, actionType, configFrame, true);
 	}
 
-	public static void addConfigButton(int identification, int parentIdentification, int disabledSprite, int enabledSprite, int width, int height, String tooltip, int configIdentification, int actionType, int configFrame, boolean updateConfig) {
+	public static void addConfigButton(int identification, int parentIdentification, Sprite disabledSprite, Sprite enabledSprite, int width, int height, String tooltip, int configIdentification, int actionType, int configFrame, boolean updateConfig) {
 		RSInterface Tab = addTabInterface(identification);
 		Tab.parentID = parentIdentification;
 		Tab.interfaceId = identification;
@@ -1545,10 +1545,14 @@ public class RSInterface {
 		Tab.scripts[0][0] = 5;
 		Tab.scripts[0][1] = configFrame;
 		Tab.scripts[0][2] = 0;
-		Tab.disabledSprite = Client.spriteCache.get(disabledSprite);
-		Tab.enabledSprite = Client.spriteCache.get(enabledSprite);
+		Tab.disabledSprite = disabledSprite;
+		Tab.enabledSprite = enabledSprite;
 		Tab.tooltip = tooltip;
 		Tab.updateConfig = updateConfig;
+	}
+
+	public static void addConfigButton(int identification, int parentIdentification, int disabledSprite, int enabledSprite, int width, int height, String tooltip, int configIdentification, int actionType, int configFrame, boolean updateConfig) {
+		addConfigButton(identification, parentIdentification, Client.spriteCache.get(disabledSprite), Client.spriteCache.get(enabledSprite), width, height, tooltip, configIdentification, actionType, configFrame, updateConfig);
 	}
 
 	public static void addConfigButton(int identification, int parentIdentification, int sprite, int configID, int configFrame) {

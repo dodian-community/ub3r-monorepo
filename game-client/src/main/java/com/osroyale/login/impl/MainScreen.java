@@ -90,6 +90,22 @@ public class MainScreen extends LoginComponent {
 			}
 		}
 
+		/* State 1: Waiting on Discord Auth (shown the instant Create Account is clicked, before the browser opens) */
+		if (loginScreenState == 1) {
+			client.boldText.drawCenteredText(0xFFFF00, boxX + 180, "Account creation is done through Discord", boxY + 40, true);
+			client.regularText.drawCenteredText(0xFFFFFF, boxX + 180, "A browser window will open - complete Discord", boxY + 70, true);
+			client.regularText.drawCenteredText(0xFFFFFF, boxX + 180, "authorization there, then return to this window", boxY + 90, true);
+			client.regularText.drawCenteredText(0xFFFFFF, boxX + 180, "to finish creating your account.", boxY + 110, true);
+
+			// Cancel Button
+			int btn1X = boxX + 25 + (btnW / 2);
+			int btnY = boxY + 145;
+			if (titlebuttonSprite != null) {
+				titlebuttonSprite.drawARGBSprite(btn1X, btnY, alpha);
+				client.boldText.drawCenteredText(0xFFFFFF, btn1X + (btnW / 2), "Cancel", btnY + 25, true);
+			}
+		}
+
 		/* State 2: Login / Account Creation Credentials Screen */
 		if (loginScreenState == 2) {
 			if (!accountCreationStatus.isEmpty()) {
@@ -144,6 +160,7 @@ public class MainScreen extends LoginComponent {
 
 			// Create Account Click
 			if (MouseHandler.clickMode3 == 1 && client.mouseInRegion(btn1X, btnY, btn1X + btnW, btnY + btnH)) {
+				loginScreenState = 1;
 				DiscordOAuth.getInstance().startAuthFlow(code -> {
 					Client.discordAuthCode = code;
 					accountCreationStatus = "You can now create your account";
@@ -155,6 +172,18 @@ public class MainScreen extends LoginComponent {
 			if (MouseHandler.clickMode3 == 1 && client.mouseInRegion(btn2X, btnY, btn2X + btnW, btnY + btnH)) {
 				accountCreationStatus = "";
 				loginScreenState = 2;
+			}
+			return;
+		}
+
+		if (loginScreenState == 1) {
+			int btn1X = boxX + 25 + (btnW / 2);
+			int btnY = boxY + 145;
+
+			// Cancel Button Click
+			if (MouseHandler.clickMode3 == 1 && client.mouseInRegion(btn1X, btnY, btn1X + btnW, btnY + btnH)) {
+				DiscordOAuth.getInstance().cancelAuthFlow();
+				loginScreenState = 0;
 			}
 			return;
 		}

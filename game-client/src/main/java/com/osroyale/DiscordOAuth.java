@@ -11,6 +11,8 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.function.Consumer;
 
 /**
@@ -18,9 +20,12 @@ import java.util.function.Consumer;
  */
 public class DiscordOAuth {
 
+    private static final long BROWSER_OPEN_DELAY_MS = 5000L;
+
     private static DiscordOAuth instance;
     private HttpServer httpServer;
     private Consumer<String> onCodeReceived;
+    private TimerTask pendingBrowserOpen;
 
     public static DiscordOAuth getInstance() {
         if (instance == null) {
@@ -59,7 +64,31 @@ public class DiscordOAuth {
 
     public void startAuthFlow(Consumer<String> codeCallback) {
         this.onCodeReceived = codeCallback;
-        openBrowser(getOAuthUrl());
+        cancelPendingBrowserOpen();
+        String url = getOAuthUrl();
+        pendingBrowserOpen = new TimerTask() {
+            @Override
+            public void run() {
+                openBrowser(url);
+            }
+        };
+        new Timer("discord-oauth-browser-delay", true).schedule(pendingBrowserOpen, BROWSER_OPEN_DELAY_MS);
+    }
+
+    /**
+     * Cancels a browser open still waiting out its delay, and drops the pending code callback.
+     * Called when the player backs out of account creation before the delay elapses.
+     */
+    public void cancelAuthFlow() {
+        cancelPendingBrowserOpen();
+        onCodeReceived = null;
+    }
+
+    private void cancelPendingBrowserOpen() {
+        if (pendingBrowserOpen != null) {
+            pendingBrowserOpen.cancel();
+            pendingBrowserOpen = null;
+        }
     }
 
     private class CallbackHandler implements HttpHandler {

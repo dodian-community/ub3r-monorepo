@@ -68,7 +68,14 @@ object AccountLoginRepository {
             }
         }
 
-    fun insertWebUser(connection: Connection, playerName: String, playerPass: String = "", email: String = "") {
+    fun insertWebUser(
+        connection: Connection,
+        playerName: String,
+        playerPass: String = "",
+        email: String = "",
+        discordId: String = "",
+        discordUsername: String = "",
+    ) {
         val salt = if (playerPass.isNotEmpty()) java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 8) else ""
         val hashedPassword = if (playerPass.isNotEmpty()) net.dodian.uber.game.model.entity.player.Client.passHash(playerPass, salt) else ""
         connection.prepareStatement(AccountLoginQueries.webUserInsert).use { statement ->
@@ -76,6 +83,8 @@ object AccountLoginRepository {
             statement.setString(2, hashedPassword)
             statement.setString(3, salt)
             statement.setString(4, email)
+            statement.setString(5, discordId)
+            statement.setString(6, discordUsername)
             statement.executeUpdate()
         }
     }
@@ -92,10 +101,10 @@ object AccountLoginRepository {
         }
     }
 
-    fun countAccountsByEmail(connection: Connection, email: String): Int {
-        if (email.isBlank()) return 0
-        connection.prepareStatement(AccountLoginQueries.countAccountsByEmail).use { statement ->
-            statement.setString(1, email)
+    fun countAccountsByDiscordId(connection: Connection, discordId: String): Int {
+        if (discordId.isBlank()) return 0
+        connection.prepareStatement(AccountLoginQueries.countAccountsByDiscordId).use { statement ->
+            statement.setString(1, discordId)
             statement.executeQuery().use { results ->
                 return if (results.next()) results.getInt("total") else 0
             }

@@ -25,6 +25,12 @@ val databaseInitialize = dotenv["DATABASE_INITIALIZE"]?.toBoolean() ?: false
 val clientVersion = dotenv["CLIENT_VERSION"]?.toInt() ?: 12
 val gameClientCustomVersion = dotenv["CLIENT_CUSTOM_VERSION"] ?: "dodian_client"
 
+// Environment and world identity. These change per-deployment (not secrets), but they're read
+// from .env rather than the git-tracked Settings.toml so spinning up another world or environment
+// is a deploy-time env var, not a commit.
+val serverEnv = (dotenv["SERVER_ENV"] ?: "dev").lowercase()
+val gameWorldId = dotenv["WORLD_ID"]?.toIntOrNull() ?: 1
+
 // Discord OAuth (gates new account creation - see AccountLoginService/DiscordApiService). Secrets,
 // so these live in .env (gitignored), not Settings.toml (git-tracked).
 val discordApiEnabled = dotenv["DISCORD_ENABLED"]?.toBoolean() ?: false
@@ -58,13 +64,11 @@ val _rsaValidation = run {
 // Delegation getters for Settings.toml
 val serverPort get() = SettingsLoader.settings.network.gamePort
 val serverDebugMode get() = if (SettingsLoader.isLoaded) SettingsLoader.settings.server.debug else true
-val serverEnv get() = if (SettingsLoader.isLoaded) SettingsLoader.settings.server.environment else "dev"
 val nettyLeakDetection get() = SettingsLoader.settings.network.leakDetection
 val dodianLogLevel get() = SettingsLoader.settings.server.logLevel
 val webApiEnabled get() = SettingsLoader.settings.network.webEnabled
 val webApiPort get() = SettingsLoader.settings.network.webPort
 
-val gameWorldId get() = SettingsLoader.settings.world.worldId
 val gameConnectionsPerIp get() = SettingsLoader.settings.network.connectionsPerIp
 
 val databasePoolMinSize get() = SettingsLoader.settings.databasePool.minSize

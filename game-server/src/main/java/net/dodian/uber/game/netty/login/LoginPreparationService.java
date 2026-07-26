@@ -88,8 +88,8 @@ public final class LoginPreparationService {
         rsa.i32(); // legacy UID
         String discordAuthCode = rsa.string(64, "discordAuthCode").trim();
         rsa.string(64, "MAC address");
-        String username = rsa.string(12, "username").trim();
-        String password = rsa.string(20, "password").trim();
+        String username = rsa.string(12, "username", 18).trim();
+        String password = rsa.string(20, "password", 19).trim();
         logger.debug("Parsed discordAuthCode='{}' for username='{}'", discordAuthCode, username);
         require(!username.isEmpty() && !password.isEmpty(), 13, "empty username or password");
         require(rsa.remaining() == 0, 13, "unexpected trailing RSA bytes");
@@ -135,12 +135,15 @@ public final class LoginPreparationService {
         private void skip(int length) { buffer.position(buffer.position() + length); }
         private byte[] bytes(int length) { byte[] value = new byte[length]; buffer.get(value); return value; }
         private String string(int maxLength, String field) {
+            return string(maxLength, field, 13);
+        }
+        private String string(int maxLength, String field, int overflowCode) {
             StringBuilder value = new StringBuilder();
             boolean terminated = false;
             while (buffer.hasRemaining()) {
                 int next = u8();
                 if (next == 10) { terminated = true; break; }
-                require(value.length() < maxLength, 13, field + " exceeds maximum length");
+                require(value.length() < maxLength, overflowCode, field + " exceeds maximum length");
                 value.append((char) next);
             }
             require(terminated, 13, "unterminated " + field);

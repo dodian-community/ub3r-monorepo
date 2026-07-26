@@ -16,11 +16,15 @@ import org.slf4j.LoggerFactory
 object StartupValidationService {
     private val logger = LoggerFactory.getLogger(StartupValidationService::class.java)
     private val validLogLevels = setOf("trace", "debug", "info", "warn", "error")
+    private val validEnvironments = setOf("dev", "test", "staging", "prod", "production")
 
     @JvmStatic
     fun validateOrThrow() {
         val violations = ArrayList<String>()
 
+        if (serverEnv !in validEnvironments) {
+            violations += "SERVER_ENV must be one of ${validEnvironments.sorted().joinToString(",")}"
+        }
         if (serverPort !in 1..65535) {
             violations += "SERVER_PORT must be between 1 and 65535"
         }
@@ -31,7 +35,7 @@ object StartupValidationService {
             violations += "WEB_API_PORT must be different from SERVER_PORT"
         }
         if (gameWorldId <= 0) {
-            violations += "world_id must be > 0"
+            violations += "WORLD_ID must be > 0"
         }
         if (gameConnectionsPerIp <= 0) {
             violations += "connections_per_ip must be > 0"

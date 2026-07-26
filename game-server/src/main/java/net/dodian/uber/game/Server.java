@@ -90,11 +90,17 @@ public class Server {
         logger.info("\n{}", STARTUP_BANNER);
 
         serverStartup = System.currentTimeMillis();
-        net.dodian.uber.game.engine.config.SettingsLoader.INSTANCE.load();
-        net.dodian.uber.game.engine.config.FeatureStateService.INSTANCE.initialize(
-                net.dodian.uber.game.engine.config.SettingsLoader.INSTANCE.getSettings()
-        );
-        StartupValidationService.validateOrThrow();
+        try {
+            net.dodian.uber.game.engine.config.SettingsLoader.INSTANCE.load();
+            net.dodian.uber.game.engine.config.FeatureStateService.INSTANCE.initialize(
+                    net.dodian.uber.game.engine.config.SettingsLoader.INSTANCE.getSettings()
+            );
+            StartupValidationService.validateOrThrow();
+        } catch (IllegalStateException e) {
+            logger.error("Startup configuration error: {}", e.getMessage());
+            System.exit(1);
+            return;
+        }
         net.dodian.uber.game.netty.listener.PacketListenerManager.initialize();
         net.dodian.uber.game.rscm.RSCM.load(new java.io.File("data/mappings"));
 
@@ -186,6 +192,23 @@ public class Server {
             logger.info("  metrics    http://localhost:{}/prometheus  - Prometheus Text Endpoint ({})", DotEnvKt.getWebApiPort(), DotEnvKt.getMetricsPrometheusEndpoint() ? "enabled" : "disabled");
             logger.info("  dashboard  http://localhost:{}/dashboard   - Real-time Visual Charts ({})", DotEnvKt.getWebApiPort(), DotEnvKt.getMetricsDashboardEnabled() ? "enabled" : "disabled");
         }
+        logger.info("SERVER_ENV=prod disables account auto-create & password-bypass entirely; dev allows them only from "
+                + "localhost/debug-bypass ranks and only with debug=true. debug=true also crashes on thread-ownership "
+                + "violations instead of just logging them, in any env.");
+        logger.info(worldRulesetSummary());
+    }
+
+    private static String worldRulesetSummary() {
+        int world = DotEnvKt.getGameWorldId();
+        if (world <= 1) {
+            return "World " + world + " runs the live ruleset: bank shortcut command + noclip anti-cheat kick active, "
+                    + "beta/admin test commands and weapon specials locked.";
+        }
+        String betaCommands = "admin/test commands unlocked (forcetask, bosspawn, bosstele, tnpc, slay_sim, rehp, boost, tool, pnpc, plunder)";
+        String specials = world == 2
+                ? "weapon specials enabled; verbose W2-* combat/dispatch debug logging active"
+                : "weapon specials still locked (only world 2 gets those)";
+        return "World " + world + " runs a beta ruleset: " + betaCommands + "; " + specials + ".";
     }
 
 

@@ -29,7 +29,6 @@ data class RankSettings(
 )
 
 data class ServerSettings(
-    @JsonProperty("environment") val environment: String,
     @JsonProperty("debug") val debug: Boolean,
     @JsonProperty("log_level") val logLevel: String
 )
@@ -45,7 +44,6 @@ data class NetworkSettings(
 )
 
 data class WorldSettings(
-    @JsonProperty("world_id") val worldId: Int,
     @JsonProperty("max_players") val maxPlayers: Int,
     @JsonProperty("global_xp_multiplier") val globalXpMultiplier: Int
 )
@@ -92,13 +90,6 @@ object SettingsLoader {
     }
 
     private fun validate() {
-        val environment = settings.server.environment.lowercase()
-        if (environment !in setOf("dev", "test", "staging", "prod", "production")) {
-            throw IllegalStateException("server.environment must be dev, test, staging, prod, or production")
-        }
-        if (environment in setOf("prod", "production") && settings.server.debug) {
-            throw IllegalStateException("server.debug must be false in production")
-        }
         // Validate ranges
         if (settings.network.gamePort !in 1..65535) {
             throw IllegalStateException("game_port must be in range 1-65535")

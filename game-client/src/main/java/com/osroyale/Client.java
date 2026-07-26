@@ -11799,10 +11799,16 @@ public class Client extends GameEngine
             loginMessage1 = "Your username must have 3 or more characters.";
             return;
         }
-        /*if (password.length() < 8) {
-            loginMessage1 = "Your password must have 8 or more characters.";
+        if (username.length() > 12) {
+            loginMessage1 = "Your username is too long.";
+            loginMessage2 = "Please use 12 characters or fewer.";
             return;
-        }*/
+        }
+        if (password.length() > 20) {
+            loginMessage1 = "Your password is too long.";
+            loginMessage2 = "Please use 20 characters or fewer.";
+            return;
+        }
 //        System.out.println("About to call Login: " + System.currentTimeMillis()%60000);
         LoginRenderThread lThread = new LoginRenderThread(this);
         lThread.start();
@@ -12079,6 +12085,18 @@ public class Client extends GameEngine
                 return;
             }
 
+            if (response == 18) {
+                loginMessage1 = "Your username is too long.";
+                loginMessage2 = "Please use 12 characters or fewer.";
+                return;
+            }
+
+            if (response == 19) {
+                loginMessage1 = "Your password is too long.";
+                loginMessage2 = "Please use 20 characters or fewer.";
+                return;
+            }
+
             if (response == 20) {
                 loginMessage1 = "Invalid loginserver requested";
                 loginMessage2 = "Please try using a different world.";
@@ -12122,8 +12140,8 @@ public class Client extends GameEngine
             }
 
             if (response == 26) {
-                loginMessage1 = "You have not registered on the website yet.";
-                loginMessage2 = "Please register on the website before trying to login.";
+                loginMessage1 = "No account found for that username.";
+                loginMessage2 = "Use Create Account to sign up via Discord first.";
                 return;
             }
 
@@ -12136,6 +12154,12 @@ public class Client extends GameEngine
             if (response == 28) {
                 loginMessage1 = "Dodian early access has reached it's limit!";
                 loginMessage2 = "Please wait for the official release!";
+                return;
+            }
+
+            if (response == 29) {
+                loginMessage1 = "Discord authorization failed or expired.";
+                loginMessage2 = "Please try Create Account again.";
                 return;
             }
 
@@ -19421,7 +19445,7 @@ public class Client extends GameEngine
     private final String[] chatMessages;
     private int tickDelta;
     private SceneGraph scene;
-    private Sprite[] sideIcons;
+    public static Sprite[] sideIcons;
 
     private int menuOffsetX;
     private int menuOffsetY;
