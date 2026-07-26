@@ -193,8 +193,9 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
             long failures = LOGIN_LOAD_FAILURES.incrementAndGet();
             OperationalTelemetry.incrementCounter("login.load.failure", 1L);
             logger.warn(
-                    "Login load failed for {} code={} load={}ms pendingRetries={} failures={}",
+                    "Login load failed for {} reason=\"{}\" code={} load={}ms pendingRetries={} failures={}",
                     client.getPlayerName(),
+                    describeReason(loadResult.getCode()),
                     loadResult.getCode(),
                     loadResult.getDurationMs(),
                     loadResult.getPendingRetries(),
@@ -460,5 +461,46 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
         LoginAttempt current = attempt;
         if (current != null && current.getStage() != LoginAttempt.Stage.COMPLETE) releaseAttempt(current);
         ctx.close();
+    }
+
+    public static String describeReason(int code) {
+        switch (code) {
+            case 3:
+                return "Invalid password or username";
+            case 4:
+                return "Account disabled/banned";
+            case 5:
+                return "Account already online or loading";
+            case 6:
+                return "Game updated";
+            case 7:
+                return "World full";
+            case 8:
+                return "Login server offline";
+            case 9:
+                return "Login limit exceeded";
+            case 10:
+                return "Bad session ID";
+            case 11:
+                return "Session rejected by login server";
+            case 12:
+                return "Account limit reached or group banned";
+            case 13:
+                return "Could not complete login / internal error";
+            case 14:
+                return "Server is currently updating";
+            case 16:
+                return "Too many login attempts from your IP";
+            case 22:
+                return "MAC/IP/UID Banned";
+            case 23:
+                return "Username too short (minimum 3 characters)";
+            case 26:
+                return "No account created / Discord verification required";
+            case 29:
+                return "Invalid or expired Discord authorization code";
+            default:
+                return "Unknown error (" + code + ")";
+        }
     }
 }

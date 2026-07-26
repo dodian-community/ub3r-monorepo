@@ -161,6 +161,7 @@ enum class DbTables(val table: String) {
     GAME_LOGS_PLAYER_TRADES("uber3_trades"),
     GAME_LOGS_PLAYER_DUELS("duel_log"),
     GAME_LOGS_ITEMS("uber3_item_log"),
+    GAME_LOGS_SHOP_TRANSACTIONS("shop_transaction_logs"),
     GAME_CHAT_LOGS("uber3_chat_log"),
     GAME_LOGS_STAFF_COMMANDS("uber3_command_log"),
 

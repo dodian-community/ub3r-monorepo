@@ -33,6 +33,7 @@ import net.dodian.uber.game.skill.farming.Farming;
 import net.dodian.uber.game.skill.farming.FarmingState;
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry;
 import net.dodian.uber.game.persistence.admin.CommandDbService;
+import net.dodian.uber.game.persistence.audit.ShopLog;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
 import net.dodian.uber.game.persistence.player.RefundRecord;
 import net.dodian.uber.game.persistence.player.RefundRepository;
@@ -3323,7 +3324,7 @@ public class Client extends Player implements Runnable {
             ShopManager.ShopItemsN[MyShopID][slot] += amount;
             int totalPrice = amount * price;
             addItem(currency, totalPrice);
-            ConsoleAuditLog.shopSell(this, MyShopID, slot, itemID, amount, currency, totalPrice);
+            ShopLog.recordSell(this, MyShopID, slot, itemID, amount, currency, (long) totalPrice);
         } else
             send(new SendMessage("Could not sell anything!"));
         /* Store update! */
@@ -3390,7 +3391,7 @@ public class Client extends Player implements Runnable {
                     return;
             }
             if (purchasedAmount > 0) {
-                ConsoleAuditLog.shopBuy(this, MyShopID, fromSlot, itemID, purchasedAmount, currency, TotPrice2 * purchasedAmount);
+                ShopLog.recordBuy(this, MyShopID, fromSlot, itemID, purchasedAmount, currency, (long) TotPrice2 * purchasedAmount);
             }
             /* Store update! */
             UpdatePlayerShop();
