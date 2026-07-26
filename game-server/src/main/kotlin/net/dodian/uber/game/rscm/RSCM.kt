@@ -50,7 +50,7 @@ object RSCM {
         if (mappingsLoaded) return
         synchronized(this) {
             if (mappingsLoaded) return
-            val dir = File("data/mappings")
+            val dir = File("content/mappings")
             if (dir.isDirectory) {
                 loadRscmFiles(dir)
             }

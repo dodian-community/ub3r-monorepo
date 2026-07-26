@@ -3,22 +3,15 @@ package net.dodian.uber.game.engine.config
 import io.github.cdimascio.dotenv.dotenv
 import java.math.BigInteger
 
-private val dotenv = dotenv()
+private val dotenv = dotenv { ignoreIfMissing = true }
 
-private fun requiredEnv(key: String): String =
-    dotenv[key]
-        ?: throw IllegalStateException("Missing required environment variable: $key")
-
-private fun requiredNonBlankEnv(key: String): String =
-    requiredEnv(key).takeIf { it.isNotBlank() }
-        ?: throw IllegalStateException("Missing required environment variable: $key")
-
-// Secrets/Credentials in .env
-val databaseHost = requiredNonBlankEnv("DATABASE_HOST")
+// Secrets/Credentials in .env. Host/name/username default to local-dev values (not secret) so the
+// server, tests, and CI can boot without a .env file; production deployments override via real env vars.
+val databaseHost = dotenv["DATABASE_HOST"]?.takeIf { it.isNotBlank() } ?: "127.0.0.1"
 val databasePort = dotenv["DATABASE_PORT"]?.toInt() ?: 3306
-val databaseName = requiredNonBlankEnv("DATABASE_NAME")
+val databaseName = dotenv["DATABASE_NAME"]?.takeIf { it.isNotBlank() } ?: "dodian"
 val databaseTablePrefix = dotenv["DATABASE_TABLE_PREFIX"] ?: ""
-val databaseUsername = requiredNonBlankEnv("DATABASE_USERNAME")
+val databaseUsername = dotenv["DATABASE_USERNAME"]?.takeIf { it.isNotBlank() } ?: "dodian"
 val databasePassword = dotenv["DATABASE_PASSWORD"] ?: ""
 val databaseInitialize = dotenv["DATABASE_INITIALIZE"]?.toBoolean() ?: false
 
@@ -39,14 +32,16 @@ val discordClientSecret = dotenv["DISCORD_CLIENT_SECRET"] ?: ""
 val discordRedirectUrl = dotenv["DISCORD_REDIRECT_URL"] ?: "http://localhost:8080/discord/callback"
 val discordMaxAccountsPerDiscord = dotenv["DISCORD_MAX_ACCOUNTS_PER_DISCORD"]?.toIntOrNull() ?: 3
 
-val rsaModulus = run {
-    val str = dotenv["RSA_MODULUS"] ?: throw IllegalStateException("Missing required environment variable: RSA_MODULUS")
-    try { BigInteger(str) } catch (e: Exception) { throw IllegalStateException("RSA_MODULUS is not a valid BigInteger", e) }
-}
-val rsaExponent = run {
-    val str = dotenv["RSA_EXPONENT"] ?: throw IllegalStateException("Missing required environment variable: RSA_EXPONENT")
-    try { BigInteger(str) } catch (e: Exception) { throw IllegalStateException("RSA_EXPONENT is not a valid BigInteger", e) }
-}
+// Dev-only fallback keypair (2048-bit, e=65537), used when RSA_MODULUS/RSA_EXPONENT aren't set via
+// .env, so local dev/tests/CI can boot without secrets. Production MUST override both via real env
+// vars - this pair is committed to source and provides no confidentiality once known.
+private const val DEV_RSA_MODULUS =
+    "28594733071843287045488567338617318348004242558695643607014244976462581434727681689118063908557530764184858205138910928513435720838915603591652363765452700687750993388272060857783518107626775161318983296812490913480536097505647242854937374747258632442583159190499024563608169286128122208003452582810496368569009812436199008910090849495125096786534836877531675705949014024143079456804421213835257847540118910504606003981893435856577019263108835673628836556453805192081661680311591808305114842049522068977044782884205132239991152780748709653752520563353554485402477393814465716946048367396715165507412340773954852321133"
+private const val DEV_RSA_EXPONENT =
+    "1203791271269902939690601603479640223417973133030826566851584629904638023992762466702423643494670604061614413048785499058067490940912280853706591263391427761379144464321568211950878533636606385249234400657730174257179899797337088103464794191490098217939285231343924939667591422561720694750774763507242618381692249870960074183478846090937476930162799894513945220996139858089877010504799052467220210954629334342165870782739374684121596705066559345419259032386962902042718709658080244836053906271679431878944972684137349198644512638787990149184202732149271007849710629392809845060512708440756245396922186616077075894209"
+
+val rsaModulus = BigInteger(dotenv["RSA_MODULUS"] ?: DEV_RSA_MODULUS)
+val rsaExponent = BigInteger(dotenv["RSA_EXPONENT"] ?: DEV_RSA_EXPONENT)
 
 // Perform validation
 val _rsaValidation = run {

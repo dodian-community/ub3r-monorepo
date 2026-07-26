@@ -13,9 +13,9 @@ object RscmGenerator {
     @JvmStatic
     fun main(args: Array<String>) {
         val locOnly = args.contains("--loc-only")
-        var outputDir = File("data/mappings")
+        var outputDir = File("content/mappings")
         if (File("../settings.gradle.kts").exists()) {
-            outputDir = File("../game-server/data/mappings")
+            outputDir = File("../game-server/content/mappings")
         }
         if (!outputDir.exists()) {
             outputDir.mkdirs()

@@ -42,6 +42,12 @@ This directory contains configurations that control gameplay features, items, ob
   *Purpose*: Configurations for ranged/magic spell GFX combat projectiles, including height offsets, speeds, delays, and launch slopes.  
   *Editing*: Edit this file to customize projectile physics and combat GFX behavior.
 
+### `/content/mappings/`
+- **`*.rscm`**  
+  *Format*: Plain-text `key=id` mapping sheets (interfaces, components, objects, npcs, sequences, spot anims, varps, varbits).  
+  *Purpose*: Client-to-server ID mapping sheets used by `RSCM.kt` and the IntelliJ tooling for name-based lookups. These are project-authored text files, not Jagex cache binaries, so they're safe to commit and are required for tests like `LocMappingTest` to run in a fresh checkout (e.g. CI) without a local cache.  
+  *Maintenance*: Regenerated programmatically using `RscmGenerator.kt`. Avoid hand-editing; regenerate and commit instead.
+
 ---
 
 ## 2. Data Directory (`/game-server/data/`)
@@ -53,12 +59,6 @@ This directory contains configurations that control gameplay features, items, ob
   *Format*: OSRS Cache Binary  
   *Purpose*: Holds the binary client/server game map, models, textures, animations, and configurations.  
   *Maintenance*: Regenerated or loaded as-is using cache tools. Never edit.
-
-### `/data/mappings/`
-- **`*.rscm`**  
-  *Format*: RSCM Mapping Binaries  
-  *Purpose*: Holds client-to-server ID mapping sheets (interfaces, components, objects, npcs, varps).  
-  *Maintenance*: Regenerated programmatically using `RscmGenerator.kt`. Never edit.
 
 ### `/data/def/`
 - **`items-json/`**  

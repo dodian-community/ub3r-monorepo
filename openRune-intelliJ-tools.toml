@@ -1,7 +1,7 @@
 [rscm]
 
 mappings_directories = [
-    "game-server/data/mappings"
+    "game-server/content/mappings"
 ]
 
 # Enable or disable providers

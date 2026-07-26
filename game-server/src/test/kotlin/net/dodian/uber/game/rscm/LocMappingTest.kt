@@ -7,7 +7,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 class LocMappingTest {
-    private val mappingFile = Path.of("data/mappings/loc.rscm")
+    private val mappingFile = Path.of("content/mappings/loc.rscm")
 
     @Test
     fun `loc mapping preserves cache ids and applies Alter names`() {
