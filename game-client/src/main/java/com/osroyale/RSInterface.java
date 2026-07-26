@@ -1935,6 +1935,23 @@ public class RSInterface {
 		return container;
 	}
 
+	public static void addModel(int id) {
+		RSInterface t = createInterface(id);
+		t.interfaceId = id;
+		t.parentID = id;
+		t.type = 6;
+		t.atActionType = 0;
+		t.contentType = 0;
+		t.width = 32;
+		t.height = 32;
+		t.opacity = 0;
+		t.modelZoom = 560;
+		t.modelRotation1 = 150;
+		t.modelRotation2 = 0;
+		t.defaultMediaType = 4;
+		t.mediaID = 0;
+	}
+
 	/**
 	 * Adds a button.
 	 */

@@ -114,6 +114,7 @@ public class CustomInterface extends RSInterface {
         ancientAutocast(archive, textDrawingAreas);
         skillGuides(archive, textDrawingAreas);
         wintertodt(archive, textDrawingAreas);
+        makeAll(textDrawingAreas);
     }
 
     private static void wintertodt(StreamLoader archive, TextDrawingArea[] font) {
@@ -5024,5 +5025,71 @@ public class CustomInterface extends RSInterface {
         rsi.child(20, RSInterface.interfaceCache[6575].children[187], 190, 215);
         rsi.child(21, RSInterface.interfaceCache[6575].children[188], 245, 214);
         rsi.child(22, RSInterface.interfaceCache[6575].children[189], 302, 215);
+    }
+
+    public static int makeAllQuanId = 35204;
+    public static int makeAllItemId = 35304;
+    public static int makeAllQuanChild = 0;
+    public static int makeAllItemChild = 0;
+    public static int makeAllX = 0;
+    public static int makeAllItemX = 0;
+    public static int makeAllCenterX = 70;
+
+    public static void makeAll(TextDrawingArea[] tda) {
+        makeAllQuanId = 35204;
+        makeAllItemId = 35304;
+        makeAllQuanChild = 0;
+        makeAllItemChild = 0;
+        makeAllX = 0;
+        makeAllItemX = 0;
+        makeAllCenterX = 70;
+
+        RSInterface inter = addTabInterface(35100);
+        RSInterface quantity = addTabInterface(35200);
+        RSInterface item = addTabInterface(35300);
+        inter.totalChildren(4);
+        quantity.totalChildren(15);
+        item.totalChildren(9);
+        addText(35101, "How many?", tda, 2, 0x403020, true, false);
+        addText(35102, "Choose a quantity, then click an image to begin.", tda, 0, 0x605048, true, false);
+        addMakeAllQuantity(tda, "1", quantity, true);
+        addMakeAllQuantity(tda, "5", quantity, true);
+        addMakeAllQuantity(tda, "10", quantity, true);
+        addMakeAllQuantity(tda, "X", quantity, true);
+        addMakeAllQuantity(tda, "All", quantity, true);
+        addMakeAllItem(item);
+        addMakeAllItem(item);
+        addMakeAllItem(item);
+        int child = 0;
+        inter.child(child++, 35101, 150, 0);
+        inter.child(child++, 35102, 150, 17);
+        inter.child(child++, 35200, 0, 0);
+        inter.child(child++, 35300, 0, 0);
+    }
+
+    private static void addMakeAllQuantity(TextDrawingArea[] tda, String text, RSInterface quan, boolean enabled) {
+        if (enabled) {
+            addButton(makeAllQuanId, 494, "Select");
+        } else {
+            addSprite(makeAllQuanId, 495);
+        }
+        addHoveredButton(makeAllQuanId + 1, 495, 35, 30, makeAllQuanId + 2);
+        addText(makeAllQuanId + 3, text, tda, 0, 0x403020, true, false);
+        quan.child(makeAllQuanChild++, makeAllQuanId, 285 + makeAllX, 0);
+        quan.child(makeAllQuanChild++, makeAllQuanId + 1, 285 + makeAllX, 0);
+        quan.child(makeAllQuanChild++, makeAllQuanId + 3, 302 + makeAllX, 9);
+        makeAllQuanId += 4;
+        makeAllX += 40;
+    }
+
+    private static void addMakeAllItem(RSInterface item) {
+        addModel(makeAllItemId + 3);
+        addButton(makeAllItemId, 492, "Select");
+        addHoveredButton(makeAllItemId + 1, 493, 100, 75, makeAllItemId + 2);
+        item.child(makeAllItemChild++, makeAllItemId, makeAllCenterX + makeAllItemX, 35);
+        item.child(makeAllItemChild++, makeAllItemId + 1, makeAllCenterX + makeAllItemX, 35);
+        item.child(makeAllItemChild++, makeAllItemId + 3, makeAllCenterX + 34 + makeAllItemX, 56);
+        makeAllItemId += 4;
+        makeAllItemX += 120;
     }
 }

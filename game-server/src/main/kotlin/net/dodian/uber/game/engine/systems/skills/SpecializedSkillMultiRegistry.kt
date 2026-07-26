@@ -7,6 +7,20 @@ import net.dodian.uber.skills.api.SkillMultiConfig
 object SpecializedSkillMultiRegistry {
     private val renderers = linkedMapOf<String, (Client, SkillMultiConfig) -> Unit>()
 
+    init {
+        register("makeall") { client, config ->
+            val entries = config.entries
+            client.sendString(config.title, 35101)
+            val modelComponents = intArrayOf(35307, 35311, 35315)
+            for (i in 0 until 3) {
+                val entry = entries.getOrNull(i)
+                val itemId = entry?.recipe?.outputItemId ?: -1
+                client.sendInterfaceModel(modelComponents[i], 100, itemId)
+            }
+            client.sendChatboxInterface(35100)
+        }
+    }
+
     fun register(key: String, renderer: (Client, SkillMultiConfig) -> Unit) {
         require(key.isNotBlank())
         require(renderers.putIfAbsent(key, renderer) == null) { "Duplicate specialized skill presentation: $key" }

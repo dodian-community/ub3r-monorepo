@@ -30,10 +30,40 @@ object SkillMultiButtonService {
         ).forEachIndexed { entry, ids -> ids.forEachIndexed { i, id -> put(id, entry to amount(i)) } }
     }
 
+    private val makeAllQuantityButtons = mapOf(
+        35204 to 1,
+        35208 to 5,
+        35212 to 10,
+        35220 to Int.MAX_VALUE
+    )
+    private val makeAllItemButtons = mapOf(
+        35304 to 0,
+        35308 to 1,
+        35312 to 2
+    )
+
     @JvmStatic
     fun tryHandle(client: Client, buttonId: Int): Boolean {
         val player = client.asSkillPlayer()
         val config = player.production.pending() ?: return false
+        if (buttonId in makeAllQuantityButtons) {
+            client.makeAllSelectedAmount = makeAllQuantityButtons.getValue(buttonId)
+            return true
+        }
+        if (buttonId == 35216) {
+            client.enterAmountId = ENTER_AMOUNT_SKILL_MULTI
+            client.send(SendFrame27())
+            return true
+        }
+        if (buttonId in makeAllItemButtons) {
+            val itemIndex = makeAllItemButtons.getValue(buttonId)
+            val entry = config.entries.getOrNull(itemIndex) ?: run {
+                player.production.clear()
+                return false
+            }
+            val qty = if (client.makeAllSelectedAmount <= 0) 1 else client.makeAllSelectedAmount
+            return player.production.select(SkillMultiSelection(config.key, entry.recipe.key, qty))
+        }
         if (buttonId == SINGLE_MAKE_X_BUTTON) {
             // Keep the pending selection alive; the entered amount arrives through
             // PacketBankingService.handleXAmount -> completeEnteredAmount.
@@ -63,6 +93,7 @@ object SkillMultiButtonService {
             player.production.clear()
             return true
         }
+        client.makeAllSelectedAmount = amount
         val entry = config.entries.firstOrNull() ?: run {
             player.production.clear()
             return false
@@ -73,7 +104,8 @@ object SkillMultiButtonService {
     @JvmStatic
     fun isSelectionButton(buttonId: Int): Boolean =
         buttonId == SINGLE_MAKE_X_BUTTON || buttonId in singleAmounts ||
-            buttonId in twoEntryButtons || buttonId in threeEntryButtons
+            buttonId in twoEntryButtons || buttonId in threeEntryButtons ||
+            buttonId in makeAllQuantityButtons || buttonId in makeAllItemButtons || buttonId == 35216
 
     private fun amount(index: Int) = when (index) { 0 -> 1; 1 -> 5; 2 -> 10; else -> Int.MAX_VALUE }
 }

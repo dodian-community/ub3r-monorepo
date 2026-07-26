@@ -6287,21 +6287,21 @@ public class Client extends GameEngine
         // local variables get deleted after method record is complete, so it
         // doesn't stay in
         // memory.
-        final int[] sideIconsId = {0, 1, 2, 3, 4, 5, 6, 15, 8, 9, 7, 11, 12, 13};
+        final int[] sideIconsId = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
         final int[] sideIconsTab = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
 
-        final int[] iconId1 = {0, 1, 2, 3, 4, 5, 6, 15, 8, 9, 7, 11, 12, 13};
+        final int[] iconId1 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
         final int[] iconX1 = {219, 189, 156, 126, 93, 62, 30, 219, 189, 156, 124, 92, 59, 28};
         final int[] iconY1 = {67, 69, 67, 69, 72, 72, 69, 28, 29, 29, 32, 30, 33, 31, 32};
 
         final int[] sideIconsX = {17, 49, 83, 114, 146, 180, 214, 16, 49, 82, 116, 148, 184, 216};
         final int[] sideIconsY = {9, 7, 7, 5, 2, 3, 7, 306, 306, 306, 302, 305, 303, 303, 303};
 
-        final int[] iconId2 = {0, 1, 2, 3, 4, 5, 6, 15, 8, 9, 7, 11, 12, 13};
+        final int[] iconId2 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
         final int[] iconX2 = {50, 80, 114, 143, 176, 208, 240, 273, 306, 338, 370, 402, 433, 433};
         final int[] iconY2 = {30, 32, 30, 32, 34, 34, 32, 28, 29, 29, 32, 31, 32, 32, 32};
 
-        final int[] sideIconsX459 = {33, 56, 86, 115, 156, 183, 211, 30, 57, 85, 121, 156, 188, 212}, sideIconsY459 = {10, 6, 7, 4, 6, 5, 8, 300, 303, 304, 302, 302, 303, 303}, sideIconsId459 = {0, 1, 2, 3, 4, 5, 6, 15, 8, 9, 7, 11, 12, 13}, sideIconsTab459 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
+        final int[] sideIconsX459 = {33, 56, 86, 115, 156, 183, 211, 30, 57, 85, 121, 156, 188, 212}, sideIconsY459 = {10, 6, 7, 4, 6, 5, 8, 300, 303, 304, 302, 302, 303, 303}, sideIconsId459 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13}, sideIconsTab459 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
 
         final int xOffset = !isResized() ? 516 : canvasWidth - 241;
         final int yOffset = !isResized() ? 168 : canvasHeight - 336;
@@ -12765,6 +12765,13 @@ public class Client extends GameEngine
             }
             for (int index = 798; index < 823; index++) {
                 iconIcons[index - 798] = spriteCache.get(index);
+            }
+            int[] makeAllSprites = {492, 493, 494, 495};
+            for (int sprId : makeAllSprites) {
+                Sprite spr = spriteCache.loadResourceSprite("/makeall/" + sprId + ".png");
+                if (spr != null) {
+                    spriteCache.set(sprId, spr);
+                }
             }
             SkillOrbs.init();
             RSFont.unpackImages(modIcons, clanIcons, iconIcons);

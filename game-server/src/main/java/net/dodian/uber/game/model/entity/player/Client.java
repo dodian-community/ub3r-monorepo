@@ -206,6 +206,7 @@ public class Client extends Player implements Runnable {
     public ArrayList<WorldObject> objects = new ArrayList<>();
     public long lastButton = 0;
     public int enterAmountId = 0;
+    public int makeAllSelectedAmount = 1;
     // Dodian: teleports
     private int tH = 0;
     public int cSelected = -1, cIndex = -1;

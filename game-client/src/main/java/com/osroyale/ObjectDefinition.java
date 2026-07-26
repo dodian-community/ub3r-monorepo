@@ -45,6 +45,11 @@ public final class ObjectDefinition {
 		objectDefinition.decode(stream, i);
 
 		/* Custom/Modified Objects */
+		if (i == 3994) {
+			objectDefinition.interactions = new String[5];
+			objectDefinition.interactions[0] = "Smelt";
+		}
+
 		if (false) switch (i) {
 
 			case 10081: /* Dead Ore */

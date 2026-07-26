@@ -15,6 +15,7 @@ import net.dodian.uber.skills.api.SkillModuleDescriptor
 import net.dodian.uber.skills.api.SkillMultiAction
 import net.dodian.uber.skills.api.SkillMultiConfig
 import net.dodian.uber.skills.api.SkillMultiEntry
+import net.dodian.uber.skills.api.SkillMultiLayout
 import net.dodian.uber.skills.api.skillRecipe
 import net.dodian.uber.skills.runtime.TomlRecordReader
 
@@ -30,7 +31,11 @@ object SmithingModule : SkillPlugin {
     val descriptor = SkillModuleDescriptor("skill.smithing", "Smithing")
     val smeltingRecipes: List<SmeltingRecipeDef> by lazy { loadSmeltingRecipes() }
 
-    private val furnaceObjectIds = intArrayOf(2150, 2151, 2152, 2153, 3994, 11666, 16469, 26814, 29662)
+    private val furnaceObjectIds = intArrayOf(
+        2030, 2150, 2151, 2152, 2153, 2966, 3294, 3994, 4304, 6189, 6190, 10082,
+        11009, 11010, 11666, 12100, 12655, 12809, 16469, 16657, 18525, 18526,
+        21879, 22721, 24009, 26300, 26814, 28565, 29662, 30157, 30158
+    )
     private val anvilObjectIds = intArrayOf(2097, 2783, 4306, 6150, 26813)
 
     override val definition: SkillPluginDefinition = skillPlugin("Smithing", Skill.SMITHING) {
@@ -40,8 +45,7 @@ object SmithingModule : SkillPlugin {
         itemOnObject(PolicyPreset.PRODUCTION, *anvilObjectIds) { interaction ->
             handleAnvil(interaction)
         }
-        // Clicking the furnace directly (no ore selected) opens a picker of every bar the
-        // player currently has ore for - mirrors clicking a range/fire for Cooking.
+        // Clicking the furnace directly opens a selection of all bars available to smelt.
         objectClick(preset = PolicyPreset.PRODUCTION, option = 1, *furnaceObjectIds) { interaction ->
             openSmeltingPicker(interaction)
         }
@@ -102,6 +106,8 @@ object SmithingModule : SkillPlugin {
             key = "smithing.smelt",
             verb = "smelt",
             action = SkillMultiAction.SMELT,
+            presentationKey = "makeall",
+            layout = SkillMultiLayout.SPECIALIZED,
             entries = entries,
         )
         return player.production.open(config) { selection ->
