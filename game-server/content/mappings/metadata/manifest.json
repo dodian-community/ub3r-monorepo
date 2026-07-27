@@ -1,6 +1,6 @@
 {
   "sourceRevision": "0a55afe6182e9c6a22955650dd02fc7d08d1648c",
-  "format": "cache-reference-v1",
+  "format": "cache-reference-v2",
   "sources": [
     {
       "path": "dump.loc",
@@ -49,5 +49,12 @@
     "spotanim": 2637,
     "varbit": 15886,
     "varp": 4074
+  },
+  "nameSources": {
+    "decoded": 49221,
+    "fallback": 43756,
+    "linked_cert": 4222,
+    "linked_placeholder": 8436,
+    "symbol": 43791
   }
 }

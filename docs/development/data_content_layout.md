@@ -43,9 +43,9 @@ This directory contains configurations that control gameplay features, items, ob
   *Editing*: Edit this file to customize projectile physics and combat GFX behavior.
 
 ### `/content/mappings/`
-- **`*.rscm`**  
-  *Format*: Plain-text `key=id` mapping sheets (interfaces, components, objects, npcs, sequences, spot anims, varps, varbits).  
-  *Purpose*: Client-to-server ID mapping sheets used by `RSCM.kt` and the IntelliJ tooling for name-based lookups. These are project-authored text files, not Jagex cache binaries, so they're safe to commit and are required for tests like `LocMappingTest` to run in a fresh checkout (e.g. CI) without a local cache.  
+- **`*.rscm`**
+  *Format*: Plain-text `key=id` reference sheets (interfaces, components, objects, npcs, sequences, spot anims, varps, varbits).
+  *Purpose*: Revision-pinned cache references for IntelliJ tooling and name-based search. They are never loaded by the server or used for gameplay routing; plugins own reviewed raw IDs. JSONL metadata beside the sheets preserves decoded cache fields and the provenance of resolved names.
   *Maintenance*: Regenerated programmatically using `RscmGenerator.kt`. Avoid hand-editing; regenerate and commit instead.
 
 ---

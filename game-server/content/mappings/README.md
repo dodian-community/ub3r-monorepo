@@ -1,6 +1,6 @@
 # RSCM Mappings Reference
 
-This directory contains generated cache-reference mappings for IntelliJ tooling, search, and reverse lookup. They are not loaded by the server and never determine gameplay IDs.
+This directory contains generated revision-218 cache-reference mappings for IntelliJ tooling, search, and reverse lookup. They are not loaded by the server and never determine gameplay IDs.
 
 ## Mappings Dictionary
 Due to client cache naming conventions (derived from original Jagex client terminologies), some file extensions and prefixes use technical terms:
@@ -26,5 +26,7 @@ Use the pinned dump as the source of truth:
 `./gradlew :game-server:generateRscm -PosrsDump=/absolute/path/to/osrs-dumps`
 
 The task emits compact `.rscm` name-to-ID files and rich JSONL records under
-`metadata/`. Verify committed output without writing it with
+`metadata/`. Names come only from the pinned revision-218 dump: decoded names,
+same-revision symbols, and verified item note/placeholder links. Records without
+such evidence keep their numeric fallback names. Verify committed output without writing it with
 `./gradlew :game-server:checkRscm -PosrsDump=/absolute/path/to/osrs-dumps`.

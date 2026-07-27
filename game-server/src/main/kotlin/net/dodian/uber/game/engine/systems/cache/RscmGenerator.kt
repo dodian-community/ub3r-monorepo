@@ -138,7 +138,7 @@ object RscmGenerator {
         consumed: List<File>,
     ): Map<String, String> {
         val rendered = linkedMapOf<String, String>()
-        val resolved = input.mapValues { (_, records) -> resolveKeys(records) }
+        val resolved = input.mapValues { (namespace, records) -> resolveKeys(namespace, records) }
         resolved.forEach { (namespace, records) ->
             rendered["$namespace.rscm"] = records.sortedBy { it.key }.joinToString("\n", postfix = "\n") { "${it.key}=${it.id}" }
             rendered["metadata/$namespace.jsonl"] = records.sortedBy { it.id }.joinToString("\n", postfix = "\n") { record ->
@@ -147,32 +147,70 @@ object RscmGenerator {
         }
         val manifest = JsonObject().apply {
             addProperty("sourceRevision", sourceRevision)
-            addProperty("format", "cache-reference-v1")
+            addProperty("format", "cache-reference-v2")
             add("sources", JsonArray().also { array -> consumed.sortedBy { it.path }.forEach { file ->
                 array.add(JsonObject().apply { addProperty("path", file.name); addProperty("sha256", sha256(file)) })
             } })
             add("namespaces", JsonObject().also { namespaces -> resolved.toSortedMap().forEach { (name, records) ->
                 namespaces.addProperty(name, records.size)
             } })
+            add("nameSources", JsonObject().also { sources -> resolved.values
+                .flatten()
+                .groupingBy { it.nameSource.wireName }
+                .eachCount()
+                .toSortedMap()
+                .forEach(sources::addProperty)
+            })
         }
         rendered["metadata/manifest.json"] = prettyJson.toJson(manifest) + "\n"
         return rendered
     }
 
-    private fun resolveKeys(records: List<ReferenceRecord>): List<ResolvedReferenceRecord> {
+    private fun resolveKeys(namespace: String, records: List<ReferenceRecord>): List<ResolvedReferenceRecord> {
+        val recordsById = records.associateBy { it.id }
         val candidates = records.map { record ->
-            val decodedName = record.properties["name"]?.lastOrNull()?.takeIf { it.isNotBlank() }
-            val genericSymbol = "${record.namespace}_${record.id}"
-            val preferred = decodedName ?: record.symbol.takeIf { it.isNotBlank() && it != genericSymbol } ?: genericSymbol
-            record to Namer.sanitizeRSCM(preferred).ifBlank { genericSymbol }
+            val name = resolveName(record, recordsById, mutableSetOf())
+            record to name
         }
         val result = mutableListOf<ResolvedReferenceRecord>()
-        candidates.groupBy { it.second }.toSortedMap().forEach { (base, group) ->
-            group.sortedBy { it.first.id }.forEachIndexed { index, (record, _) ->
-                result += ResolvedReferenceRecord(record, if (index == 0) base else "${base}_${record.id}")
+        candidates.groupBy { (_, name) -> Namer.sanitizeRSCM(name.displayName).ifBlank { "${namespace}_${name.linkedSourceId ?: 0}" } }
+            .toSortedMap()
+            .forEach { (base, group) ->
+                group.sortedBy { it.first.id }.forEachIndexed { index, (record, name) ->
+                    result += ResolvedReferenceRecord(record, if (index == 0) base else "${base}_${record.id}", name)
+                }
             }
-        }
         return result
+    }
+
+    private fun resolveName(
+        record: ReferenceRecord,
+        recordsById: Map<Int, ReferenceRecord>,
+        resolving: MutableSet<Int>,
+    ): ResolvedName {
+        val decodedName = record.properties["name"]?.lastOrNull()?.takeIf { it.isNotBlank() }
+        if (decodedName != null) return ResolvedName(decodedName, NameSource.DECODED)
+
+        val genericSymbol = "${record.namespace}_${record.id}"
+        val symbol = record.symbol.takeIf { it.isNotBlank() && it != genericSymbol }
+        if (symbol != null) return ResolvedName(symbol, NameSource.SYMBOL)
+
+        if (record.namespace != "obj" || !resolving.add(record.id)) return ResolvedName(genericSymbol, NameSource.FALLBACK)
+        try {
+            val link = when {
+                record.properties.containsKey("certtemplate") -> Link("certlink", " (noted)", NameSource.LINKED_CERT)
+                record.properties.containsKey("placeholdertemplate") -> Link("placeholderlink", " (placeholder)", NameSource.LINKED_PLACEHOLDER)
+                else -> null
+            } ?: return ResolvedName(genericSymbol, NameSource.FALLBACK)
+            val linkedId = record.properties[link.property]?.lastOrNull()?.substringAfter("obj_")?.toIntOrNull()
+                ?: return ResolvedName(genericSymbol, NameSource.FALLBACK)
+            val linked = recordsById[linkedId] ?: return ResolvedName(genericSymbol, NameSource.FALLBACK)
+            val linkedName = resolveName(linked, recordsById, resolving)
+            if (linkedName.nameSource == NameSource.FALLBACK) return ResolvedName(genericSymbol, NameSource.FALLBACK)
+            return ResolvedName(linkedName.displayName + link.suffix, link.nameSource, linkedId)
+        } finally {
+            resolving.remove(record.id)
+        }
     }
 
     private fun verifyAgainstCache(cacheDir: File, records: Map<String, List<ReferenceRecord>>) {
@@ -213,8 +251,30 @@ object RscmGenerator {
         }
     }
 
-    private data class ResolvedReferenceRecord(val record: ReferenceRecord, val key: String) {
+    private enum class NameSource(val wireName: String) {
+        DECODED("decoded"),
+        SYMBOL("symbol"),
+        LINKED_CERT("linked_cert"),
+        LINKED_PLACEHOLDER("linked_placeholder"),
+        FALLBACK("fallback"),
+    }
+
+    private data class Link(val property: String, val suffix: String, val nameSource: NameSource)
+
+    private data class ResolvedName(
+        val displayName: String,
+        val nameSource: NameSource,
+        val linkedSourceId: Int? = null,
+    )
+
+    private data class ResolvedReferenceRecord(val record: ReferenceRecord, val key: String, val name: ResolvedName) {
         val id get() = record.id
-        fun toJson(): JsonObject = record.toJson().also { it.addProperty("key", key) }
+        val nameSource get() = name.nameSource
+        fun toJson(): JsonObject = record.toJson().also {
+            it.addProperty("key", key)
+            it.addProperty("displayName", name.displayName)
+            it.addProperty("nameSource", name.nameSource.wireName)
+            name.linkedSourceId?.let { linkedId -> it.addProperty("linkedSourceId", linkedId) }
+        }
     }
 }
