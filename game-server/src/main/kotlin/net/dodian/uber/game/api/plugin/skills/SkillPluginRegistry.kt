@@ -1,24 +1,7 @@
 package net.dodian.uber.game.api.plugin.skills
 
-import net.dodian.uber.game.api.plugin.ContentBootstrap
-import net.dodian.uber.game.api.plugin.PluginRegistry
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
-
-@Deprecated("Use net.dodian.uber.game.api.plugin.PluginRegistry")
-object SkillPluginRegistry : ContentBootstrap {
-    override val id: String = "skills.registry"
-
-    override fun bootstrap() = PluginRegistry.bootstrap()
-
-    fun register(plugin: SkillPlugin) = PluginRegistry.registerSkill(plugin)
-
-    fun current(): SkillPluginSnapshot = PluginRegistry.currentSkills()
-
-    internal fun clearForTests() = PluginRegistry.clearForTests()
-
-    internal fun resetForTests() = PluginRegistry.resetForTests()
-}
 
 internal object SkillPluginKeys {
     fun objectKey(option: Int, objectId: Int): Long {

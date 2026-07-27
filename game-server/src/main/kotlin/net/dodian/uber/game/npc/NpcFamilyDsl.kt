@@ -216,22 +216,6 @@ class NpcFamilyBuilder internal constructor(
         cacheOverrides += NpcDefinitionOverrideBuilder(id).apply(block).build()
     }
 
-    @Deprecated(
-        "Use definition { } instead. This block does NOT modify the client cache.",
-        ReplaceWith("definition(block)")
-    )
-    fun cache(block: NpcDefinitionOverrideBuilder.() -> Unit) {
-        definition(block)
-    }
-
-    @Deprecated(
-        "Use definition(id, block) instead.",
-        ReplaceWith("definition(id, block)")
-    )
-    fun cache(id: Int, block: NpcDefinitionOverrideBuilder.() -> Unit) {
-        definition(id, block)
-    }
-
     fun server(block: NpcServerDefinitionBuilder.() -> Unit) {
         server(primaryId, block)
     }
@@ -243,16 +227,6 @@ class NpcFamilyBuilder internal constructor(
 
     fun combat(block: NpcCombatBuilder.() -> Unit) {
         combatProfile = NpcCombatBuilder().apply(block).build()
-    }
-
-    @Deprecated("Use server { }. Runtime values are server-owned NPC values.", ReplaceWith("server(block)"))
-    fun runtime(block: NpcServerDefinitionBuilder.() -> Unit) {
-        server(block)
-    }
-
-    @Deprecated("Use server(id) { }. Runtime values are server-owned NPC values.", ReplaceWith("server(id, block)"))
-    fun runtime(id: Int, block: NpcServerDefinitionBuilder.() -> Unit) {
-        server(id, block)
     }
 
     fun spawns(block: NpcSpawnsBuilder.() -> Unit) {

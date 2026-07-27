@@ -23,55 +23,6 @@ class SlotMachine {
     @Volatile var coinsWonRemainder: Int = 0
     @Volatile var coinsLostRemainder: Int = 0
 
-    @Deprecated("Use remainingAutoSpins instead")
-    var slotsGames: Int
-        get() = remainingAutoSpins
-        set(value) {
-            remainingAutoSpins = value
-        }
-
-    @Deprecated("Use houseBalance instead")
-    var peteBalance: Int
-        get() = houseBalance
-        set(value) {
-            houseBalance = value
-        }
-
-    @Deprecated("Use jackpotPool instead")
-    var slotsJackpot: Int
-        get() = jackpotPool
-        set(value) {
-            jackpotPool = value
-        }
-
-    @Deprecated("Use coinsWonBillions instead")
-    var CoinsBillion_Win: Int
-        get() = coinsWonBillions
-        set(value) {
-            coinsWonBillions = value
-        }
-
-    @Deprecated("Use coinsLostBillions instead")
-    var CoinsBillion_Lose: Int
-        get() = coinsLostBillions
-        set(value) {
-            coinsLostBillions = value
-        }
-
-    @Deprecated("Use coinsWonRemainder instead")
-    var Coins_Win: Int
-        get() = coinsWonRemainder
-        set(value) {
-            coinsWonRemainder = value
-        }
-
-    @Deprecated("Use coinsLostRemainder instead")
-    var Coins_Lose: Int
-        get() = coinsLostRemainder
-        set(value) {
-            coinsLostRemainder = value
-        }
-
     private val slotSymbols = ArrayList<SlotSymbol>()
     private val counterLock = Any()
     private val logger = LoggerFactory.getLogger(SlotMachine::class.java)
@@ -305,13 +256,5 @@ class SlotMachine {
         }
     }
 
-    @Deprecated("Use loadBalanceTracker instead")
-    fun loadGamble() = loadBalanceTracker()
-
-    @Deprecated("Use trackDiceTotals instead")
-    fun trackDice(id: Int, amount: Int) = trackDiceTotals(id, amount)
-
-    @Deprecated("Use playSlotMachine instead")
-    fun playSlots(client: Client, times: Int) = playSlotMachine(client, times)
 }
 

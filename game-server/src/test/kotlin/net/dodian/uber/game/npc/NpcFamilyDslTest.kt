@@ -116,18 +116,6 @@ class NpcFamilyDslTest {
         assertEquals(101, definition.transformTo)
     }
 
-    @Suppress("DEPRECATION")
-    @Test
-    fun `runtime alias still builds server definitions during migration`() {
-        val family = npcFamily("Test Rat", 100) {
-            runtime {
-                hitpoints = 20
-            }
-        }
-
-        assertEquals(20, family.definition.serverDefinitions.single().hitpoints)
-    }
-
     @Test
     fun `future monster json fields are documented but not live server builder properties`() {
         val source = Files.readString(Path.of("src/main/kotlin/net/dodian/uber/game/npc/NpcDefinitionOverride.kt"))

@@ -99,9 +99,6 @@ data class NpcServerDefinition(
         )
 }
 
-@Deprecated("Use NpcServerDefinition. Runtime values are server-owned NPC values.")
-typealias NpcRuntimeDefinition = NpcServerDefinition
-
 data class NpcDisplayOverride(
     val headIcon: Int? = null,
     val transformTo: Int? = null,
@@ -226,9 +223,6 @@ class NpcServerDefinitionBuilder internal constructor(private val id: Int? = nul
             bossAttackHandler = bossAttackHandler,
         )
 }
-
-@Deprecated("Use NpcServerDefinitionBuilder. Runtime values are server-owned NPC values.")
-typealias NpcRuntimeDefinitionBuilder = NpcServerDefinitionBuilder
 
 @GameContentDsl
 class NpcCombatBuilder {
