@@ -58,7 +58,7 @@ class ContentApiBoundaryTest {
 
     @Test
     fun `independent skill modules do not import protocol player or engine bridges`() {
-        val root = Path.of("..").resolve("skills").normalize()
+        val root = Path.of("..").resolve("content").resolve("skills").normalize()
         val forbidden = listOf(
             "net.dodian.uber.game.model.entity.player.Client",
             "SkillEngineAccess",

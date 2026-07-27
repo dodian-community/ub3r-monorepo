@@ -49,7 +49,7 @@ tasks.register("verifySkillModuleDependencies") {
     group = "verification"
     description = "Rejects server dependencies from independently compiled skill modules and shared test fixtures."
     doLast {
-        val offenders = file("skills").walkTopDown()
+        val offenders = file("content/skills").walkTopDown()
             .filter { it.name == "build.gradle.kts" }
             .filter { it.readText().contains("project(\":game-server\")") }
             .toList()
@@ -93,7 +93,7 @@ tasks.register("verifyQuestModuleDependencies") {
     group = "verification"
     description = "Rejects server dependencies from independently compiled quest modules."
     doLast {
-        val offenders = file("quests").walkTopDown()
+        val offenders = file("content/quests").walkTopDown()
             .filter { it.name == "build.gradle.kts" }
             .filter { it.readText().contains("project(\":game-server\")") }
             .toList()
