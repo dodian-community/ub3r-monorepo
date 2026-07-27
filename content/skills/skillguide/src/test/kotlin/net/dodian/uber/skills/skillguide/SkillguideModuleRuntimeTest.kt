@@ -15,4 +15,14 @@ class SkillguideModuleRuntimeTest {
         assertTrue(SkillguideModule.guides.isNotEmpty())
         assertTrue(SkillguideModule.guides.any { it.skillName == "Attack" })
     }
+
+    @Test
+    fun `plugin owns guide book every skill button and every subtab`() {
+        val definition = SkillguideModule.definition
+        assertEquals(listOf(1856), definition.itemBindings.single().itemIds.toList())
+        assertEquals(29, definition.buttonBindings.size)
+        assertTrue(definition.buttonBindings.all { it.requiredInterfaceId == 8714 })
+        assertTrue(definition.buttonBindings.any { 95068 in it.rawButtonIds })
+        assertTrue(definition.buttonBindings.any { 34155 in it.rawButtonIds })
+    }
 }

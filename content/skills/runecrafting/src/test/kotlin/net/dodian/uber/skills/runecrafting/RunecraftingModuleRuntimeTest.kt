@@ -11,10 +11,10 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
-private const val AIR_ALTAR_OBJECT_ID = 2460
+private const val NATURE_ALTAR_OBJECT_ID = 34768
 private const val RUNE_ESSENCE = 1436
 
-private fun altarRef(id: Int = AIR_ALTAR_OBJECT_ID) = SkillObjectRef(id, SkillPosition(3200, 3200, 0))
+private fun altarRef(id: Int = NATURE_ALTAR_OBJECT_ID) = SkillObjectRef(id, SkillPosition(3200, 3200, 0))
 
 class RunecraftingModuleRuntimeTest {
     @Test
@@ -26,13 +26,15 @@ class RunecraftingModuleRuntimeTest {
     @Test
     fun `data loads all 3 altars`() {
         assertEquals(3, RunecraftingModule.altars.size)
-        assertTrue(RunecraftingModule.altars.any { it.objectId == AIR_ALTAR_OBJECT_ID })
+        assertTrue(RunecraftingModule.altars.any { it.objectId == NATURE_ALTAR_OBJECT_ID })
+        assertTrue(RunecraftingModule.altars.any { it.objectId == 34766 })
+        assertFalse(RunecraftingModule.altars.any { 14905 in it.objectIds || 14903 in it.objectIds })
     }
 
     @Test
     fun `crafting at an altar consumes essence and grants runes and xp`() {
-        val altar = RunecraftingModule.altars.single { it.objectId == AIR_ALTAR_OBJECT_ID }
-        val binding = RunecraftingModule.definition.objectBindings.single { AIR_ALTAR_OBJECT_ID in it.objectIds }
+        val altar = RunecraftingModule.altars.single { it.objectId == NATURE_ALTAR_OBJECT_ID }
+        val binding = RunecraftingModule.definition.objectBindings.single { NATURE_ALTAR_OBJECT_ID in it.objectIds }
         val player = FakeSkillPlayer(mapOf(RUNE_ESSENCE to 5)).apply { setLevel(Skill.RUNECRAFTING, 1) }
 
         val handled = binding.handler(SkillObjectInteraction(player, 1, altarRef()))
@@ -46,7 +48,7 @@ class RunecraftingModuleRuntimeTest {
 
     @Test
     fun `no essence refuses to craft`() {
-        val binding = RunecraftingModule.definition.objectBindings.single { AIR_ALTAR_OBJECT_ID in it.objectIds }
+        val binding = RunecraftingModule.definition.objectBindings.single { NATURE_ALTAR_OBJECT_ID in it.objectIds }
         val player = FakeSkillPlayer().apply { setLevel(Skill.RUNECRAFTING, 1) }
 
         val handled = binding.handler(SkillObjectInteraction(player, 1, altarRef()))
@@ -70,7 +72,7 @@ class RunecraftingModuleRuntimeTest {
 
     @Test
     fun `records last altar craft timestamp as a plugin attribute`() {
-        val binding = RunecraftingModule.definition.objectBindings.single { AIR_ALTAR_OBJECT_ID in it.objectIds }
+        val binding = RunecraftingModule.definition.objectBindings.single { NATURE_ALTAR_OBJECT_ID in it.objectIds }
         val player = FakeSkillPlayer(mapOf(RUNE_ESSENCE to 1)).apply { setLevel(Skill.RUNECRAFTING, 1) }
 
         binding.handler(SkillObjectInteraction(player, 1, altarRef()))

@@ -31,6 +31,16 @@ data class PluginCatalogEntry(
  * Runtime-scanned plugin module index with deterministic ordering and validation.
  */
 object ContentModuleIndex {
+    /**
+     * These legacy classes are retained only as traversal implementation references. Their
+     * routes are fully owned by the corresponding skill plugin and must never be dispatched.
+     */
+    private val retiredSkillLegacyObjectHandlers = setOf(
+        "net.dodian.uber.game.skill.agility.GnomeCourseObjectBindings",
+        "net.dodian.uber.game.skill.agility.BarbarianCourseObjectBindings",
+        "net.dodian.uber.game.skill.agility.WildernessCourseObjectBindings",
+        "net.dodian.uber.game.skill.agility.WerewolfCourseObjectBindings",
+    )
     private val logger = LoggerFactory.getLogger(ContentModuleIndex::class.java)
 
     private enum class IndexLifecycle {
@@ -63,7 +73,8 @@ object ContentModuleIndex {
         "net.dodian.uber.skills.farming", "net.dodian.uber.skills.firemaking", "net.dodian.uber.skills.fishing",
         "net.dodian.uber.skills.fletching", "net.dodian.uber.skills.herblore", "net.dodian.uber.skills.mining",
         "net.dodian.uber.skills.prayer", "net.dodian.uber.skills.runecrafting", "net.dodian.uber.skills.slayer",
-        "net.dodian.uber.skills.smithing", "net.dodian.uber.skills.thieving", "net.dodian.uber.skills.woodcutting",
+        "net.dodian.uber.skills.skillguide", "net.dodian.uber.skills.smithing", "net.dodian.uber.skills.thieving",
+        "net.dodian.uber.skills.woodcutting",
     )
     private val SCAN_PACKAGES = CANONICAL_SCAN_PACKAGES.distinct()
 
@@ -114,8 +125,16 @@ object ContentModuleIndex {
         for (clazz in scannedClasses) {
             val instance = try {
                 clazz.kotlin.objectInstance ?: continue
-            } catch (_: Throwable) {
-                continue
+            } catch (reflectionFailure: Throwable) {
+                // Kotlin file facades are part of package scanning but cannot have an object
+                // instance. Private Kotlin objects are valid modules, though, and reflection's
+                // objectInstance accessor cannot read them on recent JVMs.
+                if (clazz.name.endsWith("Kt")) continue
+                try {
+                    clazz.getDeclaredField("INSTANCE").apply { isAccessible = true }.get(null)
+                } catch (instanceFailure: Throwable) {
+                    throw IllegalStateException("Failed to initialize content module ${clazz.name}", instanceFailure)
+                }
             }
 
             val className = clazz.name
@@ -150,7 +169,7 @@ object ContentModuleIndex {
                     pluginKind = "interface-button"
                 }
                 is ObjectContent -> {
-                    if (enabled) discoveredObjects += (simpleName to instance)
+                    if (enabled && className !in retiredSkillLegacyObjectHandlers) discoveredObjects += (simpleName to instance)
                     pluginKind = "object-content"
                 }
                 is ItemContent -> {

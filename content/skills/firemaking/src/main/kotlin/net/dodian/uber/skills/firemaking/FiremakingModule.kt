@@ -21,17 +21,12 @@ data class FiremakingLogDef(
 )
 
 /**
- * Plugin-owned reference implementation for firemaking: light a log with a tinderbox
- * (spawns a temporary fire object, drops ashes once it burns out), or add another log
- * to an already-burning fire for straight experience.
+ * Baseline firemaking only consumes a log with a tinderbox and grants experience.
  */
 object FiremakingModule : SkillPlugin {
     val descriptor = SkillModuleDescriptor("skill.firemaking", "Firemaking")
 
     private const val TINDERBOX = 590
-    private const val FIRE_OBJECT_ID = 5249
-    private const val ASHES_ITEM_ID = 592
-    private const val ANIM_LIGHT_FIRE = 733
 
     val logs: List<FiremakingLogDef> by lazy { loadLogs() }
 
@@ -40,9 +35,6 @@ object FiremakingModule : SkillPlugin {
             itemOnItem(PolicyPreset.PRODUCTION, TINDERBOX, log.itemId) { interaction ->
                 lightFire(interaction.player, log)
             }
-        }
-        itemOnObject(PolicyPreset.PRODUCTION, FIRE_OBJECT_ID, itemIds = logs.map { it.itemId }.toIntArray()) { interaction ->
-            addLogToFire(interaction.player, interaction.itemId)
         }
     }
 
@@ -60,29 +52,8 @@ object FiremakingModule : SkillPlugin {
         }
         if (!player.inventory.remove(log.itemId, 1)) return false
         player.inventory.refresh()
-        player.actions.animate(ANIM_LIGHT_FIRE)
-        player.ui.message("You light the ${log.name}.")
         player.skills.gainXp(log.experience, Skill.FIREMAKING)
-        player.actions.triggerRandomEvent(log.experience)
-        val firePos = player.world.position
-        player.world.spawnTemporaryObject(FIRE_OBJECT_ID, log.durationTicks) {
-            player.world.dropItemAt(firePos, ASHES_ITEM_ID, 1)
-            player.ui.message("The fire has burnt out.")
-        }
         player.actions.stop()
-        return true
-    }
-
-    private fun addLogToFire(player: SkillPlayer, itemId: Int): Boolean {
-        val log = logs.firstOrNull { it.itemId == itemId } ?: return false
-        if (player.skills.current(Skill.FIREMAKING) < log.requiredLevel) {
-            player.ui.message("You need a firemaking level of ${log.requiredLevel} to burn ${log.name}.")
-            return true
-        }
-        if (!player.inventory.remove(log.itemId, 1)) return false
-        player.inventory.refresh()
-        player.skills.gainXp(log.experience, Skill.FIREMAKING)
-        player.ui.message("You add the ${log.name} to the fire.")
         return true
     }
 

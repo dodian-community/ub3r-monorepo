@@ -1,11 +1,9 @@
 package net.dodian.uber.skills.cooking
 
 import net.dodian.uber.game.api.plugin.skills.SkillItemOnObjectInteraction
-import net.dodian.uber.game.api.plugin.skills.SkillObjectInteraction
 import net.dodian.uber.game.api.plugin.skills.SkillObjectRef
 import net.dodian.uber.game.api.plugin.skills.SkillPosition
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.skills.api.SkillMultiSelection
 import net.dodian.uber.skills.testkit.FakeSkillPlayer
 import net.dodian.uber.skills.testkit.LiveSkillModuleFixture
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -71,42 +69,18 @@ class CookingModuleRuntimeTest {
     }
 
     @Test
-    fun `cooking a stack of raw items opens the quantity chatbox then cooks the chosen amount`() {
+    fun `cooking a stack uses the complete baseline inventory amount`() {
         val binding = CookingModule.definition.itemOnObjectBindings.single { RANGE_OBJECT_ID in it.objectIds }
         val player = FakeSkillPlayer(mapOf(RAW_SHRIMP to 4)).apply { setLevel(Skill.COOKING, 99) }
 
         binding.handler(SkillItemOnObjectInteraction(player, rangeRef(), RAW_SHRIMP, 0, 3214))
-        val menu = player.production.pending()!!
-        assertTrue(player.production.select(SkillMultiSelection(menu.key, menu.entries.single().recipe.key, 3)))
-        player.advanceTicks(9)
+        assertNull(player.production.pending())
+        player.advanceTicks(12)
 
-        assertEquals(1, player.amount(RAW_SHRIMP))
-        assertEquals(3, player.amount(COOKED_SHRIMP))
-        assertEquals(450, player.skills.experience(Skill.COOKING))
+        assertEquals(0, player.amount(RAW_SHRIMP))
+        assertEquals(4, player.amount(COOKED_SHRIMP))
+        assertEquals(600, player.skills.experience(Skill.COOKING))
         assertNull(player.activeActionName())
-    }
-
-    @Test
-    fun `object click cooks the first cookable item in the inventory`() {
-        val binding = CookingModule.definition.objectBindings.single { RANGE_OBJECT_ID in it.objectIds }
-        val player = FakeSkillPlayer(mapOf(2134 to 1)).apply { setLevel(Skill.COOKING, 99) }
-
-        val handled = binding.handler(SkillObjectInteraction(player, 1, rangeRef()))
-        assertTrue(handled)
-        player.advanceTicks(3)
-
-        assertEquals(0, player.amount(2134))
-        assertEquals(1, player.amount(2142))
-    }
-
-    @Test
-    fun `object click with nothing cookable reports there is nothing to cook`() {
-        val binding = CookingModule.definition.objectBindings.single { RANGE_OBJECT_ID in it.objectIds }
-        val player = FakeSkillPlayer()
-
-        binding.handler(SkillObjectInteraction(player, 1, rangeRef()))
-
-        assertEquals(listOf("You don't have anything to cook."), player.messages)
     }
 
     @Test

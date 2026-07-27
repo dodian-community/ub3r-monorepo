@@ -131,7 +131,7 @@ object FletchingModule : SkillPlugin {
     }
 
     private fun shaftRecipe(): SkillRecipe = skillRecipe("fletching.shafts", 52) {
-        output(15); material(1511); requirement(1); experience(5); animation(4433); delay(2)
+        output(15); material(1511); requirement(1); experience(50); animation(1248); delay(2)
         success("You carefully cut the wood into arrow shafts."); missingMaterials("You need another log to continue fletching.")
     }
 

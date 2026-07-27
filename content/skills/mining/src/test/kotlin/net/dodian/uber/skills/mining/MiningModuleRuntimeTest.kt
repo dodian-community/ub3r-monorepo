@@ -12,11 +12,11 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
-private const val COPPER_ROCK_OBJECT_ID = 7451
+private const val COPPER_ROCK_OBJECT_ID = 10943
 private const val BRONZE_PICKAXE = 1265
 private const val RUNE_PICKAXE = 1275
 private const val COPPER_ORE = 436
-private const val RUNE_ESSENCE_OBJECT_ID = 7471
+private const val RUNE_ESSENCE_OBJECT_ID = 34773
 private const val RUNE_ESSENCE_ITEM_ID = 1436
 private const val FIRST_GEM_IN_TABLE = 1623
 
@@ -30,16 +30,55 @@ class MiningModuleRuntimeTest {
     }
 
     @Test
-    fun `data loads all 10 rocks and 9 pickaxes`() {
-        assertEquals(10, MiningModule.rocks.size)
+    fun `data loads the baseline 9 rocks and 9 pickaxes`() {
+        assertEquals(9, MiningModule.rocks.size)
         assertEquals(9, MiningModule.pickaxes.size)
+        assertFalse(MiningModule.rocks.any { it.name == "silver" })
     }
 
     @Test
-    fun `yanille mine rock 11390 routes to iron mining`() {
-        val rock = MiningModule.rocks.firstOrNull { 11390 in it.objectIds }
+    fun `verified current cache iron ids replace baseline ids`() {
+        val rock = MiningModule.rocks.firstOrNull { 11365 in it.objectIds }
         assertEquals("iron", rock?.name)
         assertEquals(440, rock?.oreItemId)
+        assertEquals(listOf(11364, 11365), rock?.objectIds)
+        assertFalse(MiningModule.rocks.any { 7455 in it.objectIds })
+        assertFalse(MiningModule.rocks.any { 11390 in it.objectIds })
+    }
+
+    @Test
+    fun `all verified current cache rock aliases own option one routes`() {
+        val expectedIds = setOf(
+            34773,
+            10943, 11161,
+            11360, 11361,
+            11364, 11365,
+            11366, 11367,
+            11370, 11371, 36206,
+            11372, 11373,
+            11374, 11375, 36208,
+            11376, 11377,
+        )
+        val actualIds = MiningModule.rocks.flatMap { it.objectIds }.toSet()
+        assertEquals(expectedIds, actualIds)
+        expectedIds.forEach { objectId ->
+            assertEquals(
+                1,
+                MiningModule.definition.objectBindings.count { objectId in it.objectIds && it.option == 1 },
+                "expected exactly one Mining option=1 route for objectId=$objectId",
+            )
+        }
+    }
+
+    @Test
+    fun `coal runtime ids retain baseline behavior`() {
+        val coal = MiningModule.rocks.single { it.name == "coal" }
+        assertEquals(listOf(11366, 11367), coal.objectIds)
+        assertEquals(30, coal.requiredLevel)
+        assertEquals(5000L, coal.baseDelayMs)
+        assertEquals(453, coal.oreItemId)
+        assertEquals(420, coal.experience)
+        assertEquals(4, coal.restThreshold)
     }
 
     @Test

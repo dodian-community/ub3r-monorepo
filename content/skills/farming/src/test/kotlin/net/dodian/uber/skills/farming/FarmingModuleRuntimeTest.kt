@@ -18,4 +18,14 @@ class FarmingModuleRuntimeTest {
         assertTrue(FarmingModule.crops.isNotEmpty())
         assertTrue(FarmingModule.crops.any { it.name == "potato" })
     }
+
+    @Test
+    fun `transform root farming patch ids remain explicitly owned`() {
+        val expected = setOf(8552, 8553, 7848, 8151, 7965, 8554, 8555, 7849, 8152, 7580, 8556, 8557, 7850, 8153, 19147, 7962, 8388)
+        assertEquals(expected, FarmingModule.patchObjectIds.toSet())
+        expected.forEach { objectId ->
+            assertTrue(FarmingModule.definition.objectBindings.any { it.option == 1 && objectId in it.objectIds })
+            assertTrue(FarmingModule.definition.itemOnObjectBindings.any { objectId in it.objectIds })
+        }
+    }
 }

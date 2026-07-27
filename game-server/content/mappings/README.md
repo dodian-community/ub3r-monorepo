@@ -15,4 +15,6 @@ Due to client cache naming conventions (derived from original Jagex client termi
 
 ---
 
-
+Skill gameplay plugins deliberately use reviewed raw cache IDs in their own
+definitions. RSCM remains developer tooling for lookup and reverse lookup; it
+is not consulted for skill route registration or runtime dispatch.

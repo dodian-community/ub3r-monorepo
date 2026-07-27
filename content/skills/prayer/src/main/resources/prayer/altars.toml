@@ -6,16 +6,6 @@ object_id = 409
 offering_enabled = true
 
 [[altar]]
-key = "chaos"
-object_id = 411
-offering_enabled = true
-
-[[altar]]
-key = "ancient"
-object_id = 6552
-offering_enabled = false
-
-[[altar]]
 key = "restoration"
 object_id = 20377
 offering_enabled = false

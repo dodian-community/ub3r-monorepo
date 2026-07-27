@@ -1,139 +1,6 @@
 schema_version = 1
 
 [[target]]
-name = "man"
-target_type = "npc"
-id = 1
-level = 1
-experience = 80
-loot_items = [995]
-loot_chances = [100]
-loot_min_amounts = [500]
-loot_max_amounts = [500]
-
-[[target]]
-name = "man"
-target_type = "npc"
-id = 2
-level = 1
-experience = 80
-loot_items = [995]
-loot_chances = [100]
-loot_min_amounts = [500]
-loot_max_amounts = [500]
-
-[[target]]
-name = "man"
-target_type = "npc"
-id = 3
-level = 1
-experience = 80
-loot_items = [995]
-loot_chances = [100]
-loot_min_amounts = [500]
-loot_max_amounts = [500]
-
-[[target]]
-name = "man"
-target_type = "npc"
-id = 4
-level = 1
-experience = 80
-loot_items = [995]
-loot_chances = [100]
-loot_min_amounts = [500]
-loot_max_amounts = [500]
-
-[[target]]
-name = "man"
-target_type = "npc"
-id = 5
-level = 1
-experience = 80
-loot_items = [995]
-loot_chances = [100]
-loot_min_amounts = [500]
-loot_max_amounts = [500]
-
-[[target]]
-name = "man"
-target_type = "npc"
-id = 6
-level = 1
-experience = 80
-loot_items = [995]
-loot_chances = [100]
-loot_min_amounts = [500]
-loot_max_amounts = [500]
-
-[[target]]
-name = "man"
-target_type = "npc"
-id = 7
-level = 1
-experience = 80
-loot_items = [995]
-loot_chances = [100]
-loot_min_amounts = [500]
-loot_max_amounts = [500]
-
-[[target]]
-name = "man"
-target_type = "npc"
-id = 3078
-level = 1
-experience = 80
-loot_items = [995]
-loot_chances = [100]
-loot_min_amounts = [500]
-loot_max_amounts = [500]
-
-[[target]]
-name = "man"
-target_type = "npc"
-id = 3079
-level = 1
-experience = 80
-loot_items = [995]
-loot_chances = [100]
-loot_min_amounts = [500]
-loot_max_amounts = [500]
-
-[[target]]
-name = "man"
-target_type = "npc"
-id = 3080
-level = 1
-experience = 80
-loot_items = [995]
-loot_chances = [100]
-loot_min_amounts = [500]
-loot_max_amounts = [500]
-
-[[target]]
-name = "man"
-target_type = "npc"
-id = 3243
-level = 1
-experience = 80
-loot_items = [995]
-loot_chances = [100]
-loot_min_amounts = [500]
-loot_max_amounts = [500]
-
-[[target]]
-name = "man"
-target_type = "npc"
-id = 3244
-level = 1
-experience = 80
-loot_items = [995]
-loot_chances = [100]
-loot_min_amounts = [500]
-loot_max_amounts = [500]
-
-# Legacy ThievingData.FARMER (3086, level 10, 800xp, item 314 x2-5).
-[[target]]
 name = "farmer"
 target_type = "npc"
 id = 3086
@@ -144,7 +11,6 @@ loot_chances = [100]
 loot_min_amounts = [2]
 loot_max_amounts = [5]
 
-# Legacy ThievingData.MASTER_FARMER (3257, level 70, 1200xp, item 314 x4-10).
 [[target]]
 name = "master_farmer"
 target_type = "npc"
@@ -157,83 +23,27 @@ loot_min_amounts = [4]
 loot_max_amounts = [10]
 
 [[target]]
-name = "master_farmer"
-target_type = "npc"
-id = 3258
-level = 70
-experience = 1200
-loot_items = [314]
-loot_chances = [100]
-loot_min_amounts = [4]
-loot_max_amounts = [10]
-
-[[target]]
-name = "guard"
-target_type = "npc"
-id = 3010
-level = 40
-experience = 468
+name = "cage"
+target_type = "other"
+id = 20873
+level = 1
+experience = 150
 loot_items = [995]
 loot_chances = [100]
-loot_min_amounts = [1200]
-loot_max_amounts = [1200]
+loot_min_amounts = [20]
+loot_max_amounts = [50]
 
 [[target]]
-name = "guard"
-target_type = "npc"
-id = 3011
-level = 40
-experience = 468
+name = "cage_alt"
+target_type = "other"
+id = 20885
+level = 1
+experience = 150
 loot_items = [995]
 loot_chances = [100]
-loot_min_amounts = [1200]
-loot_max_amounts = [1200]
+loot_min_amounts = [20]
+loot_max_amounts = [50]
 
-[[target]]
-name = "guard"
-target_type = "npc"
-id = 3267
-level = 40
-experience = 468
-loot_items = [995]
-loot_chances = [100]
-loot_min_amounts = [1200]
-loot_max_amounts = [1200]
-
-[[target]]
-name = "knight"
-target_type = "npc"
-id = 3108
-level = 55
-experience = 843
-loot_items = [995]
-loot_chances = [100]
-loot_min_amounts = [2500]
-loot_max_amounts = [2500]
-
-[[target]]
-name = "paladin"
-target_type = "npc"
-id = 3104
-level = 70
-experience = 1517
-loot_items = [995]
-loot_chances = [100]
-loot_min_amounts = [4000]
-loot_max_amounts = [4000]
-
-[[target]]
-name = "hero"
-target_type = "npc"
-id = 3106
-level = 80
-experience = 2733
-loot_items = [995]
-loot_chances = [100]
-loot_min_amounts = [8000]
-loot_max_amounts = [8000]
-
-# Legacy ThievingData.BAKER_STALL (11730, level 10, 1000xp, item 2309 x1, respawn 12s = 20 ticks).
 [[target]]
 name = "baker_stall"
 target_type = "stall"
@@ -246,7 +56,6 @@ loot_min_amounts = [1]
 loot_max_amounts = [1]
 respawn_ticks = 20
 
-# Legacy ThievingData.FUR_STALL (11732, level 40, 1800xp, weighted 5-item table, respawn 25s = 42 ticks).
 [[target]]
 name = "fur_stall"
 target_type = "stall"
@@ -259,7 +68,6 @@ loot_min_amounts = [1, 1, 1, 1, 150]
 loot_max_amounts = [1, 1, 1, 1, 350]
 respawn_ticks = 42
 
-# Legacy ThievingData.SILVER_STALL (11734, level 65, 2500xp, weighted 6-item table, respawn 25s = 42 ticks).
 [[target]]
 name = "silver_stall"
 target_type = "stall"
@@ -272,7 +80,6 @@ loot_min_amounts = [1, 1, 1, 1, 1, 300]
 loot_max_amounts = [1, 1, 1, 1, 1, 600]
 respawn_ticks = 42
 
-# Legacy ThievingData.SPICE_STALL (11733, level 80, 4800xp, weighted 6-item table, respawn 35s = 58 ticks).
 [[target]]
 name = "spice_stall"
 target_type = "stall"
@@ -285,7 +92,6 @@ loot_min_amounts = [1, 1, 1, 1, 1, 1]
 loot_max_amounts = [1, 1, 1, 1, 1, 1]
 respawn_ticks = 58
 
-# Legacy ThievingData.GEM_STALL (11731, level 90, 5800xp, weighted 5-item table, respawn 38s = 63 ticks).
 [[target]]
 name = "gem_stall"
 target_type = "stall"
@@ -297,61 +103,3 @@ loot_chances = [2, 5, 8, 15, 100]
 loot_min_amounts = [1, 1, 1, 1, 500]
 loot_max_amounts = [1, 1, 1, 1, 850]
 respawn_ticks = 63
-
-[[target]]
-name = "tea_stall"
-target_type = "market_stall"
-id = 4877
-level = 5
-experience = 160
-loot_items = [712]
-loot_chances = [100]
-loot_min_amounts = [1]
-loot_max_amounts = [1]
-
-# Legacy ThievingData.CAGE (20873, level 1, 150xp, item 995 x20-50). type=OTHER: no object swap.
-[[target]]
-name = "cage"
-target_type = "chest"
-id = 20873
-level = 1
-experience = 150
-loot_items = [995]
-loot_chances = [100]
-loot_min_amounts = [20]
-loot_max_amounts = [50]
-
-# Legacy ThievingData.CAGE_ALT (20885, level 1, 150xp, item 995 x20-50) - a second cage id that
-# was dropped entirely during the migration (no row, no object binding at all).
-[[target]]
-name = "cage"
-target_type = "chest"
-id = 20885
-level = 1
-experience = 150
-loot_items = [995]
-loot_chances = [100]
-loot_min_amounts = [20]
-loot_max_amounts = [50]
-
-[[target]]
-name = "chest"
-target_type = "chest"
-id = 6847
-level = 1
-experience = 40
-loot_items = [995]
-loot_chances = [100]
-loot_min_amounts = [50]
-loot_max_amounts = [50]
-
-[[target]]
-name = "crate"
-target_type = "chest"
-id = 11729
-level = 1
-experience = 40
-loot_items = [995]
-loot_chances = [100]
-loot_min_amounts = [50]
-loot_max_amounts = [50]

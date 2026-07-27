@@ -46,6 +46,7 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
     private val throttleAcquiredAtMillis = mutableMapOf<String, Long>()
     val graphicsPlayed = mutableListOf<Pair<Int, SkillPosition>>()
     var positionValue = SkillPosition(3200, 3200, 0)
+    var resetPositionCalls = 0
     val openedInterfaces = mutableListOf<Int>()
     val chatboxInterfaces = mutableListOf<Int>()
     val itemModels = mutableListOf<Triple<Int, Int, Int>>()
@@ -199,11 +200,14 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
         override fun menuGrid(entries: List<SkillItemGridEntry>) { this@FakeSkillPlayer.menuGrid = entries }
         override fun npcDialogue(dialogueId: Int, npcId: Int) = Unit
         override fun varbit(id: Int, value: Int) { varbits[id] = value }
+        override fun skillGuide(skillId: Int, tab: Int) { openedInterfaces += 8714 }
+        override fun guideBook() { openedInterfaces += 8134 }
     }
     override val world = object : SkillWorld {
         override val position: SkillPosition get() = positionValue
         override fun distanceTo(x: Int, y: Int) = maxOf(kotlin.math.abs(position.x - x), kotlin.math.abs(position.y - y))
         override fun teleport(destination: SkillPosition) { positionValue = destination }
+        override fun resetPosition() { resetPositionCalls++ }
         override fun anchor(position: SkillPosition) { anchor = position }
         override fun face(position: SkillPosition) = Unit
         override fun graphic(id: Int, height: Int) { graphicsPlayed += id to positionValue }

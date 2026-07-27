@@ -54,7 +54,6 @@ object PrayerModule : SkillPlugin {
         if (!player.inventory.transaction { removeAt(interaction.itemSlot, bone.itemId) }) return false
         player.actions.animate(BURY_ANIMATION)
         player.skills.gainXp(bone.experience, Skill.PRAYER)
-        player.actions.triggerRandomEvent(bone.experience)
         player.ui.message("You bury the ${player.inventory.itemName(bone.itemId).lowercase()}")
         return true
     }
@@ -70,7 +69,7 @@ object PrayerModule : SkillPlugin {
                     return@onCycleSignal CycleSignal.stop()
                 }
                 actions.animate(ALTAR_ANIMATION)
-                world.graphic(ALTAR_GFX)
+                world.graphic(ALTAR_GFX, interaction.target.position)
                 val multiplier = 2.0 + (skills.current(Skill.FIREMAKING) + 1).toDouble() / 100
                 val experience = (bone.experience * multiplier).toInt()
                 skills.gainXp(experience, Skill.PRAYER)

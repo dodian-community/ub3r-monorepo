@@ -115,7 +115,7 @@ object FishingModule : SkillPlugin {
         player.inventory.add(itemId, 1)
         player.actions.logGathering(itemId, 1, "Fishing")
         player.skills.gainXp(experience, Skill.FISHING)
-        player.actions.triggerRandomEvent(experience)
+        player.actions.triggerRandomEvent(spot.experience)
         player.ui.message("You fish up some ${player.inventory.itemName(itemId).lowercase().replace("raw ", "")}.")
     }
 

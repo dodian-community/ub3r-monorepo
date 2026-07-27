@@ -5,7 +5,7 @@ schema_version = 1
 
 [[tree]]
 name = "normal"
-objectIds = "1276,1277,1278,1279,1280,1330,1332,2409,3033,3034,3035,3036,3879,3881,3882,3883,1315,1316,1318,1319,1282,1283,1284,1285,1286,1287,1289,1290,1291,1365,1383,1384,5902,5903,5904"
+objectIds = "1276,1277,1278,1279,1280,1330,1332,2409,3879,3881,3882,3883,1318,1319,1282,1283,1284,1285,1286,1287,1289,1290,1291,1365,1383,1384,5902,5903,5904"
 logItemId = 1511
 requiredLevel = 1
 experience = 100
@@ -13,7 +13,7 @@ baseDelayMs = 1800
 
 [[tree]]
 name = "oak"
-objectIds = "1281,3037,10820"
+objectIds = "10820,4533,4540,9734,8463,8464,8465,8466,8467"
 logItemId = 1521
 requiredLevel = 15
 experience = 165
@@ -21,7 +21,7 @@ baseDelayMs = 2400
 
 [[tree]]
 name = "willow"
-objectIds = "1308,5551,5552,10819,10829,10831,10833"
+objectIds = "10819,10829,10831,10833"
 logItemId = 1519
 requiredLevel = 30
 experience = 285
@@ -29,7 +29,7 @@ baseDelayMs = 3200
 
 [[tree]]
 name = "maple"
-objectIds = "1307,4674,10832"
+objectIds = "4674,10832,36681,36682,40754,40755,4535,5126,8435,8436,8437,8438,8439,8440,8441,8442,8443,8444"
 logItemId = 1517
 requiredLevel = 45
 experience = 425
@@ -37,7 +37,7 @@ baseDelayMs = 4600
 
 [[tree]]
 name = "yew"
-objectIds = "1309,1754,10822"
+objectIds = "10822"
 logItemId = 1515
 requiredLevel = 60
 experience = 735
@@ -45,7 +45,7 @@ baseDelayMs = 5600
 
 [[tree]]
 name = "magic"
-objectIds = "1306,1762,10834"
+objectIds = "10834"
 logItemId = 1513
 requiredLevel = 75
 experience = 1075

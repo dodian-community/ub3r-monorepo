@@ -23,17 +23,14 @@ data class RunecraftingAltarDef(
 }
 
 /**
- * Plugin-owned reference implementation for altar rune-crafting. Rune pouches
- * (fill/empty/check) stay in game-server: they're wired straight from raw item-click
- * packet listeners rather than the skill plugin registry, and key off Player-scoped
- * pouch arrays that aren't part of the portable [SkillPlayer] surface.
+ * Plugin-owned reference implementation for altar rune-crafting.
  */
 object RunecraftingModule : SkillPlugin {
     val descriptor = SkillModuleDescriptor("skill.runecrafting", "Runecrafting")
 
     const val RUNE_ESSENCE_ID = 1436
 
-    /** Last altar-craft timestamp; read by game-server's legacy pouch-fill anti-cheat check. */
+    /** Last altar-craft timestamp for the plugin-owned pouch interaction guard. */
     val LAST_ALTAR_CRAFT_KEY: ContentAttributeKey<Long> = ContentAttributeKey("skill.runecrafting", "lastAltarCraftAtMillis")
 
     val altars: List<RunecraftingAltarDef> by lazy { loadAltars() }
@@ -65,7 +62,9 @@ object RunecraftingModule : SkillPlugin {
             return false
         }
 
-        val bonusRuneCount = (0 until essenceCount).count { player.random.chance(50, 100) }
+        // Legacy rolls once per essence with a level-scaled percentage: (level + 1) / 2.
+        val bonusChancePercent = (player.skills.current(Skill.RUNECRAFTING) + 1) / 2
+        val bonusRuneCount = (0 until essenceCount).count { player.random.chance(bonusChancePercent, 100) }
         val totalRunes = essenceCount + bonusRuneCount
         val totalExperience = altar.experiencePerEssence * essenceCount
 
@@ -75,7 +74,7 @@ object RunecraftingModule : SkillPlugin {
         }
         if (!committed) return false
 
-        player.attributes.put(LAST_ALTAR_CRAFT_KEY, System.currentTimeMillis())
+        player.attributes.put(LAST_ALTAR_CRAFT_KEY, player.clock.nowMillis())
         player.actions.animate(791)
         player.skills.gainXp(totalExperience, Skill.RUNECRAFTING)
         player.actions.triggerRandomEvent(totalExperience)

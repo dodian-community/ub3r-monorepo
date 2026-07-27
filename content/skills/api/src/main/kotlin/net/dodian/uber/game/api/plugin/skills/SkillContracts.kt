@@ -157,6 +157,10 @@ interface SkillUi {
     fun menuGrid(entries: List<SkillItemGridEntry>)
     fun npcDialogue(dialogueId: Int, npcId: Int)
     fun varbit(id: Int, value: Int)
+    /** Opens an existing client skill-guide page without exposing Client to plugin content. */
+    fun skillGuide(skillId: Int, tab: Int = 0)
+    /** Opens the guide-book item page. */
+    fun guideBook()
 }
 
 data class SkillItemGridEntry(val itemId: Int, val amount: Int)
@@ -165,6 +169,8 @@ interface SkillWorld {
     val position: SkillPosition
     fun distanceTo(x: Int, y: Int): Int
     fun teleport(destination: SkillPosition)
+    /** Restores the player to the engine's configured safe/default position. */
+    fun resetPosition()
     fun anchor(position: SkillPosition)
     fun face(position: SkillPosition)
     /** Plays graphic [id] at the player's own position. */

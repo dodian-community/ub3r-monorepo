@@ -52,6 +52,7 @@ import net.dodian.uber.skills.api.SkillMultiSelection
 import net.dodian.uber.skills.runtime.SkillRecipePlanner
 import net.dodian.uber.game.engine.util.Misc
 import net.dodian.uber.game.model.entity.Entity
+import net.dodian.uber.game.skill.skillguide.SkillGuide
 
 /** Engine-only protocol adapter. Public content receives [SkillPlayer], never [Client]. */
 internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlayer {
@@ -164,11 +165,14 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
             client.setMenuItems(entries.map { it.itemId }.toIntArray(), entries.map { it.amount }.toIntArray())
         override fun npcDialogue(dialogueId: Int, npcId: Int) = client.startNpcDialogue(dialogueId, npcId)
         override fun varbit(id: Int, value: Int) = client.varbit(id, value)
+        override fun skillGuide(skillId: Int, tab: Int) = SkillGuide.open(client, skillId, tab)
+        override fun guideBook() = SkillGuide.openBook(client)
     }
     override val world = object : SkillWorld {
         override val position: SkillPosition get() = client.position.toSkillPosition()
         override fun distanceTo(x: Int, y: Int) = client.distanceToPoint(x, y)
         override fun teleport(destination: SkillPosition) = client.transport(destination.toPosition())
+        override fun resetPosition() = client.resetPos()
         override fun anchor(position: SkillPosition) = client.setInteractionAnchor(position.x, position.y, position.z)
         override fun face(position: SkillPosition) = client.setFocus(position.x, position.y)
         override fun graphic(id: Int, height: Int) = client.stillgfx(id, client.position, height)

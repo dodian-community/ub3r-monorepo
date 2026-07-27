@@ -60,3 +60,27 @@ delta_x = 0
 delta_y = -38
 duration_ms = 11400
 animation_id = 904
+
+[[obstacle]]
+course = "werewolf"
+name = "zipline_alt_one"
+object_id = 11645
+required_level = 60
+experience = 1500
+movement_type = "run"
+delta_x = 0
+delta_y = -38
+duration_ms = 11400
+animation_id = 904
+
+[[obstacle]]
+course = "werewolf"
+name = "zipline_alt_two"
+object_id = 11646
+required_level = 60
+experience = 1500
+movement_type = "run"
+delta_x = 0
+delta_y = -38
+duration_ms = 11400
+animation_id = 904

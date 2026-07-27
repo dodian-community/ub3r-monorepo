@@ -48,10 +48,14 @@ object AgilityModule : SkillPlugin {
     val obstacles: List<AgilityObstacleDef> by lazy { loadObstacles() }
 
     private val obstacleObjectIds: IntArray by lazy { obstacles.map { it.objectId }.distinct().toIntArray() }
+    private val werewolfEntryGateId = 11636
 
     override val definition: SkillPluginDefinition = skillPlugin("Agility", Skill.AGILITY) {
         objectClick(preset = PolicyPreset.GATHERING, option = 1, *obstacleObjectIds) { interaction ->
             crossObstacle(interaction)
+        }
+        objectClick(preset = PolicyPreset.DIALOGUE, option = 1, werewolfEntryGateId) { interaction ->
+            enterWerewolfCourse(interaction)
         }
         itemClick(preset = PolicyPreset.DIALOGUE, option = 1, AGILITY_TICKET_ID) { interaction ->
             exchangeTickets(interaction.player)
@@ -110,6 +114,18 @@ object AgilityModule : SkillPlugin {
                     finishObstacle(player, obstacle)
                 }
         }
+        return true
+    }
+
+    private fun enterWerewolfCourse(interaction: SkillObjectInteraction): Boolean {
+        val player = interaction.player
+        if (player.skills.current(Skill.AGILITY) < 60) {
+            player.ui.npcDialogue(dialogueId = 616, npcId = 5928)
+            return true
+        }
+        player.world.replaceObject(interaction.target, replacementId = werewolfEntryGateId, restoreTicks = 10, type = 2)
+        player.ui.npcDialogue(dialogueId = 601, npcId = 5928)
+        player.world.teleport(SkillPosition(3549, 9865, 0))
         return true
     }
 

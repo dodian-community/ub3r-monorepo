@@ -44,7 +44,9 @@ object CookingModule : SkillPlugin {
     private const val COOKING_GAUNTLETS_ITEM_ID = 775
     private const val HEAD_SLOT = 0
     private const val HANDS_SLOT = 9
-    private val rangeObjectIds = intArrayOf(26181, 114, 4172, 5249, 2732, 2728, 9682, 12269, 8750)
+    // Current-cache loc mappings: Lumbridge (114), current world range (26181), and the
+    // mapped cooking-range variant (4172).  The old 2728/2781 ids are now a bunkbed/null.
+    private val rangeObjectIds = intArrayOf(114, 4172, 26181)
 
     private val activeActionKey = ContentAttributeKey<SkillActionHandle>("skill.cooking", "activeAction")
     private val remainingKey = ContentAttributeKey<Int>("skill.cooking", "remaining")
@@ -57,18 +59,7 @@ object CookingModule : SkillPlugin {
                 burnSeaweedToAsh(interaction.player)
             } else {
                 interaction.player.world.anchor(interaction.position)
-                promptQuantity(interaction.player, interaction.itemId)
-            }
-            true
-        }
-
-        objectClick(preset = PolicyPreset.PRODUCTION, option = 1, *rangeObjectIds) { interaction ->
-            val itemId = firstCookableInInventory(interaction.player)
-            if (itemId == -1) {
-                interaction.player.ui.message("You don't have anything to cook.")
-            } else {
-                interaction.player.world.anchor(interaction.position)
-                promptQuantity(interaction.player, itemId)
+                startCooking(interaction.player, interaction.itemId, interaction.player.inventory.amount(interaction.itemId))
             }
             true
         }
@@ -90,11 +81,7 @@ object CookingModule : SkillPlugin {
     fun firstCookableInInventory(player: SkillPlayer): Int =
         recipes.map { it.rawItemId }.firstOrNull { player.inventory.amount(it) > 0 } ?: -1
 
-    /**
-     * Entry point for both "use item on range" and "click range" — cooks a single item
-     * outright when that's all the player is carrying, otherwise opens the "how many
-     * would you like to cook?" chatbox instead of silently cooking the whole stack.
-     */
+    /** Kept for callers that intentionally request a bounded batch; range use cooks the full stack. */
     fun promptQuantity(player: SkillPlayer, itemId: Int): Boolean {
         val recipe = recipes.firstOrNull { it.rawItemId == itemId } ?: return false
         val available = player.inventory.amount(itemId)

@@ -26,13 +26,14 @@ class ThievingModuleRuntimeTest {
 
     @Test
     fun `toml targets are loaded`() {
-        assertTrue(ThievingModule.targets.isNotEmpty())
-        assertTrue(ThievingModule.targets.any { it.name == "man" })
+        assertEquals(9, ThievingModule.targets.size)
+        assertTrue(ThievingModule.targets.any { it.name == "farmer" })
+        assertFalse(ThievingModule.targets.any { it.name == "man" })
     }
 
     @Test
-    fun `cage_alt 20885 is registered as a chest target`() {
-        assertTrue(ThievingModule.targets.any { it.id == 20885 && it.targetType == "chest" })
+    fun `cage_alt 20885 is registered as the baseline other target`() {
+        assertTrue(ThievingModule.targets.any { it.id == 20885 && it.targetType == "other" })
     }
 
     // Regression test for the reported bug: clicking the Yanille chest produced no loot message,
@@ -47,7 +48,7 @@ class ThievingModuleRuntimeTest {
         val handled = binding.handler(SkillObjectInteraction(player, 1, target))
 
         assertTrue(handled)
-        assertTrue(player.messages.any { it.startsWith("You find") || it.startsWith("You have received") })
+        assertTrue(player.messages.any { it.startsWith("You find") || it.startsWith("You have recieved") })
         assertEquals(listOf(444 to target.position), player.graphicsPlayed)
         val replacement = player.replacedObjects.single()
         assertEquals(EMPTY_CHEST_OBJECT_ID, replacement.second)
@@ -68,15 +69,15 @@ class ThievingModuleRuntimeTest {
 
     @Test
     fun `stealing from a stall swaps to the empty stall id with the tile's face`() {
-        val binding = ThievingModule.definition.objectBindings.single { it.option == 1 && FUR_STALL_OBJECT_ID in it.objectIds }
+        val binding = ThievingModule.definition.objectBindings.single { it.option == 2 && FUR_STALL_OBJECT_ID in it.objectIds }
         val player = FakeSkillPlayer().apply { setLevel(Skill.THIEVING, 99) }
         // One of the legacy per-tile stall face lookup coordinates (expected face 0).
         val target = SkillObjectRef(FUR_STALL_OBJECT_ID, SkillPosition(2658, 3297, 0))
 
-        val handled = binding.handler(SkillObjectInteraction(player, 1, target))
+        val handled = binding.handler(SkillObjectInteraction(player, 2, target))
 
         assertTrue(handled)
-        assertTrue(player.messages.any { it.startsWith("You steal from") })
+        assertTrue(player.messages.any { it.startsWith("You receive") })
         assertEquals(634, player.replacedObjects.single().second)
     }
 }

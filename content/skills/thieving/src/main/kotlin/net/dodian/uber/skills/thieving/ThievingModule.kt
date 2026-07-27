@@ -46,13 +46,8 @@ object ThievingModule : SkillPlugin {
 
     private val npcIds by lazy { targets.filter { it.targetType == "npc" }.map { it.id }.toIntArray() }
 
-    // Stalls and chests share the same simple steal action; both live on the same click option
-    // as their respective real client-defined object (varies per object), so the handler is
-    // registered on both options 1 and 2 for these ids.
-    private val stealIds by lazy { targets.filter { it.targetType == "stall" || it.targetType == "chest" }.map { it.id }.toIntArray() }
-
-    // Market stalls (e.g. the tea stall) only expose their steal option at option 2.
-    private val marketStallIds by lazy { targets.filter { it.targetType == "market_stall" }.map { it.id }.toIntArray() }
+    private val stallIds by lazy { targets.filter { it.targetType == "stall" }.map { it.id }.toIntArray() }
+    private val cageIds = intArrayOf(20873, 20885)
 
     // Object 375 is reused at two unrelated real-world locations for two distinct one-off reward
     // chests (legacy content.objects.impl.thieving.ChestObjects); 378 is the empty/looted state
@@ -76,38 +71,18 @@ object ThievingModule : SkillPlugin {
                 pickpocketNpc(interaction)
             }
         }
-        if (stealIds.isNotEmpty()) {
-            objectClick(preset = PolicyPreset.GATHERING, option = 1, *stealIds) { interaction ->
-                stealFromTarget(interaction)
-            }
-            objectClick(preset = PolicyPreset.GATHERING, option = 2, *stealIds) { interaction ->
-                stealFromTarget(interaction)
-            }
-        }
-        if (marketStallIds.isNotEmpty()) {
-            objectClick(preset = PolicyPreset.GATHERING, option = 2, *marketStallIds) { interaction ->
-                stealFromTarget(interaction)
-            }
-        }
+        // Exact legacy options: cages are first-click (the alternate cage also supports second),
+        // while stalls are second-click only.  The remaining historical IDs were handled no-ops.
+        objectClick(preset = PolicyPreset.GATHERING, option = 1, *cageIds) { stealFromTarget(it) }
+        objectClick(preset = PolicyPreset.GATHERING, option = 2, 20885, *stallIds) { stealFromTarget(it) }
+        objectClick(preset = PolicyPreset.GATHERING, option = 1, 6847) { true }
+        objectClick(preset = PolicyPreset.GATHERING, option = 2, 11729, 4877) { true }
         objectClick(preset = PolicyPreset.GATHERING, option = 1, SPECIAL_CHEST_OBJECT_ID) { interaction ->
             openSpecialChest(interaction)
-        }
-        objectClick(preset = PolicyPreset.GATHERING, option = 2, SPECIAL_CHEST_OBJECT_ID) { interaction ->
-            openSpecialChest(interaction)
-        }
-        objectClick(preset = PolicyPreset.GATHERING, option = 1, EMPTY_CHEST_OBJECT_ID) { interaction ->
-            interaction.player.ui.message("This chest is empty!")
-            true
         }
         objectClick(preset = PolicyPreset.GATHERING, option = 2, EMPTY_CHEST_OBJECT_ID) { interaction ->
             interaction.player.ui.message("This chest is empty!")
             true
-        }
-        objectClick(preset = PolicyPreset.GATHERING, option = 1, *plunderObjectIds) { interaction ->
-            pyramidPlunderPlaceholder(interaction)
-        }
-        objectClick(preset = PolicyPreset.GATHERING, option = 2, *plunderObjectIds) { interaction ->
-            pyramidPlunderPlaceholder(interaction)
         }
     }
 
@@ -143,7 +118,7 @@ object ThievingModule : SkillPlugin {
         val player = interaction.player
         val target = targets.firstOrNull { it.id == interaction.npc.id } ?: return false
         if (player.skills.current(Skill.THIEVING) < target.level) {
-            player.ui.message("You need level ${target.level} thieving to pickpocket this target.")
+            player.ui.message("You need a thieving level of ${target.level} to steal from ${target.name.replace('_', ' ')}s.")
             return true
         }
         if (!player.actions.tryThrottle(THIEVING_THROTTLE_KEY, 2000L)) {
@@ -158,7 +133,7 @@ object ThievingModule : SkillPlugin {
         player.actions.logGathering(itemId, amount, "Thieving")
         player.skills.gainXp(target.experience, Skill.THIEVING)
         player.actions.triggerRandomEvent(target.experience)
-        player.ui.message("You pickpocket the ${target.name}.")
+        player.ui.message("You receive ${article(player.inventory.itemName(itemId))} ${player.inventory.itemName(itemId).lowercase()}")
         return true
     }
 
@@ -166,7 +141,7 @@ object ThievingModule : SkillPlugin {
         val player = interaction.player
         val target = targets.firstOrNull { it.id == interaction.target.id } ?: return false
         if (player.skills.current(Skill.THIEVING) < target.level) {
-            player.ui.message("You need level ${target.level} thieving to steal from this.")
+            player.ui.message("You need a thieving level of ${target.level} to steal from ${target.name.replace('_', ' ')}s.")
             return true
         }
         if (!player.actions.tryThrottle(THIEVING_THROTTLE_KEY, 2000L)) {
@@ -184,7 +159,7 @@ object ThievingModule : SkillPlugin {
         player.actions.logGathering(itemId, amount, "Thieving")
         player.skills.gainXp(target.experience, Skill.THIEVING)
         player.actions.triggerRandomEvent(target.experience)
-        player.ui.message("You steal from the ${target.name}.")
+        player.ui.message("You receive ${article(player.inventory.itemName(itemId))} ${player.inventory.itemName(itemId).lowercase()}")
         if (isStall && target.respawnTicks > 0) {
             val face = stallFace(interaction.position.x, interaction.position.y)
             if (face >= 0) {
@@ -223,7 +198,7 @@ object ThievingModule : SkillPlugin {
             }
             position.x == LEGENDS_CHEST_X && position.y == LEGENDS_CHEST_Y -> {
                 if (!player.profile.premium) {
-                    player.ui.message("Only premium members can open this chest.")
+                    player.world.resetPosition()
                     return true
                 }
                 lootSpecialChest(
@@ -261,11 +236,11 @@ object ThievingModule : SkillPlugin {
     ): Boolean {
         val player = interaction.player
         if (player.skills.current(Skill.THIEVING) < requiredLevel) {
-            player.ui.message("You must be level $requiredLevel thieving to open this chest.")
+            player.ui.message("You must be level $requiredLevel thieving to open this chest")
             return true
         }
         if (player.inventory.freeSlots() < 1) {
-            player.ui.message("You need at least one free inventory slot!")
+            player.ui.message("You need atleast one free inventory slot!")
             return true
         }
         if (!player.actions.tryThrottle(throttleKey, 1200L)) {
@@ -288,8 +263,8 @@ object ThievingModule : SkillPlugin {
         player.actions.logGathering(grantedItemId, grantedAmount, "Thieving")
         if (rolledRare) {
             val itemName = player.inventory.itemName(grantedItemId)
-            player.ui.message("You have received a $itemName!")
-            player.actions.yell("[Server] - ${player.profile.name} has just received from the $chestName chest a $itemName")
+            player.ui.message("You have recieved a $itemName!")
+            player.actions.yell("[Server] - ${player.profile.name} has just received from the $chestName chest a  $itemName")
         } else {
             player.ui.message("You find $grantedAmount coins inside the chest")
         }
@@ -302,9 +277,12 @@ object ThievingModule : SkillPlugin {
         return true
     }
 
-    private fun pyramidPlunderPlaceholder(interaction: SkillObjectInteraction): Boolean {
-        interaction.player.ui.message("Pyramid Plunder is being restored - check back soon!")
-        return true
+    private fun article(itemName: String): String = when {
+        itemName.startsWith("a", ignoreCase = true) || itemName.startsWith("e", ignoreCase = true) ||
+            itemName.startsWith("i", ignoreCase = true) || itemName.startsWith("o", ignoreCase = true) ||
+            itemName.startsWith("u", ignoreCase = true) -> if (itemName.endsWith("s", ignoreCase = true)) "some" else "an"
+        itemName.endsWith("s", ignoreCase = true) -> "some"
+        else -> "a"
     }
 
     private fun parseIntArray(value: String): IntArray = value.split(",").map { it.trim().toInt() }.toIntArray()

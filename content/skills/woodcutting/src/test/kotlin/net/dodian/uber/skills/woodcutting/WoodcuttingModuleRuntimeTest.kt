@@ -8,6 +8,7 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.skills.testkit.FakeSkillPlayer
 import net.dodian.uber.skills.testkit.LiveSkillModuleFixture
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -31,6 +32,26 @@ class WoodcuttingModuleRuntimeTest {
         assertEquals(6, WoodcuttingModule.trees.size)
         assertEquals(9, WoodcuttingModule.axes.size)
         assertTrue(WoodcuttingModule.trees.first { it.name == "normal" }.objectIds.contains(NORMAL_TREE_OBJECT_ID))
+    }
+
+    @Test
+    fun `tree tiers use named current cache ids and preserve baseline behavior`() {
+        val oak = WoodcuttingModule.trees.single { it.name == "oak" }
+        val willow = WoodcuttingModule.trees.single { it.name == "willow" }
+        val maple = WoodcuttingModule.trees.single { it.name == "maple" }
+        val yew = WoodcuttingModule.trees.single { it.name == "yew" }
+        val magic = WoodcuttingModule.trees.single { it.name == "magic" }
+
+        assertEquals(setOf(10820, 4533, 4540, 9734, 8463, 8464, 8465, 8466, 8467), oak.objectIds.toSet())
+        assertEquals(setOf(10819, 10829, 10831, 10833), willow.objectIds.toSet())
+        assertTrue(4674 in maple.objectIds)
+        assertEquals(listOf(10822), yew.objectIds)
+        assertEquals(listOf(10834), magic.objectIds)
+        assertEquals(735, yew.experience)
+        assertEquals(1075, magic.experience)
+
+        val runtimeIds = WoodcuttingModule.trees.flatMap { it.objectIds }.toSet()
+        assertFalse(runtimeIds.any { it in setOf(1281, 3037, 1308, 5551, 5552, 1307, 1309, 1754, 1306, 1762) })
     }
 
     @Test

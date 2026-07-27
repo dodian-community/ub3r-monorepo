@@ -27,14 +27,14 @@ object SlayerModule : SkillPlugin {
     val descriptor = SkillModuleDescriptor("skill.slayer", "Slayer")
     val tasks: List<SlayerTaskDef> by lazy { loadTasks() }
 
-    private val masterNpcIds = intArrayOf(402, 403, 404)
+    // Master conversations and assignment selection remain on the legacy route until the
+    // complete 34-task dialogue/state machine is transferred.  Registering a simplified
+    // plugin handler here shadowed those routes (and used the wrong Duradel id, 404 vs 405).
+    private val masterNpcIds = intArrayOf(402, 403, 405)
     private const val ENCHANTED_GEM_ID = 4155
     private val slayerMaskIds = intArrayOf(11784, 11864, 11865)
 
     override val definition: SkillPluginDefinition = skillPlugin("Slayer", Skill.SLAYER) {
-        npcClick(preset = PolicyPreset.GATHERING, option = 1, *masterNpcIds) { interaction ->
-            talkToMaster(interaction)
-        }
         itemClick(preset = PolicyPreset.DIALOGUE, option = 1, ENCHANTED_GEM_ID) { interaction ->
             checkGemTask(interaction)
         }
@@ -63,12 +63,6 @@ object SlayerModule : SkillPlugin {
         version = descriptor.version,
         maturity = ContentMaturity.STABLE,
     )
-
-    private fun talkToMaster(interaction: SkillNpcInteraction): Boolean {
-        val player = interaction.player
-        player.ui.message("Slayer masters can assign you tasks.")
-        return true
-    }
 
     private fun checkGemTask(interaction: SkillItemInteraction): Boolean {
         val task = interaction.player.slayerTask
