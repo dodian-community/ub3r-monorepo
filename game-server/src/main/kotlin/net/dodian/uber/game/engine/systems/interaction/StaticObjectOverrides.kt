@@ -64,13 +64,19 @@ object StaticObjectOverrides {
             }
         }
 
+    // Half-width of the client's loaded map region (104 tiles wide, centered on the viewer), so a
+    // player can't walk into an already-loaded area and see the original, un-overridden cache
+    // object before the override reaches them. Was previously 32, which left objects 33-52 tiles
+    // out unreplayed on region entry.
+    private const val LOADED_MAP_HALF_WIDTH = 52
+
     @JvmStatic
     fun replayTo(viewer: Client) {
         val pos = viewer.position ?: return
         for (override in overrides) {
             val oPos = override.position
             if (oPos.z != pos.z) continue
-            if (kotlin.math.abs(oPos.x - pos.x) > 32 || kotlin.math.abs(oPos.y - pos.y) > 32) continue
+            if (kotlin.math.abs(oPos.x - pos.x) > LOADED_MAP_HALF_WIDTH || kotlin.math.abs(oPos.y - pos.y) > LOADED_MAP_HALF_WIDTH) continue
             viewer.ReplaceObject2(
                 oPos,
                 override.replacementObjectId,

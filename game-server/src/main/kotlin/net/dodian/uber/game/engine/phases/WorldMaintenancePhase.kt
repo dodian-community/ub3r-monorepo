@@ -5,6 +5,7 @@ import net.dodian.uber.game.engine.processing.ItemProcessor
 import net.dodian.uber.game.engine.processing.PlunderDoorProcessor
 import net.dodian.uber.game.engine.processing.ShopProcessor
 import net.dodian.uber.game.engine.systems.world.WorldMaintenanceService
+import net.dodian.uber.game.model.objects.GlobalObject
 
 class WorldMaintenancePhase(
     private val plunderDoor: PlunderDoorProcessor,
@@ -24,6 +25,11 @@ class WorldMaintenancePhase(
 
     fun runShops() {
         shopProcessor.run()
+    }
+
+    /** Single world-level sweep of expired dynamic objects - see [GlobalObject.sweepExpired]. */
+    fun runGlobalObjectSweep() {
+        GlobalObject.sweepExpired()
     }
 
     fun runWorldDbInputBuild(cycle: Long) {

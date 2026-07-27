@@ -5373,7 +5373,7 @@ public class Client extends Player implements Runnable {
         /* Untradeable items prio 1! */
         if (!Ground.untradeable_items.isEmpty())
             for (GroundItem item : Ground.untradeable_items) {
-                if (item.isTaken() || dbId != item.playerId || !isWithinDistance(getPosition().getX(), getPosition().getY(), item.x, item.y, 104))
+                if (item.isTaken() || dbId != item.playerId || getPosition().getZ() != item.z || !isWithinDistance(getPosition().getX(), getPosition().getY(), item.x, item.y, 104))
                     continue;
                 send(new RemoveGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
                 send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
@@ -5381,7 +5381,7 @@ public class Client extends Player implements Runnable {
         /* Tradeable items prio 2! */
         if (!Ground.tradeable_items.isEmpty())
             for (GroundItem item : Ground.tradeable_items) {
-                if (item.isTaken() || (item.playerId != dbId && !item.isVisible()) || !isWithinDistance(getPosition().getX(), getPosition().getY(), item.x, item.y, 104))
+                if (item.isTaken() || (item.playerId != dbId && !item.isVisible()) || getPosition().getZ() != item.z || !isWithinDistance(getPosition().getX(), getPosition().getY(), item.x, item.y, 104))
                     continue;
                 send(new RemoveGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
                 send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
@@ -5389,7 +5389,7 @@ public class Client extends Player implements Runnable {
         /* Static ground items prio last! */
         if (!Ground.ground_items.isEmpty())
             for (GroundItem item : Ground.ground_items) {
-                if (item.isTaken() || !item.visible || !isWithinDistance(getPosition().getX(), getPosition().getY(), item.x, item.y, 104))
+                if (item.isTaken() || !item.visible || getPosition().getZ() != item.z || !isWithinDistance(getPosition().getX(), getPosition().getY(), item.x, item.y, 104))
                     continue;
                 send(new RemoveGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));
                 send(new CreateGroundItem(new GameItem(item.id, item.amount), new Position(item.x, item.y, item.z)));

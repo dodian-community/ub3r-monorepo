@@ -20,7 +20,6 @@ import net.dodian.uber.game.engine.config.gameWorldId
 import net.dodian.uber.game.engine.systems.follow.FollowPathfindingTelemetry
 import net.dodian.uber.game.engine.systems.follow.FollowService
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
-import net.dodian.uber.game.model.objects.GlobalObject
 import net.dodian.uber.game.netty.NetworkConstants
 import net.dodian.uber.game.activity.partyroom.PartyRoomBalloons
 import net.dodian.uber.game.engine.lifecycle.PlayerLifecycleTickService
@@ -732,7 +731,11 @@ class EntityProcessor : Runnable {
         DialogueService.flushIndexedIfNeeded(player)
         CombatRuntimeService.process(player, player.processedGameCycle)
         PlayerAnimationService.flush(player, player.processedGameCycle)
-        GlobalObject.updateObject(player)
+        // Dynamic-object state no longer needs a per-player-per-tick refresh here: region entry
+        // already gets a fresh baseline via Player.customObjects() -> GlobalObject.updateObject,
+        // and live changes push via GlobalObject.addGlobalObject/sweepExpired. Resending identical
+        // state to every player every 600ms was pure O(players x objects) waste on top of what was
+        // previously an O(players x objects x players) broadcast storm - see GlobalObject.kt.
 
         if (startingHealth != player.currentHealth || startingPrayer != player.currentPrayer) {
             player.markSaveDirty(

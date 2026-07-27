@@ -173,6 +173,7 @@ class GameLoopService(
         timedPhase("world.tasks") { worldMaintenancePhase.runWorldTasks() }
         timedPhase("combat.hitQueue") { CombatHitQueueService.process(currentCycle) }
         timedPhase("groundItems") { worldMaintenancePhase.runGroundItems() }
+        timedPhase("globalObjectSweep") { worldMaintenancePhase.runGlobalObjectSweep() }
         timedPhase("shops") { worldMaintenancePhase.runShops() }
         timedPhase("movement.finalize") { movementFinalizePhase.run() }
         timedPhase("content.postSimulation") { ContentTickPhases.run(ContentTickPhase.POST_SIMULATION) }
