@@ -1,6 +1,7 @@
 package net.dodian.uber.game.engine.event.bootstrap
 
 import net.dodian.uber.game.Server
+import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.uber.game.skill.Skillcape
 import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.events.item.ItemDropEvent
@@ -19,8 +20,8 @@ object ItemDropBootstrap {
                 return@on true
             }
 
-            val now = System.currentTimeMillis()
-            if (now - client.lastDropTime < 600) {
+            val nowCycle = GameCycleClock.currentCycle()
+            if (nowCycle - client.lastDropCycle < 1) {
                 client.send(SendMessage("You must wait a moment before dropping another item."))
                 return@on true
             }
@@ -36,7 +37,7 @@ object ItemDropBootstrap {
             if (droppedItem == 5733) {
                 client.deleteItem(droppedItem, slot, 1)
                 client.send(SendMessage("A magical force removed this item from your inventory!"))
-                client.lastDropTime = now
+                client.lastDropCycle = nowCycle
                 return@on true
             }
 
@@ -55,7 +56,7 @@ object ItemDropBootstrap {
 
             if (!client.wearing) {
                 client.dropItem(droppedItem, slot)
-                client.lastDropTime = now
+                client.lastDropCycle = nowCycle
             }
             true
         }

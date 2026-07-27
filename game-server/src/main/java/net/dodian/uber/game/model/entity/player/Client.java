@@ -3,6 +3,7 @@ import net.dodian.uber.game.api.content.ContentInteraction;
 import net.dodian.uber.game.api.content.ContentActions;
 import net.dodian.uber.game.combat.AncientSpellRegistry;
 import net.dodian.uber.game.engine.config.DotEnvKt;
+import net.dodian.uber.game.engine.loop.GameCycleClock;
 import net.dodian.uber.game.Server;
 import net.dodian.uber.game.engine.event.GameEventBus;
 import net.dodian.uber.game.engine.systems.follow.FollowRouting;
@@ -108,7 +109,7 @@ public class Client extends Player implements Runnable {
     public final InterfaceManager interfaceManager = new InterfaceManager(this);
     public boolean immune = false, loadingDone = false, reloadHp = false;
     public boolean canPreformAction = true;
-    public long lastDropTime = 0; //used for limiting drops per 600ms and logging out delayd 
+    public long lastDropCycle = 0L; //used for limiting drops per tick and logging out delayd
     public boolean isLoggingOut = false; //new flag 
     long lastBar = 0;
     public long lastSave, lastProgressSave;
@@ -141,7 +142,7 @@ public class Client extends Player implements Runnable {
     public long mutedTill;
     public long rightNow = now.getTime();
     public int resourcesGathered = 0;
-    public long lastDoor = 0;
+    public long lastDoorCycle = 0L;
     public long session_start = 0;
     public boolean pickupWanted = false, duelWin = false;
     public GroundItem attemptGround = null;
@@ -171,7 +172,7 @@ public class Client extends Player implements Runnable {
     public int[] duelLine = {31045, 31046, 31047, 31048, 31049, 31050, 31052, 31053, 31051, 31054, 31055};
     public boolean duelRequested = false, inDuel = false, duelConfirmed = false, duelConfirmed2 = false,
             duelFight = false;
-    public long lastDuelItemChangeMs = 0L;
+    public long lastDuelItemChangeCycle = 0L;
     public int duel_with = 0;
     public int duelApproachPendingSlot = -1;
     public int duelApproachTicks = 0;
@@ -1162,9 +1163,7 @@ public class Client extends Player implements Runnable {
         if (isLoggingOut) {
             return;
         }
-        long currentTime = System.currentTimeMillis();
-
-        if (currentTime - lastDropTime < 600) {
+        if (GameCycleClock.currentCycle() - lastDropCycle < 1) {
             send(new SendMessage("You cannot log out so soon after dropping an item."));
             return;
         }
@@ -1173,7 +1172,7 @@ public class Client extends Player implements Runnable {
         if (!saveNeeded || !validClient || UsingAgility) {
             if (UsingAgility) {
                 xLog = true; // Existing logic for agility delay
-                PlayerDeferredLifecycleService.scheduleXLogExpiry(this, walkBlock);
+                PlayerDeferredLifecycleService.scheduleXLogExpiry(this, getWalkBlockUntilCycle());
             }
             isLoggingOut = false;
             return;
@@ -2090,7 +2089,7 @@ public class Client extends Player implements Runnable {
             return;
         }
         if (wearID == 6583 || wearID == 7927) {
-            if (System.currentTimeMillis() < walkBlock) { //Not usable during a walkBlock!
+            if (isWalkBlocked()) { //Not usable during a walkBlock!
                 return;
             }
             send(new RemoveInterfaces());
@@ -2386,7 +2385,7 @@ public class Client extends Player implements Runnable {
         long now = System.currentTimeMillis();
         activeVerticalTransitionToken = ++verticalTransitionSequence;
         verticalTransitionUntilMillis = now + Math.max(delayMs, 0L);
-        walkBlock = Math.max(walkBlock, verticalTransitionUntilMillis);
+        applyWalkBlockMs(Math.max(delayMs, 0L));
         return activeVerticalTransitionToken;
     }
 
@@ -3831,9 +3830,9 @@ public class Client extends Player implements Runnable {
         }
         duelConfirmed = false;
         other.duelConfirmed = false;
-        long timeNow = System.currentTimeMillis();
-        lastDuelItemChangeMs = timeNow;
-        other.lastDuelItemChangeMs = timeNow;
+        long nowCycle = GameCycleClock.currentCycle();
+        lastDuelItemChangeCycle = nowCycle;
+        other.lastDuelItemChangeCycle = nowCycle;
         resetItems(3214);
         resetItems(3322);
         other.resetItems(3214);
@@ -3887,9 +3886,9 @@ public class Client extends Player implements Runnable {
             return;
         }
         duelConfirmed = false;
-        long timeNow = System.currentTimeMillis();
-        lastDuelItemChangeMs = timeNow;
-        other.lastDuelItemChangeMs = timeNow;
+        long nowCycle = GameCycleClock.currentCycle();
+        lastDuelItemChangeCycle = nowCycle;
+        other.lastDuelItemChangeCycle = nowCycle;
         resetItems(3214);
         resetItems(3322);
         refreshDuelScreen();

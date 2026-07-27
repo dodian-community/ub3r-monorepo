@@ -4,6 +4,7 @@ import java.util.Collections
 import java.util.WeakHashMap
 import java.util.function.BooleanSupplier
 import net.dodian.uber.game.engine.event.GameEventScheduler
+import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.uber.game.engine.state.GroundItemIntentStateAdapter
 import net.dodian.uber.game.engine.systems.follow.FollowRouting
 import net.dodian.uber.game.model.entity.player.Client
@@ -31,10 +32,10 @@ object PlayerDeferredLifecycleService {
     private val states = Collections.synchronizedMap(WeakHashMap<Client, PlayerDeferredState>())
 
     @JvmStatic
-    fun scheduleXLogExpiry(player: Client, expiresAtMs: Long) {
+    fun scheduleXLogExpiry(player: Client, expiresAtCycle: Long) {
         val state = stateFor(player)
         state.xLogExpiryTask?.cancel()
-        val delayTicks = millisToTicksCeil(expiresAtMs - System.currentTimeMillis())
+        val delayTicks = (expiresAtCycle - GameCycleClock.currentCycle()).coerceAtLeast(0L).toInt()
         state.xLogExpiryTask =
             GameEventScheduler.runRepeating(
                 delayTicks = delayTicks,

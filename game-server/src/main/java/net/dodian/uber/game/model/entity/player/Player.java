@@ -69,7 +69,8 @@ public abstract class Player extends Entity {
     public Position toleranceCenter = null;
     public long longName = 0;
     public int wildyLevel = 0;
-    public long lastAction = 0, lastMagic = 0;
+    public long lastAction = 0;
+    public long lastMagicCycle = 0L;
     public long lastPickAction = 0, lastFishAction = 0;
     public boolean premium = false, randomed = false, genieCombatFlag = false;
     public int playerGroup = 3, latestNews = 0, dbId = -1, questPage = 0, playerRights; //Online stuff!
@@ -180,7 +181,6 @@ public abstract class Player extends Entity {
     //Agility
     public boolean UsingAgility = false;
     public int agilityCourseStage = 0;
-    public long walkBlock = 0;
     private long walkBlockUntilCycle = -1L;
     public boolean xLog = false;
     public ArrayList<PartyRoomRewardItem> offeredPartyItems = new ArrayList<>();
@@ -217,17 +217,20 @@ public abstract class Player extends Entity {
         if (durationMs <= 0L) {
             return;
         }
-        walkBlock = Math.max(walkBlock, System.currentTimeMillis() + durationMs);
         long ticks = Math.max(1, GameCycleClock.ticksForDurationMs(durationMs));
         walkBlockUntilCycle = Math.max(walkBlockUntilCycle, GameCycleClock.currentCycle() + ticks);
     }
 
     public boolean isWalkBlockedAtCycle(long cycle) {
-        return cycle < walkBlockUntilCycle || System.currentTimeMillis() < walkBlock;
+        return cycle < walkBlockUntilCycle;
     }
 
     public boolean isWalkBlocked() {
         return isWalkBlockedAtCycle(GameCycleClock.currentCycle());
+    }
+
+    public long getWalkBlockUntilCycle() {
+        return walkBlockUntilCycle;
     }
 
     public boolean isShopping() {

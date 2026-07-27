@@ -1,6 +1,7 @@
 package net.dodian.uber.game.ui
 
 import net.dodian.uber.game.api.content.ContentInteraction
+import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.uber.game.engine.systems.interaction.ui.TradeDuelSessionService
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.ui.buttons.InterfaceButtonContent
@@ -58,8 +59,8 @@ object DuelInterface : InterfaceButtonContent {
                 if (other == null || client.slot == other.slot || !client.inDuel || client.duelConfirmed) {
                     return@buttonBinding true
                 }
-                val now = System.currentTimeMillis()
-                if (now - client.lastDuelItemChangeMs < 2000L || now - other.lastDuelItemChangeMs < 2000L) {
+                val nowCycle = GameCycleClock.currentCycle()
+                if (nowCycle - client.lastDuelItemChangeCycle < 4 || nowCycle - other.lastDuelItemChangeCycle < 4) {
                     client.sendMessage("Please wait a moment after changing the duel stakes.")
                     return@buttonBinding true
                 }

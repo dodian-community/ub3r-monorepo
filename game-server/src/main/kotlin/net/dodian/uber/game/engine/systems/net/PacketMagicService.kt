@@ -1,6 +1,7 @@
 package net.dodian.uber.game.engine.systems.net
 
 import net.dodian.uber.game.Server
+import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.cache.objects.GameObjectData
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.skill.smithing.Smithing
@@ -131,7 +132,7 @@ object PacketMagicService {
 
         val value = Server.itemManager.getAlchemy(castOnItem)
 
-        if (System.currentTimeMillis() - client.lastMagic < 1800 ||
+        if (GameCycleClock.currentCycle() - client.lastMagicCycle < 3 ||
             !client.playerHasItem(castOnItem) ||
             client.playerItems[castOnSlot] != castOnItem + 1
         ) {
@@ -215,7 +216,7 @@ object PacketMagicService {
             client.send(SendMessage("Cant enchant this item!"))
             return true
         }
-        client.lastMagic = System.currentTimeMillis()
+        client.lastMagicCycle = GameCycleClock.currentCycle()
         client.deleteItem(itemId, 1)
         RuneCostService.consume(client, intArrayOf(564), intArrayOf(runeCost))
         client.addItem(resultItem, 1)
@@ -238,7 +239,7 @@ object PacketMagicService {
             client.send(SendMessage("This item can't be alched"))
             return
         }
-        client.lastMagic = System.currentTimeMillis()
+        client.lastMagicCycle = GameCycleClock.currentCycle()
         client.deleteItem(itemId, slot, 1)
         client.deleteItem(561, 1)
         client.addItem(995, value)

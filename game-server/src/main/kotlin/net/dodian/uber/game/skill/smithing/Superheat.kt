@@ -1,6 +1,7 @@
 package net.dodian.uber.game.skill.smithing
 
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.uber.game.engine.systems.world.item.Ground
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
@@ -60,7 +61,7 @@ object Superheat {
             }
         }
 
-        client.lastMagic = System.currentTimeMillis()
+        client.lastMagicCycle = GameCycleClock.currentCycle()
         client.performAnimation(725, 0)
         client.callGfxMask(148, 100)
         RuneCostService.consume(client, intArrayOf(NATURE_RUNE), intArrayOf(1))
@@ -94,7 +95,7 @@ object Superheat {
             return
         }
 
-        client.lastMagic = System.currentTimeMillis()
+        client.lastMagicCycle = GameCycleClock.currentCycle()
         client.performAnimation(725, 0)
         client.callGfxMask(148, 100)
         val sandCount = client.getInvAmt(1783)

@@ -3,6 +3,7 @@ package net.dodian.uber.game.objects.doors
 import net.dodian.uber.game.objects.ObjectBinding
 import net.dodian.uber.game.objects.ObjectContent
 import net.dodian.uber.game.model.Position
+import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.objects.DoorRegistry
 import net.dodian.uber.game.engine.systems.interaction.ObjectClipService
@@ -67,10 +68,10 @@ object DoorToggleObjectContent : ObjectContent {
         if (matchingIndices.isEmpty()) {
             return false
         }
-        if (System.currentTimeMillis() - client.lastDoor <= 1000) {
+        if (GameCycleClock.currentCycle() - client.lastDoorCycle <= 2) {
             return true
         }
-        client.lastDoor = System.currentTimeMillis()
+        client.lastDoorCycle = GameCycleClock.currentCycle()
 
         for (index in matchingIndices) {
             val newFace = if (DoorRegistry.doorState[index] == 0) {

@@ -63,7 +63,7 @@ class Agility(private val c: Client) {
         onComplete: () -> Unit,
     ) {
         val token = c.beginVerticalTransition(delayMs)
-        c.walkBlock = System.currentTimeMillis() + delayMs
+        c.applyWalkBlockMs(delayMs)
         ContentTiming.scheduleGameThread(
             "agility-vertical",
             delayMs,
@@ -185,7 +185,7 @@ class Agility(private val c: Client) {
         c.setMovementLocked(true)
         npc?.text = "net profit of zero effort."
         c.performAnimation(828, 0)
-        c.walkBlock = System.currentTimeMillis() + 600
+        c.applyWalkBlockMs(600)
         runLater(600) {
             c.teleportTo(c.position.x, c.position.y + 2, 0)
             giveEndExperience(150)
@@ -333,7 +333,7 @@ class Agility(private val c: Client) {
         }
         c.setMovementLocked(true)
         c.performAnimation(828, 0)
-        c.walkBlock = System.currentTimeMillis() + 600
+        c.applyWalkBlockMs(600)
         runLater(600) {
             c.teleportTo(c.position.x - 2, c.position.y, 1)
             giveEndExperience(250)
@@ -364,7 +364,7 @@ class Agility(private val c: Client) {
     fun BarbStairs() {
         c.performAnimation(828, 0)
         c.teleportTo(c.position.x, c.position.y, 0)
-        c.walkBlock = System.currentTimeMillis() + 600
+        c.applyWalkBlockMs(600)
     }
 
     fun BarbFirstWall() {
@@ -514,7 +514,7 @@ class Agility(private val c: Client) {
                     }
                     parts > 1 -> {
                         c.requestWeaponAnims()
-                        c.walkBlock = System.currentTimeMillis() + 600
+                        c.applyWalkBlockMs(600)
                         c.transport(Position(c.position.x - 1, c.position.y, 0))
                         giveEndExperience(650)
                         c.agilitySessionStage = if (c.agilitySessionStage >= 2) 3 else c.agilitySessionStage

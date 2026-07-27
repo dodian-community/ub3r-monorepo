@@ -60,7 +60,7 @@ class AgilityWerewolf(private val c: Client) {
             c.setMovementLocked(true)
             val npc = NpcSpawnLocator.werewolfCourseNpc(0)
             c.performAnimation(769, 0)
-            c.walkBlock = System.currentTimeMillis() + 600
+            c.applyWalkBlockMs(600)
             val x = 3533 + Misc.random(4)
             val y = 9910 + Misc.random(2)
             val originY = npc?.position?.y ?: c.position.y
@@ -96,7 +96,7 @@ class AgilityWerewolf(private val c: Client) {
         } else if (pos.x == 3538 && pos.y == 9877 && c.position.x == 3538 && c.position.y == 9875) {
             c.setMovementLocked(true)
             c.performAnimation(769, 0)
-            c.walkBlock = System.currentTimeMillis() + 600
+            c.applyWalkBlockMs(600)
             runLater(600) {
                 if (c.disconnected) {
                     return@runLater
@@ -108,7 +108,7 @@ class AgilityWerewolf(private val c: Client) {
         } else if (pos.x == 3540 && pos.y == 9877 && c.position.x == 3538 && c.position.y == 9877) {
             c.setMovementLocked(true)
             c.performAnimation(769, 0)
-            c.walkBlock = System.currentTimeMillis() + 600
+            c.applyWalkBlockMs(600)
             runLater(600) {
                 if (c.disconnected) {
                     return@runLater
@@ -120,7 +120,7 @@ class AgilityWerewolf(private val c: Client) {
         } else if (pos.x == 3540 && pos.y == 9879 && c.position.x == 3540 && c.position.y == 9877) {
             c.setMovementLocked(true)
             c.performAnimation(769, 0)
-            c.walkBlock = System.currentTimeMillis() + 600
+            c.applyWalkBlockMs(600)
             runLater(600) {
                 if (c.disconnected) {
                     return@runLater
@@ -132,7 +132,7 @@ class AgilityWerewolf(private val c: Client) {
         } else if (pos.x == 3540 && pos.y == 9881 && c.position.x == 3540 && c.position.y == 9879) {
             c.setMovementLocked(true)
             c.performAnimation(769, 0)
-            c.walkBlock = System.currentTimeMillis() + 600
+            c.applyWalkBlockMs(600)
             runLater(600) {
                 if (c.disconnected) {
                     return@runLater
@@ -157,7 +157,7 @@ class AgilityWerewolf(private val c: Client) {
             npc?.text = "GO GO GO!"
             c.setFocus(pos.x, pos.y)
             c.performAnimation(2750, 0)
-            c.walkBlock = System.currentTimeMillis() + 600
+            c.applyWalkBlockMs(600)
             runLater(600) {
                 if (c.disconnected) {
                     return@runLater
@@ -170,7 +170,7 @@ class AgilityWerewolf(private val c: Client) {
             c.setMovementLocked(true)
             c.setFocus(pos.x, pos.y)
             c.performAnimation(2750, 0)
-            c.walkBlock = System.currentTimeMillis() + 600
+            c.applyWalkBlockMs(600)
             runLater(600) {
                 if (c.disconnected) {
                     return@runLater
@@ -183,7 +183,7 @@ class AgilityWerewolf(private val c: Client) {
             c.setMovementLocked(true)
             c.setFocus(pos.x, pos.y)
             c.performAnimation(2750, 0)
-            c.walkBlock = System.currentTimeMillis() + 600
+            c.applyWalkBlockMs(600)
             runLater(600) {
                 if (c.disconnected) {
                     return@runLater

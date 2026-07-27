@@ -152,7 +152,7 @@ private fun handleStaffModeration(context: CommandContext): Boolean {
                         client.sendMessage("That player is in the wilderness!")
                         return true
                     }
-                    if (client.UsingAgility || other.UsingAgility || System.currentTimeMillis() < client.walkBlock) {
+                    if (client.UsingAgility || other.UsingAgility || client.isWalkBlocked()) {
                         return true
                     }
                     client.transport(other.position.copy())
@@ -199,7 +199,7 @@ private fun handleStaffModeration(context: CommandContext): Boolean {
                         client.sendMessage("Can not teleport someone out of the wilderness! Contact a admin!")
                         return true
                     }
-                    if (client.UsingAgility || other.UsingAgility || System.currentTimeMillis() < client.walkBlock) {
+                    if (client.UsingAgility || other.UsingAgility || client.isWalkBlocked()) {
                         return true
                     }
                     other.transport(client.position.copy())

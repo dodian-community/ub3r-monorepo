@@ -106,7 +106,7 @@ private fun handleDevVisual(context: CommandContext): Boolean {
         }
         "heat" -> {
             client.UsingAgility = !client.UsingAgility
-            client.walkBlock = System.currentTimeMillis() + (600 * 30)
+            client.applyWalkBlockMs(600 * 30)
             context.reply("You set agility to: ${client.UsingAgility}")
         }
         "gfx" -> {
