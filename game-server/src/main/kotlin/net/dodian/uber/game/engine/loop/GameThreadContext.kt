@@ -45,7 +45,7 @@ object GameThreadContext {
         OperationalTelemetry.incrementCounter("thread_ownership.$reason")
 
         val safeContext = context.ifBlank { "unknown" }
-        val debug = try { serverDebugMode } catch (_: Exception) { false }
+        val debug = forceDebugModeForTests ?: (try { serverDebugMode } catch (_: Exception) { false })
         if (debug) {
             throw IllegalStateException(
                 "Game-thread ownership violation reason=$reason context=$safeContext " +
@@ -84,7 +84,11 @@ object GameThreadContext {
         unboundViolations.set(0L)
         wrongThreadViolations.set(0L)
         nextLogAtByContext.clear()
+        forceDebugModeForTests = null
     }
+
+    @JvmStatic
+    internal var forceDebugModeForTests: Boolean? = null
 
     private const val LOG_INTERVAL_MS = 60_000L
 }

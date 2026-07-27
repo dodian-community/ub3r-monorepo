@@ -99,6 +99,7 @@ private class MinimalQuestPlayer : QuestPlayer {
         override fun withinObjectBoundary(target: SkillObjectRef) = true
         override fun spawnTemporaryObject(objectId: Int, durationTicks: Int, onExpire: () -> Unit) {}
         override fun dropItem(itemId: Int, amount: Int) {}
+        override fun dropItemAt(position: SkillPosition, itemId: Int, amount: Int) {}
         override fun traverse(deltaX: Int, deltaY: Int, durationMs: Int, movementAnimationId: Int?, startAnimationId: Int?, arrivalAnimationId: Int?, onComplete: () -> Unit) {}
         override fun climb(destination: SkillPosition, animationId: Int, delayMs: Int, onComplete: () -> Unit) {}
     }

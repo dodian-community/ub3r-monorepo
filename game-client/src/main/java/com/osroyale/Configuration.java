@@ -96,7 +96,7 @@ public final class Configuration {
     /**
      * The HTTP URL from which to download the cache zip if not present locally.
      */
-    public static final String CACHE_DOWNLOAD_URL = "http://localhost:8081/cache.zip";
+    public static final String CACHE_DOWNLOAD_URL = "https://www.dropbox.com/scl/fi/rmf7830p7mm2lpsmfkabd/cache-tarnish-218.zip?rlkey=ht9604b8n0n3ic43d0cu2ubfr&st=m8hygvmu&dl=1";
 
     public static class DiscordConfiguration {
         public static boolean ENABLE_DISCORD_OAUTH_LOGIN = true;

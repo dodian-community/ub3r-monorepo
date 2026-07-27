@@ -6857,6 +6857,8 @@ public class Client extends GameEngine
         localPlayer.saveProfile(this);
         setGameState(GameState.LOGIN_SCREEN);
         Settings.save();
+        com.osroyale.login.impl.MainScreen.accountCreationStatus = "";
+        com.osroyale.login.impl.MainScreen.loginScreenState = 2;
         spriteCache.clear();
         try {
             if (socketStream != null) {
@@ -11979,6 +11981,8 @@ public class Client extends GameEngine
                 sendFrame36(429, 1);
                 setBounds();
                 loggedIn = true;
+                com.osroyale.login.impl.MainScreen.accountCreationStatus = "";
+                com.osroyale.login.impl.MainScreen.loginScreenState = 2;
                 localPlayer.saveProfile(this);
                 Profile.modelCache.unlinkAll();
                 return;

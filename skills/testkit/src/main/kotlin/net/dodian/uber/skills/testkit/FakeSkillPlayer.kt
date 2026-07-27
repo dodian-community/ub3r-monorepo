@@ -204,6 +204,7 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
             pendingExpiries += PendingExpiry(durationTicks, onExpire)
         }
         override fun dropItem(itemId: Int, amount: Int) { groundItems += itemId to amount }
+        override fun dropItemAt(position: SkillPosition, itemId: Int, amount: Int) { groundItems += itemId to amount }
         override fun traverse(
             deltaX: Int,
             deltaY: Int,

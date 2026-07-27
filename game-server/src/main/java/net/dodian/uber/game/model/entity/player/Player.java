@@ -465,7 +465,12 @@ public abstract class Player extends Entity {
             return false;
         int deltaX = otherPlr.getPosition().getX() - getPosition().getX(),
                 deltaY = otherPlr.getPosition().getY() - getPosition().getY();
-        return deltaX <= 16 && deltaX >= -16 && deltaY <= 16 && deltaY >= -16;
+        // Bound must match what the add-local wire encoding can represent: writeStagedLocalAdd
+        // wraps a negative delta by +32 into an unsigned 5-bit field, which the client re-signs
+        // as (raw > 15) ? raw - 32 : raw - i.e. only [-16, 15] round-trips correctly. A delta of
+        // exactly +16 wraps to the same wire value as -16, aliasing the position. Matches the
+        // (-16, 15) bound already used by withinDistance(Npc) below.
+        return deltaX <= 15 && deltaX >= -16 && deltaY <= 15 && deltaY >= -16;
     }
 
     public boolean withinDistance(Npc npc) {

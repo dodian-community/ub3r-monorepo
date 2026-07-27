@@ -1607,8 +1607,60 @@ public class Client extends Player implements Runnable {
         return true;
     }
 
+    private static final int INVENTORY_DIRTY_SLOT_THRESHOLD = 10;
+    private int[] lastSentInventoryIds;
+    private int[] lastSentInventoryAmounts;
+
     public void resetItems(int WriteFrame) {
+        if (WriteFrame == 3214) {
+            sendInventoryDelta();
+            return;
+        }
         send(new ResetItems(WriteFrame));
+    }
+
+    /**
+     * Sends only the inventory slots that changed since the last send instead of a full 28-slot
+     * resend, using the existing single-slot wire format (TarnishItemContainerEncoder.slot /
+     * opcode 34) already relied on elsewhere. Falls back to a full resend on the first call (no
+     * prior snapshot to diff against) or when more slots changed than a single resend would cost.
+     */
+    private void sendInventoryDelta() {
+        int size = playerItems.length;
+        if (lastSentInventoryIds == null || lastSentInventoryIds.length != size) {
+            send(new ResetItems(3214));
+            lastSentInventoryIds = new int[size];
+            lastSentInventoryAmounts = new int[size];
+            for (int i = 0; i < size; i++) {
+                lastSentInventoryIds[i] = playerItems[i] - 1;
+                lastSentInventoryAmounts[i] = playerItemsN[i];
+            }
+            return;
+        }
+        int changedCount = 0;
+        for (int i = 0; i < size; i++) {
+            if (playerItems[i] - 1 != lastSentInventoryIds[i] || playerItemsN[i] != lastSentInventoryAmounts[i]) {
+                changedCount++;
+            }
+        }
+        if (changedCount == 0) {
+            return;
+        }
+        if (changedCount > INVENTORY_DIRTY_SLOT_THRESHOLD) {
+            send(new ResetItems(3214));
+        } else {
+            for (int i = 0; i < size; i++) {
+                int id = playerItems[i] - 1;
+                int amount = playerItemsN[i];
+                if (id != lastSentInventoryIds[i] || amount != lastSentInventoryAmounts[i]) {
+                    send(TarnishItemContainerEncoder.slot(3214, i, id, amount));
+                }
+            }
+        }
+        for (int i = 0; i < size; i++) {
+            lastSentInventoryIds[i] = playerItems[i] - 1;
+            lastSentInventoryAmounts[i] = playerItemsN[i];
+        }
     }
 
     public void sendInventory(int interfaceId, ArrayList<GameItem> inv) {

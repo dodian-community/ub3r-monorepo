@@ -4,6 +4,7 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
+import net.dodian.uber.game.engine.systems.zone.ZoneUpdateBus
 import net.dodian.uber.game.netty.listener.out.CreateGroundItem
 import net.dodian.uber.game.netty.listener.out.RemoveGroundItem
 
@@ -102,22 +103,13 @@ class GroundItem {
     fun getDespawnTime(): Int = if (timeToShow < 1) timeToDespawn else timeToShow + timeToDespawn
 
     fun removeItemDisplay() {
-        PlayerRegistry.forEachActivePlayer { c ->
-            if (c.isWithinDistance(c.position.x, c.position.y, x, y, 104)) {
-                c.send(RemoveGroundItem(GameItem(id, amount), Position(x, y, z)))
-            }
-        }
+        ZoneUpdateBus.queueGroundItemRemove(id, amount, Position(x, y, z))
     }
 
     fun itemDisplay() {
-        PlayerRegistry.forEachActivePlayer { c ->
-            if (type == 1 && playerId != c.dbId) {
-                return@forEachActivePlayer
-            }
-            if (c.isWithinDistance(c.position.x, c.position.y, x, y, 104) && c.dbId != playerId && isVisible()) {
-                c.send(CreateGroundItem(GameItem(id, amount), Position(x, y, z)))
-            }
-        }
+        if (!isVisible()) return
+        val excludeDbId = if (playerId >= 0) playerId else null
+        ZoneUpdateBus.queueGroundItemCreate(id, amount, Position(x, y, z), excludeDbId = excludeDbId)
     }
 
     private fun sendOwnerCreate(owner: Client) {

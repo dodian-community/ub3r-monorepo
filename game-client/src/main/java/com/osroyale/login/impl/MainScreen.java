@@ -161,9 +161,15 @@ public class MainScreen extends LoginComponent {
 			// Create Account Click
 			if (MouseHandler.clickMode3 == 1 && client.mouseInRegion(btn1X, btnY, btn1X + btnW, btnY + btnH)) {
 				loginScreenState = 1;
+				client.myUsername = "";
+				client.myPassword = "";
+				client.loginScreenCursorPos = 0;
 				DiscordOAuth.getInstance().startAuthFlow(code -> {
 					Client.discordAuthCode = code;
 					accountCreationStatus = "You can now create your account";
+					client.myUsername = "";
+					client.myPassword = "";
+					client.loginScreenCursorPos = 0;
 					loginScreenState = 2;
 				});
 			}

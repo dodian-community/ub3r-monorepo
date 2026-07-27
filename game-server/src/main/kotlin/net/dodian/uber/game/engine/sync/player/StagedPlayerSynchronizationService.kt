@@ -338,8 +338,6 @@ class StagedPlayerSynchronizationService {
         if (updating.hasSelfUpdate(viewer)) return false
 
         val localCount = viewer.playerListSize
-        if (localCount <= 0) return true
-
         for (i in 0 until localCount) {
             val local = viewer.playerList[i] ?: return false
             if (!local.isSynchronizationReady) return false
@@ -347,7 +345,29 @@ class StagedPlayerSynchronizationService {
             if (local.updateFlags.isUpdateRequired) return false
             if (!viewer.withinDistance(local)) return false
         }
-        return true
+
+        return !hasUnadmittedVisibleCandidate(viewer)
+    }
+
+    // canFastSkip only re-checks players already in the viewer's local list - without this, a
+    // viewer with no pending self-update and no misbehaving existing locals (the common "standing
+    // still" case) would take the idle fast path forever and never admit a player who newly walked
+    // or logged into view. Mirrors buildPlan's own candidate discovery (same source, same
+    // visibility rule) but stops at the first hit instead of building/sorting/budgeting the list.
+    private fun hasUnadmittedVisibleCandidate(viewer: Client): Boolean {
+        val candidates = SynchronizationContext.getViewportSnapshot(viewer)?.players
+        if (candidates != null) {
+            candidates.forEach { candidate -> if (isUnadmittedVisible(viewer, candidate)) return true }
+        } else {
+            PlayerRegistry.players.forEach { candidate -> if (isUnadmittedVisible(viewer, candidate)) return true }
+        }
+        return false
+    }
+
+    private fun isUnadmittedVisible(viewer: Client, candidate: Player?): Boolean {
+        candidate ?: return false
+        if (viewer.playersUpdating.contains(candidate)) return false
+        return PlayerVisibilityRules.isVisibleTo(viewer, candidate)
     }
 
     private fun encodeIdleFastPath(viewer: Client, localCount: Int, stream: ByteMessage) {

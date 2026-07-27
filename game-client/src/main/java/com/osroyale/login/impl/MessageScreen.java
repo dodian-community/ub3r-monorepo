@@ -61,7 +61,8 @@ public class MessageScreen extends LoginComponent {
         if (MouseHandler.clickMode3 == 1) {
             client.loginMessage1 = "";
             client.loginMessage2 = "";
-            MainScreen.loginScreenState = 0;
+            MainScreen.accountCreationStatus = "";
+            MainScreen.loginScreenState = 2;
             client.loginRenderer.setScreen(new MainScreen());
         }
     }

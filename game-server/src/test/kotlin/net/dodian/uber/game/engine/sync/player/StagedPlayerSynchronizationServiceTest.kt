@@ -98,6 +98,28 @@ class StagedPlayerSynchronizationServiceTest {
     }
 
     @Test
+    fun `idle viewer admits a player who appears in a later tick`() {
+        val viewer = client(1, "viewer", 3200, 3200)
+        PlayerRegistry.players[1] = viewer
+        val service = StagedPlayerSynchronizationService()
+
+        // Tick 1: viewer is alone and idle - fast path takes over, nothing to admit yet.
+        val first = service.synchronize(viewer)
+        assertTrue(first.accepted)
+        assertEquals(0, viewer.playerListSize)
+
+        // Tick 2: a new player appears nearby without the viewer moving or getting any update flag.
+        val newcomer = client(2, "newcomer", 3201, 3200)
+        PlayerRegistry.players[2] = newcomer
+
+        val second = service.synchronize(viewer)
+        assertTrue(second.accepted)
+        assertEquals(1, viewer.playerListSize, "idle viewer must still admit a newly-visible player")
+        assertSame(newcomer, viewer.playerList[0])
+        assertTrue(viewer.playersUpdating.contains(newcomer))
+    }
+
+    @Test
     fun `required enqueue rejection leaves viewer local state uncommitted`() {
         val viewer = client(1, "viewer", 3200, 3200)
         val subject = client(2, "subject", 3201, 3200)

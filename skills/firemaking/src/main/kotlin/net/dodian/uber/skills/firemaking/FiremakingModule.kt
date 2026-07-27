@@ -64,8 +64,9 @@ object FiremakingModule : SkillPlugin {
         player.ui.message("You light the ${log.name}.")
         player.skills.gainXp(log.experience, Skill.FIREMAKING)
         player.actions.triggerRandomEvent(log.experience)
+        val firePos = player.world.position
         player.world.spawnTemporaryObject(FIRE_OBJECT_ID, log.durationTicks) {
-            player.world.dropItem(ASHES_ITEM_ID, 1)
+            player.world.dropItemAt(firePos, ASHES_ITEM_ID, 1)
             player.ui.message("The fire has burnt out.")
         }
         player.actions.stop()

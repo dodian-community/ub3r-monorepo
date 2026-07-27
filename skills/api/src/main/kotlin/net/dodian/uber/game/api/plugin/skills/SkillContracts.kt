@@ -166,6 +166,8 @@ interface SkillWorld {
     fun spawnTemporaryObject(objectId: Int, durationTicks: Int, onExpire: () -> Unit = {})
     /** Drops [amount] of [itemId] on the ground at the player's current position, initially visible only to them. */
     fun dropItem(itemId: Int, amount: Int = 1)
+    /** Drops [amount] of [itemId] on the ground at [position], initially visible only to them. */
+    fun dropItemAt(position: SkillPosition, itemId: Int, amount: Int = 1)
     /**
      * Animates a scripted traversal (e.g. crossing an agility obstacle): walks a relative offset
      * over [durationMs] using [movementAnimationId] as the walk animation (when given), optionally

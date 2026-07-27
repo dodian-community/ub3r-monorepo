@@ -112,13 +112,17 @@ object ZoneUpdateBus {
         private val excludeDbId: Int? = null,
         private val sender: (Client) -> Unit,
     ) : ZoneDelta() {
-        override val minChunkX: Int = (position.x - radius) shr 3
-        override val maxChunkX: Int = (position.x + radius) shr 3
-        override val minChunkY: Int = (position.y - radius) shr 3
-        override val maxChunkY: Int = (position.y + radius) shr 3
+        // Position.chunkX/chunkY (and thus Player.syncChunkMembership's chunk keys) apply a -6
+        // chunk-origin correction on top of the raw tile shift; matching that here is required for
+        // ChunkManager.getLoaded(chunkX, chunkY) to ever find the chunks players are actually
+        // registered in, instead of silently finding nothing every time.
+        override val minChunkX: Int = ((position.x - radius) shr 3) - 6
+        override val maxChunkX: Int = ((position.x + radius) shr 3) - 6
+        override val minChunkY: Int = ((position.y - radius) shr 3) - 6
+        override val maxChunkY: Int = ((position.y + radius) shr 3) - 6
 
         override fun appliesTo(viewer: Client): Boolean {
-            if (!viewer.isActive || viewer.disconnected) {
+            if (!viewer.isActive || viewer.disconnected || !viewer.isSynchronizationReady) {
                 return false
             }
             if (onlyDbId != null && viewer.dbId != onlyDbId) {

@@ -101,6 +101,7 @@
             <AppenderRef ref="ConsoleAuditFile"/>
         </Async>
         <Async name="AsyncShopAudit" bufferSize="8192" blocking="false">
+            <AppenderRef ref="ConsoleAuditConsole"/>
             <AppenderRef ref="ShopAuditFile"/>
         </Async>
     </Appenders>

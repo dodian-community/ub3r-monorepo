@@ -12,6 +12,7 @@ class GameThreadContextTest {
     fun setUp() {
         GameThreadContext.clearBindingForTests()
         GameThreadContext.resetDiagnosticsForTests()
+        GameThreadContext.forceDebugModeForTests = false
     }
 
     @AfterEach

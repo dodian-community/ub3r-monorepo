@@ -191,6 +191,10 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
         override fun dropItem(itemId: Int, amount: Int) {
             Ground.addItem(GroundItem(client.position, itemId, amount, client.slot, -1))
         }
+        override fun dropItemAt(position: SkillPosition, itemId: Int, amount: Int) {
+            val pos = net.dodian.uber.game.model.Position(position.x, position.y, position.z)
+            Ground.addItem(GroundItem(pos, itemId, amount, client.slot, -1))
+        }
         override fun traverse(
             deltaX: Int,
             deltaY: Int,
