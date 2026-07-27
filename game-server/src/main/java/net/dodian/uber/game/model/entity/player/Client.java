@@ -1318,271 +1318,14 @@ public class Client extends Player implements Runnable {
         return -1;
     }
 
-    public void bankItem(int itemID, int fromSlot, int amount) {
-        if (bankItemTransactional(itemID, fromSlot, amount)) {
-            return;
-        }
-        if (playerItemsN[fromSlot] <= 0 || playerItems[fromSlot] <= 0 || playerItems[fromSlot] - 1 != itemID) {
-            return;
-        }
-        if (!IsBanking) {
-            send(new RemoveInterfaces());
-            return;
-        }
-        boolean bankChanged = false;
-        ensureBankTabState();
-        int id = getUnnotedItem(itemID);
-        int size = bankSize();
-        if (id == 0) {
-            if (playerItems[fromSlot] <= 0) {
-                return;
-            }
-            amount = Math.min(amount, getInvAmt(itemID));
-            if (Server.itemManager.isStackable(itemID) || playerItemsN[fromSlot] > 1) {
-                int toBankSlot = 0;
-                boolean alreadyInBank = false;
-                for (int i = 0; i < size; i++) {
-                    if (bankItems[i] - 1 == itemID) { //Bank starts at value 0 while items should start at -1!
-                        if (playerItemsN[fromSlot] < amount) {
-                            amount = playerItemsN[fromSlot];
-                        }
-                        alreadyInBank = true;
-                        toBankSlot = i;
-                        break;
-                    }
-                }
-
-                if (!alreadyInBank && freeBankSlots() > 0) {
-                    for (int i = 0; i < size; i++) {
-                        if (bankItems[i] <= 0) {
-                            toBankSlot = i;
-                            break;
-                        }
-                    }
-                    bankItems[toBankSlot] = itemID + 1; //To continue on comment above..Dodian thing :D
-                    bankSlotTabs[toBankSlot] = currentBankTab > 0 && currentBankTab < 10 && !bankSearchActive ? currentBankTab : 0;
-                    bankChanged = true;
-                    if (playerItemsN[fromSlot] < amount) {
-                        amount = playerItemsN[fromSlot];
-                    }
-                    if ((bankItemsN[toBankSlot] + amount) <= maxItemAmount && (bankItemsN[toBankSlot] + amount) > -1) {
-                        bankItemsN[toBankSlot] += amount;
-                        bankChanged = true;
-                    } else {
-                        send(new SendMessage("Bank full!"));
-                        return;
-                    }
-                    deleteItem(itemID, fromSlot, amount);
-                } else if (alreadyInBank) {
-                    if ((bankItemsN[toBankSlot] + amount) <= maxItemAmount && (bankItemsN[toBankSlot] + amount) > -1) {
-                        bankItemsN[toBankSlot] += amount;
-                        bankChanged = true;
-                    } else {
-                        send(new SendMessage("Bank full!"));
-                        return;
-                    }
-                    deleteItem(itemID, fromSlot, amount);
-                } else {
-                    send(new SendMessage("Bank full!"));
-                }
-            } else {
-                itemID = playerItems[fromSlot];
-                int toBankSlot = 0;
-                boolean alreadyInBank = false;
-
-                for (int i = 0; i < size; i++) {
-                    if (bankItems[i] == playerItems[fromSlot]) {
-                        alreadyInBank = true;
-                        toBankSlot = i;
-                        break;
-                    }
-                }
-                if (!alreadyInBank && freeBankSlots() > 0) {
-                    for (int i = 0; i < size; i++) {
-                        if (bankItems[i] <= 0) {
-                            toBankSlot = i;
-                            break;
-                        }
-                    }
-                    int firstPossibleSlot = 0;
-                    boolean itemExists = false;
-
-                    while (amount > 0) {
-                        for (int i = firstPossibleSlot; i < playerItems.length; i++) {
-                            if ((playerItems[i]) == itemID) {
-                                firstPossibleSlot = i;
-                                itemExists = true;
-                                break;
-                            }
-                        }
-                        if (itemExists) {
-                            bankItems[toBankSlot] = playerItems[firstPossibleSlot];
-                            bankSlotTabs[toBankSlot] = currentBankTab > 0 && currentBankTab < 10 && !bankSearchActive ? currentBankTab : 0;
-                            bankItemsN[toBankSlot] += 1;
-                            bankChanged = true;
-                            deleteItem((playerItems[firstPossibleSlot] - 1), firstPossibleSlot, 1);
-                            amount--;
-                        } else {
-                            amount = 0;
-                        }
-                    }
-                } else if (alreadyInBank) {
-                    int firstPossibleSlot = 0;
-                    boolean itemExists = false;
-
-                    while (amount > 0) {
-                        for (int i = firstPossibleSlot; i < playerItems.length; i++) {
-                            if ((playerItems[i]) == itemID) {
-                                firstPossibleSlot = i;
-                                itemExists = true;
-                                break;
-                            }
-                        }
-                        if (itemExists) {
-                            bankItemsN[toBankSlot] += 1;
-                            bankChanged = true;
-                            deleteItem((playerItems[firstPossibleSlot] - 1), firstPossibleSlot, 1);
-                            amount--;
-                        } else {
-                            amount = 0;
-                        }
-                    }
-                } else {
-                    send(new SendMessage("Bank full!"));
-                }
-            }
-        } else if (id > 0) {
-            if (playerItems[fromSlot] <= 0) {
-                return;
-            }
-            amount = Math.min(amount, getInvAmt(itemID));
-            if (Server.itemManager.isStackable(playerItems[fromSlot] - 1) || playerItemsN[fromSlot] > 1) {
-                int toBankSlot = 0;
-                boolean alreadyInBank = false;
-                for (int i = 0; i < size; i++) {
-                    if (bankItems[i] == getUnnotedItem(playerItems[fromSlot] - 1) + 1) {
-                        if (playerItemsN[fromSlot] < amount) {
-                            amount = playerItemsN[fromSlot];
-                        }
-                        alreadyInBank = true;
-                        toBankSlot = i;
-                        break;
-                    }
-                }
-                if (!alreadyInBank && freeBankSlots() > 0) {
-                    for (int i = 0; i < size; i++) {
-                        if (bankItems[i] <= 0) {
-                            toBankSlot = i;
-                            break;
-                        }
-                    }
-                    bankItems[toBankSlot] = id + 1;
-                    bankSlotTabs[toBankSlot] = currentBankTab > 0 && currentBankTab < 10 && !bankSearchActive ? currentBankTab : 0;
-                    bankChanged = true;
-                    if (playerItemsN[fromSlot] < amount) {
-                        amount = playerItemsN[fromSlot];
-                    }
-                    if ((bankItemsN[toBankSlot] + amount) <= maxItemAmount && (bankItemsN[toBankSlot] + amount) > -1) {
-                        bankItemsN[toBankSlot] += amount;
-                        bankChanged = true;
-                    } else {
-                        return;
-                    }
-                    deleteItem((playerItems[fromSlot] - 1), fromSlot, amount);
-                } else if (alreadyInBank) {
-                    if ((bankItemsN[toBankSlot] + amount) <= maxItemAmount && (bankItemsN[toBankSlot] + amount) > -1) {
-                        bankItemsN[toBankSlot] += amount;
-                        bankChanged = true;
-                    } else {
-                        return;
-                    }
-                    deleteItem((playerItems[fromSlot] - 1), fromSlot, amount);
-                } else {
-                    send(new SendMessage("Bank full!"));
-                }
-            } else {
-                itemID = playerItems[fromSlot];
-                int toBankSlot = 0;
-                boolean alreadyInBank = false;
-
-                for (int i = 0; i < size; i++) {
-                    if (bankItems[i] == (playerItems[fromSlot] - 1)) {
-                        alreadyInBank = true;
-                        toBankSlot = i;
-                        break;
-                    }
-                }
-                if (!alreadyInBank && freeBankSlots() > 0) {
-                    for (int i = 0; i < size; i++) {
-                        if (bankItems[i] <= 0) {
-                            toBankSlot = i;
-                            break;
-                        }
-                    }
-                    int firstPossibleSlot = 0;
-                    boolean itemExists = false;
-
-                    while (amount > 0) {
-                        for (int i = firstPossibleSlot; i < playerItems.length; i++) {
-                            if ((playerItems[i]) == itemID) {
-                                firstPossibleSlot = i;
-                                itemExists = true;
-                                break;
-                            }
-                        }
-                        if (itemExists) {
-                            bankItems[toBankSlot] = (playerItems[firstPossibleSlot] - 1);
-                            bankSlotTabs[toBankSlot] = currentBankTab > 0 && currentBankTab < 10 && !bankSearchActive ? currentBankTab : 0;
-                            bankItemsN[toBankSlot] += 1;
-                            bankChanged = true;
-                            deleteItem((playerItems[firstPossibleSlot] - 1), firstPossibleSlot, 1);
-                            amount--;
-                        } else {
-                            amount = 0;
-                        }
-                    }
-                } else if (alreadyInBank) {
-                    int firstPossibleSlot = 0;
-                    boolean itemExists = false;
-
-                    while (amount > 0) {
-                        for (int i = firstPossibleSlot; i < playerItems.length; i++) {
-                            if ((playerItems[i]) == itemID) {
-                                firstPossibleSlot = i;
-                                itemExists = true;
-                                break;
-                            }
-                        }
-                        if (itemExists) {
-                            bankItemsN[toBankSlot] += 1;
-                            bankChanged = true;
-                            deleteItem((playerItems[firstPossibleSlot] - 1), firstPossibleSlot, 1);
-                            amount--;
-                        } else {
-                            amount = 0;
-                        }
-                    }
-                } else {
-                    send(new SendMessage("Bank full!"));
-                }
-            }
-        } else {
-            send(new SendMessage("Item not supported " + itemID));
-        }
-        if (bankChanged) {
-            markSaveDirty(PlayerSaveSegment.BANK.getMask());
-        }
-    }
-
     /**
-     * Compatibility entry point for the legacy bank packet.  It intentionally
-     * returns true for rejected requests too, so runtime bank mutations never
-     * fall through to the old piecemeal implementation below.
+     * Deposits an item into the bank via {@link BankTransactions#deposit}, the atomic
+     * deposit/withdraw engine shared with {@link #fromBank}.
      */
-    private boolean bankItemTransactional(int itemID, int fromSlot, int amount) {
+    public void bankItem(int itemID, int fromSlot, int amount) {
         if (!IsBanking || fromSlot < 0 || fromSlot >= playerItems.length
                 || playerItems[fromSlot] != itemID + 1 || playerItemsN[fromSlot] <= 0) {
-            return true;
+            return;
         }
         ensureBankTabState();
         int unnoted = getUnnotedItem(itemID);
@@ -1590,12 +1333,12 @@ public class Client extends Player implements Runnable {
         int available = Server.itemManager.isStackable(itemID) ? playerItemsN[fromSlot] : getInvAmt(itemID);
         int requested = Math.min(Math.max(amount, 0), available);
         if (requested == 0) {
-            return true;
+            return;
         }
         boolean newBankEntry = getBankSlot(bankItemId) < 0;
         if (!BankTransactions.deposit(this, itemID, fromSlot, requested, bankItemId)) {
             send(new SendMessage("Bank full!"));
-            return true;
+            return;
         }
         if (newBankEntry) {
             int bankSlot = getBankSlot(bankItemId);
@@ -1603,7 +1346,6 @@ public class Client extends Player implements Runnable {
                 bankSlotTabs[bankSlot] = currentBankTab > 0 && currentBankTab < 10 && !bankSearchActive ? currentBankTab : 0;
             }
         }
-        return true;
     }
 
     private static final int INVENTORY_DIRTY_SLOT_THRESHOLD = 10;
@@ -2504,14 +2246,16 @@ public class Client extends Player implements Runnable {
     }
 
     public boolean checkItem(int itemID) {
+        int rawId = itemID;
         itemID++;
         for (int playerItem : playerItems) {
             if (playerItem == itemID) {
                 return true;
             }
         }
+        // getEquipment() stores raw item ids with no +1 offset, unlike playerItems/bankItems.
         for (int i = 0; i < getEquipment().length; i++) {
-            if (getEquipment()[i] == itemID) {
+            if (getEquipment()[i] == rawId) {
                 return true;
             }
         }
@@ -3075,10 +2819,6 @@ public class Client extends Player implements Runnable {
             send(new SendMessage("You can't trade this item"));
             return;
         }
-        if (itemID == 7927 && new Date().before(new Date("06/1/2024")) && other.checkItem(7927)) {
-            send(new SendMessage(other.getPlayerName() + " already have the ring. Wait until after May!"));
-            return;
-        }
         if (!OfferTransactions.stakeToOffer(this, itemID, fromSlot, amount)) {
             return;
         }
@@ -3364,6 +3104,14 @@ public class Client extends Player implements Runnable {
         amount = Integer.MAX_VALUE - getInvAmt(currency) < amount * price ? (Integer.MAX_VALUE - getInvAmt(currency)) / price : amount;
 
         if (amount > 0) { // Code to check if there is any amount to sell!
+            int totalPrice = amount * price;
+            // Grant payment before removing the item/crediting shop stock: if addItem fails
+            // (e.g. inventory full for a non-stackable currency), nothing else happens, so the
+            // player never loses the item without being paid.
+            if (!addItem(currency, totalPrice)) {
+                send(new SendMessage("Not enough space in your inventory."));
+                return;
+            }
             if (!stack) {
                 for (int i = 0; i < amount; i++) {
                     deleteItem(original, 1);
@@ -3373,8 +3121,6 @@ public class Client extends Player implements Runnable {
             }
             ShopManager.ShopItems[MyShopID][slot] = itemID + 1;
             ShopManager.ShopItemsN[MyShopID][slot] += amount;
-            int totalPrice = amount * price;
-            addItem(currency, totalPrice);
             ShopLog.recordSell(this, MyShopID, slot, itemID, amount, currency, (long) totalPrice);
         } else
             send(new SendMessage("Could not sell anything!"));
@@ -3821,10 +3567,6 @@ public class Client extends Player implements Runnable {
             send(new SendMessage("You can't trade this item"));
             return;
         }
-        if (itemID == 7927 && new Date().before(new Date("06/1/2024")) && other.checkItem(7927)) {
-            send(new SendMessage(other.getPlayerName() + " already have the ring. Wait until after May!"));
-            return;
-        }
         if (!OfferTransactions.stakeToOffer(this, itemID, fromSlot, amount)) {
             return;
         }
@@ -3846,9 +3588,10 @@ public class Client extends Player implements Runnable {
     public boolean checkGameitemAmount(int slot, int amount, CopyOnWriteArrayList<GameItem> item) {
         int count = 0;
         if (item.isEmpty()) return true;
+        int targetId = item.get(slot).getId();
         if (!item.get(slot).isStackable()) {
             for (GameItem checkItem : item) {
-                if (checkItem.getId() == id)
+                if (checkItem.getId() == targetId)
                     count++;
             }
         } else
@@ -5643,18 +5386,10 @@ public class Client extends Player implements Runnable {
                 return;
             }
             PartyRoomRewardItem item = rewardList.get(rowIndex);
-            if (!RefundRepository.markClaimed(dbId, refundDates.get(rowIndex))) {
-                sendMessage("That refund entry was already claimed.");
-                setRefundList();
-                return;
-            }
-            /* Set back options! */
-            setRefundList();
-            if (!rewardList.isEmpty()) {
-                refundSlot = 0;
-                setRefundOptions();
-            } else send(new RemoveInterfaces());
-            /* Refund item function */
+            // Grant the item before marking the DB row claimed: if this were reversed and an
+            // exception hit between the two steps, the refund would be permanently consumed
+            // with nothing delivered. Granting first means the worst case on failure is a
+            // harmless re-claim attempt, not a silent item loss.
             int amount = item.getAmount() - getFreeSpace();
             if (Server.itemManager.isStackable(item.getId())) {
                 if (getFreeSpace() == 0) {
@@ -5675,6 +5410,15 @@ public class Client extends Player implements Runnable {
                 for (int i = 0; i < item.getAmount(); i++)
                     addItem(item.getId(), 1);
             checkItemUpdate();
+            if (!RefundRepository.markClaimed(dbId, refundDates.get(rowIndex))) {
+                logger.warn("Refund item granted to dbId={} but markClaimed failed (already claimed?) for date={}", dbId, refundDates.get(rowIndex));
+            }
+            /* Set back options! */
+            setRefundList();
+            if (!rewardList.isEmpty()) {
+                refundSlot = 0;
+                setRefundOptions();
+            } else send(new RemoveInterfaces());
         } catch (Exception e) {
             logger.warn("Error in checking sql!! {}", e.getMessage(), e);
         }

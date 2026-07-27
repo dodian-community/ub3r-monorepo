@@ -103,7 +103,6 @@ public abstract class Player extends Entity {
     public int headIcon = -1, skullIcon = -1, customCombat = -1;
     public boolean IsPMLoaded = false;
     public int playerIsMember = 1;
-    public int[] playerBonus = new int[14];
     public int fightType = 1; //What it should do!
     public fightStyle weaponStyle = fightStyle.PUNCH;
     public int specialAmount = 100;
