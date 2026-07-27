@@ -195,7 +195,24 @@ tasks.register<JavaExec>("dumpInterfaceDefs") {
 
 tasks.register<JavaExec>("generateRscm") {
     group = "tools"
-    description = "Generate all RSCM mappings from JSON definitions to mappings/def/"
+    description = "Generate developer-reference mappings from a pinned OSRS dump"
     classpath = sourceSets.main.get().runtimeClasspath
     mainClass.set("net.dodian.uber.game.engine.systems.cache.RscmGenerator")
+    val dumpPath = providers.gradleProperty("osrsDump")
+    doFirst {
+        require(dumpPath.isPresent) { "Pass -PosrsDump=/absolute/path/to/osrs-dump" }
+    }
+    args("--dump", dumpPath.getOrElse(""), "--output", "content/mappings", "--cache", "data/cache")
+}
+
+tasks.register<JavaExec>("checkRscm") {
+    group = "verification"
+    description = "Verify committed developer-reference mappings match the pinned OSRS dump"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("net.dodian.uber.game.engine.systems.cache.RscmGenerator")
+    val dumpPath = providers.gradleProperty("osrsDump")
+    doFirst {
+        require(dumpPath.isPresent) { "Pass -PosrsDump=/absolute/path/to/osrs-dump" }
+    }
+    args("--dump", dumpPath.getOrElse(""), "--output", "content/mappings", "--cache", "data/cache", "--check")
 }

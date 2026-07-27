@@ -1,7 +1,6 @@
 package net.dodian.uber.game.npc
 
 import net.dodian.uber.game.engine.systems.cache.CacheNpcDefinition
-import net.dodian.uber.game.rscm.asRscmSeq
 import net.dodian.uber.game.api.interaction.GameContentDsl
 
 data class NpcCacheOverride(
@@ -157,18 +156,6 @@ class NpcServerDefinitionBuilder internal constructor(private val id: Int? = nul
         this.attackAnimation = attack ?: attackAnimation
         this.defenceAnimation = defence ?: defenceAnimation
         this.deathAnimation = death ?: deathAnimation
-    }
-
-    fun attackAnimation(rscm: String) {
-        this.attackAnimation = rscm.asRscmSeq()
-    }
-
-    fun defenceAnimation(rscm: String) {
-        this.defenceAnimation = rscm.asRscmSeq()
-    }
-
-    fun deathAnimation(rscm: String) {
-        this.deathAnimation = rscm.asRscmSeq()
     }
 
     fun respawn(ticks: Int) {

@@ -19,8 +19,6 @@ object SpotAnimNames {
     }
 
     fun getId(name: String): Int {
-        val rscmId = net.dodian.uber.game.rscm.RSCM.get("spotanim", name)
-        if (rscmId != -1) return rscmId
         return nameToId[name] ?: -1
     }
 

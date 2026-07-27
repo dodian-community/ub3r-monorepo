@@ -12,7 +12,7 @@ import net.dodian.utilities.Utils
 private val AuburyVarrockProfile = profile("aubury.varrock")
 private val AuburyYanilleProfile = profile("aubury.yanille")
 
-internal object Aubury : NpcFamily by npcFamily("npc.aubury", block = {
+internal object Aubury : NpcFamily by npcFamily("Aubury", 11435, block = {
     profiles(
         AuburyVarrockProfile.key,
         AuburyYanilleProfile.key,

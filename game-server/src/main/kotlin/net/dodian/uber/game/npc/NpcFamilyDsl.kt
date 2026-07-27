@@ -2,7 +2,6 @@ package net.dodian.uber.game.npc
 
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.rscm.asRscm
 
 import net.dodian.uber.game.api.interaction.GameContentDsl
 import net.dodian.uber.game.api.interaction.NpcInteractionContext
@@ -279,15 +278,5 @@ private data class DefaultNpcFamily(
 
 fun npcFamily(name: String, primaryId: Int, block: NpcFamilyBuilder.() -> Unit): NpcFamily =
     NpcFamilyBuilder(name, primaryId).apply(block).build()
-
-fun npcFamily(rscmId: String, name: String, block: NpcFamilyBuilder.() -> Unit): NpcFamily {
-    val id = rscmId.asRscm()
-    return NpcFamilyBuilder(name, id).apply(block).build()
-}
-
-fun npcFamily(rscmId: String, block: NpcFamilyBuilder.() -> Unit): NpcFamily {
-    val id = rscmId.asRscm()
-    return NpcFamilyBuilder(rscmId.substringAfter("."), id).apply(block).build()
-}
 
 fun noNpcClick(@Suppress("UNUSED_PARAMETER") client: Client, @Suppress("UNUSED_PARAMETER") npc: Npc): Boolean = false

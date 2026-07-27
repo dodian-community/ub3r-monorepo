@@ -1,6 +1,6 @@
 # RSCM Mappings Reference
 
-This directory contains the game values and cache ID mappings (RSCM) used by the IntelliJ tools and development environment for auto-completion and reverse lookup.
+This directory contains generated cache-reference mappings for IntelliJ tooling, search, and reverse lookup. They are not loaded by the server and never determine gameplay IDs.
 
 ## Mappings Dictionary
 Due to client cache naming conventions (derived from original Jagex client terminologies), some file extensions and prefixes use technical terms:
@@ -18,3 +18,13 @@ Due to client cache naming conventions (derived from original Jagex client termi
 Skill gameplay plugins deliberately use reviewed raw cache IDs in their own
 definitions. RSCM remains developer tooling for lookup and reverse lookup; it
 is not consulted for skill route registration or runtime dispatch.
+
+## Regeneration
+
+Use the pinned dump as the source of truth:
+
+`./gradlew :game-server:generateRscm -PosrsDump=/absolute/path/to/osrs-dumps`
+
+The task emits compact `.rscm` name-to-ID files and rich JSONL records under
+`metadata/`. Verify committed output without writing it with
+`./gradlew :game-server:checkRscm -PosrsDump=/absolute/path/to/osrs-dumps`.

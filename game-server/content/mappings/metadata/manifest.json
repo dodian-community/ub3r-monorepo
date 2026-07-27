@@ -1,0 +1,53 @@
+{
+  "sourceRevision": "0a55afe6182e9c6a22955650dd02fc7d08d1648c",
+  "format": "cache-reference-v1",
+  "sources": [
+    {
+      "path": "dump.loc",
+      "sha256": "ae612d749fb4bb81d8fa3fcd25421bddd871cc2363d4c4f670009be5b616a339"
+    },
+    {
+      "path": "dump.npc",
+      "sha256": "ccdf7ff3b29ce17088868b3a20057bcea186b88bbdc1903f2f1514979bb42c0f"
+    },
+    {
+      "path": "dump.obj",
+      "sha256": "ea8bcc16b8df3d02e05d0835ab3fbeaa8272b767470f680784b17166f1094734"
+    },
+    {
+      "path": "dump.seq",
+      "sha256": "3268fceea9c3793d717cf17e340dd008db9a42ae610d05282143ac3ed5fdfa0b"
+    },
+    {
+      "path": "dump.spot",
+      "sha256": "3d59c744a286d3f44ac3b25035244e14b3b71aca4d1de09503013232f293ac50"
+    },
+    {
+      "path": "dump.varbit",
+      "sha256": "bdfb2ec1770451875684c9207689c3b21a0c93fc40c88b321f75c3b734d87275"
+    },
+    {
+      "path": "dump.varp",
+      "sha256": "99d629e5ff6e7daade482afbe3aa25f30dc52bde4df1f40d21b78db49e202511"
+    },
+    {
+      "path": "component.sym",
+      "sha256": "d4fbbfbaeebb3885614720432498aae24ecdc47daab87b98c0f57e0f3d153f08"
+    },
+    {
+      "path": "interface.sym",
+      "sha256": "a6bb0597821796eabaa27ca6d8129eee48f382f68e5df0f5c9fb53f575e58ef3"
+    }
+  ],
+  "namespaces": {
+    "component": 23831,
+    "interface": 853,
+    "loc": 50047,
+    "npc": 12630,
+    "obj": 28790,
+    "seq": 10678,
+    "spotanim": 2637,
+    "varbit": 15886,
+    "varp": 4074
+  }
+}

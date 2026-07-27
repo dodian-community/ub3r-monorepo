@@ -102,8 +102,6 @@ public class Server {
             return;
         }
         net.dodian.uber.game.netty.listener.PacketListenerManager.initialize();
-        net.dodian.uber.game.rscm.RSCM.load(new java.io.File("content/mappings"));
-
         if (getDatabaseInitialize() && !isDatabaseInitialized()) {
             initializeDatabase();
         }

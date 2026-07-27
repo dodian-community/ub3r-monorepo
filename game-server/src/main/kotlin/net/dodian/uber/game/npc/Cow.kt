@@ -7,7 +7,7 @@ import net.dodian.uber.game.engine.systems.event.ServerEvent
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 
-internal object Cow : NpcFamily by npcFamily("npc.cow", block = {
+internal object Cow : NpcFamily by npcFamily("Cow", 5842, block = {
 
     definition {
         name = "Cow"

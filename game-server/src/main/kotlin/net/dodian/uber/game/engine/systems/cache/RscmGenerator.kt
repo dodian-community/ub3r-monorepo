@@ -1,410 +1,220 @@
 package net.dodian.uber.game.engine.systems.cache
 
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import net.dodian.uber.game.rscm.Namer
 import java.io.File
-import java.io.FileReader
-import java.nio.file.Path
+import java.security.MessageDigest
 
+/**
+ * Generates developer-reference mappings from a pinned OSRS dump.  The output is
+ * intentionally not read by the game server: gameplay owns raw cache IDs.
+ */
 object RscmGenerator {
+    private val configNamespaces = linkedMapOf(
+        "loc" to "loc", "obj" to "obj", "npc" to "npc", "seq" to "seq",
+        "spot" to "spotanim", "varbit" to "varbit", "varp" to "varp",
+    )
+    private val json = Gson()
+    private val prettyJson = GsonBuilder().setPrettyPrinting().create()
 
     @JvmStatic
     fun main(args: Array<String>) {
-        val locOnly = args.contains("--loc-only")
-        var outputDir = File("content/mappings")
-        if (File("../settings.gradle.kts").exists()) {
-            outputDir = File("../game-server/content/mappings")
+        val options = parseArgs(args)
+        val dump = File(options.getValue("dump"))
+        val output = File(options["output"] ?: defaultOutput().path)
+        val sourceRevision = options["source-revision"] ?: dump.name.substringAfterLast('-')
+        require(dump.isDirectory) { "OSRS dump directory does not exist: ${dump.absolutePath}" }
+
+        val records = mutableMapOf<String, List<ReferenceRecord>>()
+        val consumed = mutableListOf<File>()
+        configNamespaces.forEach { (dumpType, namespace) ->
+            val source = File(dump, "config/dump.$dumpType")
+            require(source.isFile) { "Required dump source is missing: ${source.path}" }
+            consumed += source
+            records[namespace] = parseConfig(source, namespace)
         }
-        if (!outputDir.exists()) {
-            outputDir.mkdirs()
+        listOf("interface" to "interface", "component" to "component").forEach { (symbolType, namespace) ->
+            val source = File(dump, "symbols/$symbolType.sym")
+            require(source.isFile) { "Required dump symbol file is missing: ${source.path}" }
+            consumed += source
+            records[namespace] = if (namespace == "component") parseComponents(source) else parseSymbols(source, namespace)
         }
 
-        val gson = Gson()
-        val cachePath = "data/cache"
-        val cacheDir = File(cachePath).let { if (it.exists()) it else File("game-server/$cachePath") }
-        if (!cacheDir.isDirectory) {
-            println("Cache directory not found: ${cacheDir.absolutePath}")
+        options["cache"]?.let { cachePath -> verifyAgainstCache(File(cachePath), records) }
+        val rendered = render(records, sourceRevision, consumed)
+        if (options.containsKey("check")) {
+            val differences = rendered.filter { (relative, content) ->
+                val target = File(output, relative)
+                !target.isFile || target.readText() != content
+            }.keys
+            check(differences.isEmpty()) { "Generated reference mappings differ: ${differences.sorted().joinToString()}" }
+            println("Cache reference mappings are current under ${output.absolutePath}")
             return
         }
-
-        println("Opening cache at ${cacheDir.absolutePath}...")
-        val store = CacheStore(cacheDir.toPath()).open()
-
-        writeRscm(outputDir, "obj", buildItemEntries(gson))
-
-        println("Decoding NPC definitions...")
-        val npcDefs = NpcCacheDefinitionDecoder.decode(store)
-        writeRscm(outputDir, "npc", buildNpcLines(npcDefs.values
-            .sortedWith(compareByDescending<CacheNpcDefinition> { it.actions.filterNotNull().size }
-                .thenByDescending { it.id })
-            .toList()))
-
-        println("Decoding Object definitions...")
-        val objDefs = ObjectDefinitionDecoder.decode(store).definitions
-        val alterObjectNames = loadAlterObjectNames(System.getProperty("alter.objs.path")?.let(::File))
-        writeRscm(outputDir, "loc", buildLocLines(objDefs, outputDir, alterObjectNames))
-        if (locOnly) {
-            println("Successfully generated loc.rscm under ${outputDir.absolutePath}!")
-            store.close()
-            return
+        rendered.forEach { (relative, content) ->
+            val target = File(output, relative)
+            target.parentFile.mkdirs()
+            target.writeText(content)
         }
-
-        println("Decoding SpotAnim definitions...")
-        val spotAnimDefs = SpotAnimDefinitionDecoder.decode(store)
-        val spotAnimSymFile = File("/Users/tylercovalt/Desktop/rsmod-main/.data/symbols/spotanim.sym")
-        val spotAnimNames = parseSymFile(spotAnimSymFile)
-        println("Loaded ${spotAnimNames.size} spotanim names from ${spotAnimSymFile.path}")
-        writeRscm(outputDir, "spotanim", buildLines(
-            spotAnimDefs.keys.map { id ->
-                val name = spotAnimNames[id] ?: "spotanim_$id"
-                name to id
-            }
-        ))
-
-        println("Reading Projectile definitions...")
-        val projSymFile = File("/Users/tylercovalt/Desktop/rsmod-main/.data/symbols/projanim.sym")
-        val projNames = parseSymFile(projSymFile)
-        println("Loaded ${projNames.size} projanim names from ${projSymFile.path}")
-        writeRscm(outputDir, "projanim", buildLines(projNames.map { (id, name) -> name to id }))
-
-        println("Decoding Sequence definitions...")
-        val seqDefs = AnimationDefinitionDecoder.decode(store)
-        val seqSymFile = File("/Users/tylercovalt/Desktop/rsmod-main/.data/symbols/seq.sym")
-        val seqNames = parseSymFile(seqSymFile)
-        println("Loaded ${seqNames.size} seq names from ${seqSymFile.path}")
-        val maxSeqId = 10677
-        writeRscm(outputDir, "seq", buildLines(
-            seqDefs.keys.filter { it <= maxSeqId }.map { id ->
-                val name = seqNames[id] ?: "seq_$id"
-                name to id
-            }
-        ))
-
-        val voidPsDir = File("/Users/tylercovalt/Desktop/RSPS/game-server-main/data")
-        val varps = mutableMapOf<String, Int>()
-        if (voidPsDir.isDirectory) {
-            println("Scanning VoidPS Varp TOML files...")
-            voidPsDir.walkTopDown().filter { it.isFile && it.name.endsWith(".varps.toml") }.forEach { file ->
-                parseSectionIdToml(file).forEach { (name, id) -> varps[name] = id }
-            }
-            writeRscm(outputDir, "varp", buildLines(varps.map { it.key to it.value }))
-        }
-
-        val varbits = mutableMapOf<String, Int>()
-        if (voidPsDir.isDirectory) {
-            println("Scanning VoidPS Varbit TOML files...")
-            voidPsDir.walkTopDown().filter { it.isFile && it.name.endsWith(".varbits.toml") }.forEach { file ->
-                parseSectionIdToml(file).forEach { (name, id) -> varbits[name] = id }
-            }
-            writeRscm(outputDir, "varbit", buildLines(varbits.map { it.key to it.value }))
-        }
-
-        val ifaceNamesFile = File("/Users/tylercovalt/Desktop/RSPS/377.txt")
-        if (ifaceNamesFile.exists()) {
-            println("Generating Interface mappings from cache and 377 names...")
-            val (ifaceLines, compLines) = buildInterfaceLines(store, ifaceNamesFile)
-            writeRscm(outputDir, "interface", ifaceLines)
-            writeRscm(outputDir, "component", compLines)
-        } else {
-            println("Warning: Interface names file not found at ${ifaceNamesFile.path}")
-        }
-
-        println("Successfully generated RSCM mapping files under ${outputDir.absolutePath}!")
+        println("Generated ${records.values.sumOf { it.size }} reference records under ${output.absolutePath}")
     }
 
-    private fun buildNpcLines(defs: List<CacheNpcDefinition>): List<String> {
-        val existingKeys = mutableSetOf<String>()
-        val lines = mutableListOf<String>()
-        for (def in defs) {
-            val key = generateKey(def.name, def.id, existingKeys)
-            val actions = def.actions.filterNotNull()
-            if (actions.isNotEmpty()) {
-                lines.add("# ${actions.size} actions: ${actions.joinToString(", ", "\"", "\"")}")
-            } else {
-                lines.add("# 0 actions")
+    private fun defaultOutput(): File =
+        if (File("game-server/content/mappings").isDirectory) File("game-server/content/mappings") else File("content/mappings")
+
+    private fun parseArgs(args: Array<String>): Map<String, String> {
+        val options = linkedMapOf<String, String>()
+        var index = 0
+        while (index < args.size) {
+            val option = args[index]
+            require(option.startsWith("--")) { "Unexpected argument: $option" }
+            val key = option.removePrefix("--")
+            if (key == "check") options[key] = "true"
+            else {
+                val value = args.getOrNull(++index) ?: error("Missing value for --$key")
+                options[key] = value
             }
-            lines.add("$key=${def.id}")
+            index++
         }
-        return lines
+        require("dump" in options) { "Usage: --dump <path> [--output <path>] [--cache <path>] [--source-revision <id>] [--check]" }
+        return options
     }
 
-    private fun buildLines(rawEntries: List<Pair<String, Int>>): List<String> {
-        val existingKeys = mutableSetOf<String>()
-        return rawEntries.map { (rawName, id) ->
-            val key = generateKey(rawName, id, existingKeys)
-            "$key=$id"
+    private fun parseConfig(file: File, namespace: String): List<ReferenceRecord> {
+        val records = mutableListOf<ReferenceRecord>()
+        var currentId: Int? = null
+        var currentSymbol = ""
+        var properties = linkedMapOf<String, MutableList<String>>()
+        fun flush() {
+            val id = currentId ?: return
+            records += ReferenceRecord(namespace, id, currentSymbol, properties.mapValues { it.value.toList() })
+            properties = linkedMapOf()
         }
-    }
-
-    /**
-     * Produces a complete cache-backed loc mapping while allowing a compatible
-     * Alter object table to improve names for IDs it knows about. The override
-     * source is intentionally optional: cache IDs and existing current-only
-     * keys always survive generation.
-     */
-    private fun buildLocLines(
-        definitions: Map<Int, net.dodian.cache.objects.GameObjectData>,
-        outputDir: File,
-        alterNames: Map<Int, String>,
-    ): List<String> {
-        val existingNames = loadMappingsById(File(outputDir, "loc.rscm"))
-        data class Candidate(val id: Int, val key: String, val fromAlter: Boolean)
-
-        val candidates = definitions.values
-            .sortedBy { it.id }
-            .map { definition ->
-                val alterName = alterNames[definition.id]
-                Candidate(
-                    id = definition.id,
-                    key = alterName ?: existingNames[definition.id] ?: normalizedKey(definition.name),
-                    fromAlter = alterName != null,
-                )
-            }
-
-        val resolved = LinkedHashMap<Int, String>(candidates.size)
-        val used = mutableSetOf<String>()
-        candidates.groupBy { it.key }.toSortedMap().forEach { (key, group) ->
-            val preferred = group.firstOrNull { it.fromAlter } ?: group.minBy { it.id }
-            resolved[preferred.id] = key
-            used += key
-            group.filterNot { it === preferred }.sortedBy { it.id }.forEach { candidate ->
-                var resolvedKey = "${key}_${candidate.id}"
-                var suffix = 2
-                while (!used.add(resolvedKey)) {
-                    resolvedKey = "${key}_${candidate.id}_$suffix"
-                    suffix++
-                }
-                resolved[candidate.id] = resolvedKey
+        file.forEachLine { raw ->
+            val line = raw.trim()
+            if (line.startsWith("[") && line.endsWith("]")) {
+                flush()
+                currentSymbol = line.removeSurrounding("[", "]")
+                currentId = currentSymbol.substringAfterLast('_').toIntOrNull()
+                require(currentId != null) { "Could not read ID from $currentSymbol in ${file.name}" }
+            } else if (currentId != null && line.isNotBlank() && !line.startsWith("//")) {
+                val separator = line.indexOf('=')
+                if (separator > 0) properties.getOrPut(line.substring(0, separator)) { mutableListOf() } += line.substring(separator + 1)
             }
         }
-        return resolved.entries.sortedBy { it.key }.map { (id, key) -> "$key=$id" }
+        flush()
+        return records.sortedBy { it.id }
     }
 
-    private fun loadAlterObjectNames(file: File?): Map<Int, String> {
-        if (file == null || !file.isFile) {
-            println("No Alter Objs.kt supplied; retaining cache loc names.")
-            return emptyMap()
+    private fun parseSymbols(file: File, namespace: String): List<ReferenceRecord> =
+        file.readLines().mapNotNull { line ->
+            val parts = line.split('\t', limit = 2)
+            val id = parts.firstOrNull()?.toIntOrNull() ?: return@mapNotNull null
+            ReferenceRecord(namespace, id, parts.getOrElse(1) { "${namespace}_$id" }, emptyMap())
+        }.sortedBy { it.id }
+
+    /** Components are symbolized as `parent:child`; use the cache's packed ID for reference. */
+    private fun parseComponents(file: File): List<ReferenceRecord> =
+        file.readLines().mapNotNull { line ->
+            val parts = line.split('\t', limit = 2)
+            val coordinates = parts.firstOrNull()?.split(':', limit = 2) ?: return@mapNotNull null
+            val parent = coordinates.getOrNull(0)?.toIntOrNull() ?: return@mapNotNull null
+            val child = coordinates.getOrNull(1)?.toIntOrNull() ?: return@mapNotNull null
+            val packedId = (parent shl 16) or child
+            ReferenceRecord(
+                namespace = "component",
+                id = packedId,
+                symbol = parts.getOrElse(1) { "interface_${parent}:component_$child" },
+                properties = mapOf("parent" to listOf(parent.toString()), "child" to listOf(child.toString())),
+            )
+        }.sortedBy { it.id }
+
+    private fun render(
+        input: Map<String, List<ReferenceRecord>>,
+        sourceRevision: String,
+        consumed: List<File>,
+    ): Map<String, String> {
+        val rendered = linkedMapOf<String, String>()
+        val resolved = input.mapValues { (_, records) -> resolveKeys(records) }
+        resolved.forEach { (namespace, records) ->
+            rendered["$namespace.rscm"] = records.sortedBy { it.key }.joinToString("\n", postfix = "\n") { "${it.key}=${it.id}" }
+            rendered["metadata/$namespace.jsonl"] = records.sortedBy { it.id }.joinToString("\n", postfix = "\n") { record ->
+                json.toJson(record.toJson())
+            }
         }
-        val names = LinkedHashMap<Int, String>()
-        file.forEachLine { line ->
-            val declaration = line.trim()
-            if (!declaration.startsWith("const val ")) return@forEachLine
-            val parts = declaration.removePrefix("const val ").split(" = ", limit = 2)
-            val id = parts.getOrNull(1)?.toIntOrNull() ?: return@forEachLine
-            val name = parts[0].takeIf { it.isNotBlank() } ?: return@forEachLine
-            names[id] = name.lowercase()
+        val manifest = JsonObject().apply {
+            addProperty("sourceRevision", sourceRevision)
+            addProperty("format", "cache-reference-v1")
+            add("sources", JsonArray().also { array -> consumed.sortedBy { it.path }.forEach { file ->
+                array.add(JsonObject().apply { addProperty("path", file.name); addProperty("sha256", sha256(file)) })
+            } })
+            add("namespaces", JsonObject().also { namespaces -> resolved.toSortedMap().forEach { (name, records) ->
+                namespaces.addProperty(name, records.size)
+            } })
         }
-        println("Loaded ${names.size} Alter object names from ${file.path}")
-        return names
+        rendered["metadata/manifest.json"] = prettyJson.toJson(manifest) + "\n"
+        return rendered
     }
 
-    private fun loadMappingsById(file: File): Map<Int, String> {
-        if (!file.isFile) return emptyMap()
-        val result = HashMap<Int, String>()
-        file.forEachLine { line ->
-            val separator = line.indexOf('=')
-            if (separator <= 0) return@forEachLine
-            val id = line.substring(separator + 1).trim().toIntOrNull() ?: return@forEachLine
-            result[id] = line.substring(0, separator).trim()
+    private fun resolveKeys(records: List<ReferenceRecord>): List<ResolvedReferenceRecord> {
+        val candidates = records.map { record ->
+            val decodedName = record.properties["name"]?.lastOrNull()?.takeIf { it.isNotBlank() }
+            val genericSymbol = "${record.namespace}_${record.id}"
+            val preferred = decodedName ?: record.symbol.takeIf { it.isNotBlank() && it != genericSymbol } ?: genericSymbol
+            record to Namer.sanitizeRSCM(preferred).ifBlank { genericSymbol }
+        }
+        val result = mutableListOf<ResolvedReferenceRecord>()
+        candidates.groupBy { it.second }.toSortedMap().forEach { (base, group) ->
+            group.sortedBy { it.first.id }.forEachIndexed { index, (record, _) ->
+                result += ResolvedReferenceRecord(record, if (index == 0) base else "${base}_${record.id}")
+            }
         }
         return result
     }
 
-    private fun normalizedKey(name: String): String =
-        Namer.sanitizeRSCM(name).ifEmpty { "unnamed" }
-
-    private fun generateKey(name: String, id: Int, existing: MutableSet<String>): String {
-        val base = Namer.sanitizeRSCM(name)
-        val key = if (base.isEmpty()) "unnamed" else base
-        if (existing.add(key)) {
-            return key
-        }
-        val fallbackKey = "${key}_$id"
-        existing.add(fallbackKey)
-        return fallbackKey
-    }
-
-    private fun writeRscm(dir: File, name: String, lines: List<String>) {
-        val file = File(dir, "$name.rscm")
-        file.printWriter().use { writer ->
-            lines.forEach { writer.println(it) }
-        }
-        val entryCount = lines.count { !it.startsWith("#") }
-        println("Generated $entryCount mappings in ${file.name}")
-    }
-
-    private fun buildItemEntries(gson: Gson): List<String> {
-        var sourceFile = File("content/items/item_definitions.json")
-        if (!sourceFile.exists()) {
-            sourceFile = File("game-server/content/items/item_definitions.json")
-        }
-        if (!sourceFile.exists()) {
-            println("Warning: Item definitions not found")
-            return emptyList()
-        }
-
-        val existingKeys = mutableSetOf<String>()
-        val lines = mutableListOf<String>()
-
-        FileReader(sourceFile).use { reader ->
-            val jsonArray = gson.fromJson(reader, JsonArray::class.java)
-            for (element in jsonArray) {
-                if (element is JsonObject) {
-                    val id = element.get("id")?.asInt ?: continue
-                    val name = element.get("name")?.asString ?: "unnamed"
-                    val key = generateKey(name, id, existingKeys)
-                    lines.add("$key=$id")
+    private fun verifyAgainstCache(cacheDir: File, records: Map<String, List<ReferenceRecord>>) {
+        require(cacheDir.isDirectory) { "Cache directory does not exist: ${cacheDir.absolutePath}" }
+        CacheStore(cacheDir.toPath()).open().use { store ->
+            fun verify(namespace: String, actual: Set<Int>) {
+                val expected = records.getValue(namespace).map { it.id }.toSet()
+                // Cache decoders intentionally omit empty/null definitions. The dump is allowed
+                // to contain those placeholders, but may never omit a decoded live definition.
+                check(actual.all { it in expected }) {
+                    "$namespace dump is missing packed-cache IDs: ${(actual - expected).sorted().joinToString()}"
                 }
             }
+            verify("loc", ObjectDefinitionDecoder.decode(store).definitions.keys)
+            verify("npc", NpcCacheDefinitionDecoder.decode(store).keys)
+            verify("seq", AnimationDefinitionDecoder.decode(store).keys)
+            verify("spotanim", SpotAnimDefinitionDecoder.decode(store).keys)
+            // The server cache has an expanded varbit table beyond this pinned dump;
+            // retain it as reference data without treating that known extension as a
+            // dump/cache revision failure.
+            val dumpVarbits = records.getValue("varbit").size
+            val cacheVarbits = VarbitDefinitionDecoder.decode(store).size
+            if (dumpVarbits != cacheVarbits) println("varbit reference differs from packed cache: dump=$dumpVarbits cache=$cacheVarbits")
         }
-
-        return lines
     }
 
-    private fun buildInterfaceLines(store: CacheStore, namesFile: File): Pair<List<String>, List<String>> {
-        val interfaceMap = mutableMapOf<String, Int>()
-        val componentMap = mutableMapOf<String, Int>()
-        val interfaceExistingKeys = mutableSetOf<String>()
-        val componentExistingKeys = mutableSetOf<String>()
+    private fun sha256(file: File): String = MessageDigest.getInstance("SHA-256").digest(file.readBytes()).joinToString("") { "%02x".format(it) }
 
-        val interfaces = InterfaceDefinitionDecoder.decode(store)
-        if (interfaces.isEmpty()) {
-            println("Warning: No interface definitions decoded from cache.")
-            return emptyList<String>() to emptyList()
+    private data class ReferenceRecord(val namespace: String, val id: Int, val symbol: String, val properties: Map<String, List<String>>) {
+        fun toJson(): JsonObject = JsonObject().apply {
+            addProperty("namespace", namespace); addProperty("id", id); addProperty("key", "")
+            addProperty("symbol", symbol)
+            properties["name"]?.lastOrNull()?.let { addProperty("name", it) }
+            add("properties", JsonObject().also { propertyObject -> properties.forEach { (key, values) ->
+                if (values.size == 1) propertyObject.addProperty(key, values.single())
+                else propertyObject.add(key, JsonArray().also { values.forEach(it::add) })
+            } })
         }
-
-        val cleanInterfaceNames = parse377InterfaceNames(namesFile)
-        println("Loaded ${cleanInterfaceNames.size} interface names from ${namesFile.path}")
-
-        fun getRootInterfaceId(id: Int): Int {
-            var current = interfaces[id] ?: return id
-            var safety = 0
-            while (current.parentId != -1 && safety < 100) {
-                val parent = interfaces[current.parentId] ?: break
-                current = parent
-                safety++
-            }
-            return current.id
-        }
-
-        val rootIdToName = mutableMapOf<Int, String>()
-
-        for ((id, rawName) in cleanInterfaceNames.entries.sortedBy { it.key }) {
-            val key = generateKey(rawName, id, interfaceExistingKeys)
-            interfaceMap[key] = id
-            rootIdToName[id] = key
-        }
-
-        val cacheRootIds = interfaces.values.filter { it.parentId == -1 }.map { it.id }.sorted()
-        for (rootId in cacheRootIds) {
-            if (rootIdToName.containsKey(rootId)) continue
-
-            val rootDef = interfaces[rootId]
-            var nameToUse = rootDef?.disabledMessage?.trim() ?: ""
-            if (nameToUse.isEmpty()) {
-                nameToUse = interfaces.values
-                    .filter { getRootInterfaceId(it.id) == rootId && it.type == 4 && it.disabledMessage.trim().isNotEmpty() }
-                    .minByOrNull { it.id }
-                    ?.disabledMessage?.trim() ?: ""
-            }
-
-            val key = if (nameToUse.isNotEmpty()) {
-                generateKey(nameToUse, rootId, interfaceExistingKeys)
-            } else {
-                "interface_$rootId"
-            }
-            interfaceMap[key] = rootId
-            rootIdToName[rootId] = key
-        }
-
-        val childDefs = interfaces.values.filter { it.parentId != -1 }.sortedBy { it.id }
-        for (def in childDefs) {
-            val rootId = getRootInterfaceId(def.id)
-            val parentName = rootIdToName[rootId] ?: "interface_$rootId"
-
-            var cleanText = when {
-                def.tooltip.isNotEmpty() -> def.tooltip
-                def.spellName.isNotEmpty() -> def.spellName
-                def.type == 4 && def.disabledMessage.isNotEmpty() -> def.disabledMessage
-                else -> ""
-            }.trim()
-
-            if (cleanText.isNotEmpty()) {
-                cleanText = Namer.removeTags(cleanText)
-                    .replace("\n", " ").replace("\r", " ").replace("\t", " ").trim()
-
-                if (cleanText.isNotEmpty()) {
-                    val compKey = generateKey(cleanText, def.id, componentExistingKeys)
-                    componentMap["$parentName:$compKey"] = def.id
-                }
-            }
-        }
-
-        val ifaceLines = interfaceMap.entries
-            .sortedBy { it.value }
-            .map { "${it.key}=${it.value}" }
-        val compLines = componentMap.entries
-            .sortedBy { it.value }
-            .map { "${it.key}=${it.value}" }
-
-        return ifaceLines to compLines
     }
 
-    private fun parse377InterfaceNames(file: File): Map<Int, String> {
-        if (!file.exists()) return emptyMap()
-        val results = mutableMapOf<Int, String>()
-        file.forEachLine { line ->
-            val trimmed = line.trim()
-            if (trimmed.isEmpty() || trimmed.startsWith("#")) return@forEachLine
-            val firstSpace = trimmed.indexOfFirst { it.isWhitespace() }
-            if (firstSpace != -1) {
-                val idStr = trimmed.substring(0, firstSpace)
-                val nameStr = trimmed.substring(firstSpace).trim()
-                val id = idStr.toIntOrNull()
-                if (id != null && nameStr.isNotEmpty()) {
-                    results[id] = nameStr
-                }
-            }
-        }
-        return results
-    }
-
-    private fun parseSectionIdToml(file: File): Map<String, Int> {
-        val results = mutableMapOf<String, Int>()
-        var currentSection: String? = null
-        file.forEachLine { line ->
-            val trimmed = line.trim()
-            if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-                currentSection = trimmed.substring(1, trimmed.length - 1).trim()
-            } else if (currentSection != null && trimmed.startsWith("id")) {
-                val parts = trimmed.split("=")
-                if (parts.size == 2) {
-                    parts[1].trim().toIntOrNull()?.let { id ->
-                        results[currentSection!!] = id
-                    }
-                }
-            }
-        }
-        return results
-    }
-
-    private fun parseSymFile(file: File): Map<Int, String> {
-        if (!file.exists()) return emptyMap()
-        val results = mutableMapOf<Int, String>()
-        file.forEachLine { line ->
-            val trimmed = line.trim()
-            if (trimmed.isEmpty() || trimmed.startsWith("#")) return@forEachLine
-            val parts = trimmed.split("\t")
-            if (parts.size == 2) {
-                val id = parts[0].toIntOrNull()
-                val name = parts[1].trim()
-                if (id != null && name.isNotEmpty()) {
-                    results[id] = name
-                }
-            }
-        }
-        return results
+    private data class ResolvedReferenceRecord(val record: ReferenceRecord, val key: String) {
+        val id get() = record.id
+        fun toJson(): JsonObject = record.toJson().also { it.addProperty("key", key) }
     }
 }
