@@ -73,7 +73,12 @@ interface ContentWorld {
     fun distanceTo(x: Int, y: Int): Int
     fun teleport(destination: Position)
     fun graphic(id: Int, height: Int = 0)
-    fun replaceObject(position: Position, replacementId: Int, restoreTicks: Int = 0)
+    /**
+     * Swaps the object at [position] (currently [originalId]) for [replacementId] world-wide
+     * (every nearby viewer sees it, not just this player), reverting back to [originalId] after
+     * [restoreTicks] ticks (0 = permanent until something else replaces it).
+     */
+    fun replaceObject(position: Position, originalId: Int, replacementId: Int, restoreTicks: Int = 0)
 }
 
 fun interface ContentSocial {

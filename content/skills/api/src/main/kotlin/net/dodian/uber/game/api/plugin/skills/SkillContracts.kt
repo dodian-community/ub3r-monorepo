@@ -133,6 +133,15 @@ interface SkillActions {
     fun triggerRandomEvent(experience: Int)
     /** Records an audited resource-gathering event (fishing/mining/woodcutting/thieving loot, etc.). */
     fun logGathering(itemId: Int, amount: Int, reason: String)
+    /** Broadcasts [message] to every online player (e.g. a rare-drop announcement). */
+    fun yell(message: String)
+    /**
+     * Per-player, per-[key] cooldown gate: returns `true` (and starts the cooldown) only if at
+     * least [cooldownMs] has elapsed since the last successful acquire for this [key] on this
+     * player. Use a module-unique key (e.g. `"thieving.yanille_chest"`) to throttle a specific
+     * interaction without needing engine-side constants.
+     */
+    fun tryThrottle(key: String, cooldownMs: Long): Boolean
 }
 
 interface SkillUi {
@@ -158,8 +167,23 @@ interface SkillWorld {
     fun teleport(destination: SkillPosition)
     fun anchor(position: SkillPosition)
     fun face(position: SkillPosition)
+    /** Plays graphic [id] at the player's own position. */
     fun graphic(id: Int, height: Int = 0)
-    fun replaceObject(target: SkillObjectRef, replacementId: Int, restoreTicks: Int = 0)
+    /** Plays graphic [id] at an arbitrary world [position] (e.g. on the object being interacted with). */
+    fun graphic(id: Int, position: SkillPosition, height: Int = 0)
+    /**
+     * Swaps [target] for [replacementId] world-wide (every nearby viewer sees it, not just this
+     * player), reverting back to [target]'s original id after [restoreTicks] ticks (0 = permanent
+     * until something else replaces it). [type]/[face] set the replacement object's orientation;
+     * they default to [target]'s own values when the swap doesn't need to change orientation.
+     */
+    fun replaceObject(
+        target: SkillObjectRef,
+        replacementId: Int,
+        restoreTicks: Int = 0,
+        type: Int = target.type,
+        face: Int = target.face,
+    )
     /** Whether the player is still within interaction range of [target]'s nearest boundary tile (accounts for object size/shape, not just Chebyshev tile distance). */
     fun withinObjectBoundary(target: SkillObjectRef): Boolean
     /** Spawns [objectId] at the player's current position for [durationTicks] ticks, then removes it and invokes [onExpire]. */

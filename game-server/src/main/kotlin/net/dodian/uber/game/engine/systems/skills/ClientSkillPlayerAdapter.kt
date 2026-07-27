@@ -116,6 +116,9 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
         override fun triggerRandomEvent(experience: Int) = SkillingRandomEventService.trigger(client, experience)
         override fun logGathering(itemId: Int, amount: Int, reason: String) =
             ItemLog.playerGathering(client, itemId, amount, client.position.copy(), reason)
+        override fun yell(message: String) = client.yell(message)
+        override fun tryThrottle(key: String, cooldownMs: Long): Boolean =
+            ContentInteraction.tryAcquireMs(client, key, cooldownMs)
         override fun queue(spec: ActionSpec, beforeStart: () -> Unit): SkillActionHandle? {
             val player = this@ClientSkillPlayerAdapter
             val task = object : GatheringTask(
@@ -169,8 +172,11 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
         override fun anchor(position: SkillPosition) = client.setInteractionAnchor(position.x, position.y, position.z)
         override fun face(position: SkillPosition) = client.setFocus(position.x, position.y)
         override fun graphic(id: Int, height: Int) = client.stillgfx(id, client.position, height)
-        override fun replaceObject(target: SkillObjectRef, replacementId: Int, restoreTicks: Int) {
-            client.ReplaceObject(target.position.x, target.position.y, replacementId, target.face, target.type)
+        override fun graphic(id: Int, position: SkillPosition, height: Int) =
+            client.stillgfx(id, position.toPosition(), height)
+        override fun replaceObject(target: SkillObjectRef, replacementId: Int, restoreTicks: Int, type: Int, face: Int) {
+            val worldObject = WorldObject(replacementId, target.position.x, target.position.y, target.position.z, type, face, target.id)
+            GlobalObject.addGlobalObject(worldObject, restoreTicks * 600)
         }
         override fun withinObjectBoundary(target: SkillObjectRef): Boolean =
             ContentInteraction.withinNearestBoundaryCardinal(

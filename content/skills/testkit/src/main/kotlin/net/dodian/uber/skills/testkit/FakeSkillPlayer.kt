@@ -42,6 +42,9 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
     var randomEventChecks = 0
         private set
     val gatheringLogs = mutableListOf<Triple<Int, Int, String>>()
+    val yells = mutableListOf<String>()
+    private val throttleAcquiredAtMillis = mutableMapOf<String, Long>()
+    val graphicsPlayed = mutableListOf<Pair<Int, SkillPosition>>()
     var positionValue = SkillPosition(3200, 3200, 0)
     val openedInterfaces = mutableListOf<Int>()
     val chatboxInterfaces = mutableListOf<Int>()
@@ -160,6 +163,13 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
         override fun activeSessionKey(): String? = sessionKey
         override fun triggerRandomEvent(experience: Int) { if (experience > 0) randomEventChecks++ }
         override fun logGathering(itemId: Int, amount: Int, reason: String) { gatheringLogs += Triple(itemId, amount, reason) }
+        override fun yell(message: String) { yells += message }
+        override fun tryThrottle(key: String, cooldownMs: Long): Boolean {
+            val lastAcquired = throttleAcquiredAtMillis[key]
+            if (lastAcquired != null && nowMillis - lastAcquired < cooldownMs) return false
+            throttleAcquiredAtMillis[key] = nowMillis
+            return true
+        }
         override fun queue(spec: ActionSpec, beforeStart: () -> Unit): SkillActionHandle? {
             val failure = spec.requirements.asSequence()
                 .map { it.validate(this@FakeSkillPlayer) }
@@ -196,8 +206,11 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
         override fun teleport(destination: SkillPosition) { positionValue = destination }
         override fun anchor(position: SkillPosition) { anchor = position }
         override fun face(position: SkillPosition) = Unit
-        override fun graphic(id: Int, height: Int) = Unit
-        override fun replaceObject(target: SkillObjectRef, replacementId: Int, restoreTicks: Int) { replacedObjects += target to replacementId }
+        override fun graphic(id: Int, height: Int) { graphicsPlayed += id to positionValue }
+        override fun graphic(id: Int, position: SkillPosition, height: Int) { graphicsPlayed += id to position }
+        override fun replaceObject(target: SkillObjectRef, replacementId: Int, restoreTicks: Int, type: Int, face: Int) {
+            replacedObjects += target to replacementId
+        }
         override fun withinObjectBoundary(target: SkillObjectRef): Boolean = withinBoundaryOverride
         override fun spawnTemporaryObject(objectId: Int, durationTicks: Int, onExpire: () -> Unit) {
             spawnedObjects += objectId to durationTicks

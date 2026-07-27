@@ -3,6 +3,8 @@ package net.dodian.uber.game.api.content
 import net.dodian.uber.game.engine.systems.skills.ClientSkillPlayerAdapter
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.model.objects.GlobalObject
+import net.dodian.uber.game.model.objects.WorldObject
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 
 /**
@@ -65,8 +67,10 @@ internal class ClientContentPlayerAdapter(private val client: Client) : ContentP
         override fun distanceTo(x: Int, y: Int) = client.distanceToPoint(x, y)
         override fun teleport(destination: Position) = client.transport(destination)
         override fun graphic(id: Int, height: Int) = client.stillgfx(id, client.position, height)
-        override fun replaceObject(position: Position, replacementId: Int, restoreTicks: Int) =
-            client.ReplaceObject(position.x, position.y, replacementId, 0, 10)
+        override fun replaceObject(position: Position, originalId: Int, replacementId: Int, restoreTicks: Int) {
+            val worldObject = WorldObject(replacementId, position.x, position.y, position.z, 10, 0, originalId)
+            GlobalObject.addGlobalObject(worldObject, restoreTicks * 600)
+        }
     }
 }
 
