@@ -12,7 +12,12 @@ data class Settings(
     @JsonProperty("features") val features: FeatureSettings,
     @JsonProperty("database_pool") val databasePool: DatabasePoolSettings,
     @JsonProperty("ranks") val ranks: RankSettings = RankSettings(),
-    @JsonProperty("metrics") val metrics: MetricsSettings = MetricsSettings()
+    @JsonProperty("metrics") val metrics: MetricsSettings = MetricsSettings(),
+    @JsonProperty("discord") val discord: DiscordSettings = DiscordSettings()
+)
+
+data class DiscordSettings(
+    @JsonProperty("require_verified_email") val requireVerifiedEmail: Boolean = false
 )
 
 data class MetricsSettings(

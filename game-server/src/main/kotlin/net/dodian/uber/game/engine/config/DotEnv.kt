@@ -90,4 +90,6 @@ val metricsEnabled get() = if (SettingsLoader.isLoaded) SettingsLoader.settings.
 val metricsPrometheusEndpoint get() = if (SettingsLoader.isLoaded) SettingsLoader.settings.metrics.prometheusEndpoint else true
 val metricsDashboardEnabled get() = if (SettingsLoader.isLoaded) SettingsLoader.settings.metrics.dashboardEnabled else true
 
+val discordRequireVerifiedEmail get() = if (SettingsLoader.isLoaded) SettingsLoader.settings.discord.requireVerifiedEmail else false
+
 

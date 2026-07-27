@@ -67,6 +67,8 @@ public class Client extends GameEngine
         RSClient {
 
     public static String discordAuthCode = null;
+    public static long discordAuthCodeReceivedAtMillis = 0L;
+    private static final long DISCORD_AUTH_CODE_TTL_MILLIS = 15 * 60 * 1000L;
 
     /**
      * We keep this main method here to support fallback in lanuncher etc.
@@ -11856,12 +11858,19 @@ public class Client extends GameEngine
                 outgoing.writeDWord(ai[3]);
                 outgoing.writeDWord(ai[3]);
                 outgoing.writeDWord(0);
+                if (discordAuthCode != null && System.currentTimeMillis() - discordAuthCodeReceivedAtMillis > DISCORD_AUTH_CODE_TTL_MILLIS) {
+                    discordAuthCode = null;
+                    discordAuthCodeReceivedAtMillis = 0L;
+                    com.osroyale.login.impl.MainScreen.accountCreationStatus = "Discord authorization expired, please try again.";
+                    com.osroyale.login.impl.MainScreen.loginScreenState = 0;
+                }
                 System.out.println("[Client Login] Sending discordAuthCode='" + discordAuthCode + "' for username='" + username + "'");
                 outgoing.writeString(discordAuthCode != null ? discordAuthCode : "");
                 outgoing.writeString("");
                 outgoing.writeString(username);
                 outgoing.writeString(password);
                 discordAuthCode = null;
+                discordAuthCodeReceivedAtMillis = 0L;
                 outgoing.encodeRSA(NetworkConstants.RSA_EXPONENT, NetworkConstants.RSA_MODULUS);
                 aStream_847.position = 0;
                 if (reconnecting) {
@@ -12164,6 +12173,24 @@ public class Client extends GameEngine
             if (response == 29) {
                 loginMessage1 = "Discord authorization failed or expired.";
                 loginMessage2 = "Please try Create Account again.";
+                return;
+            }
+
+            if (response == 30) {
+                loginMessage1 = "Your username's capitalization doesn't match your registered account.";
+                loginMessage2 = "Please try again using the exact same capitalization.";
+                return;
+            }
+
+            if (response == 31) {
+                loginMessage1 = "This Discord account has reached the maximum number of linked game accounts.";
+                loginMessage2 = "Please use an existing account or a different Discord account.";
+                return;
+            }
+
+            if (response == 32) {
+                loginMessage1 = "Your Discord email is not verified.";
+                loginMessage2 = "Please verify it with Discord and try again.";
                 return;
             }
 

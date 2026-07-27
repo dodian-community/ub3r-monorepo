@@ -56,10 +56,11 @@ object AccountPersistenceService {
                     val email = discordUser?.email ?: ""
                     val discordId = discordUser?.id ?: ""
                     val discordUsername = discordUser?.username ?: ""
+                    val discordVerified = discordUser?.verified ?: false
                     val deadline = System.currentTimeMillis() + 3_000L
                     var finalResult = AccountLoginService.PreparedLogin.failure(13)
                     while (true) {
-                        val loadResult = AccountLoginService.prepareGame(client, username, password, email, discordId, discordUsername)
+                        val loadResult = AccountLoginService.prepareGame(client, username, password, email, discordId, discordUsername, discordVerified)
                         if (loadResult.code != AccountLoginService.FINAL_SAVE_PENDING_INTERNAL) {
                             finalResult = loadResult
                             break

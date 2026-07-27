@@ -89,6 +89,42 @@ object AccountLoginRepository {
         }
     }
 
+    /**
+     * Atomically checks the per-Discord-account limit and inserts under a row lock, so two concurrent
+     * creation attempts for the same discordId can't both pass the count check before either commits.
+     * Returns false (and inserts nothing) if [maxAllowed] is already reached.
+     */
+    fun insertWebUserIfUnderDiscordLimit(
+        connection: Connection,
+        playerName: String,
+        playerPass: String,
+        email: String,
+        discordId: String,
+        discordUsername: String,
+        maxAllowed: Int,
+    ): Boolean {
+        val previousAutoCommit = connection.autoCommit
+        connection.autoCommit = false
+        try {
+            val count = connection.prepareStatement(AccountLoginQueries.countAccountsByDiscordIdForUpdate).use { statement ->
+                statement.setString(1, discordId)
+                statement.executeQuery().use { results -> if (results.next()) results.getInt("total") else 0 }
+            }
+            if (count >= maxAllowed) {
+                connection.rollback()
+                return false
+            }
+            insertWebUser(connection, playerName, playerPass, email, discordId, discordUsername)
+            connection.commit()
+            return true
+        } catch (exception: Exception) {
+            connection.rollback()
+            throw exception
+        } finally {
+            connection.autoCommit = previousAutoCommit
+        }
+    }
+
     fun updateWebUserCredentials(connection: Connection, dbId: Int, playerPass: String, email: String = "") {
         val salt = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 8)
         val hashedPassword = net.dodian.uber.game.model.entity.player.Client.passHash(playerPass, salt)

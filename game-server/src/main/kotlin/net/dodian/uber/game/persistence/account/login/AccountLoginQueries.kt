@@ -17,6 +17,9 @@ internal object AccountLoginQueries {
     val countAccountsByDiscordId =
         "SELECT COUNT(*) AS total FROM ${DbTables.WEB_USERS_TABLE} WHERE discord_id = ? AND discord_id != ''"
 
+    val countAccountsByDiscordIdForUpdate =
+        "SELECT COUNT(*) AS total FROM ${DbTables.WEB_USERS_TABLE} WHERE discord_id = ? AND discord_id != '' FOR UPDATE"
+
     val statsBackfillInsert =
         "INSERT INTO ${DbTables.GAME_CHARACTERS_STATS} (uid) VALUES (?) ON DUPLICATE KEY UPDATE uid = uid"
 

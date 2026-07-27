@@ -8,6 +8,7 @@ import net.dodian.uber.game.persistence.account.AccountPersistenceService
 import net.dodian.uber.game.persistence.account.Login
 import net.dodian.uber.game.persistence.repository.DbAsyncRepository
 import net.dodian.uber.game.engine.config.discordMaxAccountsPerDiscord
+import net.dodian.uber.game.engine.config.discordRequireVerifiedEmail
 import net.dodian.uber.game.engine.config.rankBannedGroupId
 import net.dodian.uber.game.engine.config.rankDebugBypassGroupIds
 import net.dodian.uber.game.engine.config.serverDebugMode
@@ -28,6 +29,7 @@ object AccountLoginService {
         email: String = "",
         discordId: String = "",
         discordUsername: String = "",
+        discordVerified: Boolean = false,
     ): PreparedLogin {
         val prepared = try {
             DbAsyncRepository.withConnection { connection ->
@@ -38,6 +40,7 @@ object AccountLoginService {
                     email = email,
                     discordId = discordId,
                     discordUsername = discordUsername,
+                    discordVerified = discordVerified,
                     connection = connection,
                     allowDevAutoCreate = isDevAutoCreateEnabled(),
                     allowDevPasswordBypass = isDevPasswordBypassEnabled(),
@@ -86,6 +89,7 @@ object AccountLoginService {
         email: String = "",
         discordId: String = "",
         discordUsername: String = "",
+        discordVerified: Boolean = false,
         connection: Connection,
         allowDevAutoCreate: Boolean,
         allowDevPasswordBypass: Boolean,
@@ -108,14 +112,21 @@ object AccountLoginService {
                 return PreparedLogin.failure(23)
             }
             if (discordId.isNotBlank()) {
-                val count = AccountLoginRepository.countAccountsByDiscordId(connection, discordId)
-                val maxAllowed = discordMaxAccountsPerDiscord
-                if (count >= maxAllowed) {
-                    logger.warn("Account creation rejected for discord_id {}: limit of {} accounts reached", discordId, maxAllowed)
-                    return PreparedLogin.failure(12)
+                if (discordRequireVerifiedEmail && !discordVerified) {
+                    logger.warn("Account creation rejected for discord_id {}: Discord email is not verified", discordId)
+                    return PreparedLogin.failure(32)
                 }
+                val maxAllowed = discordMaxAccountsPerDiscord
+                val inserted = AccountLoginRepository.insertWebUserIfUnderDiscordLimit(
+                    connection, playerName, playerPass, email, discordId, discordUsername, maxAllowed,
+                )
+                if (!inserted) {
+                    logger.warn("Account creation rejected for discord_id {}: limit of {} accounts reached", discordId, maxAllowed)
+                    return PreparedLogin.failure(31)
+                }
+            } else {
+                AccountLoginRepository.insertWebUser(connection, playerName, playerPass, email, discordId, discordUsername)
             }
-            AccountLoginRepository.insertWebUser(connection, playerName, playerPass, email, discordId, discordUsername)
             webUser = AccountLoginRepository.loadWebUser(connection, playerName) ?: return PreparedLogin.failure(13)
         } else if (webUser.password.isEmpty() && playerPass.isNotEmpty()) {
             AccountLoginRepository.updateWebUserCredentials(connection, webUser.dbId, playerPass, email)
@@ -124,14 +135,14 @@ object AccountLoginService {
         if (AccountPersistenceService.isFinalSavePending(webUser.dbId)) {
             return PreparedLogin.failure(FINAL_SAVE_PENDING_INTERNAL)
         }
-        if (!webUser.username.equals(playerName, ignoreCase = true)) return PreparedLogin.failure(12)
+        if (!webUser.username.equals(playerName, ignoreCase = true)) return PreparedLogin.failure(30)
         val hashedPassword = Client.passHash(playerPass, webUser.salt)
         if (hashedPassword != webUser.password &&
             !isDebugPasswordBypassAllowed(player, webUser.playerGroup, allowDevPasswordBypass)
         ) {
             return PreparedLogin.failure(3)
         }
-        if (webUser.playerGroup == rankBannedGroupId) return PreparedLogin.failure(12)
+        if (webUser.playerGroup == rankBannedGroupId) return PreparedLogin.failure(4)
 
         val character = AccountLoginRepository.loadCharacter(connection, webUser.dbId)
         val newCharacter: Boolean

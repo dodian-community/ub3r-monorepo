@@ -166,6 +166,7 @@ public class MainScreen extends LoginComponent {
 				client.loginScreenCursorPos = 0;
 				DiscordOAuth.getInstance().startAuthFlow(code -> {
 					Client.discordAuthCode = code;
+					Client.discordAuthCodeReceivedAtMillis = System.currentTimeMillis();
 					accountCreationStatus = "You can now create your account";
 					client.myUsername = "";
 					client.myPassword = "";

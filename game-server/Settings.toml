@@ -41,3 +41,6 @@ debug_bypass_group_ids = [11, 34, 40]
 enabled = true
 prometheus_endpoint = false
 dashboard_enabled = false
+
+[discord]
+require_verified_email = false

@@ -483,8 +483,6 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
                 return "Bad session ID";
             case 11:
                 return "Session rejected by login server";
-            case 12:
-                return "Account limit reached or group banned";
             case 13:
                 return "Could not complete login / internal error";
             case 14:
@@ -499,6 +497,12 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
                 return "No account created / Discord verification required";
             case 29:
                 return "Invalid or expired Discord authorization code";
+            case 30:
+                return "Username capitalization does not match registered account";
+            case 31:
+                return "Discord account limit reached";
+            case 32:
+                return "Discord email not verified";
             default:
                 return "Unknown error (" + code + ")";
         }
