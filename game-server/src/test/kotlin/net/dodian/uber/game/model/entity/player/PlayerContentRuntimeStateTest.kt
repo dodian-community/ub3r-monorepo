@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import net.dodian.uber.game.api.plugin.skills.PendingSkillMulti
+import net.dodian.uber.game.engine.sync.player.PlayerSyncInvariantValidator
 import net.dodian.uber.skills.api.SkillMultiConfig
 import net.dodian.uber.skills.api.SkillMultiEntry
 import net.dodian.uber.skills.api.skillRecipe
@@ -46,6 +47,21 @@ class PlayerContentRuntimeStateTest {
         state.terminatePlayerTasks()
 
         assertNull(state.getPendingSkillMulti())
+    }
+
+    @Test
+    fun `previous sync snapshot round-trips and starts null`() {
+        // WorldSynchronizationService's dev-gated invariant check (PlayerSyncInvariantValidator)
+        // reads/writes this per-tick. It must start null for a fresh player object so a new
+        // login never gets compared against a stale snapshot left behind by a previous session
+        // that happened to reuse the same numeric slot.
+        val state = PlayerContentRuntimeState()
+        assertNull(state.getPreviousSyncSnapshot())
+
+        val snapshot = PlayerSyncInvariantValidator.ViewerLocalSnapshot(intArrayOf(1, 2, 3), 7L)
+        state.setPreviousSyncSnapshot(snapshot)
+
+        assertEquals(snapshot, state.getPreviousSyncSnapshot())
     }
 
     @Test
