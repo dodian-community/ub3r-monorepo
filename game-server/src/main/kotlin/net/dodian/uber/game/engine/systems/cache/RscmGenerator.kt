@@ -42,6 +42,25 @@ object RscmGenerator {
             consumed += source
             records[namespace] = if (namespace == "component") parseComponents(source) else parseSymbols(source, namespace)
         }
+        val interfaceFiles = File(dump, "interface").listFiles { file -> file.extension == "if" || file.extension == "if3" }
+            ?.sortedBy { it.name }
+            ?: error("Required interface dump directory is missing: ${File(dump, "interface").path}")
+        require(interfaceFiles.isNotEmpty()) { "No interface definitions were found in ${File(dump, "interface").path}" }
+        consumed += interfaceFiles
+        val componentDetails = parseInterfaceComponents(interfaceFiles)
+        records["component"] = records.getValue("component").map { record ->
+            componentDetails[record.id]?.let { details ->
+                record.copy(properties = record.properties + details.properties + mapOf("sourceFile" to listOf(details.sourceFile)))
+            } ?: record
+        }
+        records["interface"] = records.getValue("interface").map { record ->
+            val components = componentDetails.filterKeys { packedId -> packedId ushr 16 == record.id }
+            val sourceFiles = components.values.map { it.sourceFile }.distinct().sorted()
+            record.copy(properties = mapOf(
+                "componentCount" to listOf(components.size.toString()),
+                "sourceFile" to sourceFiles,
+            ))
+        }
 
         options["cache"]?.let { cachePath -> verifyAgainstCache(File(cachePath), records) }
         val rendered = render(records, sourceRevision, consumed)
@@ -132,6 +151,38 @@ object RscmGenerator {
             )
         }.sortedBy { it.id }
 
+    private fun parseInterfaceComponents(files: List<File>): Map<Int, InterfaceComponentDetails> {
+        val components = mutableMapOf<Int, InterfaceComponentDetails>()
+        files.forEach { file ->
+            val parentId = file.name.removePrefix("interface_").substringBefore('.').toIntOrNull()
+                ?: error("Could not read interface ID from ${file.name}")
+            var currentChild: Int? = null
+            var properties = linkedMapOf<String, MutableList<String>>()
+            fun flush() {
+                val child = currentChild ?: return
+                val packedId = (parentId shl 16) or child
+                check(components.put(packedId, InterfaceComponentDetails(
+                    properties.mapValues { it.value.toList() },
+                    file.name,
+                )) == null) { "Duplicate interface component $parentId:$child" }
+                properties = linkedMapOf()
+            }
+            file.forEachLine { raw ->
+                val line = raw.trim()
+                if (line.startsWith("[com_") && line.endsWith("]")) {
+                    flush()
+                    currentChild = line.removePrefix("[com_").removeSuffix("]").toIntOrNull()
+                    require(currentChild != null) { "Could not read component ID from $line in ${file.name}" }
+                } else if (currentChild != null && line.isNotBlank() && !line.startsWith("//")) {
+                    val separator = line.indexOf('=')
+                    if (separator > 0) properties.getOrPut(line.substring(0, separator)) { mutableListOf() } += line.substring(separator + 1)
+                }
+            }
+            flush()
+        }
+        return components
+    }
+
     private fun render(
         input: Map<String, List<ReferenceRecord>>,
         sourceRevision: String,
@@ -147,7 +198,7 @@ object RscmGenerator {
         }
         val manifest = JsonObject().apply {
             addProperty("sourceRevision", sourceRevision)
-            addProperty("format", "cache-reference-v2")
+            addProperty("format", "cache-reference-v3")
             add("sources", JsonArray().also { array -> consumed.sortedBy { it.path }.forEach { file ->
                 array.add(JsonObject().apply { addProperty("path", file.name); addProperty("sha256", sha256(file)) })
             } })
@@ -248,8 +299,18 @@ object RscmGenerator {
                 if (values.size == 1) propertyObject.addProperty(key, values.single())
                 else propertyObject.add(key, JsonArray().also { values.forEach(it::add) })
             } })
+            val options = properties.filterKeys { it.matches(Regex("^(?:i?op)\\d+$")) }
+            if (options.isNotEmpty()) add("options", JsonObject().also { optionObject -> options
+                .toSortedMap(compareBy<String> { it.removePrefix("iop").removePrefix("op").toInt() }.thenBy { it })
+                .forEach { (key, values) ->
+                    if (values.size == 1) optionObject.addProperty(key, values.single())
+                    else optionObject.add(key, JsonArray().also { values.forEach(it::add) })
+                }
+            })
         }
     }
+
+    private data class InterfaceComponentDetails(val properties: Map<String, List<String>>, val sourceFile: String)
 
     private enum class NameSource(val wireName: String) {
         DECODED("decoded"),

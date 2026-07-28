@@ -28,5 +28,8 @@ Use the pinned dump as the source of truth:
 The task emits compact `.rscm` name-to-ID files and rich JSONL records under
 `metadata/`. Names come only from the pinned revision-218 dump: decoded names,
 same-revision symbols, and verified item note/placeholder links. Records without
-such evidence keep their numeric fallback names. Verify committed output without writing it with
+such evidence keep their numeric fallback names. JSONL includes every decoded
+definition field plus a structured `options` object for right-click actions;
+component records additionally include their complete interface definition and
+source file. Verify committed output without writing it with
 `./gradlew :game-server:checkRscm -PosrsDump=/absolute/path/to/osrs-dumps`.

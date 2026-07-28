@@ -17,8 +17,9 @@ class RscmGeneratorNameEnrichmentTest {
         val dump = temporaryDirectory.resolve("dump")
         val config = Files.createDirectories(dump.resolve("config"))
         val symbols = Files.createDirectories(dump.resolve("symbols"))
+        val interfaces = Files.createDirectories(dump.resolve("interface"))
         val output = temporaryDirectory.resolve("output")
-        writeMinimalDump(config, symbols)
+        writeMinimalDump(config, symbols, interfaces)
 
         RscmGenerator.main(arrayOf("--dump", dump.toString(), "--output", output.toString()))
 
@@ -44,10 +45,10 @@ class RscmGeneratorNameEnrichmentTest {
         assertTrue(noted.contains("\"linkedSourceId\":1"))
         assertTrue(placeholder.contains("\"nameSource\":\"linked_placeholder\""))
         assertTrue(missing.contains("\"nameSource\":\"fallback\""))
-        assertTrue(Files.readString(output.resolve("metadata/manifest.json")).contains("\"format\": \"cache-reference-v2\""))
+        assertTrue(Files.readString(output.resolve("metadata/manifest.json")).contains("\"format\": \"cache-reference-v3\""))
     }
 
-    private fun writeMinimalDump(config: Path, symbols: Path) {
+    private fun writeMinimalDump(config: Path, symbols: Path, interfaces: Path) {
         val simpleConfigs = mapOf(
             "loc" to "[loc_0]\nname=Crate\n",
             "npc" to "[npc_0]\nname=Test npc\n",
@@ -95,5 +96,6 @@ class RscmGeneratorNameEnrichmentTest {
         )
         Files.writeString(symbols.resolve("interface.sym"), "0\tinterface_0\n")
         Files.writeString(symbols.resolve("component.sym"), "0:0\tcomponent_0\n")
+        Files.writeString(interfaces.resolve("interface_0.if3"), "[com_0]\ntype=text\ntext=Hello\nop1=Select\n")
     }
 }
