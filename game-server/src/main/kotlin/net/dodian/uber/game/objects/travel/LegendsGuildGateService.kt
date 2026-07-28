@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.model.entity.player.MovementPoint
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.objects.DoorRegistry
 import net.dodian.uber.game.api.content.ContentTiming
@@ -479,26 +480,10 @@ object LegendsGuildGateService {
     }
 
     private fun applyRoute(client: Client, path: ArrayDeque<GateStep>) {
-        client.resetWalkingQueue()
-        client.newWalkCmdSteps = 0
-        client.newWalkCmdIsRunning = false
-        val steps = minOf(path.size, Player.WALKING_QUEUE_SIZE)
-        val baseX = client.mapRegionX * 8
-        val baseY = client.mapRegionY * 8
-        client.newWalkCmdSteps = steps
-        client.newWalkCmdIsRunning = false
-
-        var index = 0
-        for (step in path) {
-            if (index >= steps) {
-                break
-            }
-            client.newWalkCmdX[index] = step.x - baseX
-            client.newWalkCmdY[index] = step.y - baseY
-            client.tmpNWCX[index] = client.newWalkCmdX[index]
-            client.tmpNWCY[index] = client.newWalkCmdY[index]
-            index++
-        }
+        val waypoints = path
+            .take(net.dodian.uber.game.model.entity.player.RouteDestination.MAX_WAYPOINTS)
+            .map { MovementPoint(it.x, it.y, it.z) }
+        client.replaceMovementRoute(waypoints, false)
     }
 
     private data class GateStep(val x: Int, val y: Int, val z: Int)
@@ -530,10 +515,10 @@ object LegendsGuildGateService {
         client.position.x == position.x && client.position.y == position.y && client.position.z == position.z
 
     private fun isMovementSettled(client: Client): Boolean {
-        return client.primaryDirection == -1 && client.secondaryDirection == -1 && client.wQueueReadPtr == client.wQueueWritePtr
+        return client.primaryDirection == -1 && client.secondaryDirection == -1 && !client.hasMovementRoute()
     }
 
-    private fun hasPendingWalkCommand(client: Client): Boolean = client.newWalkCmdSteps > 0
+    private fun hasPendingWalkCommand(client: Client): Boolean = client.hasMovementRoute()
 
     private fun playerKey(player: Player): String {
         val longName = player.longName

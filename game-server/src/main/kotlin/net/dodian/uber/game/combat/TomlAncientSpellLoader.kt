@@ -2,6 +2,7 @@ package net.dodian.uber.game.combat
 
 import java.nio.file.Files
 import java.nio.file.Path
+import net.dodian.uber.game.engine.config.ServerPaths
 
 data class AncientSpellDef(
     val index: Int,
@@ -19,7 +20,7 @@ data class AncientSpellDef(
 
 object TomlAncientSpellLoader {
     @JvmStatic
-    fun load(path: String = "content/combat/ancient_spells.toml"): List<AncientSpellDef> {
+    fun load(path: String = ServerPaths.definition("combat", "ancient_spells.toml").toString()): List<AncientSpellDef> {
         val file = Path.of(path)
         if (!Files.isRegularFile(file)) {
             return emptyList()

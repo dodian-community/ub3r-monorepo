@@ -7,6 +7,7 @@ import java.io.File
 import java.io.FileReader
 import java.util.HashSet
 import java.util.LinkedHashMap
+import net.dodian.uber.game.engine.config.ServerPaths
 import net.dodian.uber.game.engine.systems.world.item.GlobalGroundItemSpawns
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.Item
@@ -142,8 +143,8 @@ open class ItemManager @JvmOverloads constructor(
         val startTime = System.currentTimeMillis()
         val loaded = LinkedHashMap<Int, Item>()
 
-        val baseDefs = parseItemDefsFile("content/items/item_definitions.json")
-        val appearanceTypes = parseAppearanceTypes("content/items/equipment_appearance.toml")
+        val baseDefs = parseItemDefsFile(ServerPaths.definition("items", "item_definitions.json").toString())
+        val appearanceTypes = parseAppearanceTypes(ServerPaths.definition("items", "equipment_appearance.toml").toString())
         val baseMap = LinkedHashMap<Int, ItemDefBase>()
         for (base in baseDefs) {
             baseMap[base.id] = base

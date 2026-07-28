@@ -17,7 +17,7 @@ internal object ObjectInteractionMovementSettleService {
         val objectFace = objectDef?.face ?: 0
         val worldObject = WorldObject(objectId, targetPosition.x, targetPosition.y, targetPosition.z, objectType, objectFace)
         if (WorldRouteService.reachedObject(player.position, player.size, worldObject) &&
-            (player.newWalkCmdSteps > 0 || player.wQueueReadPtr != player.wQueueWritePtr)
+            player.hasMovementRoute()
         ) {
             player.resetWalkingQueue()
         }

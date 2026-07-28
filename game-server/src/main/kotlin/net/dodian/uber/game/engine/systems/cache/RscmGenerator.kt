@@ -183,7 +183,7 @@ object RscmGenerator {
     }
 
     private fun defaultOutput(): File =
-        if (File("game-server/content/mappings").isDirectory) File("game-server/content/mappings") else File("content/mappings")
+        net.dodian.uber.game.engine.config.ServerPaths.revision218Reference().toFile()
 
     private fun parseArgs(args: Array<String>): Map<String, String> {
         val options = linkedMapOf<String, String>()

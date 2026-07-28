@@ -1,6 +1,6 @@
 # Skill Plugin Modules
 
-Gameplay skills live in independent Gradle modules under `content/skills/`. A module must
+Gameplay skills live in independent Gradle modules under `game-server/plugins/skills/`. A module must
 apply `ub3r.skill-plugin`, declare its implementation class, own its route
 bindings, bundle TOML data, and test its behavior without a `Client` instance.
 

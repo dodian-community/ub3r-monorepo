@@ -34,13 +34,13 @@ abstract class GenerateQuestModuleDescriptor : DefaultTask() {
         val id = moduleId.get()
         require(Regex("quest\\.[a-z][a-z0-9-]{1,63}").matches(id)) { "Invalid quest module id '$id'" }
         val output = outputDirectory.file("META-INF/ub3r/quest-modules/$id.toml").get().asFile
-        output.parentFile.mkdirs()
-        output.writeText(
-            """
-            schema_version = 1
-            module_id = "$id"
-            implementation_class = "${implementationClass.get()}"
-            """.trimIndent() + "\n",
+        ContentModuleBuildSupport.writeDescriptor(
+            output,
+            linkedMapOf(
+                "schema_version" to "1",
+                "module_id" to id,
+                "implementation_class" to implementationClass.get(),
+            ),
         )
     }
 }
@@ -52,14 +52,9 @@ abstract class VerifyQuestModule : DefaultTask() {
     @TaskAction
     fun verify() {
         val projectRoot = project.projectDir
-        val sourceRoot = projectRoot.resolve("src/main/kotlin")
-        val testRoot = projectRoot.resolve("src/test/kotlin")
-        val source = sourceRoot.walkTopDown().filter { it.isFile && it.extension == "kt" }.joinToString("\n") { it.readText() }
-        val tests = testRoot.walkTopDown().filter { it.isFile && it.extension == "kt" }.toList()
-
-        check(tests.isNotEmpty() && tests.any { it.readText().contains("@Test") }) {
-            "${project.path} must contain at least one JUnit runtime test."
-        }
+        val module = ContentModuleBuildSupport.readSources(projectRoot)
+        val source = module.source
+        ContentModuleBuildSupport.requireRuntimeTests(project.path, module.tests)
         check(
             !source.contains("project(\":game-server\")") &&
                 !source.contains("net.dodian.uber.game.model.entity.player.Client"),

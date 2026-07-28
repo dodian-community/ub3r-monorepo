@@ -54,11 +54,10 @@ class CombatFollowTest {
         CombatRuntimeService.process(player, GameCycleClock.currentCycle())
 
         // Verify player queued walking steps
-        assertTrue(player.newWalkCmdSteps > 0)
-        val baseX = player.mapRegionX * 8
-        val baseY = player.mapRegionY * 8
-        val finalX = player.newWalkCmdX[player.newWalkCmdSteps - 1] + baseX
-        val finalY = player.newWalkCmdY[player.newWalkCmdSteps - 1] + baseY
+        assertTrue(player.hasMovementRoute())
+        val destination = requireNotNull(player.movementDestination())
+        val finalX = destination.x
+        val finalY = destination.y
 
         // The player should stand on the tile next to the NPC (3201, 3200)
         assertEquals(3201, finalX)

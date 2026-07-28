@@ -157,15 +157,7 @@ public abstract class Player extends Entity {
     private Chunk currentChunk;
     private ChunkEntityIndex chunkEntityIndex;
     public boolean loaded = false;
-    public int[] newWalkCmdX = new int[WALKING_QUEUE_SIZE];
-    public int[] newWalkCmdY = new int[WALKING_QUEUE_SIZE];
-    public int[] tmpNWCX = new int[WALKING_QUEUE_SIZE];
-    public int[] tmpNWCY = new int[WALKING_QUEUE_SIZE];
-    public int newWalkCmdSteps = 0;
-    public boolean newWalkCmdIsRunning = false;
-    public int[] travelBackX = new int[WALKING_QUEUE_SIZE];
-    public int[] travelBackY = new int[WALKING_QUEUE_SIZE];
-    public int numTravelBackSteps = 0;
+    private final RouteDestination routeDestination = new RouteDestination();
     public int m4001 = 0;
     public int m4002 = 0;
     public int m4003 = 0;
@@ -677,21 +669,36 @@ public abstract class Player extends Entity {
     public int mapRegionX, mapRegionY; // the map region the player is
     // currently in
 
-    public static final int WALKING_QUEUE_SIZE = 80;
-    public int[] walkingQueueX = new int[WALKING_QUEUE_SIZE], walkingQueueY = new int[WALKING_QUEUE_SIZE];
-    public int wQueueReadPtr = 0; // points to slot for reading from queue
-    public int wQueueWritePtr = 0; // points to (first free) slot for writing
     public boolean isRunning = false;
     private int lastWalkDeltaX = 0;
     private int lastWalkDeltaY = 0;
     public int teleportToX, teleportToY, teleportToZ; // contain absolute x/y
-    public boolean walkingBlock = false;
     public void resetWalkingQueue() {
         movementState.resetWalkingQueue();
     }
 
-    public void addToWalkingQueue(int x, int y) {
-        movementState.addToWalkingQueue(x, y);
+    public void replaceMovementRoute(java.util.Collection<MovementPoint> waypoints, boolean running) {
+        movementState.replaceRoute(waypoints, running);
+    }
+
+    public boolean hasMovementRoute() {
+        return routeDestination.isNotEmpty();
+    }
+
+    public int movementRouteSize() {
+        return routeDestination.size();
+    }
+
+    public MovementPoint movementDestination() {
+        return routeDestination.destination();
+    }
+
+    public java.util.List<MovementPoint> movementRouteSnapshot() {
+        return routeDestination.snapshot();
+    }
+
+    RouteDestination routeDestination() {
+        return routeDestination;
     }
 
     // returns 0-7 for next walking direction or -1, if we're not moving
@@ -1415,10 +1422,6 @@ public abstract class Player extends Entity {
 
     public void clearThrottleUntilCycle(String key) {
         interactionState.clearThrottleUntilCycle(key);
-    }
-
-    public void postProcessing() {
-        movementState.postProcessing();
     }
 
     public boolean buttonOnRun = true;

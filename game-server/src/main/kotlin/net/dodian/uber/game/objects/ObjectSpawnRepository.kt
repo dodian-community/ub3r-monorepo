@@ -2,6 +2,7 @@ package net.dodian.uber.game.objects
 
 import net.dodian.cache.objects.GameObjectData
 import net.dodian.uber.game.model.objects.WorldObject
+import net.dodian.uber.game.engine.config.ServerPaths
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Locale
@@ -25,9 +26,7 @@ data class ObjectSpawnEntry(
 object ObjectSpawnRepository {
     @JvmStatic
     fun resolveSpawnsPath(): Path {
-        val userDir = Path.of(System.getProperty("user.dir"))
-        val base = if (userDir.fileName.toString() == "game-server") userDir else userDir.resolve("game-server")
-        return base.resolve("src/main/kotlin/net/dodian/uber/game/objects/spawns")
+        return ServerPaths.definition("objects", "spawns")
     }
 
     @JvmStatic

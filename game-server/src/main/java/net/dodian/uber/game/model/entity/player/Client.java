@@ -892,11 +892,7 @@ public class Client extends Player implements Runnable {
         if (currentInboundPacketSequence >= 0L) {
             inboundPacketMailbox.discardWalkAtOrBefore(currentInboundPacketSequence);
         }
-        wQueueReadPtr = 0;
-        wQueueWritePtr = 0;
-        newWalkCmdSteps = 0;
-        newWalkCmdIsRunning = false;
-        walkingBlock = false;
+        resetWalkingQueue();
     }
 
     private boolean isNpcTraceOpcode(int opcode) {
@@ -4477,38 +4473,16 @@ public class Client extends Player implements Runnable {
     }
 
     public void AddToCords(int X, int Y, boolean run) {
-        if (X < 0 && Y > 0)
-            newWalkCmdSteps = Math.abs(Y - X);
-        else if (Y < 0 && X > 0)
-            newWalkCmdSteps = Math.abs(X - Y);
-        else if (Y < 0 && X < 0)
-            newWalkCmdSteps = Math.abs(-X - Y);
-        else newWalkCmdSteps = Math.abs(X + Y);
-
-        if (newWalkCmdSteps == 1) newWalkCmdSteps = 2; //Need this incase value is 1!
-        if (newWalkCmdSteps % 2 != 0) {
-            newWalkCmdSteps /= 2;
+        if (X == 0 && Y == 0) {
+            resetWalkingQueue();
+            return;
         }
-
-        if (++newWalkCmdSteps > 50) {
-            newWalkCmdSteps = 0;
-        }
-        int l = getPosition().getX();
-        l -= mapRegionX * 8;
-        for (i = 1; i < newWalkCmdSteps; i++) {
-            newWalkCmdX[i] = X;
-            newWalkCmdY[i] = Y;
-            tmpNWCX[i] = newWalkCmdX[i];
-            tmpNWCY[i] = newWalkCmdY[i];
-        }
-        newWalkCmdX[0] = newWalkCmdY[0] = tmpNWCX[0] = tmpNWCY[0] = 0;
-        int j1 = getPosition().getY();
-        j1 -= mapRegionY * 8;
-        newWalkCmdIsRunning = run; //isRunning = run;
-        for (i = 0; i < newWalkCmdSteps; i++) {
-            newWalkCmdX[i] += l;
-            newWalkCmdY[i] += j1;
-        }
+        MovementPoint destination = new MovementPoint(
+                getPosition().getX() + X,
+                getPosition().getY() + Y,
+                getPosition().getZ()
+        );
+        replaceMovementRoute(Collections.singletonList(destination), run);
     }
 
     public void appendForcemovement(Position startPos, Position endPos, int... speed) {
@@ -4550,13 +4524,11 @@ public class Client extends Player implements Runnable {
     }
 
     public void AddToWalkCords(int X, int Y, long time) {
-        newWalkCmdIsRunning = false;
         if (time > 0) applyWalkBlockMs(time);
         AddToCords(X, Y, false);
     }
 
     public void AddToRunCords(int X, int Y, long time) {
-        newWalkCmdIsRunning = true;
         if (time > 0) applyWalkBlockMs(time);
         AddToCords(X, Y, true);
     }

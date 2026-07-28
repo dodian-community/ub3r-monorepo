@@ -102,7 +102,7 @@ object PlayerDeferredLifecycleService {
                         val alreadyRoutedHere = state.pickupRouteTargetX == attempt.x &&
                             state.pickupRouteTargetY == attempt.y &&
                             state.pickupRouteTargetZ == attempt.z
-                        val walkInProgress = player.newWalkCmdSteps > 0 || player.wQueueReadPtr != player.wQueueWritePtr
+                        val walkInProgress = player.hasMovementRoute()
                         if (!alreadyRoutedHere || !walkInProgress) {
                             if (FollowRouting.routeToExactTile(player, attempt.x, attempt.y, attempt.z)) {
                                 state.pickupRouteTargetX = attempt.x

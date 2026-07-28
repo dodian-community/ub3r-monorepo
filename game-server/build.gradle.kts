@@ -33,6 +33,7 @@ val syncTestSourceSet = sourceSets.create("syncTest") {
 
 tasks.jar {
     dependsOn(":routefinder:jar")
+    dependsOn(":content-platform:api:jar", ":content-platform:runtime:jar")
     dependsOn(":skills:api:jar", ":skills:runtime:jar")
     dependsOn(":quests:api:jar", ":quests:runtime:jar")
 
@@ -52,6 +53,7 @@ tasks.jar {
 
 dependencies {
     implementation(project(":routefinder"))
+    implementation(project(":content-platform:runtime"))
     implementation(project(":skills:runtime"))
     implementation(project(":skills:fletching"))
     implementation(project(":skills:agility")); implementation(project(":skills:cooking")); implementation(project(":skills:crafting"))
@@ -145,16 +147,19 @@ tasks.register<Test>("syncTest") {
 
 tasks.register("betaCheck") {
     group = "verification"
-    description = "Comprehensive beta-readiness gate: client, server, sync, skill, and quest tests"
+    description = "Comprehensive beta-readiness gate: client, server, sync, content platform, skills, and quests"
 
     dependsOn(":skillsCheck")
     dependsOn(":questsCheck")
+    dependsOn(":content-platform:api:check")
+    dependsOn(":content-platform:runtime:check")
+    dependsOn(":content-platform:testkit:check")
     dependsOn(":game-client:test")
     dependsOn(":game-server:check")
     dependsOn(":game-server:syncTest")
 
     doLast {
-        println("Beta readiness gate passed: client, server, sync, skill-module, and quest-module tests completed.")
+        println("Beta readiness gate passed: client, server, sync, content-platform, skill-module, and quest-module tests completed.")
     }
 }
 
@@ -223,7 +228,7 @@ tasks.register<JavaExec>("generateRscm") {
     doFirst {
         require(dumpPath.isPresent) { "Pass -PosrsDump=/absolute/path/to/osrs-dump" }
     }
-    args("--dump", dumpPath.getOrElse(""), "--output", "content/mappings", "--cache", "data/cache")
+    args("--dump", dumpPath.getOrElse(""), "--output", "reference/cache-rev218", "--cache", "data/cache")
 }
 
 tasks.register<JavaExec>("checkRscm") {
@@ -235,5 +240,5 @@ tasks.register<JavaExec>("checkRscm") {
     doFirst {
         require(dumpPath.isPresent) { "Pass -PosrsDump=/absolute/path/to/osrs-dump" }
     }
-    args("--dump", dumpPath.getOrElse(""), "--output", "content/mappings", "--cache", "data/cache", "--check")
+    args("--dump", dumpPath.getOrElse(""), "--output", "reference/cache-rev218", "--cache", "data/cache", "--check")
 }

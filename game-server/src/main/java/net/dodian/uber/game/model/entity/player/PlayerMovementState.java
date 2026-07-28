@@ -1,5 +1,6 @@
 package net.dodian.uber.game.model.entity.player;
 
+import java.util.Collection;
 import net.dodian.uber.game.model.Position;
 import net.dodian.uber.game.engine.systems.interaction.ClipProbeService;
 import net.dodian.uber.game.engine.systems.interaction.PersonalPassageService;
@@ -42,48 +43,45 @@ final class PlayerMovementState {
         owner.mapRegionY = -1;
         currentX = 0;
         currentY = 0;
+        owner.routeDestination().clear();
     }
 
     void resetWalkingQueue() {
-        owner.walkingBlock = true;
-        owner.wQueueReadPtr = owner.wQueueWritePtr = 0;
-        owner.newWalkCmdSteps = 0;
-        for (int i = 0; i < Player.WALKING_QUEUE_SIZE; i++) {
-            owner.walkingQueueX[i] = currentX;
-            owner.walkingQueueY[i] = currentY;
-        }
+        owner.routeDestination().clear();
+        owner.isRunning = false;
     }
 
-    void addToWalkingQueue(int x, int y) {
-        int next = (owner.wQueueWritePtr + 1) % Player.WALKING_QUEUE_SIZE;
-        if (next == owner.wQueueReadPtr) {
-            return;
-        }
-        owner.walkingQueueX[owner.wQueueWritePtr] = x;
-        owner.walkingQueueY[owner.wQueueWritePtr] = y;
-        owner.wQueueWritePtr = next;
+    void replaceRoute(Collection<MovementPoint> waypoints, boolean running) {
+        owner.routeDestination().replace(waypoints, running);
     }
 
     int getNextWalkingDirection() {
-        if (owner.wQueueReadPtr == owner.wQueueWritePtr) {
+        RouteDestination destination = owner.routeDestination();
+        MovementPoint waypoint = destination.peekFirst();
+        while (waypoint != null &&
+                waypoint.getX() == owner.getPosition().getX() &&
+                waypoint.getY() == owner.getPosition().getY() &&
+                waypoint.getZ() == owner.getPosition().getZ()) {
+            destination.pollFirst();
+            waypoint = destination.peekFirst();
+        }
+        if (waypoint == null) return -1;
+        if (waypoint.getZ() != owner.getPosition().getZ()) {
+            resetWalkingQueue();
             return -1;
         }
-        int dir;
-        do {
-            dir = Utils.direction(currentX, currentY, owner.walkingQueueX[owner.wQueueReadPtr], owner.walkingQueueY[owner.wQueueReadPtr]);
-            if (dir == -1) {
-                owner.wQueueReadPtr = (owner.wQueueReadPtr + 1) % Player.WALKING_QUEUE_SIZE;
-            } else {
-                dir /= 2;
-                if (dir < 0 || dir > 7) {
-                    owner.println_debug("Invalid direction calculated: " + dir);
-                    resetWalkingQueue();
-                    return -1;
-                }
-            }
-        } while (dir == -1 && owner.wQueueReadPtr != owner.wQueueWritePtr);
 
-        if (dir == -1) {
+        int dir = Utils.direction(
+                owner.getPosition().getX(),
+                owner.getPosition().getY(),
+                waypoint.getX(),
+                waypoint.getY()
+        );
+        if (dir == -1) return -1;
+        dir /= 2;
+        if (dir < 0 || dir > 7) {
+            owner.println_debug("Invalid direction calculated: " + dir);
+            resetWalkingQueue();
             return -1;
         }
 
@@ -174,6 +172,9 @@ final class PlayerMovementState {
         newPos.move(deltaX, deltaY);
         owner.getPosition().moveTo(newPos.getX(), newPos.getY());
         owner.setLastWalkDelta(deltaX, deltaY);
+        if (waypoint.getX() == newPos.getX() && waypoint.getY() == newPos.getY()) {
+            destination.pollFirst();
+        }
         return dir;
     }
 
@@ -221,6 +222,9 @@ final class PlayerMovementState {
         if (primaryDirection == -1) {
             return;
         }
+        owner.isRunning = (owner.UsingAgility || owner.isWalkBlocked())
+                ? owner.routeDestination().isRunning()
+                : owner.buttonOnRun;
         if (owner.isRunning) {
             secondaryDirection = getNextWalkingDirection();
         }
@@ -254,90 +258,7 @@ final class PlayerMovementState {
             }
             currentX += deltaX;
             currentY += deltaY;
-            for (int i = 0; i < Player.WALKING_QUEUE_SIZE; i++) {
-                owner.walkingQueueX[i] += deltaX;
-                owner.walkingQueueY[i] += deltaY;
-            }
         }
-    }
-
-    void postProcessing() {
-        if (owner.walkingBlock) {
-            owner.walkingBlock = false;
-            return;
-        }
-        if (owner.newWalkCmdSteps > 0) {
-            int firstX = owner.newWalkCmdX[0];
-            int firstY = owner.newWalkCmdY[0];
-            int lastDir;
-            boolean found = false;
-            owner.numTravelBackSteps = 0;
-            int ptr = owner.wQueueReadPtr;
-            int dir = Utils.direction(currentX, currentY, firstX, firstY);
-            if (dir != -1 && (dir & 1) != 0) {
-                do {
-                    lastDir = dir;
-                    if (--ptr < 0) {
-                        ptr = Player.WALKING_QUEUE_SIZE - 1;
-                    }
-                    owner.travelBackX[owner.numTravelBackSteps] = owner.walkingQueueX[ptr];
-                    owner.travelBackY[owner.numTravelBackSteps++] = owner.walkingQueueY[ptr];
-                    dir = Utils.direction(owner.walkingQueueX[ptr], owner.walkingQueueY[ptr], firstX, firstY);
-                    if (lastDir != dir) {
-                        found = true;
-                        break;
-                    }
-                } while (ptr != owner.wQueueWritePtr);
-            } else {
-                found = true;
-            }
-
-            owner.wQueueWritePtr = owner.wQueueReadPtr;
-            addToWalkingQueue(currentX, currentY);
-
-            if (dir != -1 && (dir & 1) != 0) {
-                for (int i = 0; i < owner.numTravelBackSteps - 1; i++) {
-                    addToWalkingQueue(owner.travelBackX[i], owner.travelBackY[i]);
-                }
-                int wayPointX2 = owner.travelBackX[owner.numTravelBackSteps - 1];
-                int wayPointY2 = owner.travelBackY[owner.numTravelBackSteps - 1];
-                int wayPointX1;
-                int wayPointY1;
-                if (owner.numTravelBackSteps == 1) {
-                    wayPointX1 = currentX;
-                    wayPointY1 = currentY;
-                } else {
-                    wayPointX1 = owner.travelBackX[owner.numTravelBackSteps - 2];
-                    wayPointY1 = owner.travelBackY[owner.numTravelBackSteps - 2];
-                }
-                dir = Utils.direction(wayPointX1, wayPointY1, wayPointX2, wayPointY2);
-                if (!(dir == -1 || (dir & 1) != 0)) {
-                    dir >>= 1;
-                    int x = wayPointX1;
-                    int y = wayPointY1;
-                    while (x != wayPointX2 || y != wayPointY2) {
-                        x += Utils.directionDeltaX[dir];
-                        y += Utils.directionDeltaY[dir];
-                        if ((Utils.direction(x, y, firstX, firstY) & 1) == 0) {
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (found) {
-                        addToWalkingQueue(wayPointX1, wayPointY1);
-                    }
-                }
-            } else {
-                for (int i = 0; i < owner.numTravelBackSteps; i++) {
-                    addToWalkingQueue(owner.travelBackX[i], owner.travelBackY[i]);
-                }
-            }
-            for (int i = 0; i < owner.newWalkCmdSteps; i++) {
-                addToWalkingQueue(owner.newWalkCmdX[i], owner.newWalkCmdY[i]);
-            }
-        }
-        owner.isRunning = (owner.UsingAgility || owner.isWalkBlocked()) ? owner.newWalkCmdIsRunning : owner.buttonOnRun;
-        owner.newWalkCmdSteps = 0;
     }
 
     private void logBlockedStep(int blockedX, int blockedY, int z) {
@@ -397,18 +318,11 @@ final class PlayerMovementState {
     }
 
     private int[] resolveQueuedDestinationAbs() {
-        if (owner.wQueueReadPtr == owner.wQueueWritePtr) {
+        MovementPoint destination = owner.routeDestination().destination();
+        if (destination == null) {
             return new int[] { owner.getPosition().getX(), owner.getPosition().getY(), owner.getPosition().getZ() };
         }
-        int tail = owner.wQueueWritePtr - 1;
-        if (tail < 0) {
-            tail = Player.WALKING_QUEUE_SIZE - 1;
-        }
-        int destLocalX = owner.walkingQueueX[tail];
-        int destLocalY = owner.walkingQueueY[tail];
-        int absDestX = owner.mapRegionX * 8 + destLocalX;
-        int absDestY = owner.mapRegionY * 8 + destLocalY;
-        return new int[] { absDestX, absDestY, owner.getPosition().getZ() };
+        return new int[] { destination.getX(), destination.getY(), destination.getZ() };
     }
 
     boolean didTeleport() {

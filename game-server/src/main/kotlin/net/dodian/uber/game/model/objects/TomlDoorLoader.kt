@@ -2,11 +2,12 @@ package net.dodian.uber.game.model.objects
 
 import java.nio.file.Files
 import java.nio.file.Path
+import net.dodian.uber.game.engine.config.ServerPaths
 
 object TomlDoorLoader : DoorDefinitionLoader {
 
     private val DOOR_PATHS = listOf(
-        Path.of("content", "doors", "doors.toml"),
+        ServerPaths.definition("doors", "doors.toml"),
     )
 
     override fun load(): List<DoorDefinition> {

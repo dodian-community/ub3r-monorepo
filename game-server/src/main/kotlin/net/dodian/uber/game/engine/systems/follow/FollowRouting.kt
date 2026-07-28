@@ -12,6 +12,7 @@ import net.dodian.uber.game.model.EntityType
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.model.entity.player.MovementPoint
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.objects.WorldObject
 import org.rsmod.routefinder.Route
@@ -158,30 +159,15 @@ object FollowRouting {
 
     private fun applyRoute(follower: Client, route: Route, running: Boolean): Boolean {
         if (route.waypoints.isEmpty()) return route.success
-        val baseX = follower.mapRegionX * 8
-        val baseY = follower.mapRegionY * 8
-        val count = minOf(route.waypoints.size, Player.WALKING_QUEUE_SIZE)
-        follower.newWalkCmdSteps = count
-        follower.newWalkCmdIsRunning = running
-        for (index in 0 until count) {
-            val point = route.waypoints[index]
-            follower.newWalkCmdX[index] = point.x - baseX
-            follower.newWalkCmdY[index] = point.z - baseY
-            follower.tmpNWCX[index] = follower.newWalkCmdX[index]
-            follower.tmpNWCY[index] = follower.newWalkCmdY[index]
-        }
+        val waypoints = route.waypoints
+            .take(net.dodian.uber.game.model.entity.player.RouteDestination.MAX_WAYPOINTS)
+            .map { MovementPoint(it.x, it.z, it.level) }
+        follower.replaceMovementRoute(waypoints, running)
         return true
     }
 
     private fun applyDestination(follower: Client, x: Int, y: Int, running: Boolean): Boolean {
-        val baseX = follower.mapRegionX * 8
-        val baseY = follower.mapRegionY * 8
-        follower.newWalkCmdSteps = 1
-        follower.newWalkCmdIsRunning = running
-        follower.newWalkCmdX[0] = x - baseX
-        follower.newWalkCmdY[0] = y - baseY
-        follower.tmpNWCX[0] = follower.newWalkCmdX[0]
-        follower.tmpNWCY[0] = follower.newWalkCmdY[0]
+        follower.replaceMovementRoute(listOf(MovementPoint(x, y, follower.position.z)), running)
         return true
     }
 

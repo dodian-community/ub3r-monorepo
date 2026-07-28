@@ -207,7 +207,7 @@ object CombatRuntimeService {
             engagement.lastFollowCycle != cycleNow &&
                 (engagement.lastFollowTargetX != target.position.x ||
                     engagement.lastFollowTargetY != target.position.y ||
-                    player.wQueueReadPtr == player.wQueueWritePtr)
+                    !player.hasMovementRoute())
 
         if (gameWorldId == 2) {
             logger.info("[W2-COMBAT] followTarget player=${player.playerName} target=${target.type}:${target.slot} refreshed=$refreshed autoFollowEnabled=${engagement.autoFollowEnabled} lastFollowCycle=${engagement.lastFollowCycle} cycleNow=$cycleNow")

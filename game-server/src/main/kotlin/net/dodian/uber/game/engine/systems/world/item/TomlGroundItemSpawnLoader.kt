@@ -2,11 +2,12 @@ package net.dodian.uber.game.engine.systems.world.item
 
 import java.nio.file.Files
 import java.nio.file.Path
+import net.dodian.uber.game.engine.config.ServerPaths
 import net.dodian.uber.game.model.Position
 
 object TomlGroundItemSpawnLoader {
     @JvmStatic
-    fun load(path: String = "content/items/ground_item_spawns.toml"): List<GroundItemSpawn> {
+    fun load(path: String = ServerPaths.definition("items", "ground_item_spawns.toml").toString()): List<GroundItemSpawn> {
         val file = Path.of(path)
         if (!Files.isRegularFile(file)) {
             return emptyList()

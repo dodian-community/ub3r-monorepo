@@ -20,6 +20,6 @@ class ReferenceMappingsRuntimeIsolationTest {
             .joinToString("\n") { it.readText() }
         assertFalse(source.contains("asRscm"))
         assertFalse(source.contains("RSCM.get("))
-        assertTrue(Path.of("content/mappings/README.md").readText().contains("not loaded by the server"))
+        assertTrue(Path.of("reference/cache-rev218/README.md").readText().contains("not loaded by the server"))
     }
 }

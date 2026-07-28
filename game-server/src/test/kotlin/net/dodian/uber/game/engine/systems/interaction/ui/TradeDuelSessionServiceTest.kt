@@ -62,10 +62,8 @@ class TradeDuelSessionServiceTest {
 
         assertTrue(first.inTrade)
         assertTrue(second.inTrade)
-        assertEquals(0, first.newWalkCmdSteps)
-        assertEquals(first.wQueueReadPtr, first.wQueueWritePtr)
-        assertEquals(0, second.newWalkCmdSteps)
-        assertEquals(second.wQueueReadPtr, second.wQueueWritePtr)
+        assertFalse(first.hasMovementRoute())
+        assertFalse(second.hasMovementRoute())
     }
 
     @Test

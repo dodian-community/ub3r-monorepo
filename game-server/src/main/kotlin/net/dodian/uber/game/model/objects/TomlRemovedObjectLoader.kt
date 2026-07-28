@@ -2,6 +2,7 @@ package net.dodian.uber.game.model.objects
 
 import java.nio.file.Files
 import java.nio.file.Path
+import net.dodian.uber.game.engine.config.ServerPaths
 
 data class RemovedObjectEntry(
     val x: Int,
@@ -12,7 +13,7 @@ data class RemovedObjectEntry(
 
 object TomlRemovedObjectLoader {
     @JvmStatic
-    fun load(path: String = "content/objects/removed.toml"): List<RemovedObjectEntry> {
+    fun load(path: String = ServerPaths.definition("objects", "removed.toml").toString()): List<RemovedObjectEntry> {
         val file = Path.of(path)
         if (!Files.isRegularFile(file)) {
             return emptyList()

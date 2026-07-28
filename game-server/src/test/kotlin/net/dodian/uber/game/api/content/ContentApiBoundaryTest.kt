@@ -1,6 +1,7 @@
 package net.dodian.uber.game.api.content
 
 import net.dodian.uber.game.api.plugin.skills.SkillPlayer
+import net.dodian.uber.game.engine.config.ServerPaths
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -58,7 +59,7 @@ class ContentApiBoundaryTest {
 
     @Test
     fun `independent skill modules do not import protocol player or engine bridges`() {
-        val root = Path.of("..").resolve("content").resolve("skills").normalize()
+        val root = ServerPaths.gameServerRoot().resolve("plugins/skills")
         val forbidden = listOf(
             "net.dodian.uber.game.model.entity.player.Client",
             "SkillEngineAccess",

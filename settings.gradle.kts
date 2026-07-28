@@ -17,12 +17,19 @@ include(":game-server")
 include(":game-client")
 include(":routefinder")
 include(":stress-client")
-project(":routefinder").projectDir = file("content/routefinder")
+project(":routefinder").projectDir = file("game-server/services/routefinder")
+
+include(":content-platform")
+project(":content-platform").projectDir = file("game-server/plugins/platform")
+listOf("api", "runtime", "testkit").forEach { module ->
+    include(":content-platform:$module")
+    project(":content-platform:$module").projectDir = file("game-server/plugins/platform/$module")
+}
 
 include(":skills")
-project(":skills").projectDir = file("content/skills")
+project(":skills").projectDir = file("game-server/plugins/skills")
 
-file("content/skills").listFiles()
+file("game-server/plugins/skills").listFiles()
     ?.filter { candidate -> candidate.isDirectory && candidate.resolve("build.gradle.kts").isFile }
     ?.sortedBy { it.name }
     ?.forEach { candidate ->
@@ -31,9 +38,9 @@ file("content/skills").listFiles()
     }
 
 include(":quests")
-project(":quests").projectDir = file("content/quests")
+project(":quests").projectDir = file("game-server/plugins/quests")
 
-file("content/quests").listFiles()
+file("game-server/plugins/quests").listFiles()
     ?.filter { candidate -> candidate.isDirectory && candidate.resolve("build.gradle.kts").isFile }
     ?.sortedBy { it.name }
     ?.forEach { candidate ->

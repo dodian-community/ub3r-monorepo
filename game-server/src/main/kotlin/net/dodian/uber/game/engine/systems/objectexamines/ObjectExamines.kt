@@ -1,8 +1,8 @@
 package net.dodian.uber.game.engine.systems.objectexamines
 
 import com.google.gson.GsonBuilder
+import net.dodian.uber.game.engine.config.ServerPaths
 import org.slf4j.LoggerFactory
-import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 
 data class ObjectExamine(
@@ -16,7 +16,7 @@ object ObjectExamines {
 
     @JvmStatic
     fun load() {
-        val file = File("content/objects/object_examines.json")
+        val file = ServerPaths.definition("objects", "object_examines.json").toFile()
         if (!file.exists()) {
             logger.warn("Object examines file not found at: {}", file.absolutePath)
             return

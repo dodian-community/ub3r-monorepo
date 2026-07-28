@@ -231,11 +231,7 @@ object FollowService {
     }
 
     private fun clearQueuedWalking(follower: Client) {
-        follower.wQueueReadPtr = 0
-        follower.wQueueWritePtr = 0
-        follower.newWalkCmdSteps = 0
-        follower.newWalkCmdIsRunning = false
-        follower.walkingBlock = false
+        follower.resetWalkingQueue()
     }
 
     private fun routeFollowerTowardsTarget(

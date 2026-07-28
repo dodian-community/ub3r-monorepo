@@ -8,7 +8,7 @@ import java.nio.file.Path
 class RscmMetadataTest {
     @Test
     fun `npc metadata exposes right click options`() {
-        val record = Files.readString(Path.of("content/mappings/metadata/npc.jsonl"))
+        val record = Files.readString(Path.of("reference/cache-rev218/metadata/npc.jsonl"))
             .lineSequence()
             .first { it.contains("\"namespace\":\"npc\",\"id\":7402,") }
         assertTrue(record.contains("\"options\":{\"op2\":\"Attack\"}"))
@@ -17,7 +17,7 @@ class RscmMetadataTest {
 
     @Test
     fun `component metadata exposes its dumped definition`() {
-        val record = Files.readString(Path.of("content/mappings/metadata/component.jsonl"))
+        val record = Files.readString(Path.of("reference/cache-rev218/metadata/component.jsonl"))
             .lineSequence()
             .first { it.contains("\"namespace\":\"component\",\"id\":4,") }
         assertTrue(record.contains("\"type\":\"model\""))

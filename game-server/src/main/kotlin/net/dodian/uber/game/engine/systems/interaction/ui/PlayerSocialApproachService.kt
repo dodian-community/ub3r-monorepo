@@ -49,7 +49,7 @@ object PlayerSocialApproachService {
             EntityReachResult.OUT_OF_RANGE,
             -> {
                 val targetMoved = target.position.x != state.targetX || target.position.y != state.targetY
-                val routeExhausted = client.wQueueReadPtr == client.wQueueWritePtr && client.newWalkCmdSteps == 0
+                val routeExhausted = !client.hasMovementRoute()
                 if (targetMoved || routeExhausted) {
                     val refreshed = state.copy(
                         targetX = target.position.x,

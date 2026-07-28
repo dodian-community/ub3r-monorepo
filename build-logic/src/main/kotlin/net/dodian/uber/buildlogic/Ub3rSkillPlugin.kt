@@ -18,7 +18,6 @@ import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.withType
 import org.gradle.language.jvm.tasks.ProcessResources
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import java.io.File
 
 enum class SkillModuleKind { GAMEPLAY, SUPPORT }
 
@@ -39,14 +38,14 @@ abstract class GenerateSkillModuleDescriptor : DefaultTask() {
         val id = moduleId.get()
         require(Regex("skill\\.[a-z][a-z0-9-]{1,63}").matches(id)) { "Invalid skill module id '$id'" }
         val output = outputDirectory.file("META-INF/ub3r/skill-modules/$id.toml").get().asFile
-        output.parentFile.mkdirs()
-        output.writeText(
-            """
-            schema_version = 1
-            module_id = "$id"
-            implementation_class = "${implementationClass.get()}"
-            kind = "${kind.get().name.lowercase()}"
-            """.trimIndent() + "\n",
+        ContentModuleBuildSupport.writeDescriptor(
+            output,
+            linkedMapOf(
+                "schema_version" to "1",
+                "module_id" to id,
+                "implementation_class" to implementationClass.get(),
+                "kind" to kind.get().name.lowercase(),
+            ),
         )
     }
 }
@@ -59,15 +58,9 @@ abstract class VerifySkillModule : DefaultTask() {
     @TaskAction
     fun verify() {
         val projectRoot = project.projectDir
-        val resources = projectRoot.resolve("src/main/resources")
-        val sourceRoot = projectRoot.resolve("src/main/kotlin")
-        val testRoot = projectRoot.resolve("src/test/kotlin")
-        val source = sourceRoot.walkTopDown().filter { it.isFile && it.extension == "kt" }.joinToString("\n") { it.readText() }
-        val tests = testRoot.walkTopDown().filter { it.isFile && it.extension == "kt" }.toList()
-
-        check(tests.isNotEmpty() && tests.any { it.readText().contains("@Test") }) {
-            "${project.path} must contain at least one JUnit runtime test."
-        }
+        val module = ContentModuleBuildSupport.readSources(projectRoot)
+        val source = module.source
+        ContentModuleBuildSupport.requireRuntimeTests(project.path, module.tests)
         check(
             !source.contains("project(\":game-server\")") &&
                 !source.contains("net.dodian.uber.game.model.entity.player.Client") &&
@@ -88,7 +81,7 @@ abstract class VerifySkillModule : DefaultTask() {
                 "${project.path} is descriptor-only: gameplay modules must register at least one route."
             }
         }
-        check(resources.walkTopDown().any { it.isFile && it.extension == "toml" }) {
+        check(module.resources.walkTopDown().any { it.isFile && it.extension == "toml" }) {
             "${project.path} must bundle at least one validated skill TOML file."
         }
     }

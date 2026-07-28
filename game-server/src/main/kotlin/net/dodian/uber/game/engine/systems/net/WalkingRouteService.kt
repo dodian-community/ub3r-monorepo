@@ -3,7 +3,7 @@ package net.dodian.uber.game.engine.systems.net
 import kotlin.math.hypot
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.Player
+import net.dodian.uber.game.model.entity.player.MovementPoint
 import net.dodian.uber.game.engine.routing.RouteRequestLoc
 import net.dodian.uber.game.engine.routing.WorldRouteService
 import net.dodian.uber.game.engine.routing.findRoute
@@ -11,7 +11,7 @@ import kotlin.math.abs
 import kotlin.math.sign
 
 object WalkingRouteService {
-    data class RouteDecision(val useClientRoute: Boolean, val destination: Position)
+    data class RouteDecision(val waypoints: List<MovementPoint>, val destination: Position)
 
     /**
      * Validates the bounded client route without searching for a replacement path. Actual
@@ -56,7 +56,9 @@ object WalkingRouteService {
 
     fun preparePlainRoute(player: Client, request: WalkRequest): RouteDecision? {
         val requestedDestination = destination(request, player.position.z)
-        if (validateClientRoute(player, request)) return RouteDecision(true, requestedDestination)
+        if (validateClientRoute(player, request)) {
+            return RouteDecision(requestWaypoints(request, player.position.z), requestedDestination)
+        }
         val route = WorldRouteService.findRoute(
             RouteRequestLoc(
                 level = player.position.z,
@@ -72,22 +74,22 @@ object WalkingRouteService {
             player.resetWalkingQueue()
             return null
         }
-        val count = minOf(route.waypoints.size, Player.WALKING_QUEUE_SIZE)
-        player.newWalkCmdSteps = count
-        player.newWalkCmdIsRunning = request.running
-        val baseX = player.mapRegionX * 8
-        val baseY = player.mapRegionY * 8
-        for (index in 0 until count) {
-            val point = route.waypoints[index]
-            player.newWalkCmdX[index] = point.x - baseX
-            player.newWalkCmdY[index] = point.z - baseY
-            player.tmpNWCX[index] = player.newWalkCmdX[index]
-            player.tmpNWCY[index] = player.newWalkCmdY[index]
-        }
-        val last = route.waypoints.lastOrNull()
-        val actual = Position(last?.x ?: player.position.x, last?.z ?: player.position.y, player.position.z)
-        return RouteDecision(false, actual)
+        val waypoints = route.waypoints
+            .take(net.dodian.uber.game.model.entity.player.RouteDestination.MAX_WAYPOINTS)
+            .map { MovementPoint(it.x, it.z, it.level) }
+        val last = waypoints.lastOrNull()
+        val actual = Position(last?.x ?: player.position.x, last?.y ?: player.position.y, player.position.z)
+        return RouteDecision(waypoints, actual)
     }
+
+    fun requestWaypoints(request: WalkRequest, z: Int): List<MovementPoint> =
+        request.deltasX.indices.map { index ->
+            MovementPoint(
+                request.firstStepXAbs + request.deltasX[index],
+                request.firstStepYAbs + request.deltasY[index],
+                z,
+            )
+        }
 
     fun destination(request: WalkRequest, z: Int): Position {
         val last = request.deltasX.lastIndex

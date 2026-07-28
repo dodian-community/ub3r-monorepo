@@ -9,12 +9,12 @@ import java.nio.file.Path
 class ObjMappingTest {
     @Test
     fun `revision 218 item variants have readable verified names`() {
-        val entries = Files.readAllLines(Path.of("content/mappings/index/obj.rscm"))
+        val entries = Files.readAllLines(Path.of("reference/cache-rev218/index/obj.rscm"))
             .associate { line -> line.substringBefore('=') to line.substringAfter('=').toInt() }
         assertEquals(12_764, entries["white_dark_bow_paint_noted"])
         assertEquals(entries.size, entries.values.toSet().size)
 
-        val record = Files.readString(Path.of("content/mappings/metadata/obj.jsonl"))
+        val record = Files.readString(Path.of("reference/cache-rev218/metadata/obj.jsonl"))
             .lineSequence()
             .first { it.contains("\"namespace\":\"obj\",\"id\":12764,") }
         assertTrue(record.contains("\"displayName\":\"White dark bow paint (noted)\""))

@@ -170,7 +170,7 @@ object InteractionProcessor {
                     return InteractionExecutionResult.WAITING
                 }
             } else {
-                val walkInProgress = player.newWalkCmdSteps > 0 || player.wQueueReadPtr != player.wQueueWritePtr
+                val walkInProgress = player.hasMovementRoute()
                 val lastRouted = lastRoutePosition[intent]
                 if (walkInProgress && lastRouted != null && lastRouted == npc.position) {
                     return InteractionExecutionResult.WAITING
@@ -313,7 +313,7 @@ object InteractionProcessor {
             val settled =
                 player.primaryDirection == -1 &&
                     player.secondaryDirection == -1 &&
-                    player.wQueueReadPtr == player.wQueueWritePtr
+                    !player.hasMovementRoute()
             if (!settled) return InteractionExecutionResult.WAITING
         }
 
@@ -513,7 +513,7 @@ object InteractionProcessor {
             val settled =
                 player.primaryDirection == -1 &&
                     player.secondaryDirection == -1 &&
-                    player.wQueueReadPtr == player.wQueueWritePtr
+                    !player.hasMovementRoute()
             if (!settled) return InteractionExecutionResult.WAITING
         }
         val dispatchSnapshot =
@@ -660,7 +660,7 @@ object InteractionProcessor {
             val settled =
                 player.primaryDirection == -1 &&
                     player.secondaryDirection == -1 &&
-                    player.wQueueReadPtr == player.wQueueWritePtr
+                    !player.hasMovementRoute()
             if (!settled) return InteractionExecutionResult.WAITING
         }
         val dispatchSnapshot =
@@ -752,7 +752,7 @@ object InteractionProcessor {
 
         val routeStart = System.nanoTime()
         if (overlaps || outsideRange) {
-            val walkInProgress = player.newWalkCmdSteps > 0 || player.wQueueReadPtr != player.wQueueWritePtr
+            val walkInProgress = player.hasMovementRoute()
             val lastRouted = lastRoutePosition[intent]
             if (walkInProgress && lastRouted != null && lastRouted == npc.position) {
                 return InteractionExecutionResult.WAITING
@@ -817,7 +817,7 @@ object InteractionProcessor {
 
         val routeStart = System.nanoTime()
         if (overlaps || !player.goodDistanceEntity(npc, 5)) {
-            val walkInProgress = player.newWalkCmdSteps > 0 || player.wQueueReadPtr != player.wQueueWritePtr
+            val walkInProgress = player.hasMovementRoute()
             val lastRouted = lastRoutePosition[intent]
             if (walkInProgress && lastRouted != null && lastRouted == npc.position) {
                 return InteractionExecutionResult.WAITING
@@ -995,7 +995,7 @@ object InteractionProcessor {
     }
 
     private fun settleNpcInteractionMovement(player: Client) {
-        if (player.newWalkCmdSteps > 0 || player.wQueueReadPtr != player.wQueueWritePtr) {
+        if (player.hasMovementRoute()) {
             player.resetWalkingQueue()
         }
     }
@@ -1070,7 +1070,7 @@ object InteractionProcessor {
         // Tarnish Waypoint.lastPosition guard: if the target hasn't moved and a walk is already
         // in progress, skip re-routing and let the queue drain. Re-routing every tick would stomp
         // the walk queue before the player reaches the object.
-        val walkInProgress = player.newWalkCmdSteps > 0 || player.wQueueReadPtr != player.wQueueWritePtr
+        val walkInProgress = player.hasMovementRoute()
         val lastRouted = lastRoutePosition[intent]
         if (walkInProgress && lastRouted != null && lastRouted == targetPosition) {
             return ObjectApproachCheck(result = InteractionExecutionResult.WAITING, routeNs = System.nanoTime() - routeStart)
@@ -1159,7 +1159,7 @@ object InteractionProcessor {
             routeOutcome = ApproachStatus.PARKED_CLOSEST.name,
             elapsedNanos = routeNs,
         )
-        if (player.newWalkCmdSteps > 0 || player.wQueueReadPtr != player.wQueueWritePtr) {
+        if (player.hasMovementRoute()) {
             player.resetWalkingQueue()
         }
         clear(player)
@@ -1208,7 +1208,7 @@ object InteractionProcessor {
     private fun isMovementSettled(player: Client): Boolean {
         return player.primaryDirection == -1 &&
             player.secondaryDirection == -1 &&
-            player.wQueueReadPtr == player.wQueueWritePtr
+            !player.hasMovementRoute()
     }
 
     private fun slowLogIfNeeded(

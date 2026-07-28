@@ -6,8 +6,7 @@ import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.engine.lifecycle.PlayerDeferredLifecycleService
 import net.dodian.uber.game.events.player.WalkEvent
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.Player
-import net.dodian.uber.game.model.Position
+import net.dodian.uber.game.model.entity.player.RouteDestination
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason
@@ -35,7 +34,7 @@ object PacketWalkingService {
             player.randomed ||
             !player.validClient ||
             !player.pLoaded ||
-            player.isWalkBlocked()
+            player.isWalkBlocked
         ) {
             return
         }
@@ -85,7 +84,7 @@ object PacketWalkingService {
             player.resetItems(3214)
         }
         val stepCount = request.deltasX.size
-        if (stepCount <= 0 || stepCount > Player.WALKING_QUEUE_SIZE || request.deltasY.size != stepCount) {
+        if (stepCount <= 0 || stepCount > RouteDestination.MAX_WAYPOINTS || request.deltasY.size != stepCount) {
             player.resetWalkingQueue()
             return
         }
@@ -94,7 +93,10 @@ object PacketWalkingService {
             if (WalkingRouteService.isPlainWalkOpcode(request.opcode)) {
                 WalkingRouteService.preparePlainRoute(player, request)
             } else {
-                WalkingRouteService.RouteDecision(true, WalkingRouteService.destination(request, player.position.z))
+                WalkingRouteService.RouteDecision(
+                    WalkingRouteService.requestWaypoints(request, player.position.z),
+                    WalkingRouteService.destination(request, player.position.z),
+                )
             }
         if (routeDecision == null) {
             return
@@ -115,29 +117,16 @@ object PacketWalkingService {
                 PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(player)
             }
         }
-        val firstStepX = request.firstStepXAbs - player.mapRegionX * 8
-        val firstStepY = request.firstStepYAbs - player.mapRegionY * 8
-        if (routeDecision.useClientRoute) {
-            player.newWalkCmdSteps = stepCount
-            player.newWalkCmdIsRunning = request.running
-            for (i in 0 until stepCount) {
-                player.newWalkCmdX[i] = firstStepX + request.deltasX[i]
-                player.newWalkCmdY[i] = firstStepY + request.deltasY[i]
-                player.tmpNWCX[i] = player.newWalkCmdX[i]
-                player.tmpNWCY[i] = player.newWalkCmdY[i]
-            }
-        }
+        player.replaceMovementRoute(routeDecision.waypoints, request.running)
         logger.debug(
-            "Walk steps {} firstX {} firstY {} destinationX {} destinationY {} running {}",
-            player.newWalkCmdSteps,
-            firstStepX,
-            firstStepY,
+            "Walk waypoints {} destinationX {} destinationY {} running {}",
+            player.movementRouteSize(),
             eventDestination.x,
             eventDestination.y,
-            player.newWalkCmdIsRunning,
+            request.running,
         )
 
-        if (player.newWalkCmdSteps > 0) {
+        if (player.hasMovementRoute()) {
             DialogueService.closeBlockingDialogue(player, false)
 
             // Manual click-walk should break follow intent (Luna parity) and object interaction.
@@ -163,12 +152,12 @@ object PacketWalkingService {
             player.rerequestAnim()
             if (request.opcode != 98) {
                 ContentActions.cancel(
-                    player,
-                    PlayerActionCancelReason.MOVEMENT,
-                    true,
-                    false,
-                    false,
-                    true,
+                    player = player,
+                    reason = PlayerActionCancelReason.MOVEMENT,
+                    fullResetAnimation = true,
+                    clearDialogue = false,
+                    closeInterfaces = false,
+                    resetCompatibilityState = true,
                 )
             } else {
                 PlayerActionController.cancel(player, PlayerActionCancelReason.MOVEMENT)
