@@ -24,22 +24,17 @@ object TradeDuelSessionService {
         if (client.inTrade) {
             return
         }
-        client.trade_reqId = targetSlot
-        client.tradeReq(client.trade_reqId)
-    }
-
-    @JvmStatic
-    fun requestLegacyTrade(client: Client, targetSlot: Int) {
-        if (client.inTrade) {
+        if (!net.dodian.uber.game.engine.config.FeatureStateService.trading.get()) {
+            client.sendMessage("Trading has been temporarily disabled")
             return
         }
-        // Legacy opcode 128 routes through the historical duelReq path.
-        client.duelReq(targetSlot)
+        client.trade_reqId = targetSlot
+        PlayerSocialApproachService.requestTrade(client, client.trade_reqId)
     }
 
     @JvmStatic
     fun requestDuel(client: Client, targetSlot: Int) {
-        client.duelReq(targetSlot)
+        PlayerSocialApproachService.requestDuel(client, targetSlot)
     }
 
     @JvmStatic

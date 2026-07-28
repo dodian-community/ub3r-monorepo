@@ -13,7 +13,13 @@ data class Settings(
     @JsonProperty("database_pool") val databasePool: DatabasePoolSettings,
     @JsonProperty("ranks") val ranks: RankSettings = RankSettings(),
     @JsonProperty("metrics") val metrics: MetricsSettings = MetricsSettings(),
-    @JsonProperty("discord") val discord: DiscordSettings = DiscordSettings()
+    @JsonProperty("discord") val discord: DiscordSettings = DiscordSettings(),
+    @JsonProperty("web_security") val webSecurity: WebSecuritySettings = WebSecuritySettings(),
+)
+
+data class WebSecuritySettings(
+    @JsonProperty("allowed_origins") val allowedOrigins: List<String> = emptyList(),
+    @JsonProperty("trusted_proxy_cidrs") val trustedProxyCidrs: List<String> = emptyList(),
 )
 
 data class DiscordSettings(

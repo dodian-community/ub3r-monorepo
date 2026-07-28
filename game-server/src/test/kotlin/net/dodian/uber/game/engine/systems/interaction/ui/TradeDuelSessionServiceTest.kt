@@ -6,6 +6,7 @@ import net.dodian.uber.game.item.ItemManager
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.GameItem
 import net.dodian.uber.game.model.item.Item
+import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -33,8 +34,38 @@ class TradeDuelSessionServiceTest {
 
     @AfterEach
     fun tearDown() {
+        (PlayerRegistry.players[1] as? Client)?.let(PlayerSocialApproachService::cancel)
+        (PlayerRegistry.players[2] as? Client)?.let(PlayerSocialApproachService::cancel)
+        PlayerRegistry.players[1] = null
+        PlayerRegistry.players[2] = null
         GameThreadContext.clearBindingForTests()
         Server.itemManager = previousItemManager
+    }
+
+    @Test
+    fun `adjacent reciprocal trade opens without staging movement`() {
+        val first = Client(null, 1).apply {
+            dbId = 10
+            playerName = "first"
+            position.moveTo(3200, 3200, 0)
+        }
+        val second = Client(null, 2).apply {
+            dbId = 20
+            playerName = "second"
+            position.moveTo(3201, 3200, 0)
+        }
+        PlayerRegistry.players[1] = first
+        PlayerRegistry.players[2] = second
+
+        TradeDuelSessionService.requestTrade(first, 2)
+        TradeDuelSessionService.requestTrade(second, 1)
+
+        assertTrue(first.inTrade)
+        assertTrue(second.inTrade)
+        assertEquals(0, first.newWalkCmdSteps)
+        assertEquals(first.wQueueReadPtr, first.wQueueWritePtr)
+        assertEquals(0, second.newWalkCmdSteps)
+        assertEquals(second.wQueueReadPtr, second.wQueueWritePtr)
     }
 
     @Test

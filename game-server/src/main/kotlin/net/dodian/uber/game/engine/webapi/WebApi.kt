@@ -5,16 +5,20 @@ import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.response.*
+import io.ktor.server.request.*
 import io.ktor.server.routing.*
 import io.ktor.server.plugins.cors.routing.*
-import io.ktor.server.plugins.ratelimit.*
-import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.withTimeout
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.engine.config.webApiEnabled
 import net.dodian.uber.game.engine.config.webApiPort
+import net.dodian.uber.game.engine.config.webApiAllowedOrigins
+import net.dodian.uber.game.engine.config.webApiOpsToken
+import net.dodian.uber.game.engine.config.webApiTrustedProxyCidrs
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.persistence.db.dbConnection
@@ -23,6 +27,8 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.UUID
+import java.net.URI
 import org.slf4j.LoggerFactory
 
 data class ServerStatus(
@@ -31,12 +37,48 @@ data class ServerStatus(
 )
 
 data class OnlinePlayer(
-    val id: Int,
     val username: String
 )
 
 private fun getOnlinePlayers() = PlayerRegistry.playersOnline.map { (_, player) ->
-    OnlinePlayer(player.dbId, player.playerName)
+    OnlinePlayer(player.playerName)
+}
+
+private val operationPaths = setOf(
+    "/ready",
+    "/content/manifest",
+    "/prometheus",
+    "/metrics",
+    "/metrics/dashboard",
+    "/dashboard",
+    "/api/metrics/history",
+)
+
+private fun isOperationRoute(path: String): Boolean =
+    path in operationPaths || path.startsWith("/api/v1/operations/")
+
+private fun isHiscoresRoute(path: String): Boolean =
+    path.contains("hiscore", ignoreCase = true) ||
+        path.contains("highscore", ignoreCase = true) ||
+        path.endsWith("/index_lite.ws")
+
+private suspend fun respondApiError(
+    call: ApplicationCall,
+    status: HttpStatusCode,
+    code: String,
+    requestId: String,
+) {
+    call.respondText(
+        mapper.writeValueAsString(
+            linkedMapOf(
+                "error" to code,
+                "status" to status.value,
+                "requestId" to requestId,
+            ),
+        ),
+        ContentType.Application.Json,
+        status,
+    )
 }
 
 private val mapper: ObjectMapper = ObjectMapper()
@@ -80,9 +122,13 @@ object WebApi {
 
     // Cache for highscores CSV responses by username (lowercase)
     private val hiscoresCache = ConcurrentHashMap<String, String>()
+    private val negativeHiscoresCache = ConcurrentHashMap<String, Long>()
     private val scheduler = Executors.newSingleThreadScheduledExecutor()
+    private val refreshInProgress = AtomicBoolean(false)
+    private val requestGuard = WebRequestGuard()
 
     private fun updateHiscoresCache() {
+        if (!refreshInProgress.compareAndSet(false, true)) return
         try {
             val statsList = mutableListOf<PlayerStatRow>()
             dbConnection.use { conn ->
@@ -201,8 +247,11 @@ object WebApi {
 
             hiscoresCache.clear()
             hiscoresCache.putAll(newCache)
+            negativeHiscoresCache.clear()
         } catch (ex: Exception) {
             logger.error("Hiscores cache refresh failed; retaining the previous cache", ex)
+        } finally {
+            refreshInProgress.set(false)
         }
     }
 
@@ -221,19 +270,94 @@ object WebApi {
 
             serverEngine = embeddedServer(Netty, port = webApiPort) {
                 install(CORS) {
-                    anyHost()
                     allowHeader(HttpHeaders.ContentType)
+                    allowHeader(HttpHeaders.Authorization)
                     allowMethod(HttpMethod.Get)
-                    allowMethod(HttpMethod.Post)
-                    allowMethod(HttpMethod.Put)
-                    allowMethod(HttpMethod.Delete)
                     allowMethod(HttpMethod.Options)
-                    allowCredentials = true
+                    allowCredentials = false
+                    webApiAllowedOrigins.forEach { configuredOrigin ->
+                        try {
+                            val origin = URI(configuredOrigin)
+                            if (!origin.host.isNullOrBlank() && !origin.scheme.isNullOrBlank()) {
+                                allowHost(
+                                    if (origin.port > 0) "${origin.host}:${origin.port}" else origin.host,
+                                    schemes = listOf(origin.scheme),
+                                )
+                            }
+                        } catch (exception: Exception) {
+                            logger.warn("Ignoring invalid web API CORS origin {}", configuredOrigin)
+                        }
+                    }
                 }
-                install(RateLimit) {
-                    register {
-                        rateLimiter(limit = 30, refillPeriod = 60.seconds)
-                        requestKey { call -> call.request.local.remoteHost }
+                intercept(ApplicationCallPipeline.Plugins) {
+                    val requestId = UUID.randomUUID().toString()
+                    call.response.header("X-Request-Id", requestId)
+                    val method = call.request.httpMethod
+                    if (method != HttpMethod.Get && method != HttpMethod.Options) {
+                        respondApiError(call, HttpStatusCode.MethodNotAllowed, "method_not_allowed", requestId)
+                        finish()
+                        return@intercept
+                    }
+                    val contentLength = call.request.header(HttpHeaders.ContentLength)?.toLongOrNull() ?: 0L
+                    val headerBytes = call.request.headers.entries().sumOf { (name, values) ->
+                        name.length + values.sumOf { it.length }
+                    }
+                    if (contentLength > 8 * 1024L || headerBytes > 16 * 1024) {
+                        respondApiError(call, HttpStatusCode.PayloadTooLarge, "request_too_large", requestId)
+                        finish()
+                        return@intercept
+                    }
+
+                    val path = call.request.path()
+                    val operationRoute = method != HttpMethod.Options && isOperationRoute(path)
+                    val clientIp = WebClientAddress.resolve(call, webApiTrustedProxyCidrs)
+                    val rateClass = when {
+                        operationRoute -> WebRateClass.OPERATIONS
+                        isHiscoresRoute(path) -> WebRateClass.HISCORES
+                        else -> WebRateClass.PUBLIC
+                    }
+                    val permit = requestGuard.enter(clientIp, rateClass)
+                    if (!permit.permitted) {
+                        net.dodian.uber.game.engine.metrics.OperationalTelemetry.incrementCounter(
+                            "web.request.rate_limited",
+                            1L,
+                        )
+                        call.response.header(HttpHeaders.RetryAfter, permit.retryAfterSeconds.toString())
+                        respondApiError(call, HttpStatusCode.TooManyRequests, "rate_limited", requestId)
+                        finish()
+                        return@intercept
+                    }
+                    try {
+                        if (operationRoute &&
+                            !constantTimeTokenEquals(call.request.header(HttpHeaders.Authorization), webApiOpsToken)
+                        ) {
+                            net.dodian.uber.game.engine.metrics.OperationalTelemetry.incrementCounter(
+                                "web.request.unauthorized",
+                                1L,
+                            )
+                            requestGuard.reject(clientIp)
+                            if (webApiOpsToken.isBlank()) {
+                                respondApiError(call, HttpStatusCode.NotFound, "not_found", requestId)
+                            } else {
+                                call.response.header(HttpHeaders.WWWAuthenticate, "Bearer")
+                                respondApiError(call, HttpStatusCode.Unauthorized, "unauthorized", requestId)
+                            }
+                            finish()
+                            return@intercept
+                        }
+                        net.dodian.uber.game.engine.metrics.OperationalTelemetry.incrementCounter(
+                            "web.request.allowed",
+                            1L,
+                        )
+                        try {
+                            withTimeout(5_000L) { proceed() }
+                        } catch (_: TimeoutCancellationException) {
+                            if (!call.response.isCommitted) {
+                                respondApiError(call, HttpStatusCode.ServiceUnavailable, "request_timeout", requestId)
+                            }
+                        }
+                    } finally {
+                        permit.release()
                     }
                 }
                 routing {
@@ -241,16 +365,22 @@ object WebApi {
                         serverStatus.playersOnline = getOnlinePlayers().toSet()
                         call.respondText(mapper.writeValueAsString(serverStatus), ContentType.Application.Json)
                     }
+                    get("/api/v1/server-status") {
+                        serverStatus.playersOnline = getOnlinePlayers().toSet()
+                        call.respondText(mapper.writeValueAsString(serverStatus), ContentType.Application.Json)
+                    }
 
                     get("/health") {
-                        val dbOk = try {
-                            dbConnection.use { conn -> conn.isValid(2) }
-                        } catch (_: Exception) {
-                            false
-                        }
                         val health = mapOf(
-                            "status" to if (dbOk) "UP" else "DEGRADED",
-                            "database" to if (dbOk) "UP" else "DOWN",
+                            "status" to "UP",
+                            "players" to PlayerRegistry.getPlayerCount(),
+                            "uptimeMs" to (System.currentTimeMillis() - Server.serverStartup),
+                        )
+                        call.respondText(mapper.writeValueAsString(health), ContentType.Application.Json)
+                    }
+                    get("/api/v1/health") {
+                        val health = mapOf(
+                            "status" to "UP",
                             "players" to PlayerRegistry.getPlayerCount(),
                             "uptimeMs" to (System.currentTimeMillis() - Server.serverStartup),
                         )
@@ -366,8 +496,7 @@ object WebApi {
                         }
                     }
 
-                    rateLimit {
-                        val handleHiscores: suspend (ApplicationCall) -> Unit = { call ->
+                    val handleHiscores: suspend (ApplicationCall) -> Unit = handleHiscores@{ call ->
                             val playerName = call.request.queryParameters["player"]
                                 ?: call.request.queryParameters["username"]
                                 ?: call.request.queryParameters["name"]
@@ -376,13 +505,17 @@ object WebApi {
                                 call.respond(HttpStatusCode.BadRequest, "Missing 'player' query parameter.")
                             } else {
                                 val sanitizedPlayerName = playerName.lowercase().trim().replace(" ", "_").replace("%20", "_")
-                                var csvData = hiscoresCache[sanitizedPlayerName]
-                                if (csvData == null) {
-                                    // Fallback: force refresh cache if cache missed
-                                    updateHiscoresCache()
-                                    csvData = hiscoresCache[sanitizedPlayerName]
+                                if (!Regex("[a-z0-9_]{1,12}").matches(sanitizedPlayerName)) {
+                                    call.respond(HttpStatusCode.BadRequest, "Invalid player name.")
+                                    return@handleHiscores
                                 }
+                                val now = System.currentTimeMillis()
+                                negativeHiscoresCache.entries.removeIf { now - it.value >= 5 * 60_000L }
+                                val csvData = hiscoresCache[sanitizedPlayerName]
                                 if (csvData == null) {
+                                    if (negativeHiscoresCache.size < 10_000) {
+                                        negativeHiscoresCache.putIfAbsent(sanitizedPlayerName, now)
+                                    }
                                     call.respond(HttpStatusCode.NotFound, "Player not found.")
                                 } else {
                                     call.respondText(csvData, ContentType.Text.Plain)
@@ -390,15 +523,18 @@ object WebApi {
                             }
                         }
 
-                        get("/api/hiscores") { handleHiscores(call) }
-                        get("/api/highscores") { handleHiscores(call) }
-                        get("/hiscores") { handleHiscores(call) }
-                        get("/highscores") { handleHiscores(call) }
-                        get("/index_lite.ws") { handleHiscores(call) }
-                        get("/m=hiscore_oldschool/index_lite.ws") { handleHiscores(call) }
-                        get("/api/hiscores/{player}") { handleHiscores(call) }
-                        get("/api/highscores/{player}") { handleHiscores(call) }
-                    }
+                    get("/api/hiscores") { handleHiscores(call) }
+                    get("/api/highscores") { handleHiscores(call) }
+                    get("/api/v1/hiscores") { handleHiscores(call) }
+                    get("/api/v1/highscores") { handleHiscores(call) }
+                    get("/hiscores") { handleHiscores(call) }
+                    get("/highscores") { handleHiscores(call) }
+                    get("/index_lite.ws") { handleHiscores(call) }
+                    get("/m=hiscore_oldschool/index_lite.ws") { handleHiscores(call) }
+                    get("/api/hiscores/{player}") { handleHiscores(call) }
+                    get("/api/highscores/{player}") { handleHiscores(call) }
+                    get("/api/v1/hiscores/{player}") { handleHiscores(call) }
+                    get("/api/v1/highscores/{player}") { handleHiscores(call) }
                 }
             }.start(wait = false)
         } catch (exception: Exception) {

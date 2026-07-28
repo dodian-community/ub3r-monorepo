@@ -850,6 +850,30 @@ public final class TarnishOutboundPackets {
         }
     }
 
+    /** Opcode 28 - masked, RSA-backed account password prompt. */
+    public static final class SendPasswordPrompt {
+        public static final int OPCODE = 28;
+        public static final MessageType TYPE = MessageType.VAR_SHORT;
+
+        private final int stage;
+        private final String nonce;
+        private final String title;
+
+        public SendPasswordPrompt(int stage, String nonce, String title) {
+            this.stage = stage;
+            this.nonce = nonce;
+            this.title = title;
+        }
+
+        public ByteMessage encode() {
+            ByteMessage message = ByteMessage.message(OPCODE, TYPE);
+            message.put(stage);
+            message.putString(nonce);
+            message.putString(title);
+            return message;
+        }
+    }
+
     /** Opcode 127 - Send Exp Counter. Client: readUnsignedByte skill, readInt experience, readUnsignedByte counter. */
     public static final class SendExpCounter {
         public static final int OPCODE = 127;

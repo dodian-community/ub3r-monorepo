@@ -57,9 +57,10 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
         ByteBuf in = payloadHolder.payload();
         try {
             String remoteIp = remoteIp(ctx);
-            if (!LOGIN_ATTEMPTS.tryAcquire(remoteIp, System.currentTimeMillis())) {
-                logger.warn("[Netty] Login throttled from {}", remoteIp);
-                sendAndClose(ctx, 13);
+            LoginAttemptLimiter.Decision preflight = LOGIN_ATTEMPTS.preflight(remoteIp, System.currentTimeMillis());
+            if (!preflight.isAllowed()) {
+                logger.debug("[Netty] Login throttled from {}", remoteIp);
+                sendAndClose(ctx, preflight.getResponseCode());
                 return;
             }
             if (attempt != null) {
@@ -107,7 +108,6 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
         }
         if (!result.isSuccess()) {
             current.setStage(LoginAttempt.Stage.FAILED);
-            LOGIN_ATTEMPTS.recordFailure(current.getRemoteIp(), System.currentTimeMillis());
             OperationalTelemetry.incrementCounter("login.prepare.failure", 1L);
             logger.warn("Login preparation failed remote={} code={} reason={}",
                     ctx.channel().remoteAddress(), result.getResponseCode(), result.getReason());
@@ -121,6 +121,13 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
     private void processLogin(ChannelHandlerContext ctx, LoginAttempt current, ParsedLoginRequest parsed) {
         String username = parsed.getUsername();
         String password = parsed.getPassword();
+        LoginAttemptLimiter.Decision blocked = LOGIN_ATTEMPTS.checkBlocked(
+                current.getRemoteIp(), username, parsed.getDiscordAuthCode(), System.currentTimeMillis());
+        if (!blocked.isAllowed()) {
+            OperationalTelemetry.incrementCounter("login.auth.blocked", 1L);
+            sendAndClose(ctx, blocked.getResponseCode());
+            return;
+        }
         long longName = Utils.playerNameToLong(Utils.capitalize(username.replace('_', ' ')));
         current.longName = longName;
         if (LOADING_ACCOUNTS.putIfAbsent(longName, current) != null) {
@@ -170,7 +177,8 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
 
         current.setStage(LoginAttempt.Stage.ACCOUNT_LOADING);
         final int slotCopy = reservedSlot;
-        AccountPersistenceService.submitLoginLoad(client, username, password, parsed.getDiscordAuthCode(), loadResult ->
+        AccountPersistenceService.submitLoginLoad(
+                client, username, password, parsed.getDiscordAuthCode(), parsed.isAccountCreationRequested(), loadResult ->
                 ctx.channel().eventLoop().execute(() -> finishLogin(
                         ctx, current, parsed, client, loadResult, slotCopy, slotReserveDurationMs)));
     }
@@ -189,18 +197,29 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
             long slotReserveDurationMs
     ) {
         if (loadResult.getCode() != 0) {
-            LOGIN_ATTEMPTS.recordFailure(remoteIp(ctx), System.currentTimeMillis());
+            recordAuthenticationFailure(parsed, current.getRemoteIp(), loadResult.getCode());
             long failures = LOGIN_LOAD_FAILURES.incrementAndGet();
             OperationalTelemetry.incrementCounter("login.load.failure", 1L);
-            logger.warn(
-                    "Login load failed for {} reason=\"{}\" code={} load={}ms pendingRetries={} failures={}",
-                    client.getPlayerName(),
-                    describeReason(loadResult.getCode()),
-                    loadResult.getCode(),
-                    loadResult.getDurationMs(),
-                    loadResult.getPendingRetries(),
-                    failures
-            );
+            if (isExpectedAuthenticationRejection(loadResult.getCode())) {
+                logger.debug(
+                        "Login rejected for {} reason=\"{}\" code={} load={}ms pendingRetries={}",
+                        client.getPlayerName(),
+                        describeReason(loadResult.getCode()),
+                        loadResult.getCode(),
+                        loadResult.getDurationMs(),
+                        loadResult.getPendingRetries()
+                );
+            } else {
+                logger.warn(
+                        "Login load failed for {} reason=\"{}\" code={} load={}ms pendingRetries={} failures={}",
+                        client.getPlayerName(),
+                        describeReason(loadResult.getCode()),
+                        loadResult.getCode(),
+                        loadResult.getDurationMs(),
+                        loadResult.getPendingRetries(),
+                        failures
+                );
+            }
             releaseSlot(current);
             releaseToken(current);
             sendAndClose(ctx, loadResult.getCode());
@@ -215,7 +234,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
             return;
         }
 
-        LOGIN_ATTEMPTS.recordSuccess(remoteIp(ctx));
+        LOGIN_ATTEMPTS.recordSuccess(parsed.getUsername());
         int loginRights = rightsForGroup(hydration.getPlayerGroup());
         sendLoginSuccess(ctx, loginRights);
 
@@ -466,7 +485,7 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
     public static String describeReason(int code) {
         switch (code) {
             case 3:
-                return "Invalid password or username";
+                return "Incorrect password";
             case 4:
                 return "Account disabled/banned";
             case 5:
@@ -489,6 +508,10 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
                 return "Server is currently updating";
             case 16:
                 return "Too many login attempts from your IP";
+            case 34:
+                return "Authentication blocked for five minutes";
+            case 35:
+                return "Authentication blocked for 24 hours";
             case 22:
                 return "MAC/IP/UID Banned";
             case 23:
@@ -508,5 +531,22 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
             default:
                 return "Unknown error (" + code + ")";
         }
+    }
+
+    private static void recordAuthenticationFailure(ParsedLoginRequest parsed, String remoteIp, int code) {
+        long now = System.currentTimeMillis();
+        if (code == 3 || code == 26) {
+            LOGIN_ATTEMPTS.recordCredentialFailure(remoteIp, parsed.getUsername(), now);
+            OperationalTelemetry.incrementCounter("login.auth.failure", 1L);
+        } else if (code == 29 && parsed.isAccountCreationRequested()) {
+            LOGIN_ATTEMPTS.recordCreationAuthFailure(
+                    remoteIp, parsed.getUsername(), parsed.getDiscordAuthCode(), now);
+            OperationalTelemetry.incrementCounter("login.creation_auth.failure", 1L);
+        }
+    }
+
+    private static boolean isExpectedAuthenticationRejection(int code) {
+        return code == 3 || code == 4 || code == 5 || code == 23 || code == 26
+                || code == 29 || code == 30 || code == 31 || code == 32 || code == 33;
     }
 }

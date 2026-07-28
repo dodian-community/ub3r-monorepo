@@ -18,6 +18,33 @@ internal object DeadlyRedSpider2 : NpcFamily by npcFamily("Deadly red spider", 3
     }
 
     spawns {
+        // This cave uses the same revision-218 NPC definition (3021) but retains the
+        // historical weaker combat profile through spawn overrides. Keeping it in the same
+        // family prevents two global NpcContentDefinitions from claiming one cache ID.
+        spawn(
+            3210,
+            9897,
+            hitpoints = 60,
+            attack = 19,
+            strength = 21,
+            defence = 16,
+            magic = 1,
+            ranged = 1,
+            defenceAnimation = 5573,
+            deathAnimation = 2304,
+        )
+        spawn(
+            3213,
+            9890,
+            hitpoints = 60,
+            attack = 19,
+            strength = 21,
+            defence = 16,
+            magic = 1,
+            ranged = 1,
+            defenceAnimation = 5573,
+            deathAnimation = 2304,
+        )
         spawn(3591, 3479)
         spawn(3593, 3476)
         spawn(3593, 3483)

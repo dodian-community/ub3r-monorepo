@@ -92,7 +92,7 @@ object PacketInteractionRequestService {
     }
 
     // -------------------------------------------------------------------------
-    // Legacy Trade Request (opcode 128) — uses duelReq internally
+    // Legacy primary player action (opcode 128)
     // -------------------------------------------------------------------------
 
     /**
@@ -103,30 +103,14 @@ object PacketInteractionRequestService {
      * Guard messages and the [Client.duelReq] call live here rather than in the listener.
      */
     @JvmStatic
-    fun handleLegacyTradeRequest(client: Client, targetSlot: Int, other: Client) {
+    fun handleLegacyPrimaryPlayerAction(client: Client, targetSlot: Int, other: Client) {
         // Rubber-chicken emote
         if (client.equipment[Equipment.Slot.WEAPON.id] == 4566) {
             client.facePlayer(targetSlot)
             client.performAnimation(1833, 0)
             return
         }
-        if (client.isBusy || other.isBusy) {
-            client.send(
-                SendMessage(
-                    if (client.isBusy) "You are currently busy"
-                    else "${other.getPlayerName()} is currently busy!"
-                )
-            )
-            return
-        }
-        val guardMessage = PlayerInteractionGuardService.tradeBlockMessage(client, other)
-        if (guardMessage != null) {
-            client.send(SendMessage(guardMessage))
-            return
-        }
-        if (!client.inTrade) {
-            TradeDuelSessionService.requestLegacyTrade(client, targetSlot)
-        }
+        handleDuelRequest(client, targetSlot, other)
     }
 
     // -------------------------------------------------------------------------

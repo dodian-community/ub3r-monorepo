@@ -13,6 +13,8 @@ import net.dodian.uber.game.engine.systems.combat.CombatCommandService
 import net.dodian.uber.game.engine.systems.combat.CombatIntent
 import net.dodian.uber.game.engine.systems.interaction.AttackPlayerIntent
 import net.dodian.uber.game.engine.systems.interaction.ItemOnNpcIntent
+import net.dodian.uber.game.engine.systems.interaction.EntityInteractionReach
+import net.dodian.uber.game.engine.systems.interaction.EntityReachResult
 import net.dodian.uber.game.engine.systems.interaction.npcs.BankerApproachFallbackService
 import net.dodian.uber.game.engine.systems.interaction.NpcInteractionIntent
 import net.dodian.uber.game.engine.systems.interaction.npcs.NpcContentRegistry
@@ -167,10 +169,7 @@ object PacketInteractionService {
         if (option !in 1..4) {
             return false
         }
-        if (npc.position.withinDistance(client.position, 0)) {
-            return false
-        }
-        return client.goodDistanceEntity(npc, 1)
+        return EntityInteractionReach.resolve(client, npc, 1) == EntityReachResult.REACHED
     }
 
     private fun refreshCombatTargetFacing(client: Client, target: Entity) {

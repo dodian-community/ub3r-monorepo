@@ -44,3 +44,7 @@ dashboard_enabled = false
 
 [discord]
 require_verified_email = false
+
+[web_security]
+allowed_origins = []
+trusted_proxy_cidrs = []

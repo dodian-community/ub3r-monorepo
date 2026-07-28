@@ -9,6 +9,7 @@ import net.dodian.uber.game.netty.codec.ByteMessageEncoder
 import net.dodian.uber.game.netty.codec.MessageType
 import net.dodian.uber.game.netty.game.GamePacket
 import net.dodian.uber.game.netty.game.GamePacketDecoder
+import net.dodian.uber.game.netty.game.encode.TarnishOutboundPackets
 import net.dodian.utilities.ISAACCipher
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -52,10 +53,32 @@ class TarnishProtocolCodecTest {
     }
 
     @Test
+    fun `password input uses a variable short encrypted payload`() {
+        val seed = intArrayOf(7, 8, 9, 10)
+        val writerCipher = ISAACCipher(seed.copyOf())
+        val channel = EmbeddedChannel(GamePacketDecoder())
+        channel.attr(GamePacketDecoder.IN_CIPHER_KEY).set(ISAACCipher(seed.copyOf()))
+        val payload = byteArrayOf(1, 2, 3, 4)
+        val wire = Unpooled.buffer()
+        wire.writeByte((62 + writerCipher.getNextKey()) and 0xff)
+        wire.writeShort(payload.size)
+        wire.writeBytes(payload)
+
+        channel.writeInbound(wire)
+
+        assertPacket(channel.readInbound(), 62, payload)
+        assertFalse(channel.finish())
+    }
+
+    @Test
     fun `encoder emits Tarnish fixed variable byte and variable short headers`() {
         assertArrayEquals(byteArrayOf(35, 1, 2, 3, 4), encode(ByteMessage.message(35).putInt(0x01020304)))
         assertArrayEquals(byteArrayOf(253.toByte(), 2, 65, 10), encode(ByteMessage.message(253, MessageType.VAR).putString("A")))
         assertArrayEquals(byteArrayOf(27, 0, 2, 7, 8), encode(ByteMessage.message(27, MessageType.VAR_SHORT).put(7).put(8)))
+        assertArrayEquals(
+            byteArrayOf(28, 0, 7, 1, 97, 98, 10, 112, 119, 10),
+            encode(TarnishOutboundPackets.SendPasswordPrompt(1, "ab", "pw").encode()),
+        )
     }
 
     @Test

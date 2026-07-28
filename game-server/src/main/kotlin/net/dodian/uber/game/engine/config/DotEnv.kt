@@ -15,7 +15,7 @@ val databaseUsername = dotenv["DATABASE_USERNAME"]?.takeIf { it.isNotBlank() } ?
 val databasePassword = dotenv["DATABASE_PASSWORD"] ?: ""
 val databaseInitialize = dotenv["DATABASE_INITIALIZE"]?.toBoolean() ?: false
 
-val clientVersion = dotenv["CLIENT_VERSION"]?.toInt() ?: 12
+val clientVersion = dotenv["CLIENT_VERSION"]?.toInt() ?: 13
 val gameClientCustomVersion = dotenv["CLIENT_CUSTOM_VERSION"] ?: "dodian_client"
 
 // Environment and world identity. These change per-deployment (not secrets), but they're read
@@ -63,6 +63,9 @@ val nettyLeakDetection get() = SettingsLoader.settings.network.leakDetection
 val dodianLogLevel get() = SettingsLoader.settings.server.logLevel
 val webApiEnabled get() = SettingsLoader.settings.network.webEnabled
 val webApiPort get() = SettingsLoader.settings.network.webPort
+val webApiOpsToken = dotenv["WEB_API_OPS_TOKEN"] ?: ""
+val webApiAllowedOrigins get() = if (SettingsLoader.isLoaded) SettingsLoader.settings.webSecurity.allowedOrigins else emptyList()
+val webApiTrustedProxyCidrs get() = if (SettingsLoader.isLoaded) SettingsLoader.settings.webSecurity.trustedProxyCidrs else emptyList()
 
 val gameConnectionsPerIp get() = SettingsLoader.settings.network.connectionsPerIp
 
@@ -91,5 +94,3 @@ val metricsPrometheusEndpoint get() = if (SettingsLoader.isLoaded) SettingsLoade
 val metricsDashboardEnabled get() = if (SettingsLoader.isLoaded) SettingsLoader.settings.metrics.dashboardEnabled else true
 
 val discordRequireVerifiedEmail get() = if (SettingsLoader.isLoaded) SettingsLoader.settings.discord.requireVerifiedEmail else false
-
-

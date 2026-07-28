@@ -11,9 +11,6 @@ internal object AccountLoginQueries {
     val webUserInsert =
         "INSERT INTO ${DbTables.WEB_USERS_TABLE} (username, password, salt, email, discord_id, discord_username, passworddate, birthday_search) VALUES (?, ?, ?, ?, ?, ?, '', '')"
 
-    val webUserUpdateCredentials =
-        "UPDATE ${DbTables.WEB_USERS_TABLE} SET password = ?, salt = ?, email = IF(? != '', ?, email) WHERE userid = ?"
-
     val countAccountsByDiscordId =
         "SELECT COUNT(*) AS total FROM ${DbTables.WEB_USERS_TABLE} WHERE discord_id = ? AND discord_id != ''"
 

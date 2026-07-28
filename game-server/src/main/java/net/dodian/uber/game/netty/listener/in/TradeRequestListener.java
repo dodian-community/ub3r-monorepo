@@ -15,9 +15,8 @@ public class TradeRequestListener implements PacketListener {
 
     @Override
     public void handle(Client client, GamePacket packet) {
-        // NOTE: the Tarnish client sends opcode 128 for duel-request clicks, but this server's
-        // 139/128/39 handlers are deliberately cross-wired as a compensating set (139=Follow,
-        // 128=Trade, 39=Trade) — confirmed working in-game. See TradeListener.
+        // Opcode 128 is retained for the legacy slot-1 action. The current menu
+        // uses it for rubber-chicken "Whack"; older clients may use it for Duel.
         net.dodian.uber.game.netty.game.decode.TarnishPackets.PlayerMenuClick msg =
                 net.dodian.uber.game.netty.game.decode.TarnishPackets.PlayerMenuClick.decode(packet.opcode(), packet.payload());
         if (msg == null) {
@@ -28,9 +27,9 @@ public class TradeRequestListener implements PacketListener {
         if (!client.validClient(targetSlot) || client.getSlot() == targetSlot) {
             return;
         }
-        PacketInteractionRequestService.handleLegacyTradeRequest(client, targetSlot, other);
+        PacketInteractionRequestService.handleLegacyPrimaryPlayerAction(client, targetSlot, other);
         if (logger.isTraceEnabled()) {
-            logger.trace("{} sent TradeRequest to slot {} ({})", client.getPlayerName(), targetSlot, other.getPlayerName());
+            logger.trace("{} sent legacy primary player action to slot {} ({})", client.getPlayerName(), targetSlot, other.getPlayerName());
         }
     }
 }

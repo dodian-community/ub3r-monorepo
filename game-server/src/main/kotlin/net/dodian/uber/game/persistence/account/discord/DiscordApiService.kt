@@ -12,6 +12,7 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.nio.charset.StandardCharsets
+import java.time.Duration
 
 data class DiscordUser(
     val id: String = "",
@@ -20,16 +21,30 @@ data class DiscordUser(
     val verified: Boolean = false
 )
 
+sealed interface DiscordFetchResult {
+    data class Success(val user: DiscordUser) : DiscordFetchResult
+    data object InvalidAuthorization : DiscordFetchResult
+    data object Unavailable : DiscordFetchResult
+}
+
 object DiscordApiService {
     private val logger = LoggerFactory.getLogger(DiscordApiService::class.java)
-    private val httpClient = HttpClient.newHttpClient()
+    private val httpClient = HttpClient.newBuilder()
+        .connectTimeout(Duration.ofSeconds(5))
+        .build()
     private val objectMapper = ObjectMapper()
 
     @JvmStatic
-    fun fetchDiscordUser(code: String): DiscordUser? {
-        if (code.isBlank()) return null
+    fun fetchDiscordUser(code: String): DiscordUser? =
+        (fetchDiscordUserResult(code) as? DiscordFetchResult.Success)?.user
+
+    @JvmStatic
+    fun fetchDiscordUserResult(code: String): DiscordFetchResult {
+        if (code.isBlank()) return DiscordFetchResult.InvalidAuthorization
         try {
-            if (!discordApiEnabled || discordClientId.isEmpty()) return null
+            if (!discordApiEnabled || discordClientId.isEmpty() || discordClientSecret.isEmpty()) {
+                return DiscordFetchResult.Unavailable
+            }
 
             val params = mapOf(
                 "client_id" to discordClientId,
@@ -46,28 +61,43 @@ object DiscordApiService {
             val tokenRequest = HttpRequest.newBuilder()
                 .uri(URI.create("https://discord.com/api/oauth2/token"))
                 .header("Content-Type", "application/x-www-form-urlencoded")
+                .timeout(Duration.ofSeconds(5))
                 .POST(HttpRequest.BodyPublishers.ofString(formBody))
                 .build()
 
             val tokenResponse = httpClient.send(tokenRequest, HttpResponse.BodyHandlers.ofString())
             if (tokenResponse.statusCode() != 200) {
-                logger.error("Discord token exchange failed: status={} body={}", tokenResponse.statusCode(), tokenResponse.body())
-                return null
+                if (tokenResponse.statusCode() in 400..401) {
+                    logger.debug("Discord token exchange rejected: status={}", tokenResponse.statusCode())
+                } else {
+                    logger.warn("Discord token exchange failed: status={}", tokenResponse.statusCode())
+                }
+                return if (tokenResponse.statusCode() in 400..401) {
+                    DiscordFetchResult.InvalidAuthorization
+                } else {
+                    DiscordFetchResult.Unavailable
+                }
             }
 
             val tokenJson = objectMapper.readTree(tokenResponse.body())
-            val accessToken = tokenJson.get("access_token")?.asText() ?: return null
+            val accessToken = tokenJson.get("access_token")?.asText()
+                ?: return DiscordFetchResult.InvalidAuthorization
 
             val userRequest = HttpRequest.newBuilder()
                 .uri(URI.create("https://discord.com/api/v10/users/@me"))
                 .header("Authorization", "Bearer $accessToken")
+                .timeout(Duration.ofSeconds(5))
                 .GET()
                 .build()
 
             val userResponse = httpClient.send(userRequest, HttpResponse.BodyHandlers.ofString())
             if (userResponse.statusCode() != 200) {
-                logger.error("Discord user fetch failed: status={} body={}", userResponse.statusCode(), userResponse.body())
-                return null
+                logger.warn("Discord user fetch failed: status={}", userResponse.statusCode())
+                return if (userResponse.statusCode() in 400..401) {
+                    DiscordFetchResult.InvalidAuthorization
+                } else {
+                    DiscordFetchResult.Unavailable
+                }
             }
 
             val userJson = objectMapper.readTree(userResponse.body())
@@ -77,11 +107,11 @@ object DiscordApiService {
                 email = userJson.get("email")?.asText() ?: "",
                 verified = userJson.get("verified")?.asBoolean() ?: false
             )
-            logger.info("Successfully fetched Discord user for account creation: id={} username={} email={}", discordUser.id, discordUser.username, discordUser.email)
-            return discordUser
+            logger.info("Successfully verified Discord identity for account creation id={}", discordUser.id)
+            return DiscordFetchResult.Success(discordUser)
         } catch (e: Exception) {
-            logger.error("Error fetching Discord user for code {}", code, e)
-            return null
+            logger.error("Discord account-creation authorization failed", e)
+            return DiscordFetchResult.Unavailable
         }
     }
 }

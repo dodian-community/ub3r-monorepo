@@ -19,6 +19,9 @@ include(":routefinder")
 include(":stress-client")
 project(":routefinder").projectDir = file("content/routefinder")
 
+include(":skills")
+project(":skills").projectDir = file("content/skills")
+
 file("content/skills").listFiles()
     ?.filter { candidate -> candidate.isDirectory && candidate.resolve("build.gradle.kts").isFile }
     ?.sortedBy { it.name }
@@ -26,6 +29,9 @@ file("content/skills").listFiles()
         include(":skills:${candidate.name}")
         project(":skills:${candidate.name}").projectDir = candidate
     }
+
+include(":quests")
+project(":quests").projectDir = file("content/quests")
 
 file("content/quests").listFiles()
     ?.filter { candidate -> candidate.isDirectory && candidate.resolve("build.gradle.kts").isFile }

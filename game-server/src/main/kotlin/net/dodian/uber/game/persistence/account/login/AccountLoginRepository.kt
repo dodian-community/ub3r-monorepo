@@ -3,6 +3,7 @@ package net.dodian.uber.game.persistence.account.login
 import java.sql.Connection
 import java.sql.ResultSet
 import net.dodian.uber.game.model.player.skills.Skill
+import net.dodian.uber.game.persistence.account.AccountPasswordRepository
 
 object AccountLoginRepository {
     data class WebUserRow(
@@ -76,8 +77,9 @@ object AccountLoginRepository {
         discordId: String = "",
         discordUsername: String = "",
     ) {
-        val salt = if (playerPass.isNotEmpty()) java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 8) else ""
-        val hashedPassword = if (playerPass.isNotEmpty()) net.dodian.uber.game.model.entity.player.Client.passHash(playerPass, salt) else ""
+        val credential = playerPass.takeIf { it.isNotEmpty() }?.let(AccountPasswordRepository::createCredential)
+        val salt = credential?.salt.orEmpty()
+        val hashedPassword = credential?.hash.orEmpty()
         connection.prepareStatement(AccountLoginQueries.webUserInsert).use { statement ->
             statement.setString(1, playerName)
             statement.setString(2, hashedPassword)
@@ -122,18 +124,6 @@ object AccountLoginRepository {
             throw exception
         } finally {
             connection.autoCommit = previousAutoCommit
-        }
-    }
-
-    fun updateWebUserCredentials(connection: Connection, dbId: Int, playerPass: String, email: String = "") {
-        val salt = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 8)
-        val hashedPassword = net.dodian.uber.game.model.entity.player.Client.passHash(playerPass, salt)
-        connection.prepareStatement(AccountLoginQueries.webUserUpdateCredentials).use { statement ->
-            statement.setString(1, hashedPassword)
-            statement.setString(2, salt)
-            statement.setString(3, email)
-            statement.setString(4, email)
-            statement.executeUpdate()
         }
     }
 

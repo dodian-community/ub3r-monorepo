@@ -14,6 +14,7 @@ import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancellationService
 import net.dodian.uber.game.engine.systems.action.PlayerActionController
 import net.dodian.uber.game.engine.systems.follow.FollowService
+import net.dodian.uber.game.engine.systems.interaction.ui.PlayerSocialApproachService
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.engine.systems.interaction.ui.TradeDuelSessionService
 import net.dodian.uber.game.engine.systems.interaction.InteractionProcessor
@@ -142,6 +143,7 @@ object PacketWalkingService {
             // Manual click-walk should break follow intent (Luna parity) and object interaction.
             if (request.opcode == 164 || request.opcode == 248) {
                 FollowService.cancelFollowIntent(player)
+                PlayerSocialApproachService.cancel(player)
                 InteractionProcessor.cancel(player)
             }
 

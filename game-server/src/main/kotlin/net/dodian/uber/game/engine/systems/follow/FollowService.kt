@@ -2,12 +2,12 @@ package net.dodian.uber.game.engine.systems.follow
 
 import java.util.ArrayList
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.math.abs
-import kotlin.math.max
 import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
+import net.dodian.uber.game.engine.systems.interaction.EntityInteractionReach
+import net.dodian.uber.game.engine.systems.interaction.EntityReachResult
 
 object FollowService {
     private val followStates = ConcurrentHashMap<Long, FollowState>()
@@ -29,6 +29,7 @@ object FollowService {
         follower: Client,
         target: Client?,
     ) {
+        follower.claimServerRoutedInteractionMovement()
         if (!isUsableFollower(follower)) {
             followStates.remove(follower.longName)
             return
@@ -199,13 +200,17 @@ object FollowService {
             return
         }
 
-        val tileDistance = max(abs(tx - fx), abs(ty - fy))
-        if (tileDistance == 0) {
-            FollowRouting.enqueueRandomCardinalStep(follower, z)
-        } else if (tileDistance == 1) {
-            clearQueuedWalking(follower)
-        } else {
-            routeFollowerTowardsTarget(follower, target, state, z)
+        when (EntityInteractionReach.resolve(follower, target, 1)) {
+            EntityReachResult.OVERLAPPING -> FollowRouting.enqueueRandomCardinalStep(follower, z)
+            EntityReachResult.REACHED -> clearQueuedWalking(follower)
+            EntityReachResult.OUT_OF_RANGE -> routeFollowerTowardsTarget(follower, target, state, z)
+            EntityReachResult.DIFFERENT_PLANE,
+            EntityReachResult.INVALID_TARGET,
+            -> {
+                clearFollowerState(follower)
+                followStates.remove(follower.longName)
+                return
+            }
         }
 
         followStates[follower.longName] =

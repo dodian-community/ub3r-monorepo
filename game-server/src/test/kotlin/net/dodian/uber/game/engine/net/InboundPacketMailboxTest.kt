@@ -70,4 +70,31 @@ class InboundPacketMailboxTest {
         assertEquals(0, mailbox.pendingCount())
         assertFalse(mailbox.enqueue(null).accepted())
     }
+
+    @Test
+    fun `server-owned action can discard an older predictive walk`() {
+        val mailbox = InboundPacketMailbox(200)
+        assertTrue(mailbox.enqueue(packet(248)).accepted())
+        assertTrue(mailbox.enqueue(packet(39)).accepted())
+
+        val action = mailbox.pollNext()
+        assertEquals(InboundPacketMailbox.Family.ACTION, action?.family())
+        assertTrue(mailbox.discardWalkAtOrBefore(requireNotNull(action).sequence()))
+        assertEquals(0, mailbox.pendingCount())
+    }
+
+    @Test
+    fun `server-owned action preserves newer deliberate walking`() {
+        val mailbox = InboundPacketMailbox(200)
+        assertTrue(mailbox.enqueue(packet(39)).accepted())
+        assertTrue(mailbox.enqueue(packet(248)).accepted())
+
+        val action = mailbox.pollNext()
+        assertEquals(InboundPacketMailbox.Family.ACTION, action?.family())
+        assertFalse(mailbox.discardWalkAtOrBefore(requireNotNull(action).sequence()))
+
+        val walk = mailbox.pollNext()
+        assertEquals(InboundPacketMailbox.Family.WALK, walk?.family())
+        assertTrue(requireNotNull(walk).sequence() > action.sequence())
+    }
 }

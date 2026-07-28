@@ -16,8 +16,8 @@ class PacketListenerManagerTest {
         assertTrue(PacketListenerManager.isInitialized())
         assertTrue(repository.isLocked)
         assertTrue(first.registeredCount > 0)
-        assertEquals(53, first.discoveredHandlerCount)
-        assertEquals(78, first.registeredCount)
+        assertEquals(54, first.discoveredHandlerCount)
+        assertEquals(79, first.registeredCount)
         assertEquals(64, first.fingerprint.length)
         assertTrue(first.missingCriticalOpcodes.isEmpty())
         PacketRegistrationReport.CRITICAL_OPCODES.forEach { opcode ->
@@ -53,7 +53,7 @@ class PacketListenerManagerTest {
             25 to "ItemOnGroundItemListener", 26 to "NpcDropTableListener", 35 to "ObjectInteractionListener",
             39 to "FollowPlayerListener", 40 to "DialogueListener", 41 to "WearItemListener", 45 to "NoOpPacketListener",
             43 to "Bank10Listener", 53 to "ItemOnItemListener", 57 to "UseItemOnNpcListener",
-            60 to "SyntaxInputListener", 70 to "ObjectInteractionListener", 72 to "NpcInteractionListener",
+            60 to "SyntaxInputListener", 62 to "PasswordInputListener", 70 to "ObjectInteractionListener", 72 to "NpcInteractionListener",
             73 to "AttackPlayerListener", 74 to "RemoveIgnoreListener", 75 to "ClickItem3Listener",
             79 to "UnsupportedTarnishPacketListener", 86 to "NoOpPacketListener", 87 to "DropItemListener",
             95 to "UpdateChatListener", 98 to "WalkingListener", 101 to "ChangeAppearanceListener",

@@ -74,14 +74,18 @@ class InboundPacketMailbox(maxPendingPackets: Int) {
     class PollResult private constructor(
         private val packet: GamePacket,
         private val family: Family,
+        private val sequence: Long,
     ) {
         fun packet(): GamePacket = packet
 
         fun family(): Family = family
 
+        fun sequence(): Long = sequence
+
         companion object {
             @JvmStatic
-            fun of(packet: GamePacket, family: Family): PollResult = PollResult(packet, family)
+            fun of(packet: GamePacket, family: Family, sequence: Long): PollResult =
+                PollResult(packet, family, sequence)
         }
     }
 
@@ -158,34 +162,34 @@ class InboundPacketMailbox(maxPendingPackets: Int) {
         val action = actionPackets.pollFirst()
         if (action != null) {
             pendingCount--
-            return PollResult.of(action.packet, action.family)
+            return PollResult.of(action.packet, action.family, action.sequence)
         }
 
         val currentWalk = walkPacket
         if (currentWalk != null) {
             walkPacket = null
             pendingCount--
-            return PollResult.of(currentWalk.packet, currentWalk.family)
+            return PollResult.of(currentWalk.packet, currentWalk.family, currentWalk.sequence)
         }
 
         val currentItemClick = itemClickPacket
         if (currentItemClick != null) {
             itemClickPacket = null
             pendingCount--
-            return PollResult.of(currentItemClick.packet, currentItemClick.family)
+            return PollResult.of(currentItemClick.packet, currentItemClick.family, currentItemClick.sequence)
         }
 
         val currentMouse = mousePacket
         if (currentMouse != null) {
             mousePacket = null
             pendingCount--
-            return PollResult.of(currentMouse.packet, currentMouse.family)
+            return PollResult.of(currentMouse.packet, currentMouse.family, currentMouse.sequence)
         }
 
         val background = backgroundPackets.pollFirst()
         if (background != null) {
             pendingCount--
-            return PollResult.of(background.packet, background.family)
+            return PollResult.of(background.packet, background.family, background.sequence)
         }
 
         return null
@@ -193,6 +197,21 @@ class InboundPacketMailbox(maxPendingPackets: Int) {
 
     @Synchronized
     fun pendingCount(): Int = pendingCount
+
+    /**
+     * Drops client-predicted walking that preceded a server-owned interaction.
+     *
+     * A newer walk is deliberate follow-up input and must remain queued.
+     */
+    @Synchronized
+    fun discardWalkAtOrBefore(sequence: Long): Boolean {
+        val currentWalk = walkPacket ?: return false
+        if (currentWalk.sequence > sequence) return false
+        walkPacket = null
+        pendingCount--
+        release(currentWalk.packet)
+        return true
+    }
 
     @Synchronized
     fun snapshotAndResetCounters(): MailboxCounters {

@@ -18,6 +18,9 @@ object PacketInterfaceCloseService {
      */
     @JvmStatic
     fun handle(client: Client) {
+        if (client.viewingAccountServices) {
+            net.dodian.uber.game.ui.AccountServices.close(client)
+        }
         if (client.IsBanking) {
             client.IsBanking = false
             client.bankSearchActive = false

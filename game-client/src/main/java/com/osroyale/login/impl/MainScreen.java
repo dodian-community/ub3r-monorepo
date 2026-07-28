@@ -118,7 +118,7 @@ public class MainScreen extends LoginComponent {
 			client.boldText.drawText(true, boxX + 40, 0xFFFFFF, "Username: " + Utility.formatName(client.myUsername) + ((client.loginScreenCursorPos == 0) & (Client.tick % 40 < 20) ? "|" : ""), startY);
 
 			// Password Prompt & Input
-			String passText = !accountCreationStatus.isEmpty() ? client.myPassword : StringUtils.toAsterisks(client.myPassword);
+			String passText = StringUtils.toAsterisks(client.myPassword);
 			client.boldText.drawText(true, boxX + 40, 0xFFFFFF, "Password: " + passText + ((client.loginScreenCursorPos == 1) & (Client.tick % 40 < 20) ? "|" : ""), startY + 35);
 
 			// Remember Me Checkbox

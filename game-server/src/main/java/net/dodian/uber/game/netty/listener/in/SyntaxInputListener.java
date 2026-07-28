@@ -23,17 +23,6 @@ public class SyntaxInputListener implements PacketListener {
         long nameLong = msg.name();
         String input = net.dodian.utilities.Names.longToPlayerName(nameLong).trim();
 
-        if (client.accountPasswordState == 1) {
-            client.accountPasswordState = 0;
-            client.verifyCurrentPassword(input);
-            return;
-        }
-        if (client.accountPasswordState == 2) {
-            client.accountPasswordState = 0;
-            client.changePassword(input);
-            return;
-        }
-
         if (client.modcpSearchPendingInput) {
             client.modcpSearchPendingInput = false;
             client.openModcp(input);

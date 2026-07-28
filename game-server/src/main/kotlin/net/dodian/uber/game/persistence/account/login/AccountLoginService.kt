@@ -2,6 +2,8 @@ package net.dodian.uber.game.persistence.account.login
 
 import java.sql.Connection
 import java.sql.SQLException
+import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.persistence.account.AccountPersistenceService
@@ -110,6 +112,9 @@ object AccountLoginService {
 
         var webUser = AccountLoginRepository.loadWebUser(connection, playerName)
         if (webUser == null) {
+            if (!accountCreationRequested) {
+                return PreparedLogin.failure(26)
+            }
             // Mandatory: new accounts require a verified Discord identity (a non-blank email means
             // AccountPersistenceService already exchanged a valid discordAuthCode for it), in any environment.
             // The one exception is local dev testing (SERVER_ENV=dev + debug=true), which can create a
@@ -144,16 +149,13 @@ object AccountLoginService {
             // an ordinary login. Never attach it to or log into an existing username.
             logger.info("Account creation rejected: username already exists username={}", playerName)
             return PreparedLogin.failure(USERNAME_TAKEN)
-        } else if (webUser.password.isEmpty() && playerPass.isNotEmpty()) {
-            AccountLoginRepository.updateWebUserCredentials(connection, webUser.dbId, playerPass, email)
-            webUser = AccountLoginRepository.loadWebUser(connection, playerName) ?: return PreparedLogin.failure(13)
         }
         if (AccountPersistenceService.isFinalSavePending(webUser.dbId)) {
             return PreparedLogin.failure(FINAL_SAVE_PENDING_INTERNAL)
         }
         if (!webUser.username.equals(playerName, ignoreCase = true)) return PreparedLogin.failure(30)
         val hashedPassword = Client.passHash(playerPass, webUser.salt)
-        if (hashedPassword != webUser.password &&
+        if (!constantTimeEquals(hashedPassword, webUser.password) &&
             !isDebugPasswordBypassAllowed(player, webUser.playerGroup, allowDevPasswordBypass)
         ) {
             return PreparedLogin.failure(3)
@@ -204,6 +206,12 @@ object AccountLoginService {
     }
 
     private fun isDevAutoCreateEnabled(): Boolean = serverEnv == "dev" && serverDebugMode
+
+    private fun constantTimeEquals(left: String, right: String): Boolean =
+        MessageDigest.isEqual(
+            left.lowercase().toByteArray(StandardCharsets.US_ASCII),
+            right.lowercase().toByteArray(StandardCharsets.US_ASCII),
+        )
 
     private fun isDevPasswordBypassEnabled(): Boolean = serverEnv == "dev"
 

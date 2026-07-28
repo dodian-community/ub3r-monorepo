@@ -19,6 +19,9 @@ public class ChannelIpFilter extends ChannelInboundHandlerAdapter {
     private static final AttributeKey<Boolean> IP_LIMIT_OWNED = AttributeKey.valueOf("ipLimitOwned");
     private final ConcurrentHashMap<String, AtomicInteger> ipCounters = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Long> lastLogTime = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, AttemptWindow> attemptWindows = new ConcurrentHashMap<>();
+    private static final int MAX_CONNECTION_ATTEMPTS_PER_MINUTE = 20;
+    private static final int MAX_TRACKED_IPS = 10_000;
 
     private static final AtomicLong currentConnections = new AtomicLong(0);
     private static final AtomicLong rejectedConnections = new AtomicLong(0);
@@ -27,6 +30,12 @@ public class ChannelIpFilter extends ChannelInboundHandlerAdapter {
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
         String host = hostFrom(ctx);
         if (host == null) {
+            ctx.close();
+            return;
+        }
+        if (!allowConnectionAttempt(host, System.currentTimeMillis())) {
+            rejectedConnections.incrementAndGet();
+            logRateLimited(host, "Connection-attempt rate exceeded for {}");
             ctx.close();
             return;
         }
@@ -78,11 +87,60 @@ public class ChannelIpFilter extends ChannelInboundHandlerAdapter {
                     int remaining = counter.decrementAndGet();
                     if (remaining <= 0) {
                         ipCounters.remove(host, 0);
-                        lastLogTime.remove(host);
                     }
                 }
             }
             currentConnections.decrementAndGet();
+        }
+    }
+
+    private boolean allowConnectionAttempt(String host, long now) {
+        if (isLoopback(host)) return true;
+        if (attemptWindows.size() >= MAX_TRACKED_IPS && !attemptWindows.containsKey(host)) {
+            attemptWindows.entrySet().removeIf(entry -> {
+                boolean expired = now - entry.getValue().lastSeenAt > 60_000L;
+                if (expired) lastLogTime.remove(entry.getKey());
+                return expired;
+            });
+            if (attemptWindows.size() >= MAX_TRACKED_IPS) return false;
+        }
+        AttemptWindow window = attemptWindows.computeIfAbsent(host, ignored -> new AttemptWindow(now));
+        synchronized (window) {
+            if (now - window.startedAt >= 60_000L) {
+                window.startedAt = now;
+                window.attempts = 0;
+            }
+            window.lastSeenAt = now;
+            if (window.attempts >= MAX_CONNECTION_ATTEMPTS_PER_MINUTE) return false;
+            window.attempts++;
+            return true;
+        }
+    }
+
+    private void logRateLimited(String host, String message) {
+        long now = System.currentTimeMillis();
+        lastLogTime.compute(host, (key, previous) -> {
+            if (previous == null || now - previous > 5_000L) {
+                logger.warn(message, host);
+                return now;
+            }
+            return previous;
+        });
+    }
+
+    private static boolean isLoopback(String host) {
+        return "127.0.0.1".equals(host) || "::1".equals(host)
+                || "0:0:0:0:0:0:0:1".equals(host);
+    }
+
+    private static final class AttemptWindow {
+        private long startedAt;
+        private long lastSeenAt;
+        private int attempts;
+
+        private AttemptWindow(long now) {
+            startedAt = now;
+            lastSeenAt = now;
         }
     }
 

@@ -3,22 +3,38 @@ package net.dodian.uber.game.ui
 import net.dodian.uber.game.engine.loop.GameThreadIngress
 import net.dodian.uber.game.engine.tasking.PlayerScopedCoroutineService
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.netty.listener.out.SendPasswordPrompt
 import net.dodian.uber.game.netty.listener.out.SendString
-import net.dodian.uber.game.netty.listener.out.ShowInterface
-import net.dodian.uber.game.netty.listener.out.SendEnterName
+import net.dodian.uber.game.persistence.account.AccountPasswordRepository
 import net.dodian.uber.game.persistence.account.AccountPersistenceService
 import net.dodian.uber.game.persistence.repository.DbAsyncRepository
 import org.slf4j.LoggerFactory
+import java.math.BigInteger
+import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 
 object AccountServices {
     private val logger = LoggerFactory.getLogger(AccountServices::class.java)
+    private const val ACCOUNT_INTERFACE_ID = 36700
+    private const val CURRENT_STAGE = 1
+    private const val NEW_STAGE = 2
+    private const val AUTHORIZATION_TTL_MS = 2 * 60 * 1000L
+    private const val FAILURE_BLOCK_MS = 5 * 60 * 1000L
+    private const val MAX_FAILURES = 5
+    private const val MAX_PASSWORD_LENGTH = 20
+    private const val MAX_RSA_BYTES = 512
+    private const val MAX_FAILURE_SUBJECTS = 10_000
+    private val sessions = ConcurrentHashMap<Client, PasswordChangeSession>()
+    private val failures = ConcurrentHashMap<Int, PasswordFailureState>()
 
     @JvmStatic
     fun open(client: Client) {
+        cancelPasswordChange(client)
         client.viewingAccountServices = true
-        client.accountPasswordState = 0
 
         // Account Status first, Change Password second
         client.send(SendString("Account Status", 36732))
@@ -35,15 +51,20 @@ object AccountServices {
         // Show player details initially
         showDefaultStatus(client)
 
-        client.openInterface(36700)
+        client.openInterface(ACCOUNT_INTERFACE_ID)
     }
 
     @JvmStatic
     fun handleRowClick(client: Client, index: Int) {
         if (index == 0) { // Account Status
+            cancelPasswordChange(client)
             showDefaultStatus(client)
         } else if (index == 1) { // Change Password
-            client.accountPasswordState = 1
+            val now = System.currentTimeMillis()
+            if (isPasswordChangeBlocked(client.dbId, now)) {
+                client.send(SendString("<col=ff0000>Too many incorrect attempts. Try again in 5 minutes.</col>", 36712))
+                return
+            }
             client.send(SendString("Change Password", 36706))
             client.send(SendString("Step 1:", 36707))
             client.send(SendString("Type current password in prompt", 36708))
@@ -53,123 +74,260 @@ object AccountServices {
             client.send(SendString("Awaiting current password...", 36712))
             client.send(SendString("", 36713))
             client.send(SendString("", 36714))
-            client.send(SendEnterName("Enter current password:"))
+            beginStage(client, CURRENT_STAGE, null)
         }
     }
 
     @JvmStatic
-    fun verifyCurrentPassword(client: Client, inputPass: String) {
-        val token = ++client.accountServiceRequestToken
-        PlayerScopedCoroutineService.launch(client, "account-verify", AccountPersistenceService.scope) {
-            try {
-                val verified = DbAsyncRepository.withConnection { conn ->
-                    try {
-                        val ps = conn.prepareStatement("SELECT password, salt FROM user WHERE LOWER(username) = ?")
-                        ps.setString(1, client.playerName.lowercase())
-                        val rs = ps.executeQuery()
-                        if (rs.next()) {
-                            val dbPass = rs.getString("password")
-                            var salt = rs.getString("salt")
-                            if (salt == null) salt = ""
-                            val hashedInput = Client.passHash(inputPass, salt)
-                            hashedInput.equals(dbPass, ignoreCase = true)
-                        } else {
-                            false
-                        }
-                    } catch (e: Exception) {
-                        logger.warn("Database error verifying password for {}", client.playerName, e)
-                        null
-                    }
-                }
-                GameThreadIngress.submitCritical("account-verify") {
-                    if (client.accountServiceRequestToken != token) return@submitCritical
-                    if (client.accountPasswordState != 1) return@submitCritical
-
-                    when (verified) {
-                        true -> {
-                            client.accountPasswordState = 2
-                            client.send(SendString("<col=00ff00>Current password verified.</col>", 36712))
-                            client.send(SendString("Awaiting new password...", 36714))
-                            client.send(SendEnterName("Enter new password:"))
-                        }
-                        false -> {
-                            client.send(SendString("<col=ff0000>Incorrect current password.</col>", 36712))
-                            client.sendMessage("Incorrect current password. Password change aborted.")
-                        }
-                        null -> {
-                            client.send(SendString("<col=ff0000>Database error.</col>", 36712))
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                logger.warn("Error verifying password for {}", client.playerName, e)
-                GameThreadIngress.submitCritical("account-verify-error") {
-                    if (client.accountServiceRequestToken != token) return@submitCritical
-                    client.send(SendString("<col=ff0000>Error verifying password.</col>", 36712))
-                }
-            }
-        }
-    }
-
-    @JvmStatic
-    fun changePassword(client: Client, newPassword: String) {
-        if (newPassword.isEmpty() || newPassword.length > 20) {
-            client.send(SendString("<col=ff0000>Password must be 1-20 chars.</col>", 36712))
-            client.sendMessage("Invalid password. Password must be 1-20 characters long.")
+    fun handleEncryptedPasswordInput(client: Client, encryptedPayload: ByteArray) {
+        val expected = sessions.remove(client) ?: return
+        if (!sessionIsCurrent(client, expected)) {
+            cancelPasswordChange(client)
             return
         }
-
-        val token = ++client.accountServiceRequestToken
-        PlayerScopedCoroutineService.launch(client, "account-change-password", AccountPersistenceService.scope) {
+        PlayerScopedCoroutineService.launch(client, "account-password-input", AccountPersistenceService.scope) {
+            val decoded = decryptPasswordInput(encryptedPayload)
+            val password = decoded?.password?.concatToString().orEmpty()
+            if (decoded == null ||
+                decoded.stage != expected.stage ||
+                !constantTimeEquals(decoded.nonce, expected.nonce) ||
+                !validPassword(password)
+            ) {
+                decoded?.clear()
+                passwordUiError(client, "Invalid or expired password request.")
+                return@launch
+            }
             try {
-                val updated = DbAsyncRepository.withConnection { conn ->
-                    try {
-                        val ps = conn.prepareStatement("SELECT salt FROM user WHERE LOWER(username) = ?")
-                        ps.setString(1, client.playerName.lowercase())
-                        val rs = ps.executeQuery()
-                        if (rs.next()) {
-                            var salt = rs.getString("salt")
-                            if (salt == null) salt = ""
-                            val hashedPass = Client.passHash(newPassword, salt)
+                if (decoded.stage == CURRENT_STAGE) {
+                    verifyCurrentPassword(client, expected, password)
+                } else {
+                    updatePassword(client, expected, password)
+                }
+            } finally {
+                decoded.clear()
+                encryptedPayload.fill(0)
+            }
+        }
+    }
 
-                            val psUpdate = conn.prepareStatement("UPDATE user SET password = ? WHERE LOWER(username) = ?")
-                            psUpdate.setString(1, hashedPass)
-                            psUpdate.setString(2, client.playerName.lowercase())
-                            psUpdate.executeUpdate() > 0
-                        } else {
-                            false
-                        }
-                    } catch (e: Exception) {
-                        logger.warn("Database error changing password for {}", client.playerName, e)
-                        null
-                    }
-                }
-                GameThreadIngress.submitCritical("account-changepw") {
-                    if (client.accountServiceRequestToken != token) return@submitCritical
-                    when (updated) {
-                        true -> {
-                            client.send(SendString("<col=00ff00>Password updated successfully!</col>", 36712))
-                            client.send(SendString("", 36714))
-                            client.sendMessage("Your password has been successfully updated!")
-                        }
-                        false -> {
-                            client.send(SendString("<col=ff0000>Failed to update password.</col>", 36712))
-                            client.send(SendString("", 36714))
-                        }
-                        null -> {
-                            client.send(SendString("<col=ff0000>Database error.</col>", 36712))
-                            client.send(SendString("", 36714))
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                logger.warn("Error changing password for {}", client.playerName, e)
-                GameThreadIngress.submitCritical("account-changepw-error") {
-                    if (client.accountServiceRequestToken != token) return@submitCritical
-                    client.send(SendString("<col=ff0000>Error changing password.</col>", 36712))
+    @JvmStatic
+    fun cancelPasswordChange(client: Client) {
+        sessions.remove(client)
+    }
+
+    @JvmStatic
+    fun close(client: Client) {
+        cancelPasswordChange(client)
+        client.viewingAccountServices = false
+    }
+
+    private fun beginStage(client: Client, stage: Int, verifiedHash: String?) {
+        val nonce = UUID.randomUUID().toString().replace("-", "")
+        sessions[client] = PasswordChangeSession(
+            dbId = client.dbId,
+            channelId = client.channel?.id()?.asLongText().orEmpty(),
+            stage = stage,
+            nonce = nonce,
+            expiresAt = System.currentTimeMillis() + AUTHORIZATION_TTL_MS,
+            verifiedHash = verifiedHash,
+        )
+        val title = if (stage == CURRENT_STAGE) "Enter current password:" else "Enter new password:"
+        client.send(SendPasswordPrompt(stage, nonce, title))
+    }
+
+    private suspend fun verifyCurrentPassword(
+        client: Client,
+        expected: PasswordChangeSession,
+        inputPassword: String,
+    ) {
+        if (isPasswordChangeBlocked(expected.dbId, System.currentTimeMillis())) {
+            passwordUiError(client, "Too many incorrect attempts. Try again in 5 minutes.")
+            return
+        }
+        val verifiedRow = DbAsyncRepository.withConnection { connection ->
+            AccountPasswordRepository.verifyCurrentPassword(connection, expected.dbId, inputPassword)
+        }
+        if (verifiedRow == null) {
+            val blocked = recordPasswordFailure(expected.dbId)
+            logger.warn("Rejected in-game password verification dbId={} blocked={}", expected.dbId, blocked)
+            passwordUiError(
+                client,
+                if (blocked) "Too many incorrect attempts. Try again in 5 minutes."
+                else "Incorrect current password. Password change aborted.",
+            )
+            return
+        }
+        failures.remove(expected.dbId)
+        GameThreadIngress.submitCritical("account-password-verified") {
+            if (!client.disconnected && client.viewingAccountServices && client.dbId == expected.dbId) {
+                client.send(SendString("<col=00ff00>Current password verified.</col>", 36712))
+                client.send(SendString("Awaiting new password...", 36714))
+                beginStage(client, NEW_STAGE, verifiedRow.storedHash)
+            }
+        }
+    }
+
+    private suspend fun updatePassword(
+        client: Client,
+        expected: PasswordChangeSession,
+        newPassword: String,
+    ) {
+        val verifiedHash = expected.verifiedHash
+        if (verifiedHash.isNullOrEmpty()) {
+            passwordUiError(client, "Password authorization expired.")
+            return
+        }
+        val result: PasswordUpdateResult = try {
+            when (DbAsyncRepository.withConnection { connection ->
+                AccountPasswordRepository.updatePassword(connection, expected.dbId, verifiedHash, newPassword)
+            }) {
+                AccountPasswordRepository.UpdateResult.UPDATED -> PasswordUpdateResult.UPDATED
+                AccountPasswordRepository.UpdateResult.STALE -> PasswordUpdateResult.STALE
+            }
+        } catch (exception: Exception) {
+            logger.warn("Database error changing password for dbId={}", expected.dbId, exception)
+            PasswordUpdateResult.ERROR
+        }
+        GameThreadIngress.submitCritical("account-password-updated") {
+            if (client.disconnected || client.dbId != expected.dbId) return@submitCritical
+            when (result) {
+                PasswordUpdateResult.UPDATED -> {
+                    client.send(SendString("<col=00ff00>Password updated successfully!</col>", 36712))
                     client.send(SendString("", 36714))
+                    client.sendMessage("Your password has been successfully updated!")
+                }
+                PasswordUpdateResult.STALE ->
+                    client.send(SendString("<col=ff0000>Password changed elsewhere. Start again.</col>", 36712))
+                PasswordUpdateResult.ERROR ->
+                    client.send(SendString("<col=ff0000>Unable to update password.</col>", 36712))
+            }
+        }
+    }
+
+    private fun sessionIsCurrent(client: Client, session: PasswordChangeSession): Boolean =
+        !client.disconnected &&
+            client.viewingAccountServices &&
+            client.activeInterfaceId == ACCOUNT_INTERFACE_ID &&
+            client.dbId > 0 &&
+            client.dbId == session.dbId &&
+            client.channel?.id()?.asLongText().orEmpty() == session.channelId &&
+            System.currentTimeMillis() <= session.expiresAt
+
+    private fun decryptPasswordInput(payload: ByteArray): DecryptedPasswordInput? {
+        if (payload.size !in 1..MAX_RSA_BYTES) return null
+        return try {
+            var decoded = BigInteger(1, payload)
+                .modPow(net.dodian.uber.game.engine.config.rsaExponent, net.dodian.uber.game.engine.config.rsaModulus)
+                .toByteArray()
+            if (decoded.isNotEmpty() && decoded[0].toInt() == 0) decoded = decoded.copyOfRange(1, decoded.size)
+            val cursor = PasswordCursor(decoded)
+            if (cursor.unsignedByte() != 10) return null
+            val stage = cursor.unsignedByte()
+            val nonce = cursor.string(64)
+            val password = cursor.string(MAX_PASSWORD_LENGTH)
+            if (cursor.remaining() != 0) null else DecryptedPasswordInput(stage, nonce, password.toCharArray())
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun validPassword(password: String): Boolean =
+        password.isNotEmpty() &&
+            password.length <= MAX_PASSWORD_LENGTH &&
+            password.all { it.code in 32..126 || it == '£' }
+
+    private fun passwordUiError(client: Client, message: String) {
+        GameThreadIngress.submitCritical("account-password-error") {
+            if (!client.disconnected) {
+                client.send(SendString("<col=ff0000>$message</col>", 36712))
+                client.sendMessage(message)
+            }
+        }
+    }
+
+    private fun recordPasswordFailure(dbId: Int): Boolean {
+        val now = System.currentTimeMillis()
+        if (failures.size >= MAX_FAILURE_SUBJECTS && !failures.containsKey(dbId)) {
+            failures.entries.removeIf { (_, state) ->
+                synchronized(state) {
+                    now >= state.blockedUntil && now - state.lastSeenAt >= FAILURE_BLOCK_MS
                 }
             }
+            if (failures.size >= MAX_FAILURE_SUBJECTS) return true
+        }
+        val state = failures.computeIfAbsent(dbId) { PasswordFailureState() }
+        synchronized(state) {
+            state.lastSeenAt = now
+            if (now < state.blockedUntil) return true
+            state.failures++
+            if (state.failures < MAX_FAILURES) return false
+            state.failures = 0
+            state.blockedUntil = now + FAILURE_BLOCK_MS
+            return true
+        }
+    }
+
+    private fun isPasswordChangeBlocked(dbId: Int, now: Long): Boolean {
+        if (dbId <= 0) return true
+        val state = failures[dbId] ?: return false
+        synchronized(state) {
+            if (now < state.blockedUntil) return true
+            if (state.blockedUntil != 0L) failures.remove(dbId, state)
+            return false
+        }
+    }
+
+    private fun constantTimeEquals(left: String, right: String): Boolean =
+        MessageDigest.isEqual(
+            left.lowercase().toByteArray(StandardCharsets.US_ASCII),
+            right.lowercase().toByteArray(StandardCharsets.US_ASCII),
+        )
+
+    private data class PasswordChangeSession(
+        val dbId: Int,
+        val channelId: String,
+        val stage: Int,
+        val nonce: String,
+        val expiresAt: Long,
+        val verifiedHash: String?,
+    )
+
+    private data class DecryptedPasswordInput(
+        val stage: Int,
+        val nonce: String,
+        val password: CharArray,
+    ) {
+        fun clear() = password.fill('\u0000')
+    }
+
+    private class PasswordFailureState {
+        var failures: Int = 0
+        var blockedUntil: Long = 0L
+        var lastSeenAt: Long = System.currentTimeMillis()
+    }
+
+    private enum class PasswordUpdateResult { UPDATED, STALE, ERROR }
+
+    private class PasswordCursor(private val bytes: ByteArray) {
+        private var index = 0
+
+        fun remaining(): Int = bytes.size - index
+
+        fun unsignedByte(): Int {
+            require(remaining() >= 1)
+            return bytes[index++].toInt() and 0xff
+        }
+
+        fun string(maxLength: Int): String {
+            val start = index
+            while (index < bytes.size && bytes[index].toInt() != 10 && bytes[index].toInt() != 0) {
+                require(index - start < maxLength)
+                index++
+            }
+            require(index < bytes.size)
+            val value = String(bytes, start, index - start, StandardCharsets.ISO_8859_1)
+            index++
+            return value
         }
     }
 

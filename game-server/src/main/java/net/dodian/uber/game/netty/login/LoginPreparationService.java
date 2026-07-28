@@ -80,17 +80,18 @@ public final class LoginPreparationService {
         byte[] decryptedBytes = encrypted.modPow(DotEnvKt.getRsaExponent(), DotEnvKt.getRsaModulus()).toByteArray();
         Cursor rsa = new Cursor(decryptedBytes);
         if (rsa.remaining() > 0 && rsa.peek() == 0) rsa.u8();
-        require(rsa.remaining() >= 1 + 8 + 8 + 4, 13, "decrypted RSA block too short");
+        require(rsa.remaining() >= 1 + 8 + 8 + 4 + 1, 13, "decrypted RSA block too short");
         require(rsa.u8() == 10, 13, "invalid RSA magic");
         long clientSeed = rsa.i64();
         long serverSeed = rsa.i64();
         require(serverSeed == attempt.getExpectedServerSeed(), 13, "RSA server seed mismatch");
         rsa.i32(); // legacy UID
+        int loginMode = rsa.u8();
+        require(loginMode == 0 || loginMode == 1, 13, "invalid login mode");
         String discordAuthCode = rsa.string(64, "discordAuthCode").trim();
         rsa.string(64, "MAC address");
         String username = rsa.string(12, "username", 18).trim();
         String password = rsa.string(20, "password", 19).trim();
-        logger.debug("Parsed discordAuthCode='{}' for username='{}'", discordAuthCode, username);
         require(!username.isEmpty() && !password.isEmpty(), 13, "empty username or password");
         require(rsa.remaining() == 0, 13, "unexpected trailing RSA bytes");
 
@@ -100,7 +101,9 @@ public final class LoginPreparationService {
         ISAACCipher outbound = new ISAACCipher(seed);
         long durationMs = (System.nanoTime() - started) / 1_000_000L;
         OperationalTelemetry.recordPhaseMillis("login.prepare", durationMs);
-        return new ParsedLoginRequest(username, password, discordAuthCode, inbound, outbound, durationMs);
+        return new ParsedLoginRequest(
+                loginMode == 1 ? ParsedLoginRequest.Mode.CREATE_ACCOUNT : ParsedLoginRequest.Mode.LOGIN,
+                username, password, discordAuthCode, inbound, outbound, durationMs);
     }
 
     public static void shutdown(Duration timeout) {

@@ -24,6 +24,9 @@ import net.dodian.uber.game.engine.tasking.TaskPriority
 object InteractionTaskScheduler {
     @JvmStatic
     fun schedule(player: Client, intent: InteractionIntent, task: InteractionQueueTask) {
+        if (serverOwnsApproach(intent)) {
+            player.claimServerRoutedInteractionMovement()
+        }
         player.cancelInteractionTask()
         ContentActions.cancel(
             player = player,
@@ -86,6 +89,17 @@ object InteractionTaskScheduler {
             }
         player.interactionTaskHandle = QueueTaskHandle.from(handle)
     }
+
+    private fun serverOwnsApproach(intent: InteractionIntent): Boolean =
+        when (intent) {
+            is ObjectClickIntent,
+            is ItemOnObjectIntent,
+            is MagicOnObjectIntent,
+            is ItemOnNpcIntent,
+            is PlayerInteractionIntent -> true
+            is NpcInteractionIntent -> intent.option in 1..4
+            else -> false
+        }
 
     private fun cancelReason(intent: InteractionIntent): PlayerActionCancelReason =
         when (intent) {

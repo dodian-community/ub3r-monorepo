@@ -39,6 +39,7 @@ object AccountPersistenceService {
         username: String,
         password: String,
         discordAuthCode: String = "",
+        accountCreationRequested: Boolean = discordAuthCode.isNotBlank(),
         onComplete: Consumer<LoginLoadResult>,
     ) {
         scope.launch {
@@ -46,21 +47,42 @@ object AccountPersistenceService {
             var pendingRetries = 0
             val prepared =
                 try {
+                    if (accountCreationRequested && discordAuthCode.isBlank()) {
+                        logger.debug("Account creation rejected for {}: missing Discord authorization", username)
+                        val durationMs = (System.nanoTime() - startedAt) / 1_000_000L
+                        onComplete.accept(LoginLoadResult(29, durationMs, 0, null))
+                        return@launch
+                    }
                     // Check before exchanging the one-time Discord OAuth code. This lets the
                     // client keep that authorization and submit a different username instead of
                     // forcing the player through Discord again for a simple name collision.
-                    if (discordAuthCode.isNotBlank() && AccountLoginService.usernameExists(username)) {
+                    if (accountCreationRequested && AccountLoginService.usernameExists(username)) {
                         logger.info("Account creation rejected: username already exists username={}", username)
                         val durationMs = (System.nanoTime() - startedAt) / 1_000_000L
                         onComplete.accept(LoginLoadResult(AccountLoginService.USERNAME_TAKEN, durationMs, 0, null))
                         return@launch
                     }
-                    val discordUser = if (discordAuthCode.isNotBlank()) net.dodian.uber.game.persistence.account.discord.DiscordApiService.fetchDiscordUser(discordAuthCode) else null
-                    if (discordAuthCode.isNotBlank() && discordUser == null) {
-                        logger.warn("Account creation rejected for {}: Invalid or expired Discord authorization code", username)
-                        val durationMs = (System.nanoTime() - startedAt) / 1_000_000L
-                        onComplete.accept(LoginLoadResult(29, durationMs, 0, null))
-                        return@launch
+                    val discordUser = if (accountCreationRequested) {
+                        when (val discordResult =
+                            net.dodian.uber.game.persistence.account.discord.DiscordApiService.fetchDiscordUserResult(discordAuthCode)
+                        ) {
+                            is net.dodian.uber.game.persistence.account.discord.DiscordFetchResult.Success ->
+                                discordResult.user
+                            net.dodian.uber.game.persistence.account.discord.DiscordFetchResult.InvalidAuthorization -> {
+                                logger.debug("Account creation rejected for {}: invalid or expired Discord authorization", username)
+                                val durationMs = (System.nanoTime() - startedAt) / 1_000_000L
+                                onComplete.accept(LoginLoadResult(29, durationMs, 0, null))
+                                return@launch
+                            }
+                            net.dodian.uber.game.persistence.account.discord.DiscordFetchResult.Unavailable -> {
+                                logger.warn("Account creation unavailable for {}: Discord service/configuration failure", username)
+                                val durationMs = (System.nanoTime() - startedAt) / 1_000_000L
+                                onComplete.accept(LoginLoadResult(13, durationMs, 0, null))
+                                return@launch
+                            }
+                        }
+                    } else {
+                        null
                     }
                     val email = discordUser?.email ?: ""
                     val discordId = discordUser?.id ?: ""
@@ -77,7 +99,7 @@ object AccountPersistenceService {
                             discordId,
                             discordUsername,
                             discordVerified,
-                            accountCreationRequested = discordAuthCode.isNotBlank(),
+                            accountCreationRequested = accountCreationRequested,
                         )
                         if (loadResult.code != AccountLoginService.FINAL_SAVE_PENDING_INTERNAL) {
                             finalResult = loadResult

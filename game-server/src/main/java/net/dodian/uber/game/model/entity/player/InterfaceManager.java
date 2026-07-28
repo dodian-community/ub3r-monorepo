@@ -33,6 +33,9 @@ public class InterfaceManager {
 
     /** Opens an interface for the player with security checks. */
     public void open(int identification, boolean secure) {
+        if (player.viewingAccountServices && identification != 36700) {
+            net.dodian.uber.game.ui.AccountServices.close(player);
+        }
         if (secure) {
             if (player.activeInterfaceId == identification) {
                 return;
@@ -67,6 +70,9 @@ public class InterfaceManager {
 
     /** Opens an inventory interface for the player. */
     public void openInventory(int identification, int overlay) {
+        if (player.viewingAccountServices) {
+            net.dodian.uber.game.ui.AccountServices.close(player);
+        }
         if (player.activeInterfaceId == identification && this.overlay == overlay) {
             return;
         }
@@ -93,6 +99,9 @@ public class InterfaceManager {
 
     /** Handles clearing the screen. */
     public void close(boolean walkable) {
+        if (player.viewingAccountServices) {
+            net.dodian.uber.game.ui.AccountServices.close(player);
+        }
         boolean refreshItems = false;
 
         if (player.IsBanking) {

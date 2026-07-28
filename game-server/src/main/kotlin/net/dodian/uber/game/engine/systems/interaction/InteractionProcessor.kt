@@ -125,14 +125,27 @@ object InteractionProcessor {
         }
 
         val legendsGuardFrontLane = LegendsGuildGateService.isFrontLaneInteraction(player, npc, intent.option)
-        val overlaps = player.position.z == npc.position.z &&
-                player.position.x >= npc.position.x &&
-                player.position.x < npc.position.x + npc.size &&
-                player.position.y >= npc.position.y &&
-                player.position.y < npc.position.y + npc.size
+        val nonCombatReach =
+            if (intent.option == NPC_ATTACK_OPTION) {
+                null
+            } else {
+                EntityInteractionReach.resolve(player, npc, range)
+            }
+        val overlaps =
+            nonCombatReach?.let { it == EntityReachResult.OVERLAPPING }
+                ?: (
+                    player.position.z == npc.position.z &&
+                        player.position.x >= npc.position.x &&
+                        player.position.x < npc.position.x + npc.size &&
+                        player.position.y >= npc.position.y &&
+                        player.position.y < npc.position.y + npc.size
+                )
+        val outsideRange =
+            nonCombatReach?.let { it != EntityReachResult.REACHED && it != EntityReachResult.OVERLAPPING }
+                ?: !player.goodDistanceEntity(npc, range)
 
         val routeStart = System.nanoTime()
-        if (overlaps || (!legendsGuardFrontLane && !player.goodDistanceEntity(npc, range))) {
+        if (overlaps || (!legendsGuardFrontLane && outsideRange)) {
             if (!overlaps && BankerApproachFallbackService.shouldAttemptFallback(player, npc, intent.option)) {
                 if (player.position.withinDistance(npc.position, 2)
                     && WorldRouteService.hasLineOfSight(player.position, npc.position, player.size, npc.size)
@@ -733,14 +746,12 @@ object InteractionProcessor {
             return InteractionExecutionResult.CANCELLED
         }
 
-        val overlaps = player.position.z == npc.position.z &&
-                player.position.x >= npc.position.x &&
-                player.position.x < npc.position.x + npc.size &&
-                player.position.y >= npc.position.y &&
-                player.position.y < npc.position.y + npc.size
+        val reach = EntityInteractionReach.resolve(player, npc, 1)
+        val overlaps = reach == EntityReachResult.OVERLAPPING
+        val outsideRange = reach != EntityReachResult.REACHED && !overlaps
 
         val routeStart = System.nanoTime()
-        if (overlaps || !player.goodDistanceEntity(npc, 1)) {
+        if (overlaps || outsideRange) {
             val walkInProgress = player.newWalkCmdSteps > 0 || player.wQueueReadPtr != player.wQueueWritePtr
             val lastRouted = lastRoutePosition[intent]
             if (walkInProgress && lastRouted != null && lastRouted == npc.position) {

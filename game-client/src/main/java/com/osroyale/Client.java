@@ -4337,6 +4337,9 @@ public class Client extends GameEngine
                 } else if (inputDialogState == 2) {
                     newBoldFont.drawCenteredString(inputMessage, 259, 60 + yOffset, 0, -1);
                     newBoldFont.drawCenteredString(amountOrNameInput + "*", 259, 80 + yOffset, 128, -1);
+                } else if (inputDialogState == 3) {
+                    newBoldFont.drawCenteredString(inputMessage, 259, 60 + yOffset, 0, -1);
+                    newBoldFont.drawCenteredString(StringUtils.toAsterisks(amountOrNameInput) + "*", 259, 80 + yOffset, 128, -1);
                 } else if (clickToContinueString != null) {
                     newBoldFont.drawCenteredString(clickToContinueString, 259, 60 + yOffset, 0, -1);
                     newBoldFont.drawCenteredString("Click to continue", 259, 80 + yOffset, 128, -1);
@@ -8132,6 +8135,21 @@ public class Client extends GameEngine
         minimapZoom = 0;
     }
 
+    private void sendTradePlayerRequest(int playerIndex) {
+        outgoing.writeOpcode(39);
+        outgoing.writeLEShort(playerIndex);
+    }
+
+    private void sendDuelPlayerRequest(int playerIndex) {
+        outgoing.writeOpcode(153);
+        outgoing.writeLEShort(playerIndex);
+    }
+
+    private void sendFollowPlayerRequest(int playerIndex) {
+        outgoing.writeOpcode(139);
+        outgoing.writeLEShort(playerIndex);
+    }
+
     private void processMenuActions(int id) {
         if (id < 0) {
             return;
@@ -8504,7 +8522,7 @@ public class Client extends GameEngine
             }
         }
 
-        // send duel request
+        // Legacy slot-1 player action (currently rubber-chicken "Whack").
         if (action == 561) {
             Player player = playerArray[localPlayerIndex];
             if (player != null) {
@@ -8543,8 +8561,7 @@ public class Client extends GameEngine
                 crossY = MouseHandler.saveClickY;
                 crossType = 2;
                 crossIndex = 0;
-                outgoing.writeOpcode(153);
-                outgoing.writeLEShort(localPlayerIndex);
+                sendDuelPlayerRequest(localPlayerIndex);
             }
         }
         if (action == 519) {
@@ -8655,14 +8672,12 @@ public class Client extends GameEngine
 
                     // trade
                     if (action == 484) {
-                        outgoing.writeOpcode(139);
-                        outgoing.writeLEShort(playerIndices[count]);
+                        sendTradePlayerRequest(playerIndices[count]);
                     }
 
                     // duel
                     if (action == 6) {
-                        outgoing.writeOpcode(128);
-                        outgoing.writeShort(playerIndices[count]);
+                        sendDuelPlayerRequest(playerIndices[count]);
                     }
 
                     // gamble
@@ -9153,9 +9168,8 @@ public class Client extends GameEngine
                 crossY = MouseHandler.saveClickY;
                 crossType = 2;
                 crossIndex = 0;
-                // follow player opcode
-                outgoing.writeOpcode(39);
-                outgoing.writeLEShort(localPlayerIndex);
+                // Trade occupies player-menu slot 5 in the active server menu.
+                sendTradePlayerRequest(localPlayerIndex);
             }
         }
 
@@ -9169,9 +9183,8 @@ public class Client extends GameEngine
                 crossY = MouseHandler.saveClickY;
                 crossType = 2;
                 crossIndex = 0;
-                // trade request opcode
-                outgoing.writeOpcode(139);
-                outgoing.writeLEShort(localPlayerIndex);
+                // Follow occupies player-menu slot 4 in the active server menu.
+                sendFollowPlayerRequest(localPlayerIndex);
             }
         }
         if (action == 956 && method66(objId, second, first)) {
@@ -9920,6 +9933,25 @@ public class Client extends GameEngine
                         outgoing.writeQWord(StringUtils.longForName(amountOrNameInput));
                     }
                     inputDialogState = 0;
+                    redrawDialogueBox = true;
+                }
+            } else if (inputDialogState == 3) {
+                if (validUserPassChars.indexOf(key) >= 0 && amountOrNameInput.length() < 20) {
+                    amountOrNameInput += (char) key;
+                    redrawDialogueBox = true;
+                }
+                if (key == 8 && amountOrNameInput.length() > 0) {
+                    amountOrNameInput = amountOrNameInput.substring(0, amountOrNameInput.length() - 1);
+                    redrawDialogueBox = true;
+                }
+                if (key == 13 || key == 10) {
+                    if (!amountOrNameInput.isEmpty()) {
+                        sendEncryptedPasswordInput(amountOrNameInput);
+                    }
+                    amountOrNameInput = "";
+                    inputDialogState = 0;
+                    passwordPromptNonce = "";
+                    passwordPromptStage = 0;
                     redrawDialogueBox = true;
                 }
             } else if (backDialogueId == -1) {
@@ -11822,6 +11854,30 @@ public class Client extends GameEngine
 //        System.out.println("Just finished calling Login"+ System.currentTimeMillis()%60000);
     }
 
+    private void sendEncryptedPasswordInput(String password) {
+        if (passwordPromptStage < 1 || passwordPromptStage > 2 || passwordPromptNonce.isEmpty()) {
+            return;
+        }
+        Buffer secure = new Buffer(new byte[256]);
+        secure.writeByte(10);
+        secure.writeByte(passwordPromptStage);
+        secure.writeString(passwordPromptNonce);
+        secure.writeString(password);
+        byte[] plain = java.util.Arrays.copyOf(secure.array, secure.position);
+        byte[] encrypted = new java.math.BigInteger(1, plain)
+                .modPow(NetworkConstants.RSA_EXPONENT, NetworkConstants.RSA_MODULUS)
+                .toByteArray();
+        if (encrypted.length > 1 && encrypted[0] == 0) {
+            encrypted = java.util.Arrays.copyOfRange(encrypted, 1, encrypted.length);
+        }
+        outgoing.writeOpcode(62);
+        outgoing.writeShort(encrypted.length);
+        outgoing.writeBytes(encrypted, encrypted.length, 0);
+        java.util.Arrays.fill(plain, (byte) 0);
+        java.util.Arrays.fill(encrypted, (byte) 0);
+        java.util.Arrays.fill(secure.array, (byte) 0);
+    }
+
     public void login(String username, String password, boolean reconnecting) {
         try {
             final Connection connection = Configuration.CONNECTION;
@@ -11864,7 +11920,8 @@ public class Client extends GameEngine
                     com.osroyale.login.impl.MainScreen.accountCreationStatus = "Discord authorization expired, please try again.";
                     com.osroyale.login.impl.MainScreen.loginScreenState = 0;
                 }
-                System.out.println("[Client Login] Sending Discord authorization=" + (discordAuthCode != null) + " for username='" + username + "'");
+                boolean accountCreationRequested = !com.osroyale.login.impl.MainScreen.accountCreationStatus.isEmpty();
+                outgoing.writeByte(accountCreationRequested ? 1 : 0);
                 outgoing.writeString(discordAuthCode != null ? discordAuthCode : "");
                 outgoing.writeString("");
                 outgoing.writeString(username);
@@ -12007,7 +12064,7 @@ public class Client extends GameEngine
 
             if (response == 3) {
                 loginMessage1 = "";
-                loginMessage2 = "Invalid username or password.";
+                loginMessage2 = "Incorrect password.";
                 return;
             }
 
@@ -12024,8 +12081,8 @@ public class Client extends GameEngine
             }
 
             if (response == 6) {
-                loginMessage1 = Configuration.NAME + " has been updated!";
-                loginMessage2 = "Please reload client.";
+                loginMessage1 = "The client has been updated.";
+                loginMessage2 = "Please close and reopen it to complete the update.";
                 return;
             }
 
@@ -12095,7 +12152,7 @@ public class Client extends GameEngine
             }
 
             if (response == 16) {
-                loginMessage1 = "Login attempts exceeded.";
+                loginMessage1 = "Too many authentication attempts.";
                 loginMessage2 = "Please wait 1 minute and try again.";
                 return;
             }
@@ -12161,8 +12218,8 @@ public class Client extends GameEngine
             }
 
             if (response == 26) {
-                loginMessage1 = "No account found for that username.";
-                loginMessage2 = "Use Create Account to sign up via Discord first.";
+                loginMessage1 = "Account not created.";
+                loginMessage2 = "Use Create Account before trying to log in.";
                 return;
             }
 
@@ -12179,8 +12236,10 @@ public class Client extends GameEngine
             }
 
             if (response == 29) {
-                loginMessage1 = "Discord authorization failed or expired.";
+                loginMessage1 = "Discord authorization is missing or failed.";
                 loginMessage2 = "Please try Create Account again.";
+                com.osroyale.login.impl.MainScreen.accountCreationStatus = "";
+                com.osroyale.login.impl.MainScreen.loginScreenState = 0;
                 return;
             }
 
@@ -12192,7 +12251,7 @@ public class Client extends GameEngine
 
             if (response == 31) {
                 loginMessage1 = "This Discord account has reached the maximum number of linked game accounts.";
-                loginMessage2 = "Please use an existing account or a different Discord account.";
+                loginMessage2 = "Please use one of your existing accounts.";
                 return;
             }
 
@@ -12207,6 +12266,18 @@ public class Client extends GameEngine
                 loginMessage2 = "Please choose another username.";
                 com.osroyale.login.impl.MainScreen.accountCreationStatus = "Choose another username";
                 com.osroyale.login.impl.MainScreen.loginScreenState = 2;
+                return;
+            }
+
+            if (response == 34) {
+                loginMessage1 = "Too many authentication attempts.";
+                loginMessage2 = "Please wait 5 minutes and try again.";
+                return;
+            }
+
+            if (response == 35) {
+                loginMessage1 = "Authentication temporarily blocked.";
+                loginMessage2 = "Please wait 24 hours and try again.";
                 return;
             }
 
@@ -18471,6 +18542,18 @@ public class Client extends GameEngine
                     opcode = -1;
                     return true;
 
+                case 28:
+                    passwordPromptStage = incoming.readUnsignedByte();
+                    passwordPromptNonce = incoming.readString();
+                    inputMessage = incoming.readString();
+                    inputLength = 20;
+                    messagePromptRaised = false;
+                    inputDialogState = 3;
+                    amountOrNameInput = "";
+                    redrawDialogueBox = true;
+                    opcode = -1;
+                    return true;
+
                 case 27:
                     inputMessage = incoming.readString();
                     inputLength = incoming.readUShortA();
@@ -19686,6 +19769,8 @@ public class Client extends GameEngine
     private int anInt1222;
     public static boolean redrawDialogueBox;
     private int inputDialogState;
+    private int passwordPromptStage;
+    private String passwordPromptNonce = "";
     private int nextSong;
     private boolean songChanging;
     private final int[] anIntArray1229;

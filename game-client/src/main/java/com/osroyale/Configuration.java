@@ -54,7 +54,7 @@ public final class Configuration {
     /**
      * The current version of the client.
      */
-    public static final int CLIENT_VERSION = 12;
+    public static final int CLIENT_VERSION = 13;
 
     /**
      * The name of the client.

@@ -635,10 +635,8 @@ public final class TarnishPackets {
      * Player-menu clicks carrying a single player slot index. Per-opcode encoding:
      * 73 (attack): LEShort | 139: LEShort | 128: Short | 39: LEShort | 153: LEShort.
      *
-     * NOTE on routing: the client sends 139 for Trade, 128 for duel-request and 39 for Follow,
-     * but this server's handlers are deliberately cross-wired (139=Follow, 128=Trade, 39=Trade)
-     * as a compensating set — confirmed working in-game. Preserve the wiring; the listener class
-     * names are historical.
+     * Active semantic routing is 39=Trade, 139=Follow, and 153=Duel. Opcode 128 is
+     * retained for the legacy slot-1 action and its big-endian encoding.
      */
     public static final class PlayerMenuClick {
         private final int playerIndex;
