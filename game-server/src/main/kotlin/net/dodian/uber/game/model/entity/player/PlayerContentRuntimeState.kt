@@ -14,6 +14,7 @@ import net.dodian.uber.game.engine.systems.combat.CombatTargetState
 import net.dodian.uber.game.engine.systems.interaction.ActiveInteraction
 import net.dodian.uber.game.engine.systems.interaction.InteractionAnchorState
 import net.dodian.uber.game.engine.systems.interaction.InteractionIntent
+import net.dodian.uber.game.engine.sync.player.PlayerSyncInvariantValidator
 import net.dodian.uber.game.engine.tasking.GameTaskSet
 import net.dodian.uber.game.skill.crafting.CraftingState
 import net.dodian.uber.game.skill.fletching.FletchingState
@@ -48,6 +49,11 @@ class PlayerContentRuntimeState {
     @Volatile private var combatCancellationReason: CombatCancellationReason? = null
     @Volatile private var combatLogoutLockUntilCycle = 0L
     @Volatile private var lastBlockAnimationCycle = -1L
+    // Dev/staging-only diagnostic scratch: previous tick's local-list snapshot for
+    // PlayerSyncInvariantValidator (see WorldSynchronizationService, gated on serverDebugMode).
+    // Lives on the player object itself (not an external map) so a new login never sees a
+    // stale snapshot left behind by a prior session that happened to reuse the same slot.
+    @Volatile private var previousSyncSnapshot: PlayerSyncInvariantValidator.ViewerLocalSnapshot? = null
     @Volatile private var deathTaskState: DeathTaskState? = null
     @Volatile private var activeSmithingSelection: ActiveSmithingSelection? = null
     @Volatile private var smeltingSelection: SmeltingSelection? = null
@@ -156,6 +162,8 @@ class PlayerContentRuntimeState {
     fun setCombatLogoutLockUntilCycle(value: Long) { combatLogoutLockUntilCycle = value }
     fun getLastBlockAnimationCycle() = lastBlockAnimationCycle
     fun setLastBlockAnimationCycle(value: Long) { lastBlockAnimationCycle = value }
+    fun getPreviousSyncSnapshot() = previousSyncSnapshot
+    fun setPreviousSyncSnapshot(value: PlayerSyncInvariantValidator.ViewerLocalSnapshot?) { previousSyncSnapshot = value }
     fun getDeathTaskState() = deathTaskState
     fun setDeathTaskState(value: DeathTaskState?) { deathTaskState = value }
     fun clearDeathTaskState() { deathTaskState = null }

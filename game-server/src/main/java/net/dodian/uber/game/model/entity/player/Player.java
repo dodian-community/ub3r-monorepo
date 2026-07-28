@@ -1217,6 +1217,14 @@ public abstract class Player extends Entity {
         interactionState.clearActiveActionState();
     }
 
+    public net.dodian.uber.game.engine.sync.player.PlayerSyncInvariantValidator.ViewerLocalSnapshot getPreviousSyncSnapshot() {
+        return interactionState.getPreviousSyncSnapshot();
+    }
+
+    public void setPreviousSyncSnapshot(net.dodian.uber.game.engine.sync.player.PlayerSyncInvariantValidator.ViewerLocalSnapshot previousSyncSnapshot) {
+        interactionState.setPreviousSyncSnapshot(previousSyncSnapshot);
+    }
+
     public PlayerActionCancelReason getActiveActionCancelReason() {
         return interactionState.getActiveActionCancelReason();
     }

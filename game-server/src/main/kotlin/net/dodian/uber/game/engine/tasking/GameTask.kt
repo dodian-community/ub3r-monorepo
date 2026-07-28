@@ -4,8 +4,8 @@ import kotlin.coroutines.Continuation
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.suspendCancellableCoroutine
 import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.uber.game.engine.metrics.TaskLifecycleTelemetry
 import net.dodian.uber.game.engine.tasking.suspension.PredicateCondition
@@ -48,6 +48,12 @@ class GameTask internal constructor(
 
     override fun resumeWith(result: Result<Unit>) {
         nextStep = null
+        if (control.completed) {
+            // Already finalized by terminate() below; this resume is just the
+            // cancellation exception unwinding through the task body's own
+            // try/finally blocks. Don't re-run completion bookkeeping.
+            return
+        }
         lifecycleState = TaskLifecycleState.COMPLETED
         control.markCompleted()
         TaskLifecycleTelemetry.recordCompleted()
@@ -78,6 +84,7 @@ class GameTask internal constructor(
         if (control.completed) {
             return
         }
+        val pendingStep = nextStep
         nextStep = null
         returnValues.clear()
         metadata.clear()
@@ -85,6 +92,10 @@ class GameTask internal constructor(
         lifecycleState = TaskLifecycleState.CANCELLED
         control.markCompleted()
         TaskLifecycleTelemetry.recordCancelled(reason)
+        // Resume the suspended body (if any) with a CancellationException instead of
+        // simply abandoning the continuation, so try/finally and use{} cleanup inside
+        // the task actually runs instead of being silently skipped on termination.
+        pendingStep?.continuation?.resumeWith(Result.failure(CancellationException(reason)))
     }
 
     fun setMetadata(key: String, value: String) {
@@ -111,13 +122,13 @@ class GameTask internal constructor(
     }
 
     suspend fun wait(ticks: Int): Unit =
-        suspendCoroutine { continuation ->
+        suspendCancellableCoroutine { continuation ->
             require(ticks > 0) { "Wait ticks must be greater than 0." }
             nextStep = TaskStep(WaitCondition(ticks), continuation)
         }
 
     suspend fun wait(minTicks: Int, maxTicks: Int): Unit =
-        suspendCoroutine { continuation ->
+        suspendCancellableCoroutine { continuation ->
             require(minTicks > 0) { "Wait ticks must be greater than 0." }
             require(maxTicks > minTicks) { "maxTicks must be greater than minTicks." }
             nextStep = TaskStep(WaitCondition((minTicks..maxTicks).random()), continuation)
@@ -129,7 +140,7 @@ class GameTask internal constructor(
     fun currentCycle(): Long = GameCycleClock.currentCycle()
 
     suspend fun waitUntil(predicate: () -> Boolean): Unit =
-        suspendCoroutine { continuation ->
+        suspendCancellableCoroutine { continuation ->
             nextStep = TaskStep(PredicateCondition(predicate), continuation)
         }
 

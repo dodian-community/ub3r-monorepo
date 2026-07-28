@@ -288,8 +288,6 @@ object ContentModuleIndex {
             eventBootstraps.size,
             contentBootstraps.size,
             pluginCatalog.size,
-            CANONICAL_SCAN_PACKAGES.size,
-            0,
             platformSnapshot.enabledCount,
             platformSnapshot.disabledCount,
             platformSnapshot.fingerprint.take(12),

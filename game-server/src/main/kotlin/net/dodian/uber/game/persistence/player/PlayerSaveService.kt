@@ -122,7 +122,14 @@ object PlayerSaveService {
             val latch = CountDownLatch(1)
             currentWorker.invokeOnCompletion { latch.countDown() }
             currentWorker.cancel()
-            latch.await(remainingMillis, TimeUnit.MILLISECONDS)
+            val drainedCleanly = latch.await(remainingMillis, TimeUnit.MILLISECONDS)
+            if (!drainedCleanly) {
+                logger.warn(
+                    "Shutdown drain timed out after {}ms waiting for the save worker to finish; " +
+                        "some in-flight player saves may not have completed",
+                    timeout.toMillis(),
+                )
+            }
         }
     }
 

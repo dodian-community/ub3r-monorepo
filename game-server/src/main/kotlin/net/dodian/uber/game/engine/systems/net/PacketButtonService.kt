@@ -33,7 +33,13 @@ object PacketButtonService {
         val preserveSmithingSelection = client.activeInterfaceId in 1119..1123
         val preserveCombatConfig = actionButton in combatConfigButtons
         val preserveSkillMulti = SkillMultiButtonService.isSelectionButton(actionButton)
+        // Teleporting has its own external busy-guard (Client.doingTeleport(), checked by
+        // triggerTele before it starts a new cast). Resetting the action here would clear that
+        // guard's state a step before the click's own handler runs, letting a second teleport
+        // click restart the cast indefinitely instead of being rejected as busy.
+        val preserveActiveTeleport = client.doingTeleport()
         if (!preserveSmeltingSelection && !preserveSmithingSelection && !preserveCombatConfig && !preserveSkillMulti &&
+            !preserveActiveTeleport &&
             actionButton != 10239 && actionButton != 10238 &&
             actionButton != 6212 && actionButton != 6211
         ) {

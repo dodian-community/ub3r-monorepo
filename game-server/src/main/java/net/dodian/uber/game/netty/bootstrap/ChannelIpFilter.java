@@ -86,7 +86,11 @@ public class ChannelIpFilter extends ChannelInboundHandlerAdapter {
                 if (counter != null) {
                     int remaining = counter.decrementAndGet();
                     if (remaining <= 0) {
-                        ipCounters.remove(host, 0);
+                        // Must compare against the same AtomicInteger reference: remove(key, value)
+                        // removes only when the current mapped value .equals(value), and AtomicInteger
+                        // doesn't override equals(), so comparing against a boxed int here would never
+                        // match and this entry would never actually be cleaned up.
+                        ipCounters.remove(host, counter);
                     }
                 }
             }

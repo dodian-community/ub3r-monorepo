@@ -19,6 +19,11 @@ tasks.withType<JavaCompile>().configureEach {
     options.release.set(11)
 }
 
+// Netty patches DoS/security CVEs frequently; pin one version here and force it
+// below so Ktor's transitive Netty modules can't drift to a different, older
+// version than the one we depend on explicitly.
+val nettyVersion = "4.1.133.Final"
+
 val syncTestSourceSet = sourceSets.create("syncTest") {
     java.srcDirs("src/syncTest/java", "src/syncTest/kotlin")
     resources.srcDir("src/syncTest/resources")
@@ -82,9 +87,9 @@ dependencies {
 
     implementation("com.google.code.gson:gson:2.7")
 
-    implementation("io.netty:netty-all:4.1.108.Final")
-    implementation("io.netty:netty-transport-native-epoll:4.1.108.Final:linux-x86_64")
-    implementation("io.netty:netty-transport-native-epoll:4.1.108.Final:linux-aarch_64")
+    implementation("io.netty:netty-all:$nettyVersion")
+    implementation("io.netty:netty-transport-native-epoll:$nettyVersion:linux-x86_64")
+    implementation("io.netty:netty-transport-native-epoll:$nettyVersion:linux-aarch_64")
     implementation("com.google.guava:guava:33.1.0-jre")
     implementation("com.displee:rs-cache-library:8.1.0")
     implementation("com.displee:disio:2.3")
@@ -101,6 +106,19 @@ dependencies {
     implementation("io.ktor:ktor-server-rate-limit:$ktor_version")
 
     implementation(kotlin("reflect"))
+}
+
+// Ktor's ktor-server-netty pulls its own transitive Netty modules, which can end
+// up on a different (older) patch version than the explicit netty-all dependency
+// above. Force everything under io.netty to the same pinned version so there's
+// a single, current Netty on the runtime classpath.
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "io.netty" && requested.name.startsWith("netty-")) {
+            useVersion(nettyVersion)
+            because("keep a single patched Netty version on the classpath (see CVE-2025-58057, CVE-2025-55163, CVE-2025-24970, CVE-2024-47535)")
+        }
+    }
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {

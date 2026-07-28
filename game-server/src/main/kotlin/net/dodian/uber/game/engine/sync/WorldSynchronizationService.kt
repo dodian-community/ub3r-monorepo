@@ -2,6 +2,7 @@ package net.dodian.uber.game.engine.sync
 
 import kotlin.system.measureNanoTime
 import net.dodian.uber.game.engine.config.gameMaxPlayers
+import net.dodian.uber.game.engine.config.serverDebugMode
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.npc.NpcUpdating
 import net.dodian.uber.game.model.entity.player.Client
@@ -9,6 +10,7 @@ import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.model.entity.player.PlayerUpdating
 import net.dodian.uber.game.engine.sync.cache.RootSynchronizationCache
 import net.dodian.uber.game.engine.sync.npc.StagedNpcSynchronizationService
+import net.dodian.uber.game.engine.sync.player.PlayerSyncInvariantValidator
 import net.dodian.uber.game.engine.sync.player.StagedPlayerSynchronizationService
 import net.dodian.uber.game.ui.PlayerUiDeltaProcessor
 import net.dodian.uber.game.engine.sync.viewport.ViewportIndex
@@ -127,10 +129,23 @@ class WorldSynchronizationService {
                 }
                 SynchronizationContext.recordPlayerPacketBuilt(result.committedCount)
                 SynchronizationContext.recordViewer(result.committedCount, player.localNpcSize)
+                if (serverDebugMode) {
+                    validateSyncInvariants(player)
+                }
             } catch (throwable: Throwable) {
                 OperationalTelemetry.incrementCounter("sync.player.viewer_encode_failure")
                 handleViewerSyncFailure("player-sync-staged", player, throwable)
             }
+        }
+    }
+
+    private fun validateSyncInvariants(player: Client) {
+        try {
+            PlayerSyncInvariantValidator.validateViewerLocals(player, player.previousSyncSnapshot)
+            player.previousSyncSnapshot = PlayerSyncInvariantValidator.snapshot(player)
+        } catch (violation: RuntimeException) {
+            OperationalTelemetry.incrementCounter("sync.player.invariant_violation")
+            logger.error("Player sync invariant violation for viewer slot={}", player.slot, violation)
         }
     }
 

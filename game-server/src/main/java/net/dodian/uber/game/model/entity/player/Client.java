@@ -3152,7 +3152,7 @@ public class Client extends Player implements Runnable {
             int currency = ShopRulesService.currencyItemId(MyShopID);
             int TotPrice2 = ShopRulesService.buyPrice(MyShopID, itemID, fromSlot);
             int coins = getInvAmt(currency);
-            amount = amount * TotPrice2 > coins ? coins / TotPrice2 : amount;
+            amount = capShopBuyAmountForCurrency(amount, TotPrice2, coins);
             if (amount == 0) {
                 send(new SendMessage("You don't have enough " + getItemName(currency).toLowerCase()));
                 return;
@@ -3214,6 +3214,15 @@ public class Client extends Player implements Runnable {
         long normalizedCurrentAmount = Math.max(0L, currentCurrencyAmount);
         long currencySpace = Math.max(0L, (long) Integer.MAX_VALUE - normalizedCurrentAmount);
         long affordableAmount = currencySpace / unitPrice;
+        return (int) Math.min(requestedAmount, affordableAmount);
+    }
+
+    static int capShopBuyAmountForCurrency(int requestedAmount, int unitPrice, int availableCurrency) {
+        if (requestedAmount <= 0 || unitPrice <= 0) {
+            return requestedAmount;
+        }
+        long normalizedAvailable = Math.max(0L, availableCurrency);
+        long affordableAmount = normalizedAvailable / unitPrice;
         return (int) Math.min(requestedAmount, affordableAmount);
     }
 

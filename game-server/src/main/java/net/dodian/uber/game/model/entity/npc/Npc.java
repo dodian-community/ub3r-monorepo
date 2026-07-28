@@ -572,8 +572,8 @@ public class Npc extends Entity {
                         delayGfx(target, 6240, -1, target.distanceToPoint(getPosition(), target.getPosition()), Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.MAGIC);
                     }
                     if(isEligibleNpcAttackTarget(enemy, true)) {
-                        sendArrow(target, -1, 288);
-                        delayGfx(target, 6240, -1, enemy.distanceToPoint(getPosition(), enemy.getPosition()), Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.MAGIC);
+                        sendArrow(enemy, -1, 288);
+                        delayGfx(enemy, 6240, -1, enemy.distanceToPoint(getPosition(), enemy.getPosition()), Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.MAGIC);
                     }
                 }
             } else if(getId() == 4304) { //Kalphite King
@@ -598,8 +598,8 @@ public class Npc extends Entity {
                         delayGfx(target, 6234, 281, target.distanceToPoint(getPosition(), target.getPosition()), Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.MAGIC);
                     }
                     if(isEligibleNpcAttackTarget(enemy, true)) {
-                        sendArrow(target, 279, 280);
-                        delayGfx(target, 6234, 281, enemy.distanceToPoint(getPosition(), enemy.getPosition()), Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.MAGIC);
+                        sendArrow(enemy, 279, 280);
+                        delayGfx(enemy, 6234, 281, enemy.distanceToPoint(getPosition(), enemy.getPosition()), Utils.random((int) Math.floor(maxHit * this.getMagic())), false, this, damageType.MAGIC);
                     }
                 }
             } else if(getId() == 6610) { //Spider Queen
