@@ -46,6 +46,15 @@ object AccountPersistenceService {
             var pendingRetries = 0
             val prepared =
                 try {
+                    // Check before exchanging the one-time Discord OAuth code. This lets the
+                    // client keep that authorization and submit a different username instead of
+                    // forcing the player through Discord again for a simple name collision.
+                    if (discordAuthCode.isNotBlank() && AccountLoginService.usernameExists(username)) {
+                        logger.info("Account creation rejected: username already exists username={}", username)
+                        val durationMs = (System.nanoTime() - startedAt) / 1_000_000L
+                        onComplete.accept(LoginLoadResult(AccountLoginService.USERNAME_TAKEN, durationMs, 0, null))
+                        return@launch
+                    }
                     val discordUser = if (discordAuthCode.isNotBlank()) net.dodian.uber.game.persistence.account.discord.DiscordApiService.fetchDiscordUser(discordAuthCode) else null
                     if (discordAuthCode.isNotBlank() && discordUser == null) {
                         logger.warn("Account creation rejected for {}: Invalid or expired Discord authorization code", username)
@@ -60,7 +69,16 @@ object AccountPersistenceService {
                     val deadline = System.currentTimeMillis() + 3_000L
                     var finalResult = AccountLoginService.PreparedLogin.failure(13)
                     while (true) {
-                        val loadResult = AccountLoginService.prepareGame(client, username, password, email, discordId, discordUsername, discordVerified)
+                        val loadResult = AccountLoginService.prepareGame(
+                            client,
+                            username,
+                            password,
+                            email,
+                            discordId,
+                            discordUsername,
+                            discordVerified,
+                            accountCreationRequested = discordAuthCode.isNotBlank(),
+                        )
                         if (loadResult.code != AccountLoginService.FINAL_SAVE_PENDING_INTERNAL) {
                             finalResult = loadResult
                             break

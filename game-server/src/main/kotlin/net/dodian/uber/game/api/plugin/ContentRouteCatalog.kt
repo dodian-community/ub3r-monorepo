@@ -59,6 +59,14 @@ object ContentRouteCatalog {
                     add(ContentRouteEntry(manifest.id, "skill-item-grid", binding.interfaceId.toString(), binding.preset.name))
                 }
             }
+            ContentModuleIndex.skillSupportModules.forEach { module ->
+                val manifest = manifestsByClass[module::class.java.name] ?: return@forEach
+                module.definition.itemBindings.forEach { binding -> binding.itemIds.forEach { add(ContentRouteEntry(manifest.id, "skill-item", "${binding.option}:$it", binding.preset.name)) } }
+                module.definition.buttonBindings.forEach { binding -> binding.rawButtonIds.forEach { add(ContentRouteEntry(manifest.id, "skill-button", "$it:${binding.opIndex ?: -1}:${binding.requiredInterfaceId}", binding.preset.name)) } }
+                module.definition.itemGridBindings.forEach { binding ->
+                    add(ContentRouteEntry(manifest.id, "skill-item-grid", binding.interfaceId.toString(), binding.preset.name))
+                }
+            }
         }.sortedWith(compareBy(ContentRouteEntry::moduleId, ContentRouteEntry::routeType, ContentRouteEntry::key))
     }
 

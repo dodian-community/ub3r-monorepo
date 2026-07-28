@@ -27,12 +27,12 @@ object FarmingModule : SkillPlugin {
     val descriptor = SkillModuleDescriptor("skill.farming", "Farming")
     val crops: List<FarmingCropDef> by lazy { loadCrops() }
 
-    /** Verified live-cache patch roots. Plugin content owns these raw IDs. */
-    val patchObjectIds = intArrayOf(8552, 8553, 7848, 8151, 7965, 8554, 8555, 7849, 8152, 7580, 8556, 8557, 7850, 8153, 19147, 7962, 8388)
+    /** Revision-218 empty patch roots for the crop types currently represented in patches.toml. */
+    val patchObjectIds = intArrayOf(8573, 7840, 8132)
     private val seedIds by lazy { crops.map { it.seedId }.toIntArray() }
 
     override val definition: SkillPluginDefinition = skillPlugin("Farming", Skill.FARMING) {
-        objectClick(preset = PolicyPreset.GATHERING, option = 1, *patchObjectIds) { interaction ->
+        objectClick(preset = PolicyPreset.GATHERING, option = 2, *patchObjectIds) { interaction ->
             inspectPatch(interaction)
         }
         itemOnObject(PolicyPreset.PRODUCTION, *patchObjectIds, itemIds = seedIds) { interaction ->

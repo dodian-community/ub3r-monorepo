@@ -2,6 +2,7 @@ package net.dodian.uber.game.persistence.audit
 
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.Position
+import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.item.GameItem
 import net.dodian.uber.game.engine.systems.interaction.objects.ObjectContentRegistry
@@ -26,6 +27,7 @@ object ConsoleAuditLog {
     private val buttonLogger = LoggerFactory.getLogger("net.dodian.consoleaudit.button")
     private val objectLogger = LoggerFactory.getLogger("net.dodian.consoleaudit.object")
     private val interfaceLogger = LoggerFactory.getLogger("net.dodian.consoleaudit.interface")
+    private val npcLogger = LoggerFactory.getLogger("net.dodian.consoleaudit.npc")
 
     @JvmStatic
     fun publicChat(player: Player, message: String) {
@@ -215,6 +217,75 @@ object ConsoleAuditLog {
             itemRef(itemId, itemAmount),
             positionRef(pos),
         )
+    }
+
+    @JvmStatic
+    fun npcClick(player: Player, npc: Npc, option: Int, opcode: Int) {
+        if (!npcLogger.isInfoEnabled) return
+        val npcName = Server.npcManager?.getName(npc.id) ?: "N/A"
+        val optionLabel = when (option) {
+            1 -> "TALK/FIRST"
+            2 -> "ATTACK/SECOND"
+            3 -> "TRADE/THIRD"
+            4 -> "FOURTH"
+            5 -> "ATTACK"
+            else -> "OPTION_$option"
+        }
+        npcLogger.info(
+            "NPC CLICK | option={} ({}) | opcode={} | npcId={} | npcName=\"{}\" | index={} | pos={} | {}",
+            option,
+            optionLabel,
+            opcode,
+            npc.id,
+            npcName,
+            npc.slot,
+            positionRef(player.position),
+            playerRef(player),
+        )
+    }
+
+    @JvmStatic
+    fun npcInteraction(
+        player: Player,
+        npc: Npc,
+        option: Int,
+        opcode: Int,
+        handled: Boolean,
+        handlerSource: String? = null,
+        routeOutcome: String = "REACHED",
+        elapsedNanos: Long = 0L,
+    ) {
+        val elapsedMs = elapsedNanos.coerceAtLeast(0L) / 1_000_000.0
+        val npcName = Server.npcManager?.getName(npc.id) ?: "N/A"
+        if (handled) {
+            if (!npcLogger.isInfoEnabled) return
+            npcLogger.info(
+                "NPC OK | option={} | npcId={} | npcName=\"{}\" | index={} | pos={} | route={} | source={} | elapsedMs={} | {}",
+                option,
+                npc.id,
+                npcName,
+                npc.slot,
+                positionRef(npc.position),
+                routeOutcome,
+                handlerSource ?: "-",
+                String.format(java.util.Locale.ROOT, "%.3f", elapsedMs),
+                playerRef(player),
+            )
+        } else {
+            if (!npcLogger.isWarnEnabled) return
+            npcLogger.warn(
+                "NPC UNHANDLED | option={} | npcId={} | npcName=\"{}\" | index={} | pos={} | route={} | opcode={} | elapsedMs={} | {}",
+                option,
+                npc.id,
+                npcName,
+                npc.slot,
+                positionRef(npc.position),
+                routeOutcome,
+                opcode,
+                String.format(java.util.Locale.ROOT, "%.3f", elapsedMs),
+                playerRef(player),
+            )
+        }
     }
 
     @JvmStatic

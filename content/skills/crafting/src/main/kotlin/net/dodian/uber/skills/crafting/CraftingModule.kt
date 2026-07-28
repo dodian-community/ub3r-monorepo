@@ -65,7 +65,7 @@ object CraftingModule : SkillPlugin {
         hides.forEach { hide ->
             itemOnItem(PolicyPreset.PRODUCTION, NEEDLE_ITEM_ID, hide.itemId) { craftHide(it, hide) }
         }
-        objectClick(preset = PolicyPreset.PRODUCTION, option = 1, *spinningWheelObjectIds) { interaction ->
+        objectClick(preset = PolicyPreset.PRODUCTION, option = 2, *spinningWheelObjectIds) { interaction ->
             startSpinning(interaction)
         }
     }

@@ -1,0 +1,1070 @@
+// 0
+// alias=material_0
+[material_0]
+averagecolour=5654
+opaque=yes
+sprite=door
+unknown1=0
+animation=0,0
+
+// 1
+// alias=material_1
+[material_1]
+averagecolour=40269
+opaque=yes
+sprite=water
+unknown1=0
+animation=0,0
+
+// 2
+// alias=material_2
+[material_2]
+averagecolour=6183
+opaque=yes
+sprite=wall
+unknown1=0
+animation=0,0
+
+// 3
+// alias=material_3
+[material_3]
+averagecolour=4636
+opaque=yes
+sprite=planks
+unknown1=0
+animation=0,0
+
+// 4
+// alias=material_4
+[material_4]
+averagecolour=6678
+opaque=yes
+sprite=elfdoor
+unknown1=0
+animation=0,0
+
+// 5
+// alias=material_5
+[material_5]
+averagecolour=6024
+opaque=yes
+sprite=darkwood
+unknown1=0
+animation=0,0
+
+// 6
+// alias=material_6
+[material_6]
+averagecolour=2473
+opaque=yes
+sprite=roof
+unknown1=0
+animation=0,0
+
+// 7
+// alias=material_7
+[material_7]
+averagecolour=7057
+opaque=no
+sprite=damage
+unknown1=0
+animation=0,0
+
+// 8
+// alias=material_8
+[material_8]
+averagecolour=12818
+opaque=no
+sprite=leafytree
+unknown1=0
+animation=0,0
+
+// 9
+// alias=material_9
+[material_9]
+averagecolour=5927
+opaque=no
+sprite=treestump
+unknown1=0
+animation=0,0
+
+// 10
+// alias=material_10
+[material_10]
+averagecolour=8233
+opaque=yes
+sprite=crag
+unknown1=0
+animation=0,0
+
+// 11
+// alias=material_11
+[material_11]
+averagecolour=5155
+opaque=yes
+sprite=mossy
+unknown1=0
+animation=0,0
+
+// 12
+// alias=material_12
+[material_12]
+averagecolour=18
+opaque=no
+sprite=railings
+unknown1=0
+animation=0,0
+
+// 13
+// alias=material_13
+[material_13]
+averagecolour=32847
+opaque=yes
+sprite=painting1
+unknown1=0
+animation=0,0
+
+// 14
+// alias=material_14
+[material_14]
+averagecolour=5295
+opaque=yes
+sprite=painting2
+unknown1=0
+animation=0,0
+
+// 15
+// alias=material_15
+[material_15]
+averagecolour=47161
+opaque=yes
+sprite=marble
+unknown1=0
+animation=0,0
+
+// 16
+// alias=material_16
+[material_16]
+averagecolour=6934
+opaque=yes
+sprite=wood2
+unknown1=0
+animation=0,0
+
+// 17
+// alias=material_17
+[material_17]
+averagecolour=39640
+opaque=no
+sprite=fountain
+unknown1=0
+animation=1,2
+
+// 18
+// alias=material_18
+[material_18]
+averagecolour=9534
+opaque=yes
+sprite=thatched
+unknown1=0
+animation=0,0
+
+// 19
+// alias=material_19
+[material_19]
+averagecolour=5405
+opaque=no
+sprite=cargonet
+unknown1=0
+animation=0,0
+
+// 20
+// alias=material_20
+[material_20]
+averagecolour=5662
+opaque=yes
+sprite=books
+unknown1=0
+animation=0,0
+
+// 21
+// alias=material_21
+[material_21]
+averagecolour=6673
+opaque=no
+sprite=elfroof2
+unknown1=0
+animation=0,0
+
+// 22
+// alias=material_22
+[material_22]
+averagecolour=4512
+opaque=yes
+sprite=elfwood
+unknown1=0
+animation=0,0
+
+// 23
+// alias=material_23
+[material_23]
+averagecolour=7446
+opaque=yes
+sprite=mossybricks
+unknown1=0
+animation=0,0
+
+// 24
+// alias=material_24
+[material_24]
+averagecolour=40269
+opaque=yes
+sprite=water_animated
+unknown1=0
+animation=1,2
+
+// 25
+// alias=material_25
+[material_25]
+averagecolour=29101
+opaque=yes
+sprite=gungywater
+unknown1=0
+animation=0,0
+
+// 26
+// alias=material_26
+[material_26]
+averagecolour=81
+opaque=no
+sprite=web
+unknown1=0
+animation=0,0
+
+// 27
+// alias=material_27
+[material_27]
+averagecolour=5648
+opaque=yes
+sprite=elfroof
+unknown1=0
+animation=0,0
+
+// 28
+// alias=material_28
+[material_28]
+averagecolour=21534
+opaque=no
+sprite=mossydamage
+unknown1=0
+animation=0,0
+
+// 29
+// alias=material_29
+[material_29]
+averagecolour=13862
+opaque=no
+sprite=bamboo
+unknown1=0
+animation=0,0
+
+// 30
+// alias=material_30
+[material_30]
+averagecolour=12698
+opaque=no
+sprite=willowtex3
+unknown1=0
+animation=0,0
+
+// 31
+// alias=material_31
+[material_31]
+averagecolour=6089
+opaque=yes
+sprite=lava
+unknown1=0
+animation=0,0
+
+// 32
+// alias=material_32
+[material_32]
+averagecolour=5541
+opaque=yes
+sprite=bark
+unknown1=0
+animation=0,0
+
+// 33
+// alias=material_33
+[material_33]
+averagecolour=5009
+opaque=no
+sprite=mapletree
+unknown1=0
+animation=0,0
+
+// 34
+// alias=material_34
+[material_34]
+averagecolour=9443
+opaque=no
+sprite=stars
+unknown1=0
+animation=1,2
+
+// 35
+// alias=material_35
+[material_35]
+averagecolour=7484
+opaque=yes
+sprite=elfbrick
+unknown1=0
+animation=0,0
+
+// 36
+// alias=material_36
+[material_36]
+averagecolour=3733
+opaque=yes
+sprite=elfwall
+unknown1=0
+animation=0,0
+
+// 37
+// alias=material_37
+[material_37]
+averagecolour=32
+opaque=yes
+sprite=chainmail
+unknown1=0
+animation=0,0
+
+// 38
+// alias=material_38
+[material_38]
+averagecolour=6740
+opaque=yes
+sprite=mummy
+unknown1=0
+animation=0,0
+
+// 39
+// alias=material_39
+[material_39]
+averagecolour=13482
+opaque=yes
+sprite=elfpainting
+unknown1=0
+animation=0,0
+
+// 40
+// alias=material_40
+[material_40]
+averagecolour=6089
+opaque=yes
+sprite=lava_animated
+unknown1=0
+animation=1,2
+
+// 41
+// alias=material_41
+[material_41]
+averagecolour=10128
+opaque=no
+sprite=leafytree_diseased
+unknown1=0
+animation=0,0
+
+// 42
+// alias=material_42
+[material_42]
+averagecolour=8295
+opaque=yes
+sprite=marble_poh
+unknown1=0
+animation=0,0
+
+// 43
+// alias=material_43
+[material_43]
+averagecolour=10290
+opaque=yes
+sprite=stone_tiles
+unknown1=0
+animation=0,0
+
+// 44
+// alias=material_44
+[material_44]
+averagecolour=41
+opaque=yes
+sprite=roof2
+unknown1=0
+animation=0,0
+
+// 45
+// alias=material_45
+[material_45]
+averagecolour=9256
+opaque=yes
+sprite=old_tiles
+unknown1=0
+animation=0,0
+
+// 46
+// alias=material_46
+[material_46]
+averagecolour=3119
+opaque=yes
+sprite=pebblefloor
+unknown1=0
+animation=0,0
+
+// 47
+// alias=material_47
+[material_47]
+averagecolour=8403
+opaque=yes
+sprite=wall_white
+unknown1=0
+animation=0,0
+
+// 48
+// alias=material_48
+[material_48]
+averagecolour=6434
+opaque=yes
+sprite=glyphs
+unknown1=0
+animation=0,0
+
+// 49
+// alias=material_49
+[material_49]
+averagecolour=5592
+opaque=yes
+sprite=canvas
+unknown1=0
+animation=0,0
+
+// 50
+// alias=material_50
+[material_50]
+averagecolour=9380
+opaque=yes
+sprite=old_tiles_lighter
+unknown1=0
+animation=0,0
+
+// 51
+// alias=material_51
+[material_51]
+averagecolour=5679
+opaque=yes
+sprite=woodenfloor_new
+unknown1=0
+animation=0,0
+
+// 52
+// alias=material_52
+[material_52]
+averagecolour=41072
+opaque=no
+sprite=xmas_snowflake
+unknown1=0
+animation=0,0
+
+// 53
+// alias=material_53
+[material_53]
+averagecolour=35049
+opaque=yes
+sprite=mirror
+unknown1=0
+animation=0,0
+
+// 55
+// alias=material_55
+[material_55]
+averagecolour=14483
+opaque=yes
+sprite=old_tiles_green
+unknown1=0
+animation=0,0
+
+// 56
+// alias=material_56
+[material_56]
+averagecolour=709
+opaque=yes
+sprite=lava_animated_red
+unknown1=0
+animation=1,2
+
+// 57
+// alias=material_57
+[material_57]
+averagecolour=108
+opaque=yes
+sprite=lava_animated_white
+unknown1=0
+animation=1,2
+
+// 58
+// alias=material_58
+[material_58]
+averagecolour=3747
+opaque=no
+sprite=cherryblossom
+unknown1=0
+animation=0,0
+
+// 59
+// alias=material_59
+[material_59]
+averagecolour=3875
+opaque=yes
+sprite=infernal_cape
+unknown1=0
+animation=1,1
+
+// 60
+// alias=material_60
+[material_60]
+averagecolour=12818
+opaque=no
+sprite=leafytree_tiled
+unknown1=0
+animation=0,0
+
+// 61
+// alias=material_61
+[material_61]
+averagecolour=43086
+opaque=no
+sprite=icon_skull
+unknown1=0
+animation=0,0
+
+// 62
+// alias=material_62
+[material_62]
+averagecolour=73
+opaque=no
+sprite=icon_crown
+unknown1=0
+animation=0,0
+
+// 63
+// alias=material_63
+[material_63]
+averagecolour=58
+opaque=no
+sprite=icon_wizard
+unknown1=0
+animation=0,0
+
+// 64
+// alias=material_64
+[material_64]
+averagecolour=61
+opaque=no
+sprite=icon_comedy
+unknown1=0
+animation=0,0
+
+// 65
+// alias=material_65
+[material_65]
+averagecolour=55339
+opaque=no
+sprite=icon_helmet
+unknown1=0
+animation=0,0
+
+// 66
+// alias=material_66
+[material_66]
+averagecolour=55350
+opaque=no
+sprite=icon_swords
+unknown1=0
+animation=0,0
+
+// 67
+// alias=material_67
+[material_67]
+averagecolour=61
+opaque=no
+sprite=icon_tragedy
+unknown1=0
+animation=0,0
+
+// 68
+// alias=material_68
+[material_68]
+averagecolour=45
+opaque=no
+sprite=icon_tools
+unknown1=0
+animation=0,0
+
+// 69
+// alias=material_69
+[material_69]
+averagecolour=43048
+opaque=no
+sprite=icon_tools2
+unknown1=0
+animation=0,0
+
+// 70
+// alias=material_70
+[material_70]
+averagecolour=43038
+opaque=no
+sprite=icon_arrows
+unknown1=0
+animation=0,0
+
+// 71
+// alias=material_71
+[material_71]
+averagecolour=66
+opaque=no
+sprite=icon_balance
+unknown1=0
+animation=0,0
+
+// 72
+// alias=material_72
+[material_72]
+averagecolour=43017
+opaque=no
+sprite=icon_bandit
+unknown1=0
+animation=0,0
+
+// 73
+// alias=material_73
+[material_73]
+averagecolour=63
+opaque=no
+sprite=icon_bones
+unknown1=0
+animation=0,0
+
+// 74
+// alias=material_74
+[material_74]
+averagecolour=36
+opaque=no
+sprite=icon_cabbage
+unknown1=0
+animation=0,0
+
+// 75
+// alias=material_75
+[material_75]
+averagecolour=41
+opaque=no
+sprite=icon_cat
+unknown1=0
+animation=0,0
+
+// 76
+// alias=material_76
+[material_76]
+averagecolour=55337
+opaque=no
+sprite=icon_compass
+unknown1=0
+animation=0,0
+
+// 77
+// alias=material_77
+[material_77]
+averagecolour=54
+opaque=no
+sprite=icon_fish
+unknown1=0
+animation=0,0
+
+// 78
+// alias=material_78
+[material_78]
+averagecolour=61
+opaque=no
+sprite=icon_heart
+unknown1=0
+animation=0,0
+
+// 79
+// alias=material_79
+[material_79]
+averagecolour=55355
+opaque=no
+sprite=icon_holy
+unknown1=0
+animation=0,0
+
+// 80
+// alias=material_80
+[material_80]
+averagecolour=32781
+opaque=no
+sprite=icon_hunter
+unknown1=0
+animation=0,0
+
+// 81
+// alias=material_81
+[material_81]
+averagecolour=50
+opaque=no
+sprite=icon_ring
+unknown1=0
+animation=0,0
+
+// 82
+// alias=material_82
+[material_82]
+averagecolour=57
+opaque=no
+sprite=icon_robin
+unknown1=0
+animation=0,0
+
+// 83
+// alias=material_83
+[material_83]
+averagecolour=70
+opaque=no
+sprite=icon_rose
+unknown1=0
+animation=0,0
+
+// 84
+// alias=material_84
+[material_84]
+averagecolour=43066
+opaque=no
+sprite=icon_shield
+unknown1=0
+animation=0,0
+
+// 85
+// alias=material_85
+[material_85]
+averagecolour=55346
+opaque=no
+sprite=icon_unholy
+unknown1=0
+animation=0,0
+
+// 86
+// alias=material_86
+[material_86]
+averagecolour=55342
+opaque=no
+sprite=icon_iron_standard
+unknown1=0
+animation=0,0
+
+// 87
+// alias=material_87
+[material_87]
+averagecolour=51
+opaque=no
+sprite=icon_iron_ultimate
+unknown1=0
+animation=0,0
+
+// 88
+// alias=material_88
+[material_88]
+averagecolour=42
+opaque=no
+sprite=blank
+unknown1=0
+animation=0,0
+
+// 89
+// alias=material_89
+[material_89]
+averagecolour=14482
+opaque=no
+sprite=leafytree_tiled02
+unknown1=0
+animation=0,0
+
+// 90
+// alias=material_90
+[material_90]
+averagecolour=14482
+opaque=no
+sprite=leafytree02
+unknown1=0
+animation=0,0
+
+// 91
+// alias=material_91
+[material_91]
+averagecolour=38002
+opaque=yes
+sprite=ice
+unknown1=0
+animation=0,0
+
+// 92
+// alias=material_92
+[material_92]
+averagecolour=49262
+opaque=yes
+sprite=roof_snow
+unknown1=0
+animation=0,0
+
+// 93
+// alias=material_93
+[material_93]
+averagecolour=120
+opaque=yes
+sprite=roof_snow02
+unknown1=0
+animation=0,0
+
+// 94
+// alias=material_94
+[material_94]
+averagecolour=4133
+opaque=yes
+sprite=texture_test01
+unknown1=0
+animation=0,0
+
+// 95
+// alias=material_95
+[material_95]
+averagecolour=32
+opaque=yes
+sprite=texture_stone01
+unknown1=0
+animation=0,0
+
+// 96
+// alias=material_96
+[material_96]
+averagecolour=8384
+opaque=no
+sprite=hieroglyphic_set1
+unknown1=0
+animation=0,0
+
+// 97
+// alias=material_97
+[material_97]
+averagecolour=8384
+opaque=no
+sprite=hieroglyphic_set2
+unknown1=0
+animation=0,0
+
+// 98
+// alias=material_98
+[material_98]
+averagecolour=55738
+opaque=no
+sprite=fog01
+unknown1=0
+animation=0,0
+
+// 99
+// alias=material_99
+[material_99]
+averagecolour=55738
+opaque=no
+sprite=fog01
+unknown1=0
+animation=4,1
+
+// 100
+// alias=material_100
+[material_100]
+averagecolour=55738
+opaque=no
+sprite=fog01
+unknown1=0
+animation=4,2
+
+// 101
+// alias=material_101
+[material_101]
+averagecolour=55738
+opaque=no
+sprite=fog01
+unknown1=0
+animation=4,3
+
+// 102
+// alias=material_102
+[material_102]
+averagecolour=55738
+opaque=no
+sprite=fog01
+unknown1=0
+animation=4,4
+
+// 103
+// alias=material_103
+[material_103]
+averagecolour=55738
+opaque=no
+sprite=fog01
+unknown1=0
+animation=4,5
+
+// 104
+// alias=material_104
+[material_104]
+averagecolour=55606
+opaque=no
+sprite=fog02
+unknown1=0
+animation=0,0
+
+// 105
+// alias=material_105
+[material_105]
+averagecolour=55606
+opaque=no
+sprite=fog02
+unknown1=0
+animation=4,1
+
+// 106
+// alias=material_106
+[material_106]
+averagecolour=55606
+opaque=no
+sprite=fog02
+unknown1=0
+animation=4,2
+
+// 107
+// alias=material_107
+[material_107]
+averagecolour=55606
+opaque=no
+sprite=fog02
+unknown1=0
+animation=4,3
+
+// 108
+// alias=material_108
+[material_108]
+averagecolour=55606
+opaque=no
+sprite=fog02
+unknown1=0
+animation=4,4
+
+// 109
+// alias=material_109
+[material_109]
+averagecolour=55606
+opaque=no
+sprite=fog02
+unknown1=0
+animation=4,5
+
+// 110
+// alias=material_110
+[material_110]
+averagecolour=55606
+opaque=no
+sprite=fog03
+unknown1=0
+animation=0,0
+
+// 111
+// alias=material_111
+[material_111]
+averagecolour=55606
+opaque=no
+sprite=fog03
+unknown1=0
+animation=4,1
+
+// 112
+// alias=material_112
+[material_112]
+averagecolour=55606
+opaque=no
+sprite=fog03
+unknown1=0
+animation=4,2
+
+// 113
+// alias=material_113
+[material_113]
+averagecolour=55606
+opaque=no
+sprite=fog03
+unknown1=0
+animation=4,3
+
+// 114
+// alias=material_114
+[material_114]
+averagecolour=55606
+opaque=no
+sprite=fog03
+unknown1=0
+animation=4,4
+
+// 115
+// alias=material_115
+[material_115]
+averagecolour=55606
+opaque=no
+sprite=fog03
+unknown1=0
+animation=4,5
+
+// 116
+// alias=material_116
+[material_116]
+averagecolour=5405
+opaque=yes
+sprite=skulls01
+unknown1=0
+animation=0,0
+
+// 117
+// alias=material_117
+[material_117]
+averagecolour=6307
+opaque=yes
+sprite=skulls02
+unknown1=0
+animation=0,0
+
+// 118
+// alias=material_118
+[material_118]
+averagecolour=6322
+opaque=yes
+sprite=skulls03
+unknown1=0
+animation=0,0
+
+// 119
+// alias=material_119
+[material_119]
+averagecolour=5147
+opaque=yes
+sprite=skulls04
+unknown1=0
+animation=0,0

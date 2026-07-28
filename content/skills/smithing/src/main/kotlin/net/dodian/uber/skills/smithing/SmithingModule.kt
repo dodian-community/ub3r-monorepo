@@ -33,8 +33,8 @@ object SmithingModule : SkillPlugin {
 
     /** Verified live-cache furnace IDs. Do not resolve gameplay routes through RSCM. */
     val furnaceObjectIds = intArrayOf(2030, 3994, 16469)
-    private val smeltingInterfaceFurnaces by lazy { furnaceObjectIds }
-    private val anvilObjectIds = intArrayOf(2097, 2783)
+    private val smeltingInterfaceFurnaces = intArrayOf(2030, 16469)
+    val anvilObjectIds = intArrayOf(2097)
 
     override val definition: SkillPluginDefinition = skillPlugin("Smithing", Skill.SMITHING) {
         itemOnObject(PolicyPreset.PRODUCTION, *furnaceObjectIds) { interaction ->
@@ -43,10 +43,8 @@ object SmithingModule : SkillPlugin {
         itemOnObject(PolicyPreset.PRODUCTION, *anvilObjectIds) { interaction ->
             handleAnvil(interaction)
         }
-        // Legacy opens the smelting interface only for these furnaces, on options one and two.
-        objectClick(preset = PolicyPreset.PRODUCTION, option = 1, *smeltingInterfaceFurnaces) { interaction ->
-            openSmeltingPicker(interaction)
-        }
+        // Revision-218 exposes Smelt as option two. Small furnace 3994 has no cache
+        // click option, but remains a valid item-on-object furnace.
         objectClick(preset = PolicyPreset.PRODUCTION, option = 2, *smeltingInterfaceFurnaces) { interaction ->
             openSmeltingPicker(interaction)
         }

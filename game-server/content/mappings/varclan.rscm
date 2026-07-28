@@ -1,0 +1,579 @@
+// 0
+// alias=varclan_0
+[varclan_0]
+type=player_uid
+
+// 1
+// alias=varclan_1
+[varclan_1]
+type=int
+
+// 2
+// alias=varclan_2
+[varclan_2]
+type=coord
+
+// 3
+// alias=varclan_3
+[varclan_3]
+type=int
+
+// 4
+// alias=varclan_4
+[varclan_4]
+type=int
+
+// 5
+// alias=varclan_5
+[varclan_5]
+type=player_uid
+
+// 6
+// alias=varclan_6
+[varclan_6]
+type=player_uid
+
+// 7
+// alias=varclan_7
+[varclan_7]
+type=player_uid
+
+// 8
+// alias=varclan_8
+[varclan_8]
+type=player_uid
+
+// 9
+// alias=varclan_9
+[varclan_9]
+type=player_uid
+
+// 10
+// alias=varclan_10
+[varclan_10]
+type=player_uid
+
+// 11
+// alias=varclan_11
+[varclan_11]
+type=player_uid
+
+// 12
+// alias=varclan_12
+[varclan_12]
+type=player_uid
+
+// 13
+// alias=varclan_13
+[varclan_13]
+type=player_uid
+
+// 14
+// alias=varclan_14
+[varclan_14]
+type=player_uid
+
+// 15
+// alias=varclan_15
+[varclan_15]
+type=player_uid
+
+// 16
+// alias=varclan_16
+[varclan_16]
+type=player_uid
+
+// 17
+// alias=varclan_17
+[varclan_17]
+type=player_uid
+
+// 18
+// alias=varclan_18
+[varclan_18]
+type=player_uid
+
+// 19
+// alias=varclan_19
+[varclan_19]
+type=player_uid
+
+// 20
+// alias=varclan_20
+[varclan_20]
+type=player_uid
+
+// 21
+// alias=varclan_21
+[varclan_21]
+type=player_uid
+
+// 22
+// alias=varclan_22
+[varclan_22]
+type=player_uid
+
+// 23
+// alias=varclan_23
+[varclan_23]
+type=player_uid
+
+// 24
+// alias=varclan_24
+[varclan_24]
+type=int
+
+// 25
+// alias=varclan_25
+[varclan_25]
+type=int
+
+// 26
+// alias=varclan_26
+[varclan_26]
+type=int
+
+// 27
+// alias=varclan_27
+[varclan_27]
+type=int
+
+// 28
+// alias=varclan_28
+[varclan_28]
+type=int
+
+// 29
+// alias=varclan_29
+[varclan_29]
+type=int
+
+// 30
+// alias=varclan_30
+[varclan_30]
+type=int
+
+// 31
+// alias=varclan_31
+[varclan_31]
+type=int
+
+// 32
+// alias=varclan_32
+[varclan_32]
+type=hash64
+
+// 33
+// alias=varclan_33
+[varclan_33]
+type=int
+
+// 34
+// alias=varclan_34
+[varclan_34]
+type=int
+
+// 35
+// alias=varclan_35
+[varclan_35]
+type=int
+
+// 36
+// alias=varclan_36
+[varclan_36]
+type=int
+
+// 37
+// alias=varclan_37
+[varclan_37]
+type=int
+
+// 38
+// alias=varclan_38
+[varclan_38]
+type=int
+
+// 39
+// alias=varclan_39
+[varclan_39]
+type=int
+
+// 40
+// alias=varclan_40
+[varclan_40]
+type=int
+
+// 41
+// alias=varclan_41
+[varclan_41]
+type=hash64
+
+// 42
+// alias=varclan_42
+[varclan_42]
+type=int
+
+// 43
+// alias=varclan_43
+[varclan_43]
+type=int
+
+// 44
+// alias=varclan_44
+[varclan_44]
+type=int
+
+// 45
+// alias=varclan_45
+[varclan_45]
+type=int
+
+// 46
+// alias=varclan_46
+[varclan_46]
+type=int
+
+// 47
+// alias=varclan_47
+[varclan_47]
+type=int
+
+// 48
+// alias=varclan_48
+[varclan_48]
+type=int
+
+// 49
+// alias=varclan_49
+[varclan_49]
+type=int
+
+// 50
+// alias=varclan_50
+[varclan_50]
+type=hash64
+
+// 51
+// alias=varclan_51
+[varclan_51]
+type=int
+
+// 52
+// alias=varclan_52
+[varclan_52]
+type=int
+
+// 53
+// alias=varclan_53
+[varclan_53]
+type=int
+
+// 54
+// alias=varclan_54
+[varclan_54]
+type=int
+
+// 55
+// alias=varclan_55
+[varclan_55]
+type=int
+
+// 56
+// alias=varclan_56
+[varclan_56]
+type=int
+
+// 57
+// alias=varclan_57
+[varclan_57]
+type=int
+
+// 58
+// alias=varclan_58
+[varclan_58]
+type=int
+
+// 59
+// alias=varclan_59
+[varclan_59]
+type=hash64
+
+// 60
+// alias=varclan_60
+[varclan_60]
+type=int
+
+// 61
+// alias=varclan_61
+[varclan_61]
+type=int
+
+// 62
+// alias=varclan_62
+[varclan_62]
+type=int
+
+// 63
+// alias=varclan_63
+[varclan_63]
+type=int
+
+// 64
+// alias=varclan_64
+[varclan_64]
+type=int
+
+// 65
+// alias=varclan_65
+[varclan_65]
+type=int
+
+// 66
+// alias=varclan_66
+[varclan_66]
+type=int
+
+// 67
+// alias=varclan_67
+[varclan_67]
+type=int
+
+// 68
+// alias=varclan_68
+[varclan_68]
+type=hash64
+
+// 69
+// alias=varclan_69
+[varclan_69]
+type=int
+
+// 70
+// alias=varclan_70
+[varclan_70]
+type=int
+
+// 71
+// alias=varclan_71
+[varclan_71]
+type=int
+
+// 72
+// alias=varclan_72
+[varclan_72]
+type=int
+
+// 73
+// alias=varclan_73
+[varclan_73]
+type=int
+
+// 74
+// alias=varclan_74
+[varclan_74]
+type=int
+
+// 75
+// alias=varclan_75
+[varclan_75]
+type=int
+
+// 76
+// alias=varclan_76
+[varclan_76]
+type=int
+
+// 77
+// alias=varclan_77
+[varclan_77]
+type=hash64
+
+// 78
+// alias=varclan_78
+[varclan_78]
+type=int
+
+// 79
+// alias=varclan_79
+[varclan_79]
+type=int
+
+// 80
+// alias=varclan_80
+[varclan_80]
+type=int
+
+// 81
+// alias=varclan_81
+[varclan_81]
+type=int
+
+// 82
+// alias=varclan_82
+[varclan_82]
+type=int
+
+// 83
+// alias=varclan_83
+[varclan_83]
+type=int
+
+// 84
+// alias=varclan_84
+[varclan_84]
+type=int
+
+// 85
+// alias=varclan_85
+[varclan_85]
+type=int
+
+// 86
+// alias=varclan_86
+[varclan_86]
+type=hash64
+
+// 87
+// alias=varclan_87
+[varclan_87]
+type=int
+
+// 88
+// alias=varclan_88
+[varclan_88]
+type=int
+
+// 89
+// alias=varclan_89
+[varclan_89]
+type=int
+
+// 90
+// alias=varclan_90
+[varclan_90]
+type=int
+
+// 91
+// alias=varclan_91
+[varclan_91]
+type=int
+
+// 92
+// alias=varclan_92
+[varclan_92]
+type=int
+
+// 93
+// alias=varclan_93
+[varclan_93]
+type=int
+
+// 94
+// alias=varclan_94
+[varclan_94]
+type=int
+
+// 95
+// alias=varclan_95
+[varclan_95]
+type=hash64
+
+// 96
+// alias=varclan_96
+[varclan_96]
+type=int
+
+// 97
+// alias=varclan_97
+[varclan_97]
+type=int
+
+// 98
+// alias=varclan_98
+[varclan_98]
+type=int
+
+// 99
+// alias=varclan_99
+[varclan_99]
+type=int
+
+// 100
+// alias=varclan_100
+[varclan_100]
+type=int
+
+// 101
+// alias=varclan_101
+[varclan_101]
+type=int
+
+// 102
+// alias=varclan_102
+[varclan_102]
+type=int
+
+// 103
+// alias=varclan_103
+[varclan_103]
+type=int
+
+// 104
+// alias=varclan_104
+[varclan_104]
+type=hash64
+
+// 105
+// alias=varclan_105
+[varclan_105]
+type=int
+
+// 106
+// alias=varclan_106
+[varclan_106]
+type=int
+
+// 107
+// alias=varclan_107
+[varclan_107]
+type=int
+
+// 108
+// alias=varclan_108
+[varclan_108]
+type=int
+
+// 109
+// alias=varclan_109
+[varclan_109]
+type=int
+
+// 110
+// alias=varclan_110
+[varclan_110]
+type=int
+
+// 111
+// alias=varclan_111
+[varclan_111]
+type=int
+
+// 112
+// alias=varclan_112
+[varclan_112]
+type=int
+
+// 113
+// alias=varclan_113
+[varclan_113]
+type=hash64
+
+// 114
+// alias=varclan_114
+[varclan_114]
+type=inv
+
+// 115
+// alias=varclan_115
+[varclan_115]
+type=int

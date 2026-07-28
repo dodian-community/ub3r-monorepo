@@ -266,15 +266,20 @@ object WebApi {
                         val loopFresh = net.dodian.uber.game.engine.metrics.OperationalTelemetry.isGameLoopFresh()
                         val pluginsFrozen = net.dodian.uber.game.engine.lifecycle.EnginePluginBootstrap.isFrozen()
                         val contentPlatform = net.dodian.uber.game.api.plugin.ContentPlatformCatalog.snapshot()
-                        val ready = dbOk && loopFresh && pluginsFrozen
+                        val contentFaults = net.dodian.uber.game.api.content.ContentFaultCircuitBreaker.snapshot()
+                        val quarantinedBindings = contentFaults["disabledBindings"] as List<*>
+                        val skillsHealthy = quarantinedBindings.isEmpty()
+                        val ready = dbOk && loopFresh && pluginsFrozen && skillsHealthy
                         val readiness = linkedMapOf<String, Any>(
                             "status" to if (ready) "READY" else "DEGRADED",
                             "database" to if (dbOk) "UP" else "DOWN",
                             "gameLoop" to if (loopFresh) "FRESH" else "STALE",
+                            "skills" to if (skillsHealthy) "HEALTHY" else "DEGRADED",
                             "pluginBootstrap" to net.dodian.uber.game.engine.lifecycle.EnginePluginBootstrap.currentPhase().name,
                             "players" to PlayerRegistry.getPlayerCount(),
                             "telemetry" to net.dodian.uber.game.engine.metrics.OperationalTelemetry.snapshot(),
-                            "contentFaults" to net.dodian.uber.game.api.content.ContentFaultCircuitBreaker.snapshot(),
+                            "contentFaults" to contentFaults,
+                            "skillBetaTelemetry" to net.dodian.uber.game.engine.systems.skills.SkillBetaTelemetry.snapshot(),
                             "contentPlatform" to linkedMapOf(
                                 "fingerprint" to contentPlatform.fingerprint,
                                 "modules" to contentPlatform.modules.size,

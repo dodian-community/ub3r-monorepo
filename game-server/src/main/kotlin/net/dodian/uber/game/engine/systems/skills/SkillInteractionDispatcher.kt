@@ -38,7 +38,7 @@ object SkillInteractionDispatcher {
             if (gameWorldId == 2) logger.debug("[W2-DISPATCH] SkillDispatch no binding option={} objectId={}", option, objectId)
             return false
         }
-        return ContentErrorPolicy.runBoolean(client, "skill.object.click", bindingKey = "skill.object:$option:$objectId") {
+        return executeSkillRoute(client, "skill.object.click", "skill.object:$option:$objectId", SkillPolicyRoute.OBJECT) {
             val handled = binding.handler(SkillObjectInteraction(client.asSkillPlayer(), option, objectRef(objectId, position, obj)))
             if (gameWorldId == 2) logger.debug("[W2-DISPATCH] SkillDispatch handled={} option={} objectId={}", handled, option, objectId)
             SkillPolicyMetrics.record(
@@ -76,7 +76,7 @@ object SkillInteractionDispatcher {
     fun tryHandleNpcClick(client: Client, option: Int, npc: Npc): Boolean {
         validateThread("npc")
         val binding = PluginRegistry.currentSkills().npcBinding(option, npc.id) ?: return false
-        return ContentErrorPolicy.runBoolean(client, "skill.npc.click", bindingKey = "skill.npc:$option:${npc.id}") {
+        return executeSkillRoute(client, "skill.npc.click", "skill.npc:$option:${npc.id}", SkillPolicyRoute.NPC) {
             val handled = binding.handler(SkillNpcInteraction(client.asSkillPlayer(), option, SkillNpcRef(npc.id, npc.slot, npc.position.toSkillPosition())))
             SkillPolicyMetrics.record(
                 binding.preset,
@@ -91,7 +91,7 @@ object SkillInteractionDispatcher {
     fun tryHandleItemOnItem(client: Client, itemUsed: Int, otherItem: Int): Boolean {
         validateThread("item-on-item")
         val binding = PluginRegistry.currentSkills().itemOnItemBinding(itemUsed, otherItem) ?: return false
-        return ContentErrorPolicy.runBoolean(client, "skill.item.on.item", bindingKey = "skill.item-on-item:${minOf(itemUsed, otherItem)}:${maxOf(itemUsed, otherItem)}") {
+        return executeSkillRoute(client, "skill.item.on.item", "skill.item-on-item:${minOf(itemUsed, otherItem)}:${maxOf(itemUsed, otherItem)}", SkillPolicyRoute.ITEM_ON_ITEM) {
             val handled = binding.handler(SkillItemOnItemInteraction(client.asSkillPlayer(), itemUsed, otherItem))
             SkillPolicyMetrics.record(
                 binding.preset,
@@ -108,7 +108,7 @@ object SkillInteractionDispatcher {
         val binding = PluginRegistry.currentSkills().itemBinding(option, itemId)
             ?: PluginRegistry.currentSkillSupport().itemBinding(option, itemId)
             ?: return false
-        return ContentErrorPolicy.runBoolean(client, "skill.item.click", bindingKey = "skill.item:$option:$itemId") {
+        return executeSkillRoute(client, "skill.item.click", "skill.item:$option:$itemId", SkillPolicyRoute.ITEM) {
             val handled = binding.handler(SkillItemInteraction(client.asSkillPlayer(), option, itemId, itemSlot, interfaceId))
             SkillPolicyMetrics.record(
                 binding.preset,
@@ -131,7 +131,7 @@ object SkillInteractionDispatcher {
     ): Boolean {
         validateThread("item-on-object")
         val binding = PluginRegistry.currentSkills().itemOnObjectBinding(objectId, itemId) ?: return false
-        return ContentErrorPolicy.runBoolean(client, "skill.item.on.object", bindingKey = "skill.item-on-object:$objectId:$itemId") {
+        return executeSkillRoute(client, "skill.item.on.object", "skill.item-on-object:$objectId:$itemId", SkillPolicyRoute.ITEM_ON_OBJECT) {
             val handled = binding.handler(SkillItemOnObjectInteraction(client.asSkillPlayer(), objectRef(objectId, position, obj), itemId, itemSlot, interfaceId))
             SkillPolicyMetrics.record(
                 binding.preset,
@@ -152,7 +152,7 @@ object SkillInteractionDispatcher {
     ): Boolean {
         validateThread("magic-on-object")
         val binding = PluginRegistry.currentSkills().magicOnObjectBinding(objectId, spellId) ?: return false
-        return ContentErrorPolicy.runBoolean(client, "skill.magic.on.object", bindingKey = "skill.magic-on-object:$objectId:$spellId") {
+        return executeSkillRoute(client, "skill.magic.on.object", "skill.magic-on-object:$objectId:$spellId", SkillPolicyRoute.MAGIC_ON_OBJECT) {
             val handled = binding.handler(SkillMagicOnObjectInteraction(client.asSkillPlayer(), objectRef(objectId, position, obj), spellId))
             SkillPolicyMetrics.record(
                 binding.preset,
@@ -214,7 +214,7 @@ object SkillInteractionDispatcher {
         val binding = PluginRegistry.currentSkills().buttonBinding(rawButtonId, opIndex, client.activeInterfaceId)
             ?: PluginRegistry.currentSkillSupport().buttonBinding(rawButtonId, opIndex, client.activeInterfaceId)
             ?: return false
-        return ContentErrorPolicy.runBoolean(client, "skill.button.click", bindingKey = "skill.button:$rawButtonId:$opIndex:${client.activeInterfaceId}") {
+        return executeSkillRoute(client, "skill.button.click", "skill.button:$rawButtonId:$opIndex:${client.activeInterfaceId}", SkillPolicyRoute.BUTTON) {
             val handled = binding.handler(SkillButtonInteraction(client.asSkillPlayer(), rawButtonId, opIndex, client.activeInterfaceId))
             SkillPolicyMetrics.record(
                 binding.preset,
@@ -231,9 +231,22 @@ object SkillInteractionDispatcher {
         val binding = PluginRegistry.currentSkills().itemGridBinding(interfaceId)
             ?: PluginRegistry.currentSkillSupport().itemGridBinding(interfaceId)
             ?: return false
-        return ContentErrorPolicy.runBoolean(client, "skill.item.grid", bindingKey = "skill.item-grid:$interfaceId") {
+        return executeSkillRoute(client, "skill.item.grid", "skill.item-grid:$interfaceId", SkillPolicyRoute.ITEM) {
             binding.handler(SkillItemGridInteraction(client.asSkillPlayer(), interfaceId, itemId, slot, amount))
         }
+    }
+
+    private fun executeSkillRoute(
+        client: Client,
+        scope: String,
+        bindingKey: String,
+        route: SkillPolicyRoute,
+        action: () -> Boolean,
+    ): Boolean {
+        val started = System.nanoTime()
+        val result = ContentErrorPolicy.runBooleanResult(client, scope, bindingKey = bindingKey, action = action)
+        SkillBetaTelemetry.record(client, bindingKey, route, result, System.nanoTime() - started)
+        return result.handled
     }
 
     private fun validateThread(route: String) {

@@ -1,0 +1,601 @@
+// 0
+// alias=hitmark_0
+[hitmark_0]
+damageformat=%1
+middlegraphic="hitmark,17"
+sticktime=50
+
+// 1
+// alias=hitmark_1
+[hitmark_1]
+middlegraphic=hitmark_blocked
+damageformat=
+fadeout=no
+sticktime=150
+
+// 2
+// alias=hitmark_2
+[hitmark_2]
+sticktime=50
+multivar=varplayerbit_14196
+multimark=default,hitmark_70
+multimark=0,hitmark_70
+multimark=1,hitmark_68
+
+// 3
+// alias=hitmark_3
+[hitmark_3]
+damageformat=%1
+middlegraphic="hitmark,3"
+sticktime=50
+damageyof=1
+
+// 4
+// alias=hitmark_4
+[hitmark_4]
+damageformat=%1
+middlegraphic="hitmark,12"
+sticktime=50
+damageyof=2
+
+// 5
+// alias=hitmark_5
+[hitmark_5]
+damageformat=%1
+middlegraphic="hitmark,11"
+sticktime=50
+damageyof=1
+
+// 6
+// alias=hitmark_6
+[hitmark_6]
+damageformat=%1
+middlegraphic="hitmark,8"
+sticktime=50
+
+// 7
+// alias=hitmark_7
+[hitmark_7]
+damageformat=%1
+middlegraphic="hitmark,18"
+sticktime=50
+damageyof=2
+
+// 8
+// alias=hitmark_8
+[hitmark_8]
+sticktime=50
+multivar=varplayerbit_10236
+multimark=default,hitmark_7
+multimark=0,hitmark_7
+multimark=1,hitmark_7
+
+// 9
+// alias=hitmark_9
+[hitmark_9]
+sticktime=50
+multivar=varplayerbit_10236
+multimark=default,hitmark_38
+multimark=0,hitmark_38
+multimark=1,hitmark_7
+
+// 10
+// alias=hitmark_10
+[hitmark_10]
+sticktime=50
+multivar=varplayerbit_10236
+multimark=default,hitmark_39
+multimark=0,hitmark_39
+multimark=1,hitmark_39
+
+// 11
+// alias=hitmark_11
+[hitmark_11]
+sticktime=50
+multivar=varplayerbit_10236
+multimark=default,hitmark_40
+multimark=0,hitmark_40
+multimark=1,hitmark_39
+
+// 12
+// alias=hitmark_12
+[hitmark_12]
+sticktime=50
+multivar=varplayerbit_10236
+multimark=default,hitmark_26
+multimark=0,hitmark_26
+multimark=1,hitmark_26
+
+// 13
+// alias=hitmark_13
+[hitmark_13]
+sticktime=50
+multivar=varplayerbit_10236
+multimark=default,hitmark_27
+multimark=0,hitmark_27
+multimark=1,hitmark_26
+
+// 14
+// alias=hitmark_14
+[hitmark_14]
+sticktime=50
+multivar=varplayerbit_10236
+multimark=default,hitmark_41
+multimark=0,hitmark_41
+multimark=1,hitmark_41
+
+// 15
+// alias=hitmark_15
+[hitmark_15]
+sticktime=50
+multivar=varplayerbit_10236
+multimark=default,hitmark_42
+multimark=0,hitmark_42
+multimark=1,hitmark_41
+
+// 16
+// alias=hitmark_16
+[hitmark_16]
+sticktime=50
+multivar=varplayerbit_10236
+multimark=default,hitmark_28
+multimark=0,hitmark_28
+multimark=1,hitmark_28
+
+// 17
+// alias=hitmark_17
+[hitmark_17]
+sticktime=50
+multivar=varplayerbit_10236
+multimark=default,hitmark_29
+multimark=0,hitmark_29
+multimark=1,hitmark_28
+
+// 18
+// alias=hitmark_18
+[hitmark_18]
+sticktime=50
+multivar=varplayerbit_10236
+multimark=default,hitmark_34
+multimark=0,hitmark_34
+multimark=1,hitmark_34
+
+// 19
+// alias=hitmark_19
+[hitmark_19]
+sticktime=50
+multivar=varplayerbit_10236
+multimark=default,hitmark_35
+multimark=0,hitmark_35
+multimark=1,hitmark_34
+
+// 20
+// alias=hitmark_20
+[hitmark_20]
+sticktime=50
+multivar=varplayerbit_10236
+multimark=default,hitmark_36
+multimark=0,hitmark_36
+multimark=1,hitmark_36
+
+// 21
+// alias=hitmark_21
+[hitmark_21]
+sticktime=50
+multivar=varplayerbit_10236
+multimark=default,hitmark_37
+multimark=0,hitmark_37
+multimark=1,hitmark_36
+
+// 22
+// alias=hitmark_22
+[hitmark_22]
+sticktime=50
+multivar=varplayerbit_10236
+multimark=default,hitmark_30
+multimark=0,hitmark_30
+multimark=1,hitmark_30
+
+// 23
+// alias=hitmark_23
+[hitmark_23]
+sticktime=50
+multivar=varplayerbit_10236
+multimark=default,hitmark_31
+multimark=0,hitmark_31
+multimark=1,hitmark_30
+
+// 24
+// alias=hitmark_24
+[hitmark_24]
+sticktime=50
+multivar=varplayerbit_10236
+multimark=default,hitmark_32
+multimark=0,hitmark_32
+multimark=1,hitmark_32
+
+// 25
+// alias=hitmark_25
+[hitmark_25]
+sticktime=50
+multivar=varplayerbit_10236
+multimark=default,hitmark_33
+multimark=0,hitmark_33
+multimark=1,hitmark_32
+
+// 26
+// alias=hitmark_26
+[hitmark_26]
+damageformat=%1
+middlegraphic="hitmark,0"
+sticktime=50
+damageyof=1
+
+// 27
+// alias=hitmark_27
+[hitmark_27]
+damageformat=%1
+middlegraphic="hitmark,9"
+sticktime=50
+damageyof=1
+
+// 28
+// alias=hitmark_28
+[hitmark_28]
+damageformat=%1
+middlegraphic="hitmark,1"
+sticktime=50
+damageyof=1
+
+// 29
+// alias=hitmark_29
+[hitmark_29]
+damageformat=%1
+middlegraphic="hitmark,10"
+sticktime=50
+damageyof=1
+
+// 30
+// alias=hitmark_30
+[hitmark_30]
+damageformat=%1
+middlegraphic="hitmark,4"
+sticktime=50
+
+// 31
+// alias=hitmark_31
+[hitmark_31]
+damageformat=%1
+middlegraphic="hitmark,13"
+sticktime=50
+
+// 32
+// alias=hitmark_32
+[hitmark_32]
+damageformat=%1
+middlegraphic="hitmark,5"
+sticktime=50
+
+// 33
+// alias=hitmark_33
+[hitmark_33]
+damageformat=%1
+middlegraphic="hitmark,14"
+sticktime=50
+
+// 34
+// alias=hitmark_34
+[hitmark_34]
+damageformat=%1
+middlegraphic="hitmark,6"
+sticktime=50
+
+// 35
+// alias=hitmark_35
+[hitmark_35]
+damageformat=%1
+middlegraphic="hitmark,15"
+sticktime=50
+
+// 36
+// alias=hitmark_36
+[hitmark_36]
+damageformat=%1
+middlegraphic="hitmark,7"
+sticktime=50
+
+// 37
+// alias=hitmark_37
+[hitmark_37]
+damageformat=%1
+middlegraphic="hitmark,16"
+sticktime=50
+
+// 38
+// alias=hitmark_38
+[hitmark_38]
+damageformat=%1
+middlegraphic="hitmark,19"
+sticktime=50
+damageyof=2
+
+// 39
+// alias=hitmark_39
+[hitmark_39]
+damageformat=%1
+middlegraphic="hitmark,20"
+sticktime=50
+damageyof=2
+
+// 40
+// alias=hitmark_40
+[hitmark_40]
+damageformat=%1
+middlegraphic="hitmark,22"
+sticktime=50
+damageyof=2
+
+// 41
+// alias=hitmark_41
+[hitmark_41]
+damageformat=%1
+middlegraphic="hitmark,21"
+sticktime=50
+damageyof=2
+
+// 42
+// alias=hitmark_42
+[hitmark_42]
+damageformat=%1
+middlegraphic="hitmark,23"
+sticktime=50
+damageyof=2
+
+// 43
+// alias=hitmark_43
+[hitmark_43]
+sticktime=50
+multivar=varplayerbit_14196
+multimark=default,hitmark_48
+multimark=0,hitmark_48
+multimark=1,hitmark_28
+
+// 44
+// alias=hitmark_44
+[hitmark_44]
+sticktime=50
+multivar=varplayerbit_14196
+multimark=default,hitmark_51
+multimark=0,hitmark_51
+multimark=1,hitmark_34
+
+// 45
+// alias=hitmark_45
+[hitmark_45]
+sticktime=50
+multivar=varplayerbit_14196
+multimark=default,hitmark_52
+multimark=0,hitmark_52
+multimark=1,hitmark_36
+
+// 46
+// alias=hitmark_46
+[hitmark_46]
+sticktime=50
+multivar=varplayerbit_14196
+multimark=default,hitmark_49
+multimark=0,hitmark_49
+multimark=1,hitmark_30
+
+// 47
+// alias=hitmark_47
+[hitmark_47]
+sticktime=50
+multivar=varplayerbit_14196
+multimark=default,hitmark_50
+multimark=0,hitmark_50
+multimark=1,hitmark_32
+
+// 48
+// alias=hitmark_48
+[hitmark_48]
+damageformat=%1
+middlegraphic="hitmark,24"
+sticktime=50
+damageyof=1
+
+// 49
+// alias=hitmark_49
+[hitmark_49]
+damageformat=%1
+middlegraphic="hitmark,25"
+sticktime=50
+
+// 50
+// alias=hitmark_50
+[hitmark_50]
+damageformat=%1
+middlegraphic="hitmark,26"
+sticktime=50
+
+// 51
+// alias=hitmark_51
+[hitmark_51]
+damageformat=%1
+middlegraphic="hitmark,27"
+sticktime=50
+
+// 52
+// alias=hitmark_52
+[hitmark_52]
+damageformat=%1
+middlegraphic="hitmark,28"
+sticktime=50
+
+// 53
+// alias=hitmark_53
+[hitmark_53]
+sticktime=50
+multivar=varplayerbit_10236
+multimark=default,hitmark_56
+multimark=0,hitmark_56
+multimark=1,hitmark_56
+
+// 54
+// alias=hitmark_54
+[hitmark_54]
+sticktime=50
+multivar=varplayerbit_10236
+multimark=default,hitmark_57
+multimark=0,hitmark_57
+multimark=1,hitmark_56
+
+// 55
+// alias=hitmark_55
+[hitmark_55]
+sticktime=50
+multivar=varplayerbit_14196
+multimark=default,hitmark_58
+multimark=0,hitmark_58
+multimark=1,hitmark_56
+
+// 56
+// alias=hitmark_56
+[hitmark_56]
+damageformat=%1
+middlegraphic="hitmark,29"
+sticktime=50
+damageyof=2
+
+// 57
+// alias=hitmark_57
+[hitmark_57]
+damageformat=%1
+middlegraphic="hitmark,30"
+sticktime=50
+damageyof=2
+
+// 58
+// alias=hitmark_58
+[hitmark_58]
+damageformat=%1
+middlegraphic="hitmark,31"
+sticktime=50
+damageyof=2
+
+// 59
+// alias=hitmark_59
+[hitmark_59]
+sticktime=50
+multivar=varplayerbit_10236
+multimark=default,hitmark_62
+multimark=0,hitmark_62
+multimark=1,hitmark_62
+
+// 60
+// alias=hitmark_60
+[hitmark_60]
+sticktime=50
+multivar=varplayerbit_10236
+multimark=default,hitmark_63
+multimark=0,hitmark_63
+multimark=1,hitmark_62
+
+// 61
+// alias=hitmark_61
+[hitmark_61]
+sticktime=50
+multivar=varplayerbit_14196
+multimark=default,hitmark_64
+multimark=0,hitmark_64
+multimark=1,hitmark_62
+
+// 62
+// alias=hitmark_62
+[hitmark_62]
+damageformat=%1
+middlegraphic="hitmark,32"
+sticktime=50
+damageyof=2
+
+// 63
+// alias=hitmark_63
+[hitmark_63]
+damageformat=%1
+middlegraphic="hitmark,33"
+sticktime=50
+damageyof=2
+
+// 64
+// alias=hitmark_64
+[hitmark_64]
+damageformat=%1
+middlegraphic="hitmark,34"
+sticktime=50
+damageyof=2
+
+// 65
+// alias=hitmark_65
+[hitmark_65]
+sticktime=50
+multivar=varplayerbit_10236
+multimark=default,hitmark_68
+multimark=0,hitmark_68
+multimark=1,hitmark_68
+
+// 66
+// alias=hitmark_66
+[hitmark_66]
+sticktime=50
+multivar=varplayerbit_10236
+multimark=default,hitmark_69
+multimark=0,hitmark_69
+multimark=1,hitmark_68
+
+// 67
+// alias=hitmark_67
+[hitmark_67]
+damageformat=%1
+middlegraphic="hitmark,35"
+sticktime=50
+damageyof=1
+
+// 68
+// alias=hitmark_68
+[hitmark_68]
+damageformat=%1
+middlegraphic="hitmark,2"
+sticktime=50
+damageyof=1
+
+// 69
+// alias=hitmark_69
+[hitmark_69]
+damageformat=%1
+middlegraphic="hitmark,36"
+sticktime=50
+damageyof=1
+
+// 70
+// alias=hitmark_70
+[hitmark_70]
+damageformat=%1
+middlegraphic="hitmark,37"
+sticktime=50
+damageyof=1
+
+// 71
+// alias=hitmark_71
+[hitmark_71]
+damageformat=%1
+middlegraphic="hitmark,38"
+sticktime=50
+damageyof=1
+
+// 72
+// alias=hitmark_72
+[hitmark_72]
+damageformat=%1
+middlegraphic="hitmark,39"
+sticktime=50
+damageyof=1

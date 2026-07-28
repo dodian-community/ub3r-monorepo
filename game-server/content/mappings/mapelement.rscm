@@ -1,0 +1,7804 @@
+// 0
+// alias=mapelement_0
+[mapelement_0]
+category=category_1049
+graphic="mapfunction,0"
+mapfunction=yes
+vis=both
+
+// 1
+// alias=mapelement_1
+[mapelement_1]
+category=category_1050
+graphic="mapfunction,1"
+mapfunction=yes
+vis=both
+
+// 2
+// alias=mapelement_2
+[mapelement_2]
+category=category_1052
+graphic="mapfunction,2"
+mapfunction=yes
+vis=both
+
+// 3
+// alias=mapelement_3
+[mapelement_3]
+category=category_1053
+graphic="mapfunction,3"
+mapfunction=yes
+vis=both
+
+// 4
+// alias=mapelement_4
+[mapelement_4]
+category=category_1054
+graphic="mapfunction,4"
+mapfunction=yes
+vis=both
+
+// 5
+// alias=mapelement_5
+[mapelement_5]
+category=category_1055
+graphic="mapfunction,5"
+mapfunction=yes
+vis=both
+
+// 6
+// alias=mapelement_6
+[mapelement_6]
+text=The Node
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 7
+// alias=mapelement_7
+[mapelement_7]
+category=category_1057
+graphic="mapfunction,7"
+mapfunction=yes
+vis=both
+
+// 8
+// alias=mapelement_8
+[mapelement_8]
+category=category_1058
+graphic="mapfunction,8"
+mapfunction=yes
+vis=both
+
+// 9
+// alias=mapelement_9
+[mapelement_9]
+category=category_1059
+graphic="mapfunction,9"
+mapfunction=yes
+vis=both
+
+// 10
+// alias=mapelement_10
+[mapelement_10]
+category=category_1060
+graphic="mapfunction,10"
+mapfunction=yes
+vis=both
+
+// 11
+// alias=mapelement_11
+[mapelement_11]
+category=category_1061
+graphic="mapfunction,11"
+mapfunction=yes
+vis=both
+
+// 12
+// alias=mapelement_12
+[mapelement_12]
+category=category_1062
+graphic="mapfunction,12"
+mapfunction=yes
+vis=both
+
+// 13
+// alias=mapelement_13
+[mapelement_13]
+category=category_1062
+graphic="mapfunction,86"
+op1=Open
+mapfunction=no
+vis=both
+opbase=Map
+
+// 14
+// alias=mapelement_14
+[mapelement_14]
+category=category_1063
+graphic="mapfunction,87"
+op1=Open
+mapfunction=no
+opbase=Map
+
+// 15
+// alias=mapelement_15
+[mapelement_15]
+category=category_1064
+graphic="mapfunction,13"
+mapfunction=yes
+vis=both
+
+// 16
+// alias=mapelement_16
+[mapelement_16]
+category=category_1065
+graphic="mapfunction,14"
+mapfunction=yes
+vis=both
+
+// 17
+// alias=mapelement_17
+[mapelement_17]
+category=category_1066
+graphic="mapfunction,15"
+mapfunction=yes
+vis=both
+
+// 18
+// alias=mapelement_18
+[mapelement_18]
+category=category_1067
+graphic="mapfunction,16"
+mapfunction=yes
+vis=both
+
+// 19
+// alias=mapelement_19
+[mapelement_19]
+category=category_1068
+graphic="mapfunction,17"
+mapfunction=yes
+vis=both
+
+// 20
+// alias=mapelement_20
+[mapelement_20]
+category=category_1069
+graphic="mapfunction,18"
+mapfunction=yes
+vis=both
+
+// 21
+// alias=mapelement_21
+[mapelement_21]
+category=category_1070
+graphic="mapfunction,19"
+mapfunction=yes
+vis=both
+
+// 22
+// alias=mapelement_22
+[mapelement_22]
+category=category_1071
+graphic="mapfunction,20"
+mapfunction=yes
+vis=both
+
+// 23
+// alias=mapelement_23
+[mapelement_23]
+category=category_1072
+graphic="mapfunction,21"
+mapfunction=yes
+vis=both
+
+// 24
+// alias=mapelement_24
+[mapelement_24]
+category=category_1073
+graphic="mapfunction,22"
+mapfunction=yes
+vis=both
+
+// 25
+// alias=mapelement_25
+[mapelement_25]
+category=category_1074
+graphic="mapfunction,23"
+mapfunction=yes
+vis=both
+
+// 26
+// alias=mapelement_26
+[mapelement_26]
+category=category_1075
+graphic="mapfunction,24"
+mapfunction=yes
+vis=both
+
+// 27
+// alias=mapelement_27
+[mapelement_27]
+category=category_1076
+graphic="mapfunction,25"
+mapfunction=yes
+vis=both
+
+// 28
+// alias=mapelement_28
+[mapelement_28]
+category=category_1077
+graphic="mapfunction,26"
+mapfunction=yes
+vis=both
+
+// 29
+// alias=mapelement_29
+[mapelement_29]
+category=category_1078
+graphic="mapfunction,27"
+mapfunction=yes
+vis=both
+
+// 30
+// alias=mapelement_30
+[mapelement_30]
+category=category_1079
+graphic="mapfunction,28"
+mapfunction=yes
+vis=both
+
+// 31
+// alias=mapelement_31
+[mapelement_31]
+category=category_1080
+graphic="mapfunction,29"
+mapfunction=yes
+vis=both
+
+// 32
+// alias=mapelement_32
+[mapelement_32]
+category=category_1081
+graphic="mapfunction,30"
+mapfunction=yes
+vis=both
+
+// 33
+// alias=mapelement_33
+[mapelement_33]
+category=category_1082
+graphic="mapfunction,31"
+mapfunction=yes
+vis=both
+
+// 34
+// alias=mapelement_34
+[mapelement_34]
+category=category_1083
+graphic="mapfunction,32"
+mapfunction=yes
+vis=both
+
+// 35
+// alias=mapelement_35
+[mapelement_35]
+category=category_1084
+graphic="mapfunction,33"
+mapfunction=yes
+vis=both
+
+// 36
+// alias=mapelement_36
+[mapelement_36]
+category=category_1085
+graphic="mapfunction,34"
+mapfunction=yes
+vis=both
+
+// 37
+// alias=mapelement_37
+[mapelement_37]
+category=category_1086
+graphic="mapfunction,35"
+mapfunction=yes
+vis=both
+
+// 38
+// alias=mapelement_38
+[mapelement_38]
+category=category_1081
+graphic="mapfunction,36"
+mapfunction=yes
+vis=both
+
+// 39
+// alias=mapelement_39
+[mapelement_39]
+category=category_1081
+graphic="mapfunction,37"
+mapfunction=yes
+vis=both
+
+// 40
+// alias=mapelement_40
+[mapelement_40]
+category=category_1087
+graphic="mapfunction,38"
+mapfunction=yes
+vis=both
+
+// 41
+// alias=mapelement_41
+[mapelement_41]
+category=category_1088
+graphic="mapfunction,39"
+mapfunction=yes
+vis=both
+
+// 42
+// alias=mapelement_42
+[mapelement_42]
+category=category_1089
+graphic="mapfunction,40"
+mapfunction=yes
+vis=both
+
+// 43
+// alias=mapelement_43
+[mapelement_43]
+category=category_1090
+graphic="mapfunction,41"
+mapfunction=yes
+vis=both
+
+// 44
+// alias=mapelement_44
+[mapelement_44]
+category=category_1091
+graphic="mapfunction,42"
+mapfunction=yes
+vis=both
+
+// 45
+// alias=mapelement_45
+[mapelement_45]
+category=category_1092
+graphic="mapfunction,43"
+mapfunction=yes
+vis=both
+
+// 46
+// alias=mapelement_46
+[mapelement_46]
+category=category_1093
+graphic="mapfunction,44"
+mapfunction=yes
+vis=both
+
+// 47
+// alias=mapelement_47
+[mapelement_47]
+category=category_1094
+graphic="mapfunction,45"
+mapfunction=yes
+vis=both
+
+// 48
+// alias=mapelement_48
+[mapelement_48]
+category=category_1095
+graphic="mapfunction,46"
+mapfunction=yes
+vis=both
+
+// 49
+// alias=mapelement_49
+[mapelement_49]
+category=category_1096
+graphic="mapfunction,47"
+mapfunction=yes
+vis=both
+
+// 50
+// alias=mapelement_50
+[mapelement_50]
+category=category_1097
+graphic="mapfunction,48"
+mapfunction=yes
+vis=both
+
+// 51
+// alias=mapelement_51
+[mapelement_51]
+category=category_1098
+graphic="mapfunction,49"
+mapfunction=yes
+vis=both
+
+// 52
+// alias=mapelement_52
+[mapelement_52]
+category=category_1081
+graphic="mapfunction,50"
+mapfunction=yes
+vis=both
+
+// 53
+// alias=mapelement_53
+[mapelement_53]
+category=category_1099
+graphic="mapfunction,51"
+mapfunction=yes
+vis=both
+
+// 54
+// alias=mapelement_54
+[mapelement_54]
+category=category_1100
+graphic="mapfunction,52"
+mapfunction=yes
+vis=both
+
+// 55
+// alias=mapelement_55
+[mapelement_55]
+category=category_1101
+graphic="mapfunction,53"
+mapfunction=yes
+vis=both
+
+// 56
+// alias=mapelement_56
+[mapelement_56]
+category=category_1102
+graphic="mapfunction,54"
+mapfunction=yes
+vis=both
+
+// 57
+// alias=mapelement_57
+[mapelement_57]
+text=Weiss
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 58
+// alias=mapelement_58
+[mapelement_58]
+category=category_1104
+graphic="mapfunction,56"
+mapfunction=yes
+vis=both
+
+// 59
+// alias=mapelement_59
+[mapelement_59]
+category=category_1105
+graphic="mapfunction,57"
+mapfunction=yes
+vis=both
+
+// 60
+// alias=mapelement_60
+[mapelement_60]
+category=category_1106
+graphic="mapfunction,58"
+mapfunction=yes
+vis=both
+
+// 61
+// alias=mapelement_61
+[mapelement_61]
+category=category_1107
+graphic="mapfunction,59"
+mapfunction=yes
+vis=both
+
+// 62
+// alias=mapelement_62
+[mapelement_62]
+category=category_1108
+graphic="mapfunction,60"
+mapfunction=yes
+vis=both
+
+// 63
+// alias=mapelement_63
+[mapelement_63]
+category=category_1109
+graphic="mapfunction,61"
+mapfunction=yes
+vis=both
+
+// 64
+// alias=mapelement_64
+[mapelement_64]
+category=category_1110
+graphic="mapfunction,62"
+mapfunction=yes
+vis=both
+
+// 65
+// alias=mapelement_65
+[mapelement_65]
+category=category_1111
+graphic="mapfunction,63"
+mapfunction=yes
+vis=both
+
+// 66
+// alias=mapelement_66
+[mapelement_66]
+category=category_1112
+graphic="mapfunction,64"
+mapfunction=yes
+vis=both
+
+// 67
+// alias=mapelement_67
+[mapelement_67]
+category=category_1113
+graphic="mapfunction,65"
+mapfunction=yes
+vis=both
+
+// 68
+// alias=mapelement_68
+[mapelement_68]
+category=category_1114
+graphic="mapfunction,67"
+mapfunction=yes
+vis=both
+
+// 69
+// alias=mapelement_69
+[mapelement_69]
+category=category_1115
+graphic="mapfunction,68"
+mapfunction=yes
+vis=both
+
+// 70
+// alias=mapelement_70
+[mapelement_70]
+category=category_1116
+graphic="mapfunction,69"
+mapfunction=yes
+vis=both
+
+// 71
+// alias=mapelement_71
+[mapelement_71]
+category=category_1117
+graphic="mapfunction,70"
+mapfunction=yes
+vis=both
+
+// 72
+// alias=mapelement_72
+[mapelement_72]
+category=category_1118
+graphic="mapfunction,71"
+mapfunction=yes
+vis=both
+
+// 73
+// alias=mapelement_73
+[mapelement_73]
+category=category_1119
+graphic="mapfunction,72"
+mapfunction=yes
+vis=both
+
+// 74
+// alias=mapelement_74
+[mapelement_74]
+category=category_1120
+graphic="mapfunction,73"
+mapfunction=yes
+vis=both
+
+// 75
+// alias=mapelement_75
+[mapelement_75]
+category=category_1121
+graphic="mapfunction,74"
+mapfunction=yes
+vis=both
+
+// 76
+// alias=mapelement_76
+[mapelement_76]
+category=category_1122
+graphic="mapfunction,75"
+mapfunction=yes
+vis=both
+
+// 77
+// alias=mapelement_77
+[mapelement_77]
+category=category_1123
+graphic="mapfunction,76"
+mapfunction=yes
+vis=both
+
+// 78
+// alias=mapelement_78
+[mapelement_78]
+text=Salt Mine
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 79
+// alias=mapelement_79
+[mapelement_79]
+category=category_1125
+graphic="mapfunction,78"
+mapfunction=yes
+vis=both
+
+// 80
+// alias=mapelement_80
+[mapelement_80]
+category=category_1125
+graphic="mapfunction,79"
+mapfunction=yes
+vis=both
+
+// 81
+// alias=mapelement_81
+[mapelement_81]
+category=category_1125
+graphic="mapfunction,80"
+mapfunction=yes
+vis=both
+
+// 82
+// alias=mapelement_82
+[mapelement_82]
+category=category_1125
+graphic="mapfunction,81"
+mapfunction=yes
+vis=both
+
+// 83
+// alias=mapelement_83
+[mapelement_83]
+category=category_1125
+graphic="mapfunction,82"
+mapfunction=yes
+vis=both
+
+// 84
+// alias=mapelement_84
+[mapelement_84]
+category=category_1126
+graphic="mapfunction,83"
+mapfunction=yes
+vis=both
+
+// 85
+// alias=mapelement_85
+[mapelement_85]
+category=category_1127
+graphic="mapfunction,84"
+mapfunction=yes
+vis=both
+
+// 86
+// alias=mapelement_86
+[mapelement_86]
+category=category_1128
+graphic="mapfunction,132"
+mapfunction=yes
+vis=both
+
+// 87
+// alias=mapelement_87
+[mapelement_87]
+text=Lumbridge
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 88
+// alias=mapelement_88
+[mapelement_88]
+text=Varrock
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 89
+// alias=mapelement_89
+[mapelement_89]
+text=Kingdom of<br>Misthalin
+size=2
+colour=16750623
+category=category_1129
+mapfunction=no
+
+// 90
+// alias=mapelement_90
+[mapelement_90]
+text=Al Kharid
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 91
+// alias=mapelement_91
+[mapelement_91]
+category=category_1716
+graphic="mapfunction,85"
+mapfunction=yes
+vis=both
+
+// 92
+// alias=mapelement_92
+[mapelement_92]
+text=Shantay<br>Pass
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 93
+// alias=mapelement_93
+[mapelement_93]
+text=Toll<br>Gate
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 94
+// alias=mapelement_94
+[mapelement_94]
+text=Tutorial Island
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 95
+// alias=mapelement_95
+[mapelement_95]
+text=Port<br>Sarim
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 96
+// alias=mapelement_96
+[mapelement_96]
+text=Falador
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 97
+// alias=mapelement_97
+[mapelement_97]
+text=Edgeville
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 98
+// alias=mapelement_98
+[mapelement_98]
+text=Brimhaven
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 99
+// alias=mapelement_99
+[mapelement_99]
+text=Karamja
+size=2
+colour=16750623
+category=category_1129
+mapfunction=no
+
+// 100
+// alias=mapelement_100
+[mapelement_100]
+text=Crandor
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 101
+// alias=mapelement_101
+[mapelement_101]
+text=Entrana
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 102
+// alias=mapelement_102
+[mapelement_102]
+text=Draynor<br>Village
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 103
+// alias=mapelement_103
+[mapelement_103]
+text=Jail
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 104
+// alias=mapelement_104
+[mapelement_104]
+text=Market
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 105
+// alias=mapelement_105
+[mapelement_105]
+text=Draynor<br>Manor
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 106
+// alias=mapelement_106
+[mapelement_106]
+text=Barbarian<br>Village
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 107
+// alias=mapelement_107
+[mapelement_107]
+text=Desert Mining<br>Camp
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 108
+// alias=mapelement_108
+[mapelement_108]
+text=Bedabin<br>Camp
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 109
+// alias=mapelement_109
+[mapelement_109]
+text=Exam Centre
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 110
+// alias=mapelement_110
+[mapelement_110]
+text=Digsite
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 111
+// alias=mapelement_111
+[mapelement_111]
+text=Lumber Yard
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 112
+// alias=mapelement_112
+[mapelement_112]
+text=Palace
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 113
+// alias=mapelement_113
+[mapelement_113]
+text=Grand Exchange
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 114
+// alias=mapelement_114
+[mapelement_114]
+text=Cooks'<br>Guild
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 115
+// alias=mapelement_115
+[mapelement_115]
+text=Monastery
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 116
+// alias=mapelement_116
+[mapelement_116]
+text=Dwarven<br>Mine
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 117
+// alias=mapelement_117
+[mapelement_117]
+text=Ice<br>Mountain
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 118
+// alias=mapelement_118
+[mapelement_118]
+text=Black Knights'<br>Fortress
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 119
+// alias=mapelement_119
+[mapelement_119]
+text=Goblin<br>Village
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 120
+// alias=mapelement_120
+[mapelement_120]
+text=White Knights'<br>Castle
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 121
+// alias=mapelement_121
+[mapelement_121]
+text=Park
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 122
+// alias=mapelement_122
+[mapelement_122]
+text=Kingdom of<br>Asgarnia
+size=2
+colour=16750623
+category=category_1129
+mapfunction=no
+
+// 123
+// alias=mapelement_123
+[mapelement_123]
+text=Dark Wizards'<br>Tower
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 124
+// alias=mapelement_124
+[mapelement_124]
+text=Slayer<br>Tower
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 125
+// alias=mapelement_125
+[mapelement_125]
+text=Melzar's<br>Maze
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 126
+// alias=mapelement_126
+[mapelement_126]
+text=Rimmington
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 127
+// alias=mapelement_127
+[mapelement_127]
+text=Wizards' Tower
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 128
+// alias=mapelement_128
+[mapelement_128]
+text=Lumbridge<br>Swamp
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 129
+// alias=mapelement_129
+[mapelement_129]
+text=Fishing<br>Platform
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 130
+// alias=mapelement_130
+[mapelement_130]
+text=Tai Bwo<br>Wannai
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 131
+// alias=mapelement_131
+[mapelement_131]
+text=Shilo Village
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 132
+// alias=mapelement_132
+[mapelement_132]
+text=Ship Yard
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 133
+// alias=mapelement_133
+[mapelement_133]
+text=Cairn Isle
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 134
+// alias=mapelement_134
+[mapelement_134]
+text=Kharazi Jungle
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 135
+// alias=mapelement_135
+[mapelement_135]
+text=Chaos<br>Temple
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 136
+// alias=mapelement_136
+[mapelement_136]
+text=Graveyard of<br>Shadows
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 137
+// alias=mapelement_137
+[mapelement_137]
+text=Bandit<br>Camp
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 138
+// alias=mapelement_138
+[mapelement_138]
+text=Dark Warriors'<br>Fortress
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 139
+// alias=mapelement_139
+[mapelement_139]
+text=Ruins
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 140
+// alias=mapelement_140
+[mapelement_140]
+text=The Forgotten<br>Cemetery
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 141
+// alias=mapelement_141
+[mapelement_141]
+text=Bone Yard
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 142
+// alias=mapelement_142
+[mapelement_142]
+text=Lava Dragon<br>Isle
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 143
+// alias=mapelement_143
+[mapelement_143]
+text=Wilderness
+size=2
+colour=16750623
+category=category_1129
+mapfunction=no
+
+// 144
+// alias=mapelement_144
+[mapelement_144]
+text=Lava Maze
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 145
+// alias=mapelement_145
+[mapelement_145]
+text=Frozen Waste<br>Plateau
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 146
+// alias=mapelement_146
+[mapelement_146]
+text=Agility Training<br>Area
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 147
+// alias=mapelement_147
+[mapelement_147]
+text=Pirates'<br>Hideout
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 148
+// alias=mapelement_148
+[mapelement_148]
+text=Mage Arena
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 149
+// alias=mapelement_149
+[mapelement_149]
+text=Deserted<br>Keep
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 150
+// alias=mapelement_150
+[mapelement_150]
+text=Resource Area
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 151
+// alias=mapelement_151
+[mapelement_151]
+text=Scorpion<br>Pit
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 152
+// alias=mapelement_152
+[mapelement_152]
+text=Rogues' Castle
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 153
+// alias=mapelement_153
+[mapelement_153]
+text=Demonic<br>Ruins
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 154
+// alias=mapelement_154
+[mapelement_154]
+text=Fountain<br>of Rune
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 155
+// alias=mapelement_155
+[mapelement_155]
+text=Bear
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 156
+// alias=mapelement_156
+[mapelement_156]
+text=Spider
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 157
+// alias=mapelement_157
+[mapelement_157]
+text=Heroes'<br>Guild
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 158
+// alias=mapelement_158
+[mapelement_158]
+text=Druids'<br>Circle
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 159
+// alias=mapelement_159
+[mapelement_159]
+text=Taverley
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 160
+// alias=mapelement_160
+[mapelement_160]
+text=White Wolf<br>Mountain
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 161
+// alias=mapelement_161
+[mapelement_161]
+text=Catherby
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 162
+// alias=mapelement_162
+[mapelement_162]
+text=Camelot<br>Castle
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 163
+// alias=mapelement_163
+[mapelement_163]
+text=Seers'<br>Village
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 164
+// alias=mapelement_164
+[mapelement_164]
+text=Sinclair Mansion
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 165
+// alias=mapelement_165
+[mapelement_165]
+text=Flax
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 166
+// alias=mapelement_166
+[mapelement_166]
+text=Beehives
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 167
+// alias=mapelement_167
+[mapelement_167]
+text=Sorcerer's Tower
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 168
+// alias=mapelement_168
+[mapelement_168]
+text=Keep<br>Le Faye
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 169
+// alias=mapelement_169
+[mapelement_169]
+text=Legends'<br>Guild
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 170
+// alias=mapelement_170
+[mapelement_170]
+text=Hemenster
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 171
+// alias=mapelement_171
+[mapelement_171]
+text=McGrubor's<br>Wood
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 172
+// alias=mapelement_172
+[mapelement_172]
+text=Coal<br>Trucks
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 173
+// alias=mapelement_173
+[mapelement_173]
+text=Fishing<br>Guild
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 174
+// alias=mapelement_174
+[mapelement_174]
+text=Kingdom of<br>Kandarin
+size=2
+colour=16750623
+category=category_1129
+mapfunction=no
+
+// 175
+// alias=mapelement_175
+[mapelement_175]
+text=East<br>Ardougne
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 176
+// alias=mapelement_176
+[mapelement_176]
+text=West<br>Ardougne
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 177
+// alias=mapelement_177
+[mapelement_177]
+text=Combat<br>Training<br>Camp
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 178
+// alias=mapelement_178
+[mapelement_178]
+text=Agility<br>Training<br>Area
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 179
+// alias=mapelement_179
+[mapelement_179]
+text=Tree Gnome<br>Stronghold
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 180
+// alias=mapelement_180
+[mapelement_180]
+text=Grand Tree
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 181
+// alias=mapelement_181
+[mapelement_181]
+text=Swamp
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 182
+// alias=mapelement_182
+[mapelement_182]
+text=Gnome Ball<br>Field
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 183
+// alias=mapelement_183
+[mapelement_183]
+text=Barbarian<br>Outpost
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 184
+// alias=mapelement_184
+[mapelement_184]
+text=Underground<br>Pass
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 185
+// alias=mapelement_185
+[mapelement_185]
+text=Battlefield
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 186
+// alias=mapelement_186
+[mapelement_186]
+text=Baxtorian<br>Falls
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 187
+// alias=mapelement_187
+[mapelement_187]
+text=Tree Gnome<br>Village
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 188
+// alias=mapelement_188
+[mapelement_188]
+text=Fight<br>Arena
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 189
+// alias=mapelement_189
+[mapelement_189]
+text=Port<br>Khazard
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 190
+// alias=mapelement_190
+[mapelement_190]
+text=Yanille
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 191
+// alias=mapelement_191
+[mapelement_191]
+text=Wizards'<br>Guild
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 192
+// alias=mapelement_192
+[mapelement_192]
+text=Nightmare<br>Zone
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 193
+// alias=mapelement_193
+[mapelement_193]
+text=Observatory
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 194
+// alias=mapelement_194
+[mapelement_194]
+text=Necromancer
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 195
+// alias=mapelement_195
+[mapelement_195]
+text=Gu'Tanoth
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 196
+// alias=mapelement_196
+[mapelement_196]
+text=Feldip<br>Hills
+size=2
+colour=16750623
+category=category_1129
+mapfunction=no
+
+// 197
+// alias=mapelement_197
+[mapelement_197]
+text=Ardougne<br>Zoo
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 198
+// alias=mapelement_198
+[mapelement_198]
+text=Morytania
+size=2
+colour=16750623
+category=category_1129
+mapfunction=no
+
+// 199
+// alias=mapelement_199
+[mapelement_199]
+text=Mort Myre<br>Swamp
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 200
+// alias=mapelement_200
+[mapelement_200]
+text=Canifis
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 201
+// alias=mapelement_201
+[mapelement_201]
+text=River<br>Salve
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 202
+// alias=mapelement_202
+[mapelement_202]
+text=River Lum
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 203
+// alias=mapelement_203
+[mapelement_203]
+text=Crombwick<br>Manor
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 204
+// alias=mapelement_204
+[mapelement_204]
+text=Agility<br>Arena
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 205
+// alias=mapelement_205
+[mapelement_205]
+text=Burthorpe
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 206
+// alias=mapelement_206
+[mapelement_206]
+text=Death<br>Plateau
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 207
+// alias=mapelement_207
+[mapelement_207]
+text=Tirannwn
+size=2
+colour=16750623
+category=category_1129
+mapfunction=no
+
+// 208
+// alias=mapelement_208
+[mapelement_208]
+text=Isafdar
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 209
+// alias=mapelement_209
+[mapelement_209]
+text=Arandar
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 210
+// alias=mapelement_210
+[mapelement_210]
+text=Prifddinas
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 211
+// alias=mapelement_211
+[mapelement_211]
+text=Tyras<br>Camp
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 212
+// alias=mapelement_212
+[mapelement_212]
+text=Iorwerth<br>Camp
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 213
+// alias=mapelement_213
+[mapelement_213]
+text=Trollheim
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 214
+// alias=mapelement_214
+[mapelement_214]
+text=Troll<br>Stronghold
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 215
+// alias=mapelement_215
+[mapelement_215]
+text=Mort'ton
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 216
+// alias=mapelement_216
+[mapelement_216]
+text=The<br>Hollows
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 217
+// alias=mapelement_217
+[mapelement_217]
+text=Poison Waste
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 218
+// alias=mapelement_218
+[mapelement_218]
+text=Castle Wars
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 219
+// alias=mapelement_219
+[mapelement_219]
+text=Champions'<br>Guild
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 220
+// alias=mapelement_220
+[mapelement_220]
+text=Rellekka
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 221
+// alias=mapelement_221
+[mapelement_221]
+text=Golden<br>Apple Tree
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 222
+// alias=mapelement_222
+[mapelement_222]
+text=Lighthouse
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 223
+// alias=mapelement_223
+[mapelement_223]
+text=Fremennik<br>Province
+size=2
+colour=16750623
+category=category_1129
+mapfunction=no
+
+// 224
+// alias=mapelement_224
+[mapelement_224]
+text=Crafting<br>Guild
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 225
+// alias=mapelement_225
+[mapelement_225]
+text=Haunted<br>Woods
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 226
+// alias=mapelement_226
+[mapelement_226]
+text=Miscellania
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 227
+// alias=mapelement_227
+[mapelement_227]
+text=Etceteria
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 228
+// alias=mapelement_228
+[mapelement_228]
+text=Ape Atoll
+size=2
+colour=16750623
+category=category_1129
+mapfunction=no
+
+// 229
+// alias=mapelement_229
+[mapelement_229]
+text=Crash<br>Island
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 230
+// alias=mapelement_230
+[mapelement_230]
+text=Marim
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 231
+// alias=mapelement_231
+[mapelement_231]
+text=Fenkenstrain's<br>Castle
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 232
+// alias=mapelement_232
+[mapelement_232]
+text=Mausoleum
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 233
+// alias=mapelement_233
+[mapelement_233]
+text=Trollweiss<br>Mountain
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 234
+// alias=mapelement_234
+[mapelement_234]
+text=Abandoned<br>Mine
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 235
+// alias=mapelement_235
+[mapelement_235]
+text=Ruins of<br>Uzer
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 236
+// alias=mapelement_236
+[mapelement_236]
+text=River<br>Elid
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 237
+// alias=mapelement_237
+[mapelement_237]
+text=Kalphite<br>Lair
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 238
+// alias=mapelement_238
+[mapelement_238]
+text=Pollnivneach
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 239
+// alias=mapelement_239
+[mapelement_239]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 240
+// alias=mapelement_240
+[mapelement_240]
+text=Menaphos
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 241
+// alias=mapelement_241
+[mapelement_241]
+text=Sophanem
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 242
+// alias=mapelement_242
+[mapelement_242]
+text=Jaleustrophos<br>Pyramid
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 243
+// alias=mapelement_243
+[mapelement_243]
+text=Graveyard
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 244
+// alias=mapelement_244
+[mapelement_244]
+text=Port<br>Phasmatys
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 245
+// alias=mapelement_245
+[mapelement_245]
+text=Ectofuntus
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 246
+// alias=mapelement_246
+[mapelement_246]
+text=Mountain<br>Camp
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 247
+// alias=mapelement_247
+[mapelement_247]
+text=Kharidian<br>Desert
+size=2
+colour=16750623
+category=category_1129
+mapfunction=no
+
+// 248
+// alias=mapelement_248
+[mapelement_248]
+text=Ice path
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 249
+// alias=mapelement_249
+[mapelement_249]
+text=God Wars<br>Dungeon
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 250
+// alias=mapelement_250
+[mapelement_250]
+text=Barrows
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 251
+// alias=mapelement_251
+[mapelement_251]
+text=Jiggig
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 252
+// alias=mapelement_252
+[mapelement_252]
+text=Mudskipper<br>Point
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 253
+// alias=mapelement_253
+[mapelement_253]
+text=Nardah
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 254
+// alias=mapelement_254
+[mapelement_254]
+text=Mage<br>Training<br>Arena
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 255
+// alias=mapelement_255
+[mapelement_255]
+text=Keldagrim<br>Entrance
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 256
+// alias=mapelement_256
+[mapelement_256]
+text=Waterbirth<br>Island
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 257
+// alias=mapelement_257
+[mapelement_257]
+text=Lletya
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 258
+// alias=mapelement_258
+[mapelement_258]
+text=Burgh de Rott
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 259
+// alias=mapelement_259
+[mapelement_259]
+text=Lizards
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 260
+// alias=mapelement_260
+[mapelement_260]
+text=Quarry
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 261
+// alias=mapelement_261
+[mapelement_261]
+text=Outpost
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 262
+// alias=mapelement_262
+[mapelement_262]
+text=Mos Le'Harmless
+size=2
+colour=16750623
+category=category_1129
+mapfunction=no
+
+// 263
+// alias=mapelement_263
+[mapelement_263]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 264
+// alias=mapelement_264
+[mapelement_264]
+text=Ranging<br>Guild
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 265
+// alias=mapelement_265
+[mapelement_265]
+text=Dragontooth<br>Island
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 266
+// alias=mapelement_266
+[mapelement_266]
+text=Piscatoris<br>Fishing<br>Colony
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 267
+// alias=mapelement_267
+[mapelement_267]
+text=Here be<br>penguins
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 268
+// alias=mapelement_268
+[mapelement_268]
+text=Void Knights'<br>Outpost
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 269
+// alias=mapelement_269
+[mapelement_269]
+text=Lunar Isle
+size=2
+colour=16750623
+category=category_1129
+mapfunction=no
+
+// 270
+// alias=mapelement_270
+[mapelement_270]
+text=Pirates' Cove
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 271
+// alias=mapelement_271
+[mapelement_271]
+text=Vultures
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 272
+// alias=mapelement_272
+[mapelement_272]
+text=Port<br>Tyras
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 273
+// alias=mapelement_273
+[mapelement_273]
+text=Castle<br>Drakan
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 274
+// alias=mapelement_274
+[mapelement_274]
+category=category_1250
+graphic="mapfunction,88"
+mapfunction=yes
+vis=both
+
+// 275
+// alias=mapelement_275
+[mapelement_275]
+text=Meiyerditch
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 276
+// alias=mapelement_276
+[mapelement_276]
+text=Witchaven
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 277
+// alias=mapelement_277
+[mapelement_277]
+text=Warriors'<br>Guild
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 278
+// alias=mapelement_278
+[mapelement_278]
+text=Musa Point
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 279
+// alias=mapelement_279
+[mapelement_279]
+text=Eagles'<br>Peak
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 280
+// alias=mapelement_280
+[mapelement_280]
+text=Falconer
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 281
+// alias=mapelement_281
+[mapelement_281]
+text=Barbarian<br>Assault
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 282
+// alias=mapelement_282
+[mapelement_282]
+text=Iceberg
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 283
+// alias=mapelement_283
+[mapelement_283]
+text=Pest<br>Control
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 284
+// alias=mapelement_284
+[mapelement_284]
+text=Neitiznot
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 285
+// alias=mapelement_285
+[mapelement_285]
+text=Jatizso
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 286
+// alias=mapelement_286
+[mapelement_286]
+text=Fremennik Isles
+size=2
+colour=16750623
+category=category_1129
+mapfunction=no
+
+// 287
+// alias=mapelement_287
+[mapelement_287]
+text=Tower of<br>Life
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 288
+// alias=mapelement_288
+[mapelement_288]
+text=Clock Tower
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 289
+// alias=mapelement_289
+[mapelement_289]
+text=Harmony
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 290
+// alias=mapelement_290
+[mapelement_290]
+text=Trawler
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 291
+// alias=mapelement_291
+[mapelement_291]
+text=Otto's<br>Grotto
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 292
+// alias=mapelement_292
+[mapelement_292]
+text=Clan Wars
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 293
+// alias=mapelement_293
+[mapelement_293]
+text=Zul-Andra
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 294
+// alias=mapelement_294
+[mapelement_294]
+text=Zulrah's<br>shrine
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 295
+// alias=mapelement_295
+[mapelement_295]
+text=Silvarea
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 296
+// alias=mapelement_296
+[mapelement_296]
+text=Kingdom of<br>Great Kourend
+size=2
+colour=16750623
+category=category_1129
+mapfunction=no
+
+// 297
+// alias=mapelement_297
+[mapelement_297]
+text=Arceuus
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 298
+// alias=mapelement_298
+[mapelement_298]
+text=Hosidius
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 299
+// alias=mapelement_299
+[mapelement_299]
+text=Lovakengj
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 300
+// alias=mapelement_300
+[mapelement_300]
+text=Port<br>Piscarilius
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 301
+// alias=mapelement_301
+[mapelement_301]
+text=Shayzien
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 302
+// alias=mapelement_302
+[mapelement_302]
+text=Library
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 303
+// alias=mapelement_303
+[mapelement_303]
+text=Dark<br>Altar
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 304
+// alias=mapelement_304
+[mapelement_304]
+text=Sulphur<br>Mine
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 305
+// alias=mapelement_305
+[mapelement_305]
+text=Blast Mine
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 306
+// alias=mapelement_306
+[mapelement_306]
+text=Lovakite<br>Mine
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 307
+// alias=mapelement_307
+[mapelement_307]
+text=Tower of<br>Magic
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 308
+// alias=mapelement_308
+[mapelement_308]
+text=Mess
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 309
+// alias=mapelement_309
+[mapelement_309]
+text=Saltpetre
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 310
+// alias=mapelement_310
+[mapelement_310]
+text=Tithe Farm
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 311
+// alias=mapelement_311
+[mapelement_311]
+text=Charcoal<br>Burners
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 312
+// alias=mapelement_312
+[mapelement_312]
+text=Infirmary
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 313
+// alias=mapelement_313
+[mapelement_313]
+text=Lizardman<br>Canyon
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 314
+// alias=mapelement_314
+[mapelement_314]
+text=Combat<br>Ring
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 315
+// alias=mapelement_315
+[mapelement_315]
+text=Graveyard of<br>Heroes
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 316
+// alias=mapelement_316
+[mapelement_316]
+text=Shamans
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 317
+// alias=mapelement_317
+[mapelement_317]
+text=Vinery
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 318
+// alias=mapelement_318
+[mapelement_318]
+text=Woodcutting<br>Guild
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 319
+// alias=mapelement_319
+[mapelement_319]
+text=Doors of<br>Dinh
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 320
+// alias=mapelement_320
+[mapelement_320]
+text=The<br>Wintertodt
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 321
+// alias=mapelement_321
+[mapelement_321]
+text=Settlement<br>Ruins
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 322
+// alias=mapelement_322
+[mapelement_322]
+text=Fishing Hamlet
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 323
+// alias=mapelement_323
+[mapelement_323]
+text=Land's<br>End
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 324
+// alias=mapelement_324
+[mapelement_324]
+text=Xeric's<br>Look out
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 325
+// alias=mapelement_325
+[mapelement_325]
+text=Kourend<br>Woodland
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 326
+// alias=mapelement_326
+[mapelement_326]
+text=Unmarked<br>Grave
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 327
+// alias=mapelement_327
+[mapelement_327]
+text=Crabclaw<br>Isle
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 328
+// alias=mapelement_328
+[mapelement_328]
+text=Shayziens'<br>Wall
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 329
+// alias=mapelement_329
+[mapelement_329]
+text=Lacerta<br>Falls
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 330
+// alias=mapelement_330
+[mapelement_330]
+text=Xeric's<br>Shrine
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 331
+// alias=mapelement_331
+[mapelement_331]
+text=Lizardman<br>Settlement
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 332
+// alias=mapelement_332
+[mapelement_332]
+text=Mount<br>Quidamortem
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 333
+// alias=mapelement_333
+[mapelement_333]
+text=Chasm of Fire
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 334
+// alias=mapelement_334
+[mapelement_334]
+text=Lower level
+size=1
+colour=16776960
+category=category_1129
+mapfunction=no
+
+// 335
+// alias=mapelement_335
+[mapelement_335]
+text=Middle level
+size=1
+colour=16776960
+category=category_1129
+mapfunction=no
+
+// 336
+// alias=mapelement_336
+[mapelement_336]
+text=Upper level
+size=1
+colour=16776960
+category=category_1129
+mapfunction=no
+
+// 337
+// alias=mapelement_337
+[mapelement_337]
+text=Waterfiends
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 338
+// alias=mapelement_338
+[mapelement_338]
+text=Mithril<br>dragons
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 339
+// alias=mapelement_339
+[mapelement_339]
+text=Brutal green<br>dragons
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 340
+// alias=mapelement_340
+[mapelement_340]
+text=Shadow<br>warriors
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 341
+// alias=mapelement_341
+[mapelement_341]
+text=Pit scorpions
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 342
+// alias=mapelement_342
+[mapelement_342]
+text=Hobgoblins
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 343
+// alias=mapelement_343
+[mapelement_343]
+text=Ardougne<br>Sewers
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 344
+// alias=mapelement_344
+[mapelement_344]
+text=Zombies & rocks
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 345
+// alias=mapelement_345
+[mapelement_345]
+text=Rat Pits
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 346
+// alias=mapelement_346
+[mapelement_346]
+text=Bats
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 347
+// alias=mapelement_347
+[mapelement_347]
+text=Ogres
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 348
+// alias=mapelement_348
+[mapelement_348]
+text=Dungeon<br>rats
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 349
+// alias=mapelement_349
+[mapelement_349]
+text=Spiders
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 350
+// alias=mapelement_350
+[mapelement_350]
+text=Here be<br>goblins
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 351
+// alias=mapelement_351
+[mapelement_351]
+text=Skeletal wyverns
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 352
+// alias=mapelement_352
+[mapelement_352]
+text=Pirates
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 353
+// alias=mapelement_353
+[mapelement_353]
+text=Muggers
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 354
+// alias=mapelement_354
+[mapelement_354]
+text=Ice warriors<br>& giants
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 355
+// alias=mapelement_355
+[mapelement_355]
+text=Distillery
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 356
+// alias=mapelement_356
+[mapelement_356]
+text=Dead people
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 357
+// alias=mapelement_357
+[mapelement_357]
+text=Nothing<br>interesting<br>happens<br>here
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 358
+// alias=mapelement_358
+[mapelement_358]
+text=Agility course
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 359
+// alias=mapelement_359
+[mapelement_359]
+text=Wire<br>machine
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 360
+// alias=mapelement_360
+[mapelement_360]
+text=Bone<br>collector
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 361
+// alias=mapelement_361
+[mapelement_361]
+text=Oldak's<br>teleportation<br>laboratory
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 362
+// alias=mapelement_362
+[mapelement_362]
+text=Station
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 363
+// alias=mapelement_363
+[mapelement_363]
+text=Council<br>chamber
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 364
+// alias=mapelement_364
+[mapelement_364]
+text=Ur-tag
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 365
+// alias=mapelement_365
+[mapelement_365]
+text=Ur-meg
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 366
+// alias=mapelement_366
+[mapelement_366]
+text=Ur-zek & Ur-taal
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 367
+// alias=mapelement_367
+[mapelement_367]
+text=Tegdak
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 368
+// alias=mapelement_368
+[mapelement_368]
+text=Ur-vass
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 369
+// alias=mapelement_369
+[mapelement_369]
+text=Nursery
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 370
+// alias=mapelement_370
+[mapelement_370]
+text=Zanik's<br>bedroom
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 371
+// alias=mapelement_371
+[mapelement_371]
+text=Beware of<br>the scorpions
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 372
+// alias=mapelement_372
+[mapelement_372]
+text=Mining Guild
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 373
+// alias=mapelement_373
+[mapelement_373]
+text=Access to<br>Falador
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 374
+// alias=mapelement_374
+[mapelement_374]
+text=Hammerspike's<br>hangout
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 375
+// alias=mapelement_375
+[mapelement_375]
+text=Boot
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 376
+// alias=mapelement_376
+[mapelement_376]
+text=Kurask
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 377
+// alias=mapelement_377
+[mapelement_377]
+text=Cave crawlers
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 378
+// alias=mapelement_378
+[mapelement_378]
+text=Turoth
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 379
+// alias=mapelement_379
+[mapelement_379]
+text=Basilisks
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 380
+// alias=mapelement_380
+[mapelement_380]
+text=Rock<br>slugs
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 381
+// alias=mapelement_381
+[mapelement_381]
+text=Cockatrice
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 382
+// alias=mapelement_382
+[mapelement_382]
+text=Pyrefiends
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 383
+// alias=mapelement_383
+[mapelement_383]
+text=Jellies
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 384
+// alias=mapelement_384
+[mapelement_384]
+text=Saradomin's<br>Encampment
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 385
+// alias=mapelement_385
+[mapelement_385]
+text=Zamorak's<br>Fortress
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 386
+// alias=mapelement_386
+[mapelement_386]
+text=Armadyl's<br>Eyrie
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 387
+// alias=mapelement_387
+[mapelement_387]
+text=Bandos's<br>Stronghold
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 388
+// alias=mapelement_388
+[mapelement_388]
+text=Queen's<br>Chamber
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 389
+// alias=mapelement_389
+[mapelement_389]
+text=Soldiers
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 390
+// alias=mapelement_390
+[mapelement_390]
+text=Guardians
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 391
+// alias=mapelement_391
+[mapelement_391]
+text=Moss giants
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 392
+// alias=mapelement_392
+[mapelement_392]
+text=Dogs
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 393
+// alias=mapelement_393
+[mapelement_393]
+text=Fire<br>giants
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 394
+// alias=mapelement_394
+[mapelement_394]
+text=Red dragons
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 395
+// alias=mapelement_395
+[mapelement_395]
+text=Bronze<br>dragons
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 396
+// alias=mapelement_396
+[mapelement_396]
+text=Iron & steel<br>dragons
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 397
+// alias=mapelement_397
+[mapelement_397]
+text=Bronze, iron &<br>steel dragons
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 398
+// alias=mapelement_398
+[mapelement_398]
+text=Greater demons
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 399
+// alias=mapelement_399
+[mapelement_399]
+text=Jogres
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 400
+// alias=mapelement_400
+[mapelement_400]
+text=Elvarg
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 401
+// alias=mapelement_401
+[mapelement_401]
+text=Lesser demons
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 402
+// alias=mapelement_402
+[mapelement_402]
+text=Baby green<br>dragons
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 403
+// alias=mapelement_403
+[mapelement_403]
+text=Black demons
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 404
+// alias=mapelement_404
+[mapelement_404]
+text=Black<br>demons
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 405
+// alias=mapelement_405
+[mapelement_405]
+text=Red Spiders
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 406
+// alias=mapelement_406
+[mapelement_406]
+text=Skeletons
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 407
+// alias=mapelement_407
+[mapelement_407]
+text=River Kelda
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 408
+// alias=mapelement_408
+[mapelement_408]
+text=Dondakan's<br>rock
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 409
+// alias=mapelement_409
+[mapelement_409]
+text=Minecarts
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 410
+// alias=mapelement_410
+[mapelement_410]
+text=Blast<br>Furnace
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 411
+// alias=mapelement_411
+[mapelement_411]
+text=Brewery
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 412
+// alias=mapelement_412
+[mapelement_412]
+text=Black<br>Guard<br>H.Q.
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 413
+// alias=mapelement_413
+[mapelement_413]
+text=Trolls
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 414
+// alias=mapelement_414
+[mapelement_414]
+text=Exit
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 415
+// alias=mapelement_415
+[mapelement_415]
+text=Terror dogs
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 416
+// alias=mapelement_416
+[mapelement_416]
+text=Essence<br>Mine
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 417
+// alias=mapelement_417
+[mapelement_417]
+text=Miscellania<br>Expansion
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 418
+// alias=mapelement_418
+[mapelement_418]
+text=Sea snakes
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 419
+// alias=mapelement_419
+[mapelement_419]
+text=H.A.M. Cult
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 420
+// alias=mapelement_420
+[mapelement_420]
+text=Draynor Sewers
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 421
+// alias=mapelement_421
+[mapelement_421]
+text=Mine
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 422
+// alias=mapelement_422
+[mapelement_422]
+text=Watermill<br>cellar
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 423
+// alias=mapelement_423
+[mapelement_423]
+text=Champions'<br>Challenge
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 424
+// alias=mapelement_424
+[mapelement_424]
+text=Draynor Manor<br>basement
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 425
+// alias=mapelement_425
+[mapelement_425]
+text=VTAM Corporation
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 426
+// alias=mapelement_426
+[mapelement_426]
+text=Bank vault
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 427
+// alias=mapelement_427
+[mapelement_427]
+text=Goblin Maze
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 428
+// alias=mapelement_428
+[mapelement_428]
+text=Chasm of<br>Tears
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 429
+// alias=mapelement_429
+[mapelement_429]
+text=Tears of<br>Guthix
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 430
+// alias=mapelement_430
+[mapelement_430]
+text=Lumbridge<br>Castle<br>cellar
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 431
+// alias=mapelement_431
+[mapelement_431]
+text=Giant frogs
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 432
+// alias=mapelement_432
+[mapelement_432]
+text=Hill giants
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 433
+// alias=mapelement_433
+[mapelement_433]
+text=Chronozon
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 434
+// alias=mapelement_434
+[mapelement_434]
+text=Here be<br>dead stuff
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 435
+// alias=mapelement_435
+[mapelement_435]
+text=Thugs
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 436
+// alias=mapelement_436
+[mapelement_436]
+text=Dave's<br>Basement<br>of Doom
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 437
+// alias=mapelement_437
+[mapelement_437]
+text=Poison spiders
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 438
+// alias=mapelement_438
+[mapelement_438]
+text=Poison<br>spiders
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 439
+// alias=mapelement_439
+[mapelement_439]
+text=Zombies
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 440
+// alias=mapelement_440
+[mapelement_440]
+text=Skeletons<br>& zombies
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 441
+// alias=mapelement_441
+[mapelement_441]
+text=Earth warriors
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 442
+// alias=mapelement_442
+[mapelement_442]
+text=Chaos<br>druids
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 443
+// alias=mapelement_443
+[mapelement_443]
+text=Rats
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 444
+// alias=mapelement_444
+[mapelement_444]
+text=Here be a<br>big mole
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 445
+// alias=mapelement_445
+[mapelement_445]
+text=Motherlode Mine
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 446
+// alias=mapelement_446
+[mapelement_446]
+text=Obstacle<br>course
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 447
+// alias=mapelement_447
+[mapelement_447]
+text=Skullball
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 448
+// alias=mapelement_448
+[mapelement_448]
+text=Shades
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 449
+// alias=mapelement_449
+[mapelement_449]
+text=Here be odd stuff
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 450
+// alias=mapelement_450
+[mapelement_450]
+text=Nechryael
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 451
+// alias=mapelement_451
+[mapelement_451]
+text=Abyssal<br>demons
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 452
+// alias=mapelement_452
+[mapelement_452]
+text=Bloodvelds
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 453
+// alias=mapelement_453
+[mapelement_453]
+text=Gargoyles
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 454
+// alias=mapelement_454
+[mapelement_454]
+text=Aberrant<br>Spectres
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 455
+// alias=mapelement_455
+[mapelement_455]
+text=Ankou
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 456
+// alias=mapelement_456
+[mapelement_456]
+text=Cave horrors<br>&<br>albino bats
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 457
+// alias=mapelement_457
+[mapelement_457]
+text=Altar
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 458
+// alias=mapelement_458
+[mapelement_458]
+text=Lizards &<br>Zamorak fighters
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 459
+// alias=mapelement_459
+[mapelement_459]
+text=War
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 460
+// alias=mapelement_460
+[mapelement_460]
+text=Gift of<br>Peace
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 461
+// alias=mapelement_461
+[mapelement_461]
+text=Famine
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 462
+// alias=mapelement_462
+[mapelement_462]
+text=Grain of<br>Plenty
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 463
+// alias=mapelement_463
+[mapelement_463]
+text=Pestilence
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 464
+// alias=mapelement_464
+[mapelement_464]
+text=Box of<br>Health
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 465
+// alias=mapelement_465
+[mapelement_465]
+text=Death
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 466
+// alias=mapelement_466
+[mapelement_466]
+text=Cradle of<br>Life
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 467
+// alias=mapelement_467
+[mapelement_467]
+text=Cauldron of<br>Thunder
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 468
+// alias=mapelement_468
+[mapelement_468]
+text=Black Knights'<br>Base
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 469
+// alias=mapelement_469
+[mapelement_469]
+text=Hellhounds
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 470
+// alias=mapelement_470
+[mapelement_470]
+text=Fire Obelisk
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 471
+// alias=mapelement_471
+[mapelement_471]
+text=Black dragons
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 472
+// alias=mapelement_472
+[mapelement_472]
+text=Black<br>dragons
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 473
+// alias=mapelement_473
+[mapelement_473]
+text=Dramen Tree
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 474
+// alias=mapelement_474
+[mapelement_474]
+text=Animated<br>axes
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 475
+// alias=mapelement_475
+[mapelement_475]
+text=Chaos<br>dwarves
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 476
+// alias=mapelement_476
+[mapelement_476]
+text=Blue<br>dragons
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 477
+// alias=mapelement_477
+[mapelement_477]
+text=Poisonous<br>scorpions
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 478
+// alias=mapelement_478
+[mapelement_478]
+text=Cyclopes
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 479
+// alias=mapelement_479
+[mapelement_479]
+text=Cyclopes<br>& Axes
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 480
+// alias=mapelement_480
+[mapelement_480]
+text=Ice Queen's<br>Lair
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 481
+// alias=mapelement_481
+[mapelement_481]
+text=Fountain<br>of Heroes
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 482
+// alias=mapelement_482
+[mapelement_482]
+text=Mountain<br>dwarves
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 483
+// alias=mapelement_483
+[mapelement_483]
+text=Nora T. Hagg's<br>cellar
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 484
+// alias=mapelement_484
+[mapelement_484]
+text=Key Master
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 485
+// alias=mapelement_485
+[mapelement_485]
+text=Beware of<br>the dog
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 486
+// alias=mapelement_486
+[mapelement_486]
+text=Anger
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 487
+// alias=mapelement_487
+[mapelement_487]
+text=Hopelessness
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 488
+// alias=mapelement_488
+[mapelement_488]
+text=Confusion
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 489
+// alias=mapelement_489
+[mapelement_489]
+text=Fear
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 490
+// alias=mapelement_490
+[mapelement_490]
+text=Goutweed<br>store
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 491
+// alias=mapelement_491
+[mapelement_491]
+text=Troll<br>generals
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 492
+// alias=mapelement_492
+[mapelement_492]
+text=Burntmeat's<br>Kitchen
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 493
+// alias=mapelement_493
+[mapelement_493]
+text=Fight Pit
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 494
+// alias=mapelement_494
+[mapelement_494]
+text=Fight Cave
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 495
+// alias=mapelement_495
+[mapelement_495]
+text=Sub-level 1
+size=1
+colour=16776960
+category=category_1129
+mapfunction=no
+
+// 496
+// alias=mapelement_496
+[mapelement_496]
+text=Sub-level 2
+size=1
+colour=16776960
+category=category_1129
+mapfunction=no
+
+// 497
+// alias=mapelement_497
+[mapelement_497]
+text=Sub-level 3
+size=1
+colour=16776960
+category=category_1129
+mapfunction=no
+
+// 498
+// alias=mapelement_498
+[mapelement_498]
+text=Sub-level 4
+size=1
+colour=16776960
+category=category_1129
+mapfunction=no
+
+// 499
+// alias=mapelement_499
+[mapelement_499]
+text=Sub-level 5
+size=1
+colour=16776960
+category=category_1129
+mapfunction=no
+
+// 500
+// alias=mapelement_500
+[mapelement_500]
+text=Sub-level 6
+size=1
+colour=16776960
+category=category_1129
+mapfunction=no
+
+// 501
+// alias=mapelement_501
+[mapelement_501]
+text=Dagannoth
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 502
+// alias=mapelement_502
+[mapelement_502]
+text=Giant rock crabs
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 503
+// alias=mapelement_503
+[mapelement_503]
+text=Giant<br>rock crabs
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 504
+// alias=mapelement_504
+[mapelement_504]
+text=Rock lobsters
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 505
+// alias=mapelement_505
+[mapelement_505]
+text=Rock<br>lobsters
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 506
+// alias=mapelement_506
+[mapelement_506]
+text=Wallasalki
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 507
+// alias=mapelement_507
+[mapelement_507]
+text=Dagannoth Kings
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 508
+// alias=mapelement_508
+[mapelement_508]
+text=Shadow<br>spiders
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 509
+// alias=mapelement_509
+[mapelement_509]
+text=Agility<br>course<br>spikes
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 510
+// alias=mapelement_510
+[mapelement_510]
+text=Mage Arena<br>bank
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 511
+// alias=mapelement_511
+[mapelement_511]
+text=King<br>Black<br>Dragon
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 512
+// alias=mapelement_512
+[mapelement_512]
+text=Corporeal<br>Beast
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 513
+// alias=mapelement_513
+[mapelement_513]
+text=Salarin the<br>Twisted
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 514
+// alias=mapelement_514
+[mapelement_514]
+text=Smoke devils
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 515
+// alias=mapelement_515
+[mapelement_515]
+text=Thermonuclear<br>Smoke Devil
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 516
+// alias=mapelement_516
+[mapelement_516]
+text=Throne room
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 517
+// alias=mapelement_517
+[mapelement_517]
+text=Beware of the<br>mushrooms
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 518
+// alias=mapelement_518
+[mapelement_518]
+text=Shrine
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 519
+// alias=mapelement_519
+[mapelement_519]
+text=Otherworldly<br>beings
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 520
+// alias=mapelement_520
+[mapelement_520]
+text=Puro-puro
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 521
+// alias=mapelement_521
+[mapelement_521]
+text=Tanglefeet
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 522
+// alias=mapelement_522
+[mapelement_522]
+text=Brimstail
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 523
+// alias=mapelement_523
+[mapelement_523]
+text=Voice of Yama
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 524
+// alias=mapelement_524
+[mapelement_524]
+text=Ents
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 525
+// alias=mapelement_525
+[mapelement_525]
+text=Brutal black, blue<br>& red dragons
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 526
+// alias=mapelement_526
+[mapelement_526]
+text=Bronze & iron<br>dragons
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 527
+// alias=mapelement_527
+[mapelement_527]
+text=Steel<br>dragons
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 528
+// alias=mapelement_528
+[mapelement_528]
+text=Dark<br>beasts
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 529
+// alias=mapelement_529
+[mapelement_529]
+text=Ghosts
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 530
+// alias=mapelement_530
+[mapelement_530]
+text=Dust devils
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 531
+// alias=mapelement_531
+[mapelement_531]
+text=Sand<br>crabs
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 532
+// alias=mapelement_532
+[mapelement_532]
+text=Spectres
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 533
+// alias=mapelement_533
+[mapelement_533]
+text=Banshees
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 534
+// alias=mapelement_534
+[mapelement_534]
+text=Mor Ul Rek
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 535
+// alias=mapelement_535
+[mapelement_535]
+text=The Inferno
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 536
+// alias=mapelement_536
+[mapelement_536]
+text=Lizardman<br>Caves
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 537
+// alias=mapelement_537
+[mapelement_537]
+text=Underwater
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 538
+// alias=mapelement_538
+[mapelement_538]
+text=Wyverns
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 539
+// alias=mapelement_539
+[mapelement_539]
+text=Wyverns<br>Task Only
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 540
+// alias=mapelement_540
+[mapelement_540]
+text=Volcano Mine
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 541
+// alias=mapelement_541
+[mapelement_541]
+text=A
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+vis=both
+
+// 542
+// alias=mapelement_542
+[mapelement_542]
+text=B
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+vis=both
+
+// 543
+// alias=mapelement_543
+[mapelement_543]
+text=C
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+vis=both
+
+// 544
+// alias=mapelement_544
+[mapelement_544]
+text=Fossil<br>Island
+size=2
+colour=16750623
+category=category_1129
+mapfunction=no
+
+// 545
+// alias=mapelement_545
+[mapelement_545]
+text=Museum<br>Camp
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 546
+// alias=mapelement_546
+[mapelement_546]
+text=The Warrens
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 547
+// alias=mapelement_547
+[mapelement_547]
+text=Mushroom<br>Forest
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 548
+// alias=mapelement_548
+[mapelement_548]
+text=House<br>on the<br>Hill
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 549
+// alias=mapelement_549
+[mapelement_549]
+text=Volcano
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 550
+// alias=mapelement_550
+[mapelement_550]
+text=Tar<br>Swamp
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 551
+// alias=mapelement_551
+[mapelement_551]
+text=Crabclaw Caves
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 552
+// alias=mapelement_552
+[mapelement_552]
+text=Wilderness<br>Emblem Trader
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 553
+// alias=mapelement_553
+[mapelement_553]
+text=Ice giants
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 554
+// alias=mapelement_554
+[mapelement_554]
+text=Greater<br>demons
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 555
+// alias=mapelement_555
+[mapelement_555]
+text=Green dragons
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 556
+// alias=mapelement_556
+[mapelement_556]
+text=Green<br>dragons
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 557
+// alias=mapelement_557
+[mapelement_557]
+text=Revenants
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 558
+// alias=mapelement_558
+[mapelement_558]
+text=Myths'<br>Guild
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 559
+// alias=mapelement_559
+[mapelement_559]
+text=Corsair<br>Cove
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 560
+// alias=mapelement_560
+[mapelement_560]
+text=Ancient<br>Forge
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 561
+// alias=mapelement_561
+[mapelement_561]
+text=Ogresses
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 562
+// alias=mapelement_562
+[mapelement_562]
+text=Chinchompas
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 563
+// alias=mapelement_563
+[mapelement_563]
+text=Dragons
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 564
+// alias=mapelement_564
+[mapelement_564]
+text=Baby dragons
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 565
+// alias=mapelement_565
+[mapelement_565]
+text=Chapel
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 566
+// alias=mapelement_566
+[mapelement_566]
+text=Ungael
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 567
+// alias=mapelement_567
+[mapelement_567]
+text=Lithkren
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 568
+// alias=mapelement_568
+[mapelement_568]
+text=War Tent
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 569
+// alias=mapelement_569
+[mapelement_569]
+text=Foodhall
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 570
+// alias=mapelement_570
+[mapelement_570]
+text=Kourend<br>Castle
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 571
+// alias=mapelement_571
+[mapelement_571]
+text=Kebos<br>Lowlands
+size=2
+colour=16750623
+category=category_1129
+mapfunction=no
+
+// 572
+// alias=mapelement_572
+[mapelement_572]
+text=Paterdomus<br>Temple
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 573
+// alias=mapelement_573
+[mapelement_573]
+text=Darkmeyer
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 574
+// alias=mapelement_574
+[mapelement_574]
+text=Slepe
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 575
+// alias=mapelement_575
+[mapelement_575]
+text=Ver Sinhaza
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 576
+// alias=mapelement_576
+[mapelement_576]
+category=category_1251
+graphic="mapfunction,89"
+mapfunction=yes
+vis=both
+
+// 577
+// alias=mapelement_577
+[mapelement_577]
+category=category_1252
+graphic="mapfunction,90"
+mapfunction=yes
+vis=both
+
+// 578
+// alias=mapelement_578
+[mapelement_578]
+category=category_1253
+graphic="mapfunction,91"
+mapfunction=yes
+vis=both
+
+// 579
+// alias=mapelement_579
+[mapelement_579]
+category=category_1254
+graphic="mapfunction,92"
+mapfunction=yes
+vis=both
+
+// 580
+// alias=mapelement_580
+[mapelement_580]
+category=category_1255
+graphic="mapfunction,93"
+mapfunction=yes
+vis=both
+
+// 581
+// alias=mapelement_581
+[mapelement_581]
+category=category_1256
+graphic="mapfunction,94"
+mapfunction=yes
+vis=both
+
+// 582
+// alias=mapelement_582
+[mapelement_582]
+category=category_1257
+graphic="mapfunction,95"
+mapfunction=yes
+vis=both
+
+// 583
+// alias=mapelement_583
+[mapelement_583]
+category=category_1258
+graphic="mapfunction,96"
+mapfunction=yes
+vis=both
+
+// 584
+// alias=mapelement_584
+[mapelement_584]
+category=category_1259
+graphic="mapfunction,97"
+mapfunction=yes
+vis=both
+
+// 585
+// alias=mapelement_585
+[mapelement_585]
+category=category_1260
+graphic="mapfunction,98"
+mapfunction=yes
+vis=both
+
+// 586
+// alias=mapelement_586
+[mapelement_586]
+category=category_1261
+graphic="mapfunction,99"
+mapfunction=yes
+vis=both
+
+// 587
+// alias=mapelement_587
+[mapelement_587]
+category=category_1262
+graphic="mapfunction,100"
+mapfunction=yes
+vis=both
+
+// 588
+// alias=mapelement_588
+[mapelement_588]
+category=category_1263
+graphic="mapfunction,101"
+mapfunction=yes
+vis=both
+
+// 589
+// alias=mapelement_589
+[mapelement_589]
+category=category_1264
+graphic="mapfunction,103"
+mapfunction=yes
+vis=both
+
+// 590
+// alias=mapelement_590
+[mapelement_590]
+category=category_1265
+graphic="mapfunction,115"
+mapfunction=yes
+vis=both
+
+// 591
+// alias=mapelement_591
+[mapelement_591]
+category=category_1266
+graphic="mapfunction,106"
+mapfunction=yes
+vis=both
+
+// 592
+// alias=mapelement_592
+[mapelement_592]
+category=category_1267
+graphic="mapfunction,107"
+mapfunction=yes
+vis=both
+
+// 593
+// alias=mapelement_593
+[mapelement_593]
+category=category_1268
+graphic="mapfunction,108"
+mapfunction=yes
+vis=both
+
+// 594
+// alias=mapelement_594
+[mapelement_594]
+category=category_1269
+graphic="mapfunction,110"
+mapfunction=yes
+vis=both
+
+// 595
+// alias=mapelement_595
+[mapelement_595]
+category=category_1270
+graphic="mapfunction,111"
+mapfunction=yes
+vis=both
+
+// 596
+// alias=mapelement_596
+[mapelement_596]
+category=category_1271
+graphic="mapfunction,112"
+mapfunction=yes
+vis=both
+
+// 597
+// alias=mapelement_597
+[mapelement_597]
+category=category_1272
+graphic="mapfunction,113"
+mapfunction=yes
+vis=both
+
+// 598
+// alias=mapelement_598
+[mapelement_598]
+category=category_1273
+graphic="mapfunction,114"
+mapfunction=yes
+vis=both
+
+// 599
+// alias=mapelement_599
+[mapelement_599]
+category=category_1274
+graphic="mapfunction,116"
+mapfunction=yes
+vis=both
+
+// 600
+// alias=mapelement_600
+[mapelement_600]
+category=category_1275
+graphic="mapfunction,117"
+mapfunction=yes
+vis=both
+
+// 601
+// alias=mapelement_601
+[mapelement_601]
+text=Kalphite<br>Cave
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 602
+// alias=mapelement_602
+[mapelement_602]
+text=Lovakengj<br>Assembly
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 603
+// alias=mapelement_603
+[mapelement_603]
+text=The Forsaken<br>Tower
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 604
+// alias=mapelement_604
+[mapelement_604]
+text=Mount<br>Karuulm
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 605
+// alias=mapelement_605
+[mapelement_605]
+text=Farming Guild
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 606
+// alias=mapelement_606
+[mapelement_606]
+text=Battlefront
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 607
+// alias=mapelement_607
+[mapelement_607]
+text=Molch
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 608
+// alias=mapelement_608
+[mapelement_608]
+text=Kebos Swamp
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 609
+// alias=mapelement_609
+[mapelement_609]
+text=Lake Molch
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 610
+// alias=mapelement_610
+[mapelement_610]
+text=River Molch
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 611
+// alias=mapelement_611
+[mapelement_611]
+text=Wyrms
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 612
+// alias=mapelement_612
+[mapelement_612]
+text=Drakes
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 613
+// alias=mapelement_613
+[mapelement_613]
+text=Hydras
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 614
+// alias=mapelement_614
+[mapelement_614]
+text=Alchemical<br>Hydra
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 615
+// alias=mapelement_615
+[mapelement_615]
+text=Sulphur<br>lizards
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 616
+// alias=mapelement_616
+[mapelement_616]
+text=Tasakaal
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 617
+// alias=mapelement_617
+[mapelement_617]
+text=Hespori
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 618
+// alias=mapelement_618
+[mapelement_618]
+text=Lizardman<br>Temple
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 619
+// alias=mapelement_619
+[mapelement_619]
+category=category_1317
+graphic="mapfunction,118"
+mapfunction=yes
+vis=both
+
+// 620
+// alias=mapelement_620
+[mapelement_620]
+text=Forthos Ruin
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 621
+// alias=mapelement_621
+[mapelement_621]
+text=Kingstown
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 622
+// alias=mapelement_622
+[mapelement_622]
+text=Wine of<br>Zamorak
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 623
+// alias=mapelement_623
+[mapelement_623]
+text=Larran's<br>Chest
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 624
+// alias=mapelement_624
+[mapelement_624]
+text=River<br>Dougne
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 625
+// alias=mapelement_625
+[mapelement_625]
+text=River<br>Hos
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 626
+// alias=mapelement_626
+[mapelement_626]
+text=Undead<br>druids
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 627
+// alias=mapelement_627
+[mapelement_627]
+text=Bone<br>Burner
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 628
+// alias=mapelement_628
+[mapelement_628]
+text=Temple Spiders
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 629
+// alias=mapelement_629
+[mapelement_629]
+text=Sarachnis
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 630
+// alias=mapelement_630
+[mapelement_630]
+category=category_1070
+graphic="mapfunction,109"
+mapfunction=yes
+vis=both
+
+// 631
+// alias=mapelement_631
+[mapelement_631]
+category=category_1396
+graphic="mapfunction,119"
+mapfunction=yes
+vis=both
+
+// 632
+// alias=mapelement_632
+[mapelement_632]
+text=Moss<br>giants
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 633
+// alias=mapelement_633
+[mapelement_633]
+text=Trahaearn<br>Mine
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 634
+// alias=mapelement_634
+[mapelement_634]
+text=Zalcano
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 635
+// alias=mapelement_635
+[mapelement_635]
+text=The Gauntlet
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 636
+// alias=mapelement_636
+[mapelement_636]
+text=Gwenith
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 637
+// alias=mapelement_637
+[mapelement_637]
+text=Last Man<br>Standing
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 638
+// alias=mapelement_638
+[mapelement_638]
+text=The Mountain
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 639
+// alias=mapelement_639
+[mapelement_639]
+text=Trinity<br>Outpost
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 640
+// alias=mapelement_640
+[mapelement_640]
+text=Debtor<br>Hideout
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 641
+// alias=mapelement_641
+[mapelement_641]
+text=Moser<br>Settlement
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 642
+// alias=mapelement_642
+[mapelement_642]
+text=Rocky<br>Outcrop
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 643
+// alias=mapelement_643
+[mapelement_643]
+text=Island<br>of Stone
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 644
+// alias=mapelement_644
+[mapelement_644]
+text=Basilisk<br>Knights
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 645
+// alias=mapelement_645
+[mapelement_645]
+category=category_176
+graphic="mapfunction,123"
+mapfunction=yes
+vis=both
+
+// 646
+// alias=mapelement_646
+[mapelement_646]
+text=Lesser<br>demons
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 647
+// alias=mapelement_647
+[mapelement_647]
+text=The<br>Nightmare
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 648
+// alias=mapelement_648
+[mapelement_648]
+text=Shura
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 649
+// alias=mapelement_649
+[mapelement_649]
+text=Elves
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 650
+// alias=mapelement_650
+[mapelement_650]
+category=category_1425
+graphic="mapfunction,124"
+mapfunction=yes
+vis=both
+
+// 651
+// alias=mapelement_651
+[mapelement_651]
+text=Icyene<br>Graveyard
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 652
+// alias=mapelement_652
+[mapelement_652]
+category=category_1459
+graphic="mapfunction,125"
+mapfunction=yes
+vis=both
+
+// 653
+// alias=mapelement_653
+[mapelement_653]
+text=Crypt
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 654
+// alias=mapelement_654
+[mapelement_654]
+text=Ferox<br>Enclave
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 655
+// alias=mapelement_655
+[mapelement_655]
+text=Citharede<br>Abbey
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 656
+// alias=mapelement_656
+[mapelement_656]
+text=South Falador<br>Farm
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 657
+// alias=mapelement_657
+[mapelement_657]
+text=Sourhog Cave
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 658
+// alias=mapelement_658
+[mapelement_658]
+text=Isle of Souls
+size=2
+colour=16750623
+category=category_1129
+mapfunction=no
+
+// 659
+// alias=mapelement_659
+[mapelement_659]
+text=Soul Wars<br>Arena
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 660
+// alias=mapelement_660
+[mapelement_660]
+text=Soul Wars<br>Lobby
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 661
+// alias=mapelement_661
+[mapelement_661]
+text=Soul<br>Obelisk
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 662
+// alias=mapelement_662
+[mapelement_662]
+text=Western<br>Graveyard
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 663
+// alias=mapelement_663
+[mapelement_663]
+text=Eastern<br>Graveyard
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 664
+// alias=mapelement_664
+[mapelement_664]
+text=Blue<br>Base
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 665
+// alias=mapelement_665
+[mapelement_665]
+text=Red<br>Base
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 666
+// alias=mapelement_666
+[mapelement_666]
+text=Avatar of<br>Creation
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 667
+// alias=mapelement_667
+[mapelement_667]
+text=Avatar of<br>Destruction
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 668
+// alias=mapelement_668
+[mapelement_668]
+text=Iron<br>dragons
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 669
+// alias=mapelement_669
+[mapelement_669]
+text=Desert Island
+size=2
+colour=16750623
+category=category_1129
+mapfunction=no
+
+// 670
+// alias=mapelement_670
+[mapelement_670]
+text=Wild Varrock
+size=2
+colour=16750623
+category=category_1129
+mapfunction=no
+
+// 671
+// alias=mapelement_671
+[mapelement_671]
+text=Hut
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 672
+// alias=mapelement_672
+[mapelement_672]
+text=Stone Circle
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 673
+// alias=mapelement_673
+[mapelement_673]
+text=Court of Chaos
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 674
+// alias=mapelement_674
+[mapelement_674]
+text=Old Manor
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 675
+// alias=mapelement_675
+[mapelement_675]
+text=Town Center
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 676
+// alias=mapelement_676
+[mapelement_676]
+text=Blank Tower
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 677
+// alias=mapelement_677
+[mapelement_677]
+text=Trading Post
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 678
+// alias=mapelement_678
+[mapelement_678]
+text=Dark Warrior's<br>Palace
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 679
+// alias=mapelement_679
+[mapelement_679]
+text=Pillars of Sacrifice
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 680
+// alias=mapelement_680
+[mapelement_680]
+category=category_1499
+graphic="mapfunction,126"
+mapfunction=yes
+vis=both
+
+// 681
+// alias=mapelement_681
+[mapelement_681]
+text=Ruins of<br>Unkah
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 682
+// alias=mapelement_682
+[mapelement_682]
+text=Sea Spirit<br>Dock
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 683
+// alias=mapelement_683
+[mapelement_683]
+text=Tempoross<br>Cove
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 684
+// alias=mapelement_684
+[mapelement_684]
+text=Camdozaal<br>Vault
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 685
+// alias=mapelement_685
+[mapelement_685]
+text=Ramarno
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 686
+// alias=mapelement_686
+[mapelement_686]
+text=Offering<br>Altar
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 687
+// alias=mapelement_687
+[mapelement_687]
+text=Golem<br>Workshop
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 688
+// alias=mapelement_688
+[mapelement_688]
+text=Camdozaal<br>Mines
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 689
+// alias=mapelement_689
+[mapelement_689]
+text=Ancient<br>Vault
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 690
+// alias=mapelement_690
+[mapelement_690]
+category=category_1551
+graphic="mapfunction,127"
+mapfunction=yes
+vis=both
+
+// 691
+// alias=mapelement_691
+[mapelement_691]
+text=Shayzien<br>Encampment
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 692
+// alias=mapelement_692
+[mapelement_692]
+text=Giant<br>Pit
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 693
+// alias=mapelement_693
+[mapelement_693]
+text=Ruins<br>of Morra
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 694
+// alias=mapelement_694
+[mapelement_694]
+text=Shayzia<br>Ruin
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 695
+// alias=mapelement_695
+[mapelement_695]
+text=Northern<br>Tundras
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 696
+// alias=mapelement_696
+[mapelement_696]
+text=River<br>of Souls
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 697
+// alias=mapelement_697
+[mapelement_697]
+category=category_1579
+graphic="mapfunction,128"
+mapfunction=yes
+vis=both
+
+// 698
+// alias=mapelement_698
+[mapelement_698]
+text=Sire
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 699
+// alias=mapelement_699
+[mapelement_699]
+text=Here be<br>spiders
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 700
+// alias=mapelement_700
+[mapelement_700]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 701
+// alias=mapelement_701
+[mapelement_701]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 702
+// alias=mapelement_702
+[mapelement_702]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 703
+// alias=mapelement_703
+[mapelement_703]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 704
+// alias=mapelement_704
+[mapelement_704]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 705
+// alias=mapelement_705
+[mapelement_705]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 706
+// alias=mapelement_706
+[mapelement_706]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 707
+// alias=mapelement_707
+[mapelement_707]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 708
+// alias=mapelement_708
+[mapelement_708]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 709
+// alias=mapelement_709
+[mapelement_709]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 710
+// alias=mapelement_710
+[mapelement_710]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 711
+// alias=mapelement_711
+[mapelement_711]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 712
+// alias=mapelement_712
+[mapelement_712]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 713
+// alias=mapelement_713
+[mapelement_713]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 714
+// alias=mapelement_714
+[mapelement_714]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 715
+// alias=mapelement_715
+[mapelement_715]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 716
+// alias=mapelement_716
+[mapelement_716]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 717
+// alias=mapelement_717
+[mapelement_717]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 718
+// alias=mapelement_718
+[mapelement_718]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 719
+// alias=mapelement_719
+[mapelement_719]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 720
+// alias=mapelement_720
+[mapelement_720]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 721
+// alias=mapelement_721
+[mapelement_721]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 722
+// alias=mapelement_722
+[mapelement_722]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 723
+// alias=mapelement_723
+[mapelement_723]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 724
+// alias=mapelement_724
+[mapelement_724]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 725
+// alias=mapelement_725
+[mapelement_725]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 726
+// alias=mapelement_726
+[mapelement_726]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 727
+// alias=mapelement_727
+[mapelement_727]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 728
+// alias=mapelement_728
+[mapelement_728]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 729
+// alias=mapelement_729
+[mapelement_729]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 730
+// alias=mapelement_730
+[mapelement_730]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 731
+// alias=mapelement_731
+[mapelement_731]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 732
+// alias=mapelement_732
+[mapelement_732]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 733
+// alias=mapelement_733
+[mapelement_733]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 734
+// alias=mapelement_734
+[mapelement_734]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 735
+// alias=mapelement_735
+[mapelement_735]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 736
+// alias=mapelement_736
+[mapelement_736]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 737
+// alias=mapelement_737
+[mapelement_737]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 738
+// alias=mapelement_738
+[mapelement_738]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 739
+// alias=mapelement_739
+[mapelement_739]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 740
+// alias=mapelement_740
+[mapelement_740]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 741
+// alias=mapelement_741
+[mapelement_741]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 742
+// alias=mapelement_742
+[mapelement_742]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 743
+// alias=mapelement_743
+[mapelement_743]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 744
+// alias=mapelement_744
+[mapelement_744]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 745
+// alias=mapelement_745
+[mapelement_745]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 746
+// alias=mapelement_746
+[mapelement_746]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 747
+// alias=mapelement_747
+[mapelement_747]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 748
+// alias=mapelement_748
+[mapelement_748]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 749
+// alias=mapelement_749
+[mapelement_749]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 750
+// alias=mapelement_750
+[mapelement_750]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 751
+// alias=mapelement_751
+[mapelement_751]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 752
+// alias=mapelement_752
+[mapelement_752]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 753
+// alias=mapelement_753
+[mapelement_753]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 754
+// alias=mapelement_754
+[mapelement_754]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 755
+// alias=mapelement_755
+[mapelement_755]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 756
+// alias=mapelement_756
+[mapelement_756]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 757
+// alias=mapelement_757
+[mapelement_757]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 758
+// alias=mapelement_758
+[mapelement_758]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 759
+// alias=mapelement_759
+[mapelement_759]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 760
+// alias=mapelement_760
+[mapelement_760]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 761
+// alias=mapelement_761
+[mapelement_761]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 762
+// alias=mapelement_762
+[mapelement_762]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 763
+// alias=mapelement_763
+[mapelement_763]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 764
+// alias=mapelement_764
+[mapelement_764]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 765
+// alias=mapelement_765
+[mapelement_765]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 766
+// alias=mapelement_766
+[mapelement_766]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 767
+// alias=mapelement_767
+[mapelement_767]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 768
+// alias=mapelement_768
+[mapelement_768]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 769
+// alias=mapelement_769
+[mapelement_769]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 770
+// alias=mapelement_770
+[mapelement_770]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 771
+// alias=mapelement_771
+[mapelement_771]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 772
+// alias=mapelement_772
+[mapelement_772]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 773
+// alias=mapelement_773
+[mapelement_773]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 774
+// alias=mapelement_774
+[mapelement_774]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 775
+// alias=mapelement_775
+[mapelement_775]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 776
+// alias=mapelement_776
+[mapelement_776]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 777
+// alias=mapelement_777
+[mapelement_777]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 778
+// alias=mapelement_778
+[mapelement_778]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 779
+// alias=mapelement_779
+[mapelement_779]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 780
+// alias=mapelement_780
+[mapelement_780]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 781
+// alias=mapelement_781
+[mapelement_781]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 782
+// alias=mapelement_782
+[mapelement_782]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 783
+// alias=mapelement_783
+[mapelement_783]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 784
+// alias=mapelement_784
+[mapelement_784]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 785
+// alias=mapelement_785
+[mapelement_785]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 786
+// alias=mapelement_786
+[mapelement_786]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 787
+// alias=mapelement_787
+[mapelement_787]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 788
+// alias=mapelement_788
+[mapelement_788]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 789
+// alias=mapelement_789
+[mapelement_789]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 790
+// alias=mapelement_790
+[mapelement_790]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 791
+// alias=mapelement_791
+[mapelement_791]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 792
+// alias=mapelement_792
+[mapelement_792]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 793
+// alias=mapelement_793
+[mapelement_793]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 794
+// alias=mapelement_794
+[mapelement_794]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 795
+// alias=mapelement_795
+[mapelement_795]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 796
+// alias=mapelement_796
+[mapelement_796]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 797
+// alias=mapelement_797
+[mapelement_797]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 798
+// alias=mapelement_798
+[mapelement_798]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 799
+// alias=mapelement_799
+[mapelement_799]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 800
+// alias=mapelement_800
+[mapelement_800]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 801
+// alias=mapelement_801
+[mapelement_801]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 802
+// alias=mapelement_802
+[mapelement_802]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 803
+// alias=mapelement_803
+[mapelement_803]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 804
+// alias=mapelement_804
+[mapelement_804]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 805
+// alias=mapelement_805
+[mapelement_805]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 806
+// alias=mapelement_806
+[mapelement_806]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 807
+// alias=mapelement_807
+[mapelement_807]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 808
+// alias=mapelement_808
+[mapelement_808]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 809
+// alias=mapelement_809
+[mapelement_809]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 810
+// alias=mapelement_810
+[mapelement_810]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 811
+// alias=mapelement_811
+[mapelement_811]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 812
+// alias=mapelement_812
+[mapelement_812]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 813
+// alias=mapelement_813
+[mapelement_813]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 814
+// alias=mapelement_814
+[mapelement_814]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 815
+// alias=mapelement_815
+[mapelement_815]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 816
+// alias=mapelement_816
+[mapelement_816]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 817
+// alias=mapelement_817
+[mapelement_817]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 818
+// alias=mapelement_818
+[mapelement_818]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 819
+// alias=mapelement_819
+[mapelement_819]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 820
+// alias=mapelement_820
+[mapelement_820]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 821
+// alias=mapelement_821
+[mapelement_821]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 822
+// alias=mapelement_822
+[mapelement_822]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 823
+// alias=mapelement_823
+[mapelement_823]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 824
+// alias=mapelement_824
+[mapelement_824]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 825
+// alias=mapelement_825
+[mapelement_825]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 826
+// alias=mapelement_826
+[mapelement_826]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 827
+// alias=mapelement_827
+[mapelement_827]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 828
+// alias=mapelement_828
+[mapelement_828]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 829
+// alias=mapelement_829
+[mapelement_829]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 830
+// alias=mapelement_830
+[mapelement_830]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 831
+// alias=mapelement_831
+[mapelement_831]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 832
+// alias=mapelement_832
+[mapelement_832]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 833
+// alias=mapelement_833
+[mapelement_833]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 834
+// alias=mapelement_834
+[mapelement_834]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 835
+// alias=mapelement_835
+[mapelement_835]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 836
+// alias=mapelement_836
+[mapelement_836]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 837
+// alias=mapelement_837
+[mapelement_837]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 838
+// alias=mapelement_838
+[mapelement_838]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 839
+// alias=mapelement_839
+[mapelement_839]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 840
+// alias=mapelement_840
+[mapelement_840]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 841
+// alias=mapelement_841
+[mapelement_841]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 842
+// alias=mapelement_842
+[mapelement_842]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 843
+// alias=mapelement_843
+[mapelement_843]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 844
+// alias=mapelement_844
+[mapelement_844]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 845
+// alias=mapelement_845
+[mapelement_845]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 846
+// alias=mapelement_846
+[mapelement_846]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 847
+// alias=mapelement_847
+[mapelement_847]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 848
+// alias=mapelement_848
+[mapelement_848]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 849
+// alias=mapelement_849
+[mapelement_849]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 850
+// alias=mapelement_850
+[mapelement_850]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 851
+// alias=mapelement_851
+[mapelement_851]
+text=Ancient<br>Prison
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 852
+// alias=mapelement_852
+[mapelement_852]
+text=Greater<br>nechryael
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 853
+// alias=mapelement_853
+[mapelement_853]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 854
+// alias=mapelement_854
+[mapelement_854]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 855
+// alias=mapelement_855
+[mapelement_855]
+text=Ruins of<br>Ullek
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 856
+// alias=mapelement_856
+[mapelement_856]
+text=Necropolis
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 857
+// alias=mapelement_857
+[mapelement_857]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 858
+// alias=mapelement_858
+[mapelement_858]
+category=category_1641
+graphic="mapfunction,129"
+mapfunction=yes
+vis=both
+
+// 859
+// alias=mapelement_859
+[mapelement_859]
+category=category_1642
+graphic="mapfunction,130"
+mapfunction=yes
+vis=both
+
+// 860
+// alias=mapelement_860
+[mapelement_860]
+category=category_1643
+graphic="mapfunction,131"
+mapfunction=yes
+vis=both
+
+// 861
+// alias=mapelement_861
+[mapelement_861]
+text=Kovac
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 862
+// alias=mapelement_862
+[mapelement_862]
+text=Giants'<br>Plateau
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 863
+// alias=mapelement_863
+[mapelement_863]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 864
+// alias=mapelement_864
+[mapelement_864]
+text=Emir's<br>Arena
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 865
+// alias=mapelement_865
+[mapelement_865]
+text=Kalphite<br>Lair
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 866
+// alias=mapelement_866
+[mapelement_866]
+text=Kalphite<br>Cave
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 867
+// alias=mapelement_867
+[mapelement_867]
+text=Trouble<br>Brewing
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 868
+// alias=mapelement_868
+[mapelement_868]
+text=Piscatoris
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 869
+// alias=mapelement_869
+[mapelement_869]
+text=Troll<br>Country
+size=2
+colour=16750623
+category=category_1129
+mapfunction=no
+
+// 870
+// alias=mapelement_870
+[mapelement_870]
+text=Uzer<br>Oasis
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 871
+// alias=mapelement_871
+[mapelement_871]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both
+
+// 872
+// alias=mapelement_872
+[mapelement_872]
+text=Skeleton
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 873
+// alias=mapelement_873
+[mapelement_873]
+text=Callisto's Den
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 874
+// alias=mapelement_874
+[mapelement_874]
+text=Silk Chasm
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 875
+// alias=mapelement_875
+[mapelement_875]
+text=Vet'ion's Rest
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 876
+// alias=mapelement_876
+[mapelement_876]
+text=Hunter's End
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 877
+// alias=mapelement_877
+[mapelement_877]
+text=Web Chasm
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 878
+// alias=mapelement_878
+[mapelement_878]
+text=Skeletal Tomb
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 879
+// alias=mapelement_879
+[mapelement_879]
+text=Jaldraocht<br>Pyramid
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 880
+// alias=mapelement_880
+[mapelement_880]
+text=Jalsavrah<br>Pyramid
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 881
+// alias=mapelement_881
+[mapelement_881]
+text=Jaltevas<br>Pyramid
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 882
+// alias=mapelement_882
+[mapelement_882]
+text=Daimon's<br>Crater
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 883
+// alias=mapelement_883
+[mapelement_883]
+text=Frozen Temple
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 884
+// alias=mapelement_884
+[mapelement_884]
+text=Huntsman's<br>Wood
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 885
+// alias=mapelement_885
+[mapelement_885]
+text=Tower of<br>Bounty
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 886
+// alias=mapelement_886
+[mapelement_886]
+text=Bounty Hunter
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 887
+// alias=mapelement_887
+[mapelement_887]
+category=category_1790
+graphic="mapfunction,133"
+mapfunction=yes
+vis=both
+
+// 888
+// alias=mapelement_888
+[mapelement_888]
+text=The<br>Stranglewood
+size=1
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 889
+// alias=mapelement_889
+[mapelement_889]
+text=Temple
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 890
+// alias=mapelement_890
+[mapelement_890]
+text=Ritual<br>Site
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 891
+// alias=mapelement_891
+[mapelement_891]
+text=Main<br>Block
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 892
+// alias=mapelement_892
+[mapelement_892]
+text=Administration
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 893
+// alias=mapelement_893
+[mapelement_893]
+text=Refugee<br>Camp
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 894
+// alias=mapelement_894
+[mapelement_894]
+text=Science<br>District
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 895
+// alias=mapelement_895
+[mapelement_895]
+text=Residential<br>District
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 896
+// alias=mapelement_896
+[mapelement_896]
+text=Sunken<br>Cathedral
+size=0
+colour=16777215
+category=category_1129
+mapfunction=no
+
+// 897
+// alias=mapelement_897
+[mapelement_897]
+category=category_1056
+graphic="mapfunction,6"
+mapfunction=yes
+vis=both

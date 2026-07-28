@@ -1,0 +1,685 @@
+// 0
+// alias=headbar_0
+[headbar_0]
+full="standard_health_30,0"
+empty="standard_health_30,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+
+// 1
+// alias=headbar_1
+[headbar_1]
+full="headbar_shooting_star_50,0"
+empty="headbar_shooting_star_50,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=50
+
+// 2
+// alias=headbar_2
+[headbar_2]
+full="standard_health_40,0"
+empty="standard_health_40,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=40
+
+// 3
+// alias=headbar_3
+[headbar_3]
+full="standard_shield_30,0"
+empty="standard_shield_30,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+
+// 4
+// alias=headbar_4
+[headbar_4]
+full="standard_shield_40,0"
+empty="standard_shield_40,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=40
+
+// 5
+// alias=headbar_5
+[headbar_5]
+full="standard_shield_50,0"
+empty="standard_shield_50,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=50
+
+// 6
+// alias=headbar_6
+[headbar_6]
+full="standard_shield_60,0"
+empty="standard_shield_60,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=60
+
+// 7
+// alias=headbar_7
+[headbar_7]
+full="headbar_shield_100,1"
+empty="headbar_shield_100,0"
+showpriority=250
+hidepriority=250
+sticktime=60
+fadeout=40
+segments=100
+
+// 8
+// alias=headbar_8
+[headbar_8]
+full="headbar_olmtimer_100,0"
+empty="headbar_olmtimer_100,1"
+showpriority=250
+hidepriority=250
+sticktime=60
+fadeout=40
+segments=120
+
+// 9
+// alias=headbar_9
+[headbar_9]
+full="standard_shield_80,0"
+empty="standard_shield_80,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=80
+
+// 10
+// alias=headbar_10
+[headbar_10]
+full="standard_shield_100,0"
+empty="standard_shield_100,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=100
+
+// 11
+// alias=headbar_11
+[headbar_11]
+full="standard_shield_120,0"
+empty="standard_shield_120,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=120
+
+// 12
+// alias=headbar_12
+[headbar_12]
+full="standard_health_70,0"
+empty="standard_health_70,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=70
+
+// 13
+// alias=headbar_13
+[headbar_13]
+full="standard_shield_140,0"
+empty="standard_shield_140,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=140
+
+// 14
+// alias=headbar_14
+[headbar_14]
+full="standard_shield_160,0"
+empty="standard_shield_160,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=160
+
+// 15
+// alias=headbar_15
+[headbar_15]
+full="standard_armour_30,0"
+empty="standard_armour_30,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+
+// 16
+// alias=headbar_16
+[headbar_16]
+full="standard_health_50,0"
+empty="standard_health_50,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=50
+
+// 17
+// alias=headbar_17
+[headbar_17]
+full="standard_health_60,0"
+empty="standard_health_60,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=60
+
+// 18
+// alias=headbar_18
+[headbar_18]
+full="standard_health_80,0"
+empty="standard_health_80,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=80
+
+// 19
+// alias=headbar_19
+[headbar_19]
+full="standard_health_100,0"
+empty="standard_health_100,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=100
+
+// 20
+// alias=headbar_20
+[headbar_20]
+full="standard_health_120,0"
+empty="standard_health_120,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=120
+
+// 21
+// alias=headbar_21
+[headbar_21]
+full="standard_health_140,0"
+empty="standard_health_140,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=140
+
+// 22
+// alias=headbar_22
+[headbar_22]
+full="standard_health_160,0"
+empty="standard_health_160,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=160
+
+// 23
+// alias=headbar_23
+[headbar_23]
+full="standard_armour_40,0"
+empty="standard_armour_40,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=40
+
+// 24
+// alias=headbar_24
+[headbar_24]
+full="standard_armour_50,0"
+empty="standard_armour_50,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=50
+
+// 25
+// alias=headbar_25
+[headbar_25]
+full="standard_armour_60,0"
+empty="standard_armour_60,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=60
+
+// 26
+// alias=headbar_26
+[headbar_26]
+full="standard_armour_80,0"
+empty="standard_armour_80,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=80
+
+// 27
+// alias=headbar_27
+[headbar_27]
+full="standard_armour_100,0"
+empty="standard_armour_100,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=100
+
+// 28
+// alias=headbar_28
+[headbar_28]
+full="standard_armour_120,0"
+empty="standard_armour_120,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=120
+
+// 29
+// alias=headbar_29
+[headbar_29]
+full="standard_armour_140,0"
+empty="standard_armour_140,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=140
+
+// 30
+// alias=headbar_30
+[headbar_30]
+full="standard_armour_160,0"
+empty="standard_armour_160,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=160
+
+// 31
+// alias=headbar_31
+[headbar_31]
+full="standard_charge_30,0"
+empty="standard_charge_30,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+
+// 32
+// alias=headbar_32
+[headbar_32]
+full="standard_charge_40,0"
+empty="standard_charge_40,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=40
+
+// 33
+// alias=headbar_33
+[headbar_33]
+full="standard_charge_50,0"
+empty="standard_charge_50,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=50
+
+// 34
+// alias=headbar_34
+[headbar_34]
+full="standard_charge_60,0"
+empty="standard_charge_60,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=60
+
+// 35
+// alias=headbar_35
+[headbar_35]
+full="standard_charge_80,0"
+empty="standard_charge_80,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=80
+
+// 36
+// alias=headbar_36
+[headbar_36]
+full="standard_charge_100,0"
+empty="standard_charge_100,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=100
+
+// 37
+// alias=headbar_37
+[headbar_37]
+full="standard_charge_120,0"
+empty="standard_charge_120,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=120
+
+// 38
+// alias=headbar_38
+[headbar_38]
+full="standard_charge_140,0"
+empty="standard_charge_140,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=140
+
+// 39
+// alias=headbar_39
+[headbar_39]
+full="standard_charge_160,0"
+empty="standard_charge_160,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=160
+
+// 40
+// alias=headbar_40
+[headbar_40]
+full="standard_shield_70,0"
+empty="standard_shield_70,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=70
+
+// 41
+// alias=headbar_41
+[headbar_41]
+full="standard_armour_70,0"
+empty="standard_armour_70,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=70
+
+// 42
+// alias=headbar_42
+[headbar_42]
+full="standard_charge_70,0"
+empty="standard_charge_70,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=70
+
+// 43
+// alias=headbar_43
+[headbar_43]
+full="standard_prayer_30,0"
+empty="standard_prayer_30,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+
+// 44
+// alias=headbar_44
+[headbar_44]
+full="standard_prayer_40,0"
+empty="standard_prayer_40,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=40
+
+// 45
+// alias=headbar_45
+[headbar_45]
+full="standard_prayer_50,0"
+empty="standard_prayer_50,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=50
+
+// 46
+// alias=headbar_46
+[headbar_46]
+full="standard_prayer_60,0"
+empty="standard_prayer_60,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=60
+
+// 47
+// alias=headbar_47
+[headbar_47]
+full="standard_prayer_70,0"
+empty="standard_prayer_70,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=70
+
+// 48
+// alias=headbar_48
+[headbar_48]
+full="standard_prayer_80,0"
+empty="standard_prayer_80,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=80
+
+// 49
+// alias=headbar_49
+[headbar_49]
+full="standard_prayer_100,0"
+empty="standard_prayer_100,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=100
+
+// 50
+// alias=headbar_50
+[headbar_50]
+full="standard_prayer_120,0"
+empty="standard_prayer_120,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=120
+
+// 51
+// alias=headbar_51
+[headbar_51]
+full="standard_prayer_140,0"
+empty="standard_prayer_140,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=140
+
+// 52
+// alias=headbar_52
+[headbar_52]
+full="standard_prayer_160,0"
+empty="standard_prayer_160,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=160
+
+// 53
+// alias=headbar_53
+[headbar_53]
+full="standard_poison_30,0"
+empty="standard_poison_30,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+
+// 54
+// alias=headbar_54
+[headbar_54]
+full="standard_poison_40,0"
+empty="standard_poison_40,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=40
+
+// 55
+// alias=headbar_55
+[headbar_55]
+full="standard_poison_50,0"
+empty="standard_poison_50,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=50
+
+// 56
+// alias=headbar_56
+[headbar_56]
+full="standard_poison_60,0"
+empty="standard_poison_60,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=60
+
+// 57
+// alias=headbar_57
+[headbar_57]
+full="standard_poison_70,0"
+empty="standard_poison_70,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=70
+
+// 58
+// alias=headbar_58
+[headbar_58]
+full="standard_poison_80,0"
+empty="standard_poison_80,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=80
+
+// 59
+// alias=headbar_59
+[headbar_59]
+full="standard_poison_100,0"
+empty="standard_poison_100,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=100
+
+// 60
+// alias=headbar_60
+[headbar_60]
+full="standard_poison_120,0"
+empty="standard_poison_120,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=120
+
+// 61
+// alias=headbar_61
+[headbar_61]
+full="standard_poison_140,0"
+empty="standard_poison_140,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=140
+
+// 62
+// alias=headbar_62
+[headbar_62]
+full="standard_poison_160,0"
+empty="standard_poison_160,1"
+showpriority=250
+hidepriority=250
+sticktime=300
+fadeout=280
+segments=160

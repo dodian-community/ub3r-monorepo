@@ -37,6 +37,24 @@ class MiningModuleRuntimeTest {
     }
 
     @Test
+    fun `pickaxe tier names match revision 218 item ids`() {
+        assertEquals(
+            mapOf(
+                "bronze" to 1265,
+                "iron" to 1267,
+                "steel" to 1269,
+                "black" to 12297,
+                "mithril" to 1273,
+                "adamant" to 1271,
+                "rune" to 1275,
+                "dragon" to 11920,
+                "3rd_age" to 20014,
+            ),
+            MiningModule.pickaxes.associate { it.name to it.itemId },
+        )
+    }
+
+    @Test
     fun `verified current cache iron ids replace baseline ids`() {
         val rock = MiningModule.rocks.firstOrNull { 11365 in it.objectIds }
         assertEquals("iron", rock?.name)

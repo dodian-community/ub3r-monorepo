@@ -1,6 +1,6 @@
 package net.dodian.uber.game.npc
 
-internal object CaveBugLarva : NpcFamily by npcFamily("Cave bug larva", 1833, block = {
+internal object CaveBugLarva : NpcFamily by npcFamily("Cave bug larva", 482, block = {
     definition {
         examine = "I guess he sells what he steals...?"
     }

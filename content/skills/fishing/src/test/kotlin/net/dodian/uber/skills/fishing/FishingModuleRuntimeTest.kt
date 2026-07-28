@@ -11,7 +11,8 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
-private const val NET_SPOT_NPC_ID = 1510
+private const val NET_SPOT_NPC_ID = 1514
+private const val ROD_SPOT_NPC_ID = 1506
 private const val SHRIMP = 317
 private const val SMALL_NET = 303
 
@@ -65,10 +66,10 @@ class FishingModuleRuntimeTest {
 
     @Test
     fun `feather-consuming spot requires and consumes feathers`() {
-        val binding = FishingModule.definition.npcBindings.single { NET_SPOT_NPC_ID in it.npcIds && it.option == 2 }
+        val binding = FishingModule.definition.npcBindings.single { ROD_SPOT_NPC_ID in it.npcIds && it.option == 1 }
         val player = FakeSkillPlayer(mapOf(309 to 1, 314 to 1)).apply { setLevel(Skill.FISHING, 20) }
 
-        binding.handler(SkillNpcInteraction(player, 2, npcRef(NET_SPOT_NPC_ID)))
+        binding.handler(SkillNpcInteraction(player, 1, npcRef(ROD_SPOT_NPC_ID)))
         player.advanceTicks(6)
 
         assertEquals(0, player.amount(314))
@@ -104,12 +105,21 @@ class FishingModuleRuntimeTest {
 
     @Test
     fun `premium only spot refuses non-premium players`() {
-        val binding = FishingModule.definition.npcBindings.single { 1514 in it.npcIds && it.option == 1 }
+        val binding = FishingModule.definition.npcBindings.single { 1511 in it.npcIds && it.option == 1 }
         val player = FakeSkillPlayer(mapOf(303 to 1)).apply { setLevel(Skill.FISHING, 99) }
 
-        binding.handler(SkillNpcInteraction(player, 1, npcRef(1514)))
+        binding.handler(SkillNpcInteraction(player, 1, npcRef(1511)))
 
         assertEquals(listOf("You need to be premium to fish from this spot!"), player.messages)
         assertNull(player.activeActionName())
+    }
+
+    @Test
+    fun `all eight methods use revision 218 fishing spot actions`() {
+        assertEquals(
+            setOf(1514 to 1, 1506 to 1, 1510 to 1, 1510 to 3, 1511 to 1, 1511 to 3, 1520 to 1, 1520 to 3),
+            FishingModule.spots.map { it.npcId to it.clickOption }.toSet(),
+        )
+        assertTrue(FishingModule.spots.none { it.clickOption == 2 })
     }
 }

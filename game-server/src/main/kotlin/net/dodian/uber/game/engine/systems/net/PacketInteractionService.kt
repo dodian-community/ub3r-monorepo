@@ -21,6 +21,7 @@ import net.dodian.uber.game.engine.systems.interaction.scheduler.NpcInteractionT
 import net.dodian.uber.game.engine.systems.interaction.scheduler.PlayerInteractionTask
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.engine.config.gameWorldId
+import net.dodian.uber.game.persistence.audit.ConsoleAuditLog
 import org.slf4j.LoggerFactory
 
 /**
@@ -63,7 +64,8 @@ object PacketInteractionService {
     @JvmStatic
     fun handleUseItemOnNpc(client: Client, opcode: Int, itemId: Int, slot: Int, npcIndex: Int) {
         if (client.randomed || client.UsingAgility) return
-        Server.npcManager.npcMap[npcIndex] ?: return
+        val npc = Server.npcManager.npcMap[npcIndex] ?: return
+        ConsoleAuditLog.npcClick(client, npc, 0, opcode)
 
         val intent = ItemOnNpcIntent(opcode, PlayerRegistry.cycle.toLong(), itemId, slot, npcIndex)
         InteractionTaskScheduler.schedule(client, intent, NpcInteractionTask(client, intent))
@@ -85,6 +87,7 @@ object PacketInteractionService {
         if (client.randomed || client.UsingAgility) {
             return
         }
+        ConsoleAuditLog.npcClick(client, npc, option, opcode)
         if (client.playerPotatoState != null) {
             client.clearPlayerPotatoState()
         }
@@ -123,6 +126,7 @@ object PacketInteractionService {
             }
             return
         }
+        ConsoleAuditLog.npcClick(client, npc, 5, opcode)
         val dedupeDecision = AttackStartDedupeService.shouldAcceptAttackStart(
             player = client,
             intent = CombatIntent.ATTACK_NPC,

@@ -188,6 +188,15 @@ object InteractionProcessor {
                 else -> DispatchTiming(false, 0L, 0L, null)
             }
         clear(player)
+        net.dodian.uber.game.persistence.audit.ConsoleAuditLog.npcInteraction(
+            player = player,
+            npc = npc,
+            option = intent.option,
+            opcode = intent.opcode,
+            handled = timing.handled,
+            handlerSource = timing.handlerName,
+            elapsedNanos = System.nanoTime() - startNs,
+        )
         slowLogIfNeeded(
             player,
             intent,

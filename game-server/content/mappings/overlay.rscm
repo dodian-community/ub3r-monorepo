@@ -1,0 +1,1774 @@
+// 0
+// alias=overlay_0
+[overlay_0]
+colour=0xaaaaaa
+
+// 1
+// alias=overlay_1
+[overlay_1]
+colour=0x444444
+
+// 2
+// alias=overlay_2
+[overlay_2]
+colour=0x666666
+
+// 3
+// alias=overlay_3
+[overlay_3]
+colour=0x888888
+
+// 4
+// alias=overlay_4
+[overlay_4]
+material=material_3
+
+// 5
+// alias=overlay_5
+[overlay_5]
+material=material_1
+mapcolour=0x687daa
+
+// 6
+// alias=overlay_6
+[overlay_6]
+material=material_25
+
+// 7
+// alias=overlay_7
+[overlay_7]
+colour=0x5b5b5b
+
+// 8
+// alias=overlay_8
+[overlay_8]
+colour=0xfffff5
+
+// 9
+// alias=overlay_9
+[overlay_9]
+colour=0x505050
+
+// 10
+// alias=overlay_10
+[overlay_10]
+colour=0x222222
+
+// 11
+// alias=overlay_11
+[overlay_11]
+material=material_46
+
+// 12
+// alias=overlay_12
+[overlay_12]
+colour=0x993333
+
+// 13
+// alias=overlay_13
+[overlay_13]
+colour=0x3d2b0b
+
+// 14
+// alias=overlay_14
+[overlay_14]
+colour=0x3d2b0b
+
+// 15
+// alias=overlay_15
+[overlay_15]
+colour=0x663300
+
+// 16
+// alias=overlay_16
+[overlay_16]
+colour=0x663300
+
+// 17
+// alias=overlay_17
+[overlay_17]
+colour=0xcc
+
+// 18
+// alias=overlay_18
+[overlay_18]
+material=material_31
+
+// 19
+// alias=overlay_19
+[overlay_19]
+material=material_15
+
+// 20
+// alias=overlay_20
+[overlay_20]
+colour=0x996600
+
+// 21
+// alias=overlay_21
+[overlay_21]
+colour=0x6d5b2b
+
+// 22
+// alias=overlay_22
+[overlay_22]
+colour=0x6d5b2b
+
+// 23
+// alias=overlay_23
+[overlay_23]
+material=material_47
+
+// 24
+// alias=overlay_24
+[overlay_24]
+colour=0xcbba76
+
+// 25
+// alias=overlay_25
+[overlay_25]
+colour=0x827944
+
+// 26
+// alias=overlay_26
+[overlay_26]
+material=material_23
+
+// 27
+// alias=overlay_27
+[overlay_27]
+material=material_2
+
+// 28
+// alias=overlay_28
+[overlay_28]
+colour=0x35720a
+
+// 29
+// alias=overlay_29
+[overlay_29]
+colour=0xeeeeee
+
+// 30
+// alias=overlay_30
+[overlay_30]
+colour=0x654d0b
+
+// 31
+// alias=overlay_31
+[overlay_31]
+material=material_11
+
+// 32
+// alias=overlay_32
+[overlay_32]
+colour=0xc9ddf7
+
+// 33
+// alias=overlay_33
+[overlay_33]
+colour=0x505050
+
+// 34
+// alias=overlay_34
+[overlay_34]
+material=material_3
+
+// 35
+// alias=overlay_35
+[overlay_35]
+colour=0x664411
+
+// 36
+// alias=overlay_36
+[overlay_36]
+colour=0x0
+
+// 37
+// alias=overlay_37
+[overlay_37]
+colour=0x557799
+
+// 38
+// alias=overlay_38
+[overlay_38]
+material=material_17
+
+// 39
+// alias=overlay_39
+[overlay_39]
+colour=0x4749a3
+
+// 40
+// alias=overlay_40
+[overlay_40]
+colour=0x3f6181
+
+// 41
+// alias=overlay_41
+[overlay_41]
+occlude=no
+colour=0xff00ff
+
+// 42
+// alias=overlay_42
+[overlay_42]
+colour=0xff00ff
+
+// 43
+// alias=overlay_43
+[overlay_43]
+colour=0x505050
+occlude=no
+
+// 44
+// alias=overlay_44
+[overlay_44]
+material=material_3
+occlude=no
+
+// 45
+// alias=overlay_45
+[overlay_45]
+material=material_23
+occlude=no
+
+// 46
+// alias=overlay_46
+[overlay_46]
+material=material_2
+occlude=no
+
+// 47
+// alias=overlay_47
+[overlay_47]
+colour=0x282820
+mapcolour=0x0
+
+// 48
+// alias=overlay_48
+[overlay_48]
+colour=0x282820
+
+// 49
+// alias=overlay_49
+[overlay_49]
+colour=0x302020
+
+// 50
+// alias=overlay_50
+[overlay_50]
+occlude=no
+colour=0xff00ff
+mapcolour=0x827944
+
+// 51
+// alias=overlay_51
+[overlay_51]
+material=material_51
+
+// 52
+// alias=overlay_52
+[overlay_52]
+occlude=no
+colour=0xff00ff
+mapcolour=0xc4ac4e
+
+// 53
+// alias=overlay_53
+[overlay_53]
+occlude=no
+colour=0xff00ff
+mapcolour=0xb79767
+
+// 54
+// alias=overlay_54
+[overlay_54]
+occlude=no
+colour=0xff00ff
+mapcolour=0x606058
+
+// 55
+// alias=overlay_55
+[overlay_55]
+colour=0x606058
+
+// 56
+// alias=overlay_56
+[overlay_56]
+occlude=no
+colour=0xff00ff
+mapcolour=0x83c3ca
+
+// 57
+// alias=overlay_57
+[overlay_57]
+colour=0x3d2b0b
+occlude=no
+mapcolour=0xfffff5
+
+// 58
+// alias=overlay_58
+[overlay_58]
+occlude=no
+colour=0xff00ff
+mapcolour=0x282820
+
+// 59
+// alias=overlay_59
+[overlay_59]
+occlude=no
+colour=0x826016
+
+// 60
+// alias=overlay_60
+[overlay_60]
+occlude=no
+colour=0xff00ff
+mapcolour=0x3d2b0b
+
+// 61
+// alias=overlay_61
+[overlay_61]
+occlude=no
+colour=0xff00ff
+mapcolour=0x1818
+
+// 62
+// alias=overlay_62
+[overlay_62]
+occlude=no
+colour=0x3838
+
+// 63
+// alias=overlay_63
+[overlay_63]
+occlude=no
+colour=0xff00ff
+mapcolour=0xb8b098
+
+// 64
+// alias=overlay_64
+[overlay_64]
+occlude=no
+colour=0xff00ff
+mapcolour=0x882222
+
+// 65
+// alias=overlay_65
+[overlay_65]
+occlude=no
+colour=0x788868
+
+// 66
+// alias=overlay_66
+[overlay_66]
+occlude=no
+colour=0xff00ff
+mapcolour=0x788868
+
+// 67
+// alias=overlay_67
+[overlay_67]
+occlude=no
+colour=0x5c2057
+
+// 68
+// alias=overlay_68
+[overlay_68]
+occlude=no
+colour=0xff00ff
+mapcolour=0x5c2057
+
+// 69
+// alias=overlay_69
+[overlay_69]
+occlude=no
+colour=0x873968
+
+// 70
+// alias=overlay_70
+[overlay_70]
+occlude=no
+colour=0xff00ff
+mapcolour=0x873968
+
+// 71
+// alias=overlay_71
+[overlay_71]
+occlude=no
+colour=0x660000
+
+// 72
+// alias=overlay_72
+[overlay_72]
+occlude=no
+colour=0xff00ff
+mapcolour=0x660000
+
+// 73
+// alias=overlay_73
+[overlay_73]
+occlude=no
+colour=0x3ab011
+
+// 74
+// alias=overlay_74
+[overlay_74]
+occlude=no
+colour=0xff00ff
+mapcolour=0x3ab011
+
+// 75
+// alias=overlay_75
+[overlay_75]
+colour=0xc4ac4e
+
+// 76
+// alias=overlay_76
+[overlay_76]
+colour=0xb79767
+
+// 77
+// alias=overlay_77
+[overlay_77]
+occlude=no
+colour=0x403010
+mapcolour=0x403010
+
+// 78
+// alias=overlay_78
+[overlay_78]
+colour=0x97874f
+
+// 79
+// alias=overlay_79
+[overlay_79]
+colour=0x7d5b2b
+
+// 80
+// alias=overlay_80
+[overlay_80]
+colour=0x504020
+
+// 81
+// alias=overlay_81
+[overlay_81]
+colour=0x5c5444
+
+// 82
+// alias=overlay_82
+[overlay_82]
+colour=0x464034
+
+// 83
+// alias=overlay_83
+[overlay_83]
+material=material_35
+
+// 84
+// alias=overlay_84
+[overlay_84]
+colour=0x303525
+
+// 85
+// alias=overlay_85
+[overlay_85]
+colour=0x2d0000
+
+// 86
+// alias=overlay_86
+[overlay_86]
+colour=0x423f73
+
+// 87
+// alias=overlay_87
+[overlay_87]
+colour=0x544d37
+
+// 88
+// alias=overlay_88
+[overlay_88]
+colour=0x5e461c
+
+// 89
+// alias=overlay_89
+[overlay_89]
+colour=0x2e2920
+
+// 90
+// alias=overlay_90
+[overlay_90]
+colour=0x504020
+
+// 91
+// alias=overlay_91
+[overlay_91]
+occlude=no
+colour=0xff00ff
+mapcolour=0x0
+
+// 92
+// alias=overlay_92
+[overlay_92]
+occlude=no
+colour=0x303838
+mapcolour=0x303838
+
+// 93
+// alias=overlay_93
+[overlay_93]
+colour=0x494242
+
+// 94
+// alias=overlay_94
+[overlay_94]
+colour=0xc890
+mapcolour=0xc890
+
+// 95
+// alias=overlay_95
+[overlay_95]
+colour=0x587070
+
+// 96
+// alias=overlay_96
+[overlay_96]
+occlude=no
+colour=0xff00
+mapcolour=0x0
+
+// 97
+// alias=overlay_97
+[overlay_97]
+colour=0xff00ff
+mapcolour=0x3a4b35
+
+// 98
+// alias=overlay_98
+[overlay_98]
+colour=0x282828
+
+// 99
+// alias=overlay_99
+[overlay_99]
+occlude=no
+colour=0xff00ff
+mapcolour=0x222222
+
+// 100
+// alias=overlay_100
+[overlay_100]
+colour=0x544217
+
+// 101
+// alias=overlay_101
+[overlay_101]
+colour=0x303525
+
+// 102
+// alias=overlay_102
+[overlay_102]
+colour=0x501840
+mapcolour=0x501840
+
+// 103
+// alias=overlay_103
+[overlay_103]
+colour=0x83c3ca
+
+// 104
+// alias=overlay_104
+[overlay_104]
+colour=0x666666
+
+// 105
+// alias=overlay_105
+[overlay_105]
+colour=0x66593b
+
+// 106
+// alias=overlay_106
+[overlay_106]
+colour=0x3a4b35
+
+// 107
+// alias=overlay_107
+[overlay_107]
+colour=0x403010
+
+// 108
+// alias=overlay_108
+[overlay_108]
+colour=0xc9ddf9
+
+// 109
+// alias=overlay_109
+[overlay_109]
+colour=0x383820
+
+// 110
+// alias=overlay_110
+[overlay_110]
+occlude=no
+colour=0xff00ff
+mapcolour=0xb0f0
+
+// 111
+// alias=overlay_111
+[overlay_111]
+occlude=no
+colour=0xff00ff
+mapcolour=0x60f830
+
+// 112
+// alias=overlay_112
+[overlay_112]
+occlude=no
+colour=0xff00ff
+mapcolour=0xf00808
+
+// 113
+// alias=overlay_113
+[overlay_113]
+occlude=no
+colour=0x403810
+mapcolour=0x403810
+
+// 114
+// alias=overlay_114
+[overlay_114]
+colour=0x181810
+
+// 115
+// alias=overlay_115
+[overlay_115]
+colour=0x0
+mapcolour=0x181810
+
+// 116
+// alias=overlay_116
+[overlay_116]
+occlude=no
+colour=0x4f4f4f
+
+// 117
+// alias=overlay_117
+[overlay_117]
+colour=0xd8d8f0
+mapcolour=0xd8d8f0
+
+// 118
+// alias=overlay_118
+[overlay_118]
+colour=0x5c543c
+
+// 119
+// alias=overlay_119
+[overlay_119]
+colour=0x2f2b1f
+mapcolour=0x333028
+
+// 120
+// alias=overlay_120
+[overlay_120]
+occlude=no
+colour=0xff00ff
+mapcolour=0xd8d8f0
+
+// 121
+// alias=overlay_121
+[overlay_121]
+occlude=no
+colour=0xff00ff
+mapcolour=0x201e38
+
+// 122
+// alias=overlay_122
+[overlay_122]
+colour=0xb8b098
+mapcolour=0xb8b098
+
+// 123
+// alias=overlay_123
+[overlay_123]
+occlude=no
+colour=0xff00ff
+mapcolour=0x450000
+
+// 124
+// alias=overlay_124
+[overlay_124]
+colour=0xff00ff
+mapcolour=0x66593b
+
+// 125
+// alias=overlay_125
+[overlay_125]
+colour=0xff00ff
+mapcolour=0x383830
+
+// 126
+// alias=overlay_126
+[overlay_126]
+colour=0x404038
+
+// 127
+// alias=overlay_127
+[overlay_127]
+colour=0x77a785
+
+// 128
+// alias=overlay_128
+[overlay_128]
+occlude=no
+colour=0xff00ff
+mapcolour=0x44886e
+
+// 129
+// alias=overlay_129
+[overlay_129]
+colour=0x82c4b8
+
+// 130
+// alias=overlay_130
+[overlay_130]
+colour=0x272710
+
+// 131
+// alias=overlay_131
+[overlay_131]
+colour=0x373229
+
+// 132
+// alias=overlay_132
+[overlay_132]
+colour=0x303828
+
+// 133
+// alias=overlay_133
+[overlay_133]
+occlude=no
+colour=0x404044
+mapcolour=0x464646
+
+// 134
+// alias=overlay_134
+[overlay_134]
+occlude=no
+colour=0xff00ff
+mapcolour=0xeeeeee
+
+// 135
+// alias=overlay_135
+[overlay_135]
+occlude=no
+colour=0xff00ff
+mapcolour=0x687daa
+
+// 136
+// alias=overlay_136
+[overlay_136]
+colour=0x746949
+
+// 137
+// alias=overlay_137
+[overlay_137]
+colour=0xff00ff
+occlude=no
+mapcolour=0x2e2e2e
+
+// 138
+// alias=overlay_138
+[overlay_138]
+colour=0x2e2e2e
+occlude=no
+mapcolour=0x2e2e2e
+
+// 139
+// alias=overlay_139
+[overlay_139]
+colour=0x484838
+occlude=no
+mapcolour=0x484838
+
+// 140
+// alias=overlay_140
+[overlay_140]
+colour=0x688080
+occlude=no
+mapcolour=0x688080
+
+// 141
+// alias=overlay_141
+[overlay_141]
+colour=0xa0a8a8
+occlude=no
+mapcolour=0xa0a8a8
+
+// 142
+// alias=overlay_142
+[overlay_142]
+colour=0x506060
+occlude=no
+mapcolour=0x506060
+
+// 143
+// alias=overlay_143
+[overlay_143]
+colour=0xff00ff
+occlude=no
+mapcolour=0xa0a8a8
+
+// 144
+// alias=overlay_144
+[overlay_144]
+colour=0x818173
+occlude=no
+mapcolour=0x818173
+
+// 145
+// alias=overlay_145
+[overlay_145]
+colour=0xb0b0a6
+occlude=no
+mapcolour=0xb0b0a6
+
+// 146
+// alias=overlay_146
+[overlay_146]
+colour=0x646459
+occlude=no
+mapcolour=0x646459
+
+// 147
+// alias=overlay_147
+[overlay_147]
+colour=0xff00ff
+occlude=no
+mapcolour=0xb0b0a6
+
+// 148
+// alias=overlay_148
+[overlay_148]
+colour=0x738173
+occlude=no
+mapcolour=0x738173
+
+// 149
+// alias=overlay_149
+[overlay_149]
+colour=0xa6b0a6
+occlude=no
+mapcolour=0xa6b0a6
+
+// 150
+// alias=overlay_150
+[overlay_150]
+colour=0x7296b7
+mapcolour=0x687daa
+
+// 151
+// alias=overlay_151
+[overlay_151]
+occlude=no
+colour=0xff00ff
+mapcolour=0xf6cf0e
+
+// 152
+// alias=overlay_152
+[overlay_152]
+occlude=no
+colour=0xff00ff
+mapcolour=0x544d37
+
+// 153
+// alias=overlay_153
+[overlay_153]
+occlude=no
+colour=0xff00ff
+mapcolour=0x35720a
+
+// 154
+// alias=overlay_154
+[overlay_154]
+occlude=no
+colour=0xff00ff
+mapcolour=0xcbba76
+
+// 155
+// alias=overlay_155
+[overlay_155]
+colour=0x44886e
+
+// 156
+// alias=overlay_156
+[overlay_156]
+colour=0xfab737
+
+// 157
+// alias=overlay_157
+[overlay_157]
+colour=0x4182af
+
+// 158
+// alias=overlay_158
+[overlay_158]
+colour=0x3c2823
+
+// 159
+// alias=overlay_159
+[overlay_159]
+occlude=no
+colour=0xdda6dd
+mapcolour=0xdbb7db
+
+// 160
+// alias=overlay_160
+[overlay_160]
+occlude=no
+colour=0xff00ff
+mapcolour=0x654d0b
+
+// 161
+// alias=overlay_161
+[overlay_161]
+occlude=no
+colour=0x435541
+mapcolour=0x435541
+
+// 162
+// alias=overlay_162
+[overlay_162]
+occlude=no
+colour=0x6e3e2f
+mapcolour=0x6e3e2f
+
+// 163
+// alias=overlay_163
+[overlay_163]
+colour=0x505070
+
+// 164
+// alias=overlay_164
+[overlay_164]
+colour=0x596459
+occlude=no
+mapcolour=0x596459
+
+// 165
+// alias=overlay_165
+[overlay_165]
+colour=0xfafa45
+
+// 166
+// alias=overlay_166
+[overlay_166]
+colour=0xa6cac4
+
+// 167
+// alias=overlay_167
+[overlay_167]
+colour=0xca7bc9
+
+// 168
+// alias=overlay_168
+[overlay_168]
+colour=0x84b7c4
+
+// 169
+// alias=overlay_169
+[overlay_169]
+colour=0xff00ff
+occlude=no
+mapcolour=0xa6b0a6
+
+// 170
+// alias=overlay_170
+[overlay_170]
+colour=0x787060
+
+// 171
+// alias=overlay_171
+[overlay_171]
+colour=0x786b52
+
+// 172
+// alias=overlay_172
+[overlay_172]
+colour=0x786848
+
+// 173
+// alias=overlay_173
+[overlay_173]
+material=material_43
+
+// 174
+// alias=overlay_174
+[overlay_174]
+colour=0x648e90
+occlude=no
+mapcolour=0x648e90
+
+// 175
+// alias=overlay_175
+[overlay_175]
+colour=0x9bbabb
+occlude=no
+mapcolour=0x9bbabb
+
+// 176
+// alias=overlay_176
+[overlay_176]
+colour=0x4d6e6f
+occlude=no
+mapcolour=0x4d6e6f
+
+// 177
+// alias=overlay_177
+[overlay_177]
+colour=0xff00ff
+occlude=no
+mapcolour=0x4d6e6f
+
+// 178
+// alias=overlay_178
+[overlay_178]
+colour=0x3b3b34
+
+// 179
+// alias=overlay_179
+[overlay_179]
+colour=0x4a4242
+
+// 180
+// alias=overlay_180
+[overlay_180]
+occlude=no
+colour=0xb4253
+
+// 181
+// alias=overlay_181
+[overlay_181]
+occlude=no
+colour=0x32363d
+
+// 182
+// alias=overlay_182
+[overlay_182]
+colour=0x1b2233
+
+// 183
+// alias=overlay_183
+[overlay_183]
+colour=0xa1122
+
+// 184
+// alias=overlay_184
+[overlay_184]
+colour=0x53442d
+
+// 185
+// alias=overlay_185
+[overlay_185]
+colour=0x43341b
+
+// 186
+// alias=overlay_186
+[overlay_186]
+colour=0x33230a
+
+// 187
+// alias=overlay_187
+[overlay_187]
+colour=0x18192d
+
+// 188
+// alias=overlay_188
+[overlay_188]
+colour=0x21223e
+
+// 189
+// alias=overlay_189
+[overlay_189]
+occlude=no
+colour=0xf99322
+
+// 190
+// alias=overlay_190
+[overlay_190]
+colour=0x7d7d57
+
+// 191
+// alias=overlay_191
+[overlay_191]
+colour=0x666547
+
+// 192
+// alias=overlay_192
+[overlay_192]
+colour=0x8f8e4d
+
+// 193
+// alias=overlay_193
+[overlay_193]
+occlude=no
+colour=0x431d1b
+
+// 194
+// alias=overlay_194
+[overlay_194]
+occlude=no
+colour=0x241a19
+
+// 195
+// alias=overlay_195
+[overlay_195]
+material=material_91
+
+// 196
+// alias=overlay_196
+[overlay_196]
+colour=0xecebe9
+
+// 197
+// alias=overlay_197
+[overlay_197]
+colour=0xbfb9b6
+
+// 198
+// alias=overlay_198
+[overlay_198]
+colour=0x9c926c
+
+// 199
+// alias=overlay_199
+[overlay_199]
+occlude=no
+colour=0xff00ff
+mapcolour=0x383828
+
+// 200
+// alias=overlay_200
+[overlay_200]
+occlude=no
+colour=0xa1a22
+
+// 201
+// alias=overlay_201
+[overlay_201]
+occlude=no
+colour=0xc8b9ae
+
+// 202
+// alias=overlay_202
+[overlay_202]
+occlude=no
+colour=0xedceb8
+
+// 203
+// alias=overlay_203
+[overlay_203]
+occlude=no
+colour=0x649075
+
+// 204
+// alias=overlay_204
+[overlay_204]
+colour=0x6f673e
+mapcolour=0x6b633c
+
+// 205
+// alias=overlay_205
+[overlay_205]
+colour=0x8d8653
+mapcolour=0x878150
+
+// 206
+// alias=overlay_206
+[overlay_206]
+material=material_35
+mapcolour=0x7e7444
+
+// 207
+// alias=overlay_207
+[overlay_207]
+occlude=no
+colour=0xff00ff
+mapcolour=0x6b633c
+
+// 208
+// alias=overlay_208
+[overlay_208]
+occlude=no
+colour=0xff00ff
+mapcolour=0x878150
+
+// 209
+// alias=overlay_209
+[overlay_209]
+occlude=no
+colour=0xff00ff
+mapcolour=0x6f6314
+
+// 210
+// alias=overlay_210
+[overlay_210]
+colour=0x96633d
+mapcolour=0x96633d
+
+// 211
+// alias=overlay_211
+[overlay_211]
+occlude=no
+colour=0xff00ff
+mapcolour=0x96633d
+
+// 212
+// alias=overlay_212
+[overlay_212]
+colour=0x805534
+mapcolour=0x805534
+
+// 213
+// alias=overlay_213
+[overlay_213]
+occlude=no
+colour=0xff00ff
+mapcolour=0x805534
+
+// 214
+// alias=overlay_214
+[overlay_214]
+colour=0xb3986c
+mapcolour=0x967d54
+
+// 215
+// alias=overlay_215
+[overlay_215]
+colour=0x474231
+occlude=no
+
+// 216
+// alias=overlay_216
+[overlay_216]
+colour=0xa29976
+mapcolour=0x9c936d
+
+// 217
+// alias=overlay_217
+[overlay_217]
+colour=0xff00ff
+mapcolour=0x9c936d
+
+// 218
+// alias=overlay_218
+[overlay_218]
+colour=0x312d21
+occlude=no
+
+// 219
+// alias=overlay_219
+[overlay_219]
+occlude=no
+colour=0xff00ff
+mapcolour=0x2e2e42
+
+// 220
+// alias=overlay_220
+[overlay_220]
+colour=0x12110e
+occlude=no
+
+// 221
+// alias=overlay_221
+[overlay_221]
+colour=0x312c21
+occlude=no
+
+// 222
+// alias=overlay_222
+[overlay_222]
+occlude=no
+colour=0x85665f
+
+// 223
+// alias=overlay_223
+[overlay_223]
+occlude=no
+colour=0x9b664e
+
+// 224
+// alias=overlay_224
+[overlay_224]
+occlude=no
+colour=0x705650
+
+// 225
+// alias=overlay_225
+[overlay_225]
+colour=0xa98632
+occlude=no
+
+// 226
+// alias=overlay_226
+[overlay_226]
+colour=0xcaa13c
+occlude=no
+
+// 227
+// alias=overlay_227
+[overlay_227]
+colour=0x1c1919
+
+// 228
+// alias=overlay_228
+[overlay_228]
+colour=0x131111
+
+// 229
+// alias=overlay_229
+[overlay_229]
+occlude=no
+colour=0x665f47
+mapcolour=0x665f47
+
+// 230
+// alias=overlay_230
+[overlay_230]
+occlude=no
+colour=0xff00ff
+mapcolour=0x665f47
+
+// 231
+// alias=overlay_231
+[overlay_231]
+colour=0x343b4b
+occlude=no
+
+// 232
+// alias=overlay_232
+[overlay_232]
+colour=0x212a3e
+occlude=no
+
+// 233
+// alias=overlay_233
+[overlay_233]
+colour=0xff00ff
+occlude=no
+mapcolour=0x212a3e
+
+// 234
+// alias=overlay_234
+[overlay_234]
+colour=0xa1122
+occlude=no
+
+// 235
+// alias=overlay_235
+[overlay_235]
+colour=0x293143
+occlude=no
+
+// 236
+// alias=overlay_236
+[overlay_236]
+colour=0x293246
+occlude=no
+
+// 237
+// alias=overlay_237
+[overlay_237]
+colour=0x958b67
+occlude=no
+
+// 238
+// alias=overlay_238
+[overlay_238]
+colour=0x7d7657
+occlude=no
+
+// 239
+// alias=overlay_239
+[overlay_239]
+colour=0x665f47
+occlude=no
+
+// 240
+// alias=overlay_240
+[overlay_240]
+occlude=no
+colour=0x75624e
+
+// 241
+// alias=overlay_241
+[overlay_241]
+occlude=no
+colour=0x726b4f
+
+// 242
+// alias=overlay_242
+[overlay_242]
+colour=0x2a3b1b
+occlude=no
+
+// 243
+// alias=overlay_243
+[overlay_243]
+colour=0x77156
+occlude=no
+
+// 244
+// alias=overlay_244
+[overlay_244]
+colour=0x3a462e
+occlude=no
+
+// 245
+// alias=overlay_245
+[overlay_245]
+colour=0x264541
+occlude=no
+
+// 246
+// alias=overlay_246
+[overlay_246]
+colour=0xe1d8d6
+occlude=no
+
+// 247
+// alias=overlay_247
+[overlay_247]
+colour=0x8c7973
+occlude=no
+
+// 248
+// alias=overlay_248
+[overlay_248]
+colour=0x5c5250
+occlude=no
+
+// 249
+// alias=overlay_249
+[overlay_249]
+colour=0xf5eeec
+occlude=no
+
+// 250
+// alias=overlay_250
+[overlay_250]
+colour=0x4a5d8a
+occlude=no
+
+// 251
+// alias=overlay_251
+[overlay_251]
+colour=0x4e2c2a
+occlude=no
+
+// 252
+// alias=overlay_252
+[overlay_252]
+colour=0x1c1b14
+occlude=no
+
+// 253
+// alias=overlay_253
+[overlay_253]
+colour=0xc0c8c8
+occlude=no
+
+// 254
+// alias=overlay_254
+[overlay_254]
+colour=0x4d5e6f
+occlude=no
+
+// 255
+// alias=overlay_255
+[overlay_255]
+colour=0x6d2b28
+occlude=no
+
+// 256
+// alias=overlay_256
+[overlay_256]
+occlude=no
+colour=0xff00ff
+mapcolour=0xfab342
+
+// 257
+// alias=overlay_257
+[overlay_257]
+material=material_116
+
+// 258
+// alias=overlay_258
+[overlay_258]
+material=material_117
+
+// 259
+// alias=overlay_259
+[overlay_259]
+material=material_118
+
+// 260
+// alias=overlay_260
+[overlay_260]
+material=material_119
+
+// 261
+// alias=overlay_261
+[overlay_261]
+colour=0x646471
+
+// 262
+// alias=overlay_262
+[overlay_262]
+colour=0xfdfefe
+
+// 263
+// alias=overlay_263
+[overlay_263]
+colour=0xffffff
+
+// 264
+// alias=overlay_264
+[overlay_264]
+occlude=no
+colour=0xff00ff
+mapcolour=0x303838
+
+// 265
+// alias=overlay_265
+[overlay_265]
+occlude=no
+colour=0x45524e
+mapcolour=0x45524e
+
+// 266
+// alias=overlay_266
+[overlay_266]
+occlude=no
+colour=0xff00ff
+mapcolour=0x45524e
+
+// 267
+// alias=overlay_267
+[overlay_267]
+colour=0xff00ff
+occlude=no
+mapcolour=0x312d21
+
+// 268
+// alias=overlay_268
+[overlay_268]
+colour=0xff00ff
+occlude=no
+mapcolour=0x4d5e6f
+
+// 269
+// alias=overlay_269
+[overlay_269]
+colour=0x394653
+occlude=no
+
+// 270
+// alias=overlay_270
+[overlay_270]
+colour=0xccc5c5
+occlude=no
+
+// 271
+// alias=overlay_271
+[overlay_271]
+colour=0x3e2b21
+occlude=no
+
+// 272
+// alias=overlay_272
+[overlay_272]
+colour=0xff00ff
+occlude=no
+mapcolour=0x3e2b21
+
+// 273
+// alias=overlay_273
+[overlay_273]
+colour=0x4f3420
+occlude=no
+
+// 274
+// alias=overlay_274
+[overlay_274]
+colour=0x533d2d
+occlude=no
+
+// 275
+// alias=overlay_275
+[overlay_275]
+colour=0x573e3d
+occlude=no
+
+// 276
+// alias=overlay_276
+[overlay_276]
+colour=0xff00ff
+occlude=no
+mapcolour=0x573e3d
+
+// 277
+// alias=overlay_277
+[overlay_277]
+colour=0x332c26
+occlude=no
+
+// 278
+// alias=overlay_278
+[overlay_278]
+colour=0xff00ff
+occlude=no
+mapcolour=0x332c26
+
+// 279
+// alias=overlay_279
+[overlay_279]
+colour=0x332926
+occlude=no
+
+// 280
+// alias=overlay_280
+[overlay_280]
+colour=0xff00ff
+occlude=no
+mapcolour=0x332926
+
+// 281
+// alias=overlay_281
+[overlay_281]
+colour=0x654f37
+
+// 282
+// alias=overlay_282
+[overlay_282]
+colour=0x4e3d57
+
+// 283
+// alias=overlay_283
+[overlay_283]
+occlude=no
+colour=0xff00ff
+mapcolour=0x4e3d57
+
+// 284
+// alias=overlay_284
+[overlay_284]
+colour=0x34213e
+
+// 285
+// alias=overlay_285
+[overlay_285]
+colour=0x3b2e42
+
+// 286
+// alias=overlay_286
+[overlay_286]
+colour=0x48405c
+
+// 287
+// alias=overlay_287
+[overlay_287]
+colour=0x242b33
+
+// 288
+// alias=overlay_288
+[overlay_288]
+colour=0x2a333d
+
+// 289
+// alias=overlay_289
+[overlay_289]
+colour=0x252a25
+
+// 290
+// alias=overlay_290
+[overlay_290]
+colour=0x24433c
+
+// 291
+// alias=overlay_291
+[overlay_291]
+colour=0x18192d
+
+// 292
+// alias=overlay_292
+[overlay_292]
+colour=0x121322
+
+// 293
+// alias=overlay_293
+[overlay_293]
+colour=0x90912
+
+// 294
+// alias=overlay_294
+[overlay_294]
+colour=0x3d2219
+
+// 295
+// alias=overlay_295
+[overlay_295]
+colour=0x25252a
+
+// 296
+// alias=overlay_296
+[overlay_296]
+colour=0x534e4a
+
+// 297
+// alias=overlay_297
+[overlay_297]
+colour=0x2a2b3d
+
+// 298
+// alias=overlay_298
+[overlay_298]
+colour=0x957267
+
+// 299
+// alias=overlay_299
+[overlay_299]
+colour=0x6c6760
+
+// 300
+// alias=overlay_300
+[overlay_300]
+colour=0xff00ff
+occlude=no
+mapcolour=0x9e6755
+
+// 301
+// alias=overlay_301
+[overlay_301]
+colour=0x4f534a
+
+// 302
+// alias=overlay_302
+[overlay_302]
+occlude=no
+colour=0x654d0b
+mapcolour=0x654d0b
+
+// 303
+// alias=overlay_303
+[overlay_303]
+occlude=no
+colour=0x202828
+
+// 304
+// alias=overlay_304
+[overlay_304]
+occlude=no
+colour=0xff00ff
+mapcolour=0x584828

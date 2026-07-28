@@ -1,0 +1,21 @@
+// 0
+// alias=stringvector_0
+[stringvector_0]
+
+// 1
+// alias=stringvector_1
+[stringvector_1]
+
+// 2
+// alias=stringvector_2
+[stringvector_2]
+
+// 3
+// alias=stringvector_3
+[stringvector_3]
+persist=yes
+
+// 4
+// alias=stringvector_4
+[stringvector_4]
+persist=yes

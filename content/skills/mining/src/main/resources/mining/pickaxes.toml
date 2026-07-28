@@ -27,14 +27,14 @@ speedBonus = 0.42
 animationId = 624
 
 [[pickaxe]]
-name = "iron"
+name = "adamant"
 itemId = 1271
 requiredLevel = 31
 speedBonus = 0.33
 animationId = 628
 
 [[pickaxe]]
-name = "steel"
+name = "mithril"
 itemId = 1273
 requiredLevel = 21
 speedBonus = 0.24
@@ -48,14 +48,14 @@ speedBonus = 0.15
 animationId = 629
 
 [[pickaxe]]
-name = "mithril"
+name = "steel"
 itemId = 1269
 requiredLevel = 6
 speedBonus = 0.1
 animationId = 627
 
 [[pickaxe]]
-name = "adamant"
+name = "iron"
 itemId = 1267
 requiredLevel = 1
 speedBonus = 0.065

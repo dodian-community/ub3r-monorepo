@@ -1,0 +1,592 @@
+// 0
+// alias=dbtable_0
+[dbtable_0]
+column=col0,int,REQUIRED,INDEXED,CLIENTSIDE
+column=col1,string,REQUIRED,CLIENTSIDE
+column=col2,string,REQUIRED,CLIENTSIDE
+column=col3,boolean,CLIENTSIDE
+default=col3,false
+column=col4,int,REQUIRED,INDEXED,CLIENTSIDE
+column=col5,boolean,REQUIRED,INDEXED,CLIENTSIDE
+column=col6,int,REQUIRED,INDEXED,CLIENTSIDE
+column=col7,int,REQUIRED,INDEXED,CLIENTSIDE
+column=col8,int,REQUIRED,CLIENTSIDE
+column=col9,int,REQUIRED,CLIENTSIDE
+column=col10,int,INDEXED,CLIENTSIDE
+default=col10,-1
+column=col11,int,INDEXED,CLIENTSIDE
+default=col11,0
+column=col12,boolean,string,CLIENTSIDE
+default=col12,false,
+column=col13,coord,CLIENTSIDE
+default=col13,0_0_0_0_0
+column=col14,mapelement,INDEXED,CLIENTSIDE
+column=col15,int,REQUIRED,CLIENTSIDE
+column=col16,int,CLIENTSIDE
+default=col16,0
+column=col17,int,REQUIRED,CLIENTSIDE
+column=col18
+column=col19,dbrow,INDEXED,CLIENTSIDE
+column=col20,boolean,CLIENTSIDE
+default=col20,false
+column=col21,stat,int,LIST,CLIENTSIDE
+column=col22,stat,int,LIST,CLIENTSIDE
+column=col23,dbrow,LIST,CLIENTSIDE
+column=col24,int,CLIENTSIDE
+default=col24,0
+column=col25,int,CLIENTSIDE
+default=col25,3
+column=col26,int,CLIENTSIDE
+default=col26,3
+column=col27,boolean,CLIENTSIDE
+default=col27,true
+column=col28,boolean,CLIENTSIDE
+default=col28,false
+column=col29,int,INDEXED,CLIENTSIDE
+default=col29,0
+column=col30,int,int,LIST,CLIENTSIDE
+default=col30,0,0
+column=col31,inv,namedobj,int,LIST,CLIENTSIDE
+column=col32,dbrow,LIST,CLIENTSIDE
+column=col33,stat,int,LIST,CLIENTSIDE
+column=col34,int,CLIENTSIDE
+default=col34,1
+column=col35,int,CLIENTSIDE
+default=col35,-1
+column=col36
+column=col37,int,CLIENTSIDE
+default=col37,0
+column=col38,int,CLIENTSIDE
+default=col38,0
+column=col39,boolean,CLIENTSIDE
+default=col39,false
+column=col40,int,INDEXED,CLIENTSIDE
+default=col40,0
+column=col41,string,CLIENTSIDE
+default=col41,
+column=col42,boolean,CLIENTSIDE
+default=col42,false
+
+// 1
+// alias=dbtable_1
+[dbtable_1]
+
+// 2
+// alias=dbtable_2
+[dbtable_2]
+column=col0,string,REQUIRED,CLIENTSIDE
+column=col1,graphic,int,int,REQUIRED,CLIENTSIDE
+column=col2,int,int,CLIENTSIDE
+default=col2,0,0
+column=col3,component,REQUIRED,CLIENTSIDE
+
+// 3
+// alias=dbtable_3
+[dbtable_3]
+column=col0,string,REQUIRED,CLIENTSIDE
+column=col1,dbrow,REQUIRED,LIST,CLIENTSIDE
+column=col2,dbrow,REQUIRED,LIST,CLIENTSIDE
+column=col3,dbrow,LIST,CLIENTSIDE
+column=col4,dbrow,LIST,CLIENTSIDE
+column=col5,dbrow,LIST,CLIENTSIDE
+column=col6,dbrow,LIST,CLIENTSIDE
+column=col7,dbrow,LIST,CLIENTSIDE
+
+// 4
+// alias=dbtable_4
+[dbtable_4]
+column=col0,int,REQUIRED,INDEXED,CLIENTSIDE
+column=col1,int,REQUIRED,CLIENTSIDE
+column=col2,string,REQUIRED,CLIENTSIDE
+column=col3,dbrow,REQUIRED,LIST,CLIENTSIDE
+column=col4,dbrow,CLIENTSIDE
+column=col5,int,REQUIRED,LIST,CLIENTSIDE
+column=col6,dbrow,CLIENTSIDE
+column=col7,boolean,CLIENTSIDE
+default=col7,true
+
+// 5
+// alias=dbtable_5
+[dbtable_5]
+column=col0,int,REQUIRED,INDEXED,CLIENTSIDE
+column=col1,int,REQUIRED,CLIENTSIDE
+column=col2,dbrow,REQUIRED,CLIENTSIDE
+column=col3,dbrow,LIST,CLIENTSIDE
+column=col4,int,REQUIRED,CLIENTSIDE
+column=col5,boolean,CLIENTSIDE
+default=col5,true
+
+// 6
+// alias=dbtable_6
+[dbtable_6]
+column=col0,int,REQUIRED,INDEXED,CLIENTSIDE
+column=col1,int,REQUIRED,CLIENTSIDE
+column=col2,string,REQUIRED,CLIENTSIDE
+column=col3,dbrow,REQUIRED,LIST,CLIENTSIDE
+column=col4,dbrow,CLIENTSIDE
+column=col5,dbrow,CLIENTSIDE
+column=col6,int,REQUIRED,LIST,CLIENTSIDE
+column=col7,boolean,CLIENTSIDE
+default=col7,true
+
+// 7
+// alias=dbtable_7
+[dbtable_7]
+column=col0,int,REQUIRED,INDEXED,CLIENTSIDE
+column=col1,int,REQUIRED,CLIENTSIDE
+column=col2,string,REQUIRED,CLIENTSIDE
+column=col3,dbrow,REQUIRED,CLIENTSIDE
+column=col4,dbrow,LIST,CLIENTSIDE
+column=col5,dbrow,LIST,CLIENTSIDE
+column=col6,int,REQUIRED,LIST,CLIENTSIDE
+column=col7,boolean,CLIENTSIDE
+default=col7,true
+
+// 8
+// alias=dbtable_8
+[dbtable_8]
+column=col0,int,REQUIRED,INDEXED,CLIENTSIDE
+column=col1,int,REQUIRED,CLIENTSIDE
+column=col2,string,REQUIRED,CLIENTSIDE
+column=col3,dbrow,REQUIRED,LIST,CLIENTSIDE
+column=col4,dbrow,LIST,CLIENTSIDE
+column=col5,dbrow,CLIENTSIDE
+column=col6,string,CLIENTSIDE
+column=col7,dbrow,CLIENTSIDE
+column=col8,loc,CLIENTSIDE
+column=col9,coord,CLIENTSIDE
+column=col10,int,REQUIRED,LIST,CLIENTSIDE
+column=col11,boolean,CLIENTSIDE
+default=col11,true
+
+// 9
+// alias=dbtable_9
+[dbtable_9]
+column=col0,int,REQUIRED,INDEXED,CLIENTSIDE
+column=col1,int,REQUIRED,CLIENTSIDE
+column=col2,string,REQUIRED,CLIENTSIDE
+column=col3,dbrow,REQUIRED,CLIENTSIDE
+column=col4,int,REQUIRED,LIST,CLIENTSIDE
+column=col5,string,CLIENTSIDE
+column=col6,dbrow,LIST,CLIENTSIDE
+column=col7,loc,CLIENTSIDE
+column=col8,coord,CLIENTSIDE
+column=col9,dbrow,CLIENTSIDE
+column=col10,dbrow,CLIENTSIDE
+column=col11,int,REQUIRED,LIST,CLIENTSIDE
+column=col12,boolean,CLIENTSIDE
+default=col12,true
+
+// 10
+// alias=dbtable_10
+[dbtable_10]
+column=col0,int,REQUIRED,INDEXED,CLIENTSIDE
+column=col1,int,REQUIRED,CLIENTSIDE
+column=col2,string,REQUIRED,CLIENTSIDE
+column=col3,int,REQUIRED,CLIENTSIDE
+column=col4,int,int,int,int,REQUIRED,CLIENTSIDE
+column=col5,dbrow,REQUIRED,CLIENTSIDE
+column=col6,dbrow,CLIENTSIDE
+column=col7,int,REQUIRED,LIST,CLIENTSIDE
+column=col8,boolean,CLIENTSIDE
+default=col8,true
+
+// 11
+// alias=dbtable_11
+[dbtable_11]
+column=col0,int,REQUIRED,INDEXED,CLIENTSIDE
+column=col1,int,REQUIRED,CLIENTSIDE
+column=col2,string,REQUIRED,CLIENTSIDE
+column=col3,dbrow,REQUIRED,CLIENTSIDE
+column=col4,dbrow,REQUIRED,CLIENTSIDE
+column=col5,int,REQUIRED,LIST,CLIENTSIDE
+column=col6,boolean,CLIENTSIDE
+default=col6,false
+
+// 12
+// alias=dbtable_12
+[dbtable_12]
+column=col0,int,REQUIRED,INDEXED,CLIENTSIDE
+column=col1,int,REQUIRED,CLIENTSIDE
+column=col2,dbrow,REQUIRED,CLIENTSIDE
+column=col3,dbrow,CLIENTSIDE
+column=col4,dbrow,LIST,CLIENTSIDE
+column=col5,int,REQUIRED,LIST,CLIENTSIDE
+column=col6,boolean,CLIENTSIDE
+default=col6,true
+
+// 13
+// alias=dbtable_13
+[dbtable_13]
+column=col0,int,REQUIRED,INDEXED,CLIENTSIDE
+column=col1,int,REQUIRED,CLIENTSIDE
+column=col2,dbrow,REQUIRED,CLIENTSIDE
+column=col3,string,REQUIRED,CLIENTSIDE
+column=col4,dbrow,REQUIRED,CLIENTSIDE
+column=col5,dbrow,CLIENTSIDE
+column=col6,int,CLIENTSIDE
+default=col6,21
+column=col7,boolean,CLIENTSIDE
+default=col7,true
+
+// 14
+// alias=dbtable_14
+[dbtable_14]
+column=col0,int,REQUIRED,INDEXED,CLIENTSIDE
+column=col1,int,REQUIRED,CLIENTSIDE
+column=col2,string,REQUIRED,CLIENTSIDE
+column=col3,dbrow,LIST,CLIENTSIDE
+column=col4,dbrow,CLIENTSIDE
+column=col5,int,LIST,CLIENTSIDE
+default=col5,21
+column=col6,boolean,CLIENTSIDE
+default=col6,false
+
+// 15
+// alias=dbtable_15
+[dbtable_15]
+column=col0,npc,REQUIRED,CLIENTSIDE
+column=col1,npc,CLIENTSIDE
+column=col2,coord,REQUIRED,CLIENTSIDE
+column=col3,string,REQUIRED,CLIENTSIDE
+
+// 16
+// alias=dbtable_16
+[dbtable_16]
+column=col0,loc,REQUIRED,CLIENTSIDE
+column=col1,loc,CLIENTSIDE
+column=col2,coord,REQUIRED,CLIENTSIDE
+column=col3,string,REQUIRED,CLIENTSIDE
+
+// 17
+// alias=dbtable_17
+[dbtable_17]
+column=col0,coord,REQUIRED,CLIENTSIDE
+column=col1,coord,REQUIRED,CLIENTSIDE
+column=col2,string,REQUIRED,CLIENTSIDE
+
+// 18
+// alias=dbtable_18
+[dbtable_18]
+column=col0,coord,REQUIRED,CLIENTSIDE
+column=col1,string,REQUIRED,CLIENTSIDE
+column=col2,string,CLIENTSIDE
+
+// 19
+// alias=dbtable_19
+[dbtable_19]
+column=col0,loc,REQUIRED,CLIENTSIDE
+column=col1,coord,REQUIRED,CLIENTSIDE
+column=col2,npc,REQUIRED,LIST,CLIENTSIDE
+column=col3,obj,REQUIRED,CLIENTSIDE
+column=col4,coord,REQUIRED,CLIENTSIDE
+column=col5,inv,CLIENTSIDE
+default=col5,inv_93
+column=col6,int,CLIENTSIDE
+default=col6,1
+column=col7,string,REQUIRED,CLIENTSIDE
+
+// 20
+// alias=dbtable_20
+[dbtable_20]
+column=col0,npc,REQUIRED,LIST,CLIENTSIDE
+column=col1,coord,CLIENTSIDE
+column=col2,string,REQUIRED,CLIENTSIDE
+
+// 21
+// alias=dbtable_21
+[dbtable_21]
+column=col0,string,REQUIRED,CLIENTSIDE
+column=col1,obj,REQUIRED,LIST,CLIENTSIDE
+column=col2,inv,CLIENTSIDE
+default=col2,inv_93
+column=col3,int,CLIENTSIDE
+default=col3,1
+
+// 22
+// alias=dbtable_22
+[dbtable_22]
+column=col0,string,REQUIRED,CLIENTSIDE
+column=col1,int,REQUIRED,CLIENTSIDE
+
+// 23
+// alias=dbtable_23
+[dbtable_23]
+column=col0,string,REQUIRED,CLIENTSIDE
+column=col1,dbrow,REQUIRED,CLIENTSIDE
+column=col2,int,REQUIRED,CLIENTSIDE
+
+// 24
+// alias=dbtable_24
+[dbtable_24]
+column=col0,stat,REQUIRED,CLIENTSIDE
+column=col1,int,REQUIRED,CLIENTSIDE
+
+// 25
+// alias=dbtable_25
+[dbtable_25]
+column=col0,string,int,REQUIRED,LIST,CLIENTSIDE
+
+// 26
+// alias=dbtable_26
+[dbtable_26]
+column=col0,string,REQUIRED,CLIENTSIDE
+
+// 27
+// alias=dbtable_27
+[dbtable_27]
+column=col0,string,REQUIRED,CLIENTSIDE
+column=col1,npc,REQUIRED,LIST,CLIENTSIDE
+
+// 28
+// alias=dbtable_28
+[dbtable_28]
+column=col0,string,REQUIRED,CLIENTSIDE
+column=col1,obj,LIST,CLIENTSIDE
+column=col2,obj,LIST,CLIENTSIDE
+column=col3,obj,LIST,CLIENTSIDE
+column=col4,obj,LIST,CLIENTSIDE
+column=col5,obj,LIST,CLIENTSIDE
+column=col6,obj,LIST,CLIENTSIDE
+column=col7,obj,LIST,CLIENTSIDE
+column=col8,obj,LIST,CLIENTSIDE
+column=col9,obj,CLIENTSIDE
+column=col10,obj,LIST,CLIENTSIDE
+column=col11,obj,CLIENTSIDE
+column=col12,int,CLIENTSIDE
+column=col13,int,CLIENTSIDE
+column=col14,int,CLIENTSIDE
+column=col15,int,CLIENTSIDE
+column=col16,int,CLIENTSIDE
+column=col17,int,CLIENTSIDE
+column=col18,int,CLIENTSIDE
+column=col19,int,CLIENTSIDE
+column=col20,int,CLIENTSIDE
+column=col21,int,CLIENTSIDE
+column=col22,int,CLIENTSIDE
+column=col23,int,CLIENTSIDE
+
+// 29
+// alias=dbtable_29
+[dbtable_29]
+
+// 30
+// alias=dbtable_30
+[dbtable_30]
+column=col0,string,string,string,REQUIRED,LIST,CLIENTSIDE
+
+// 31
+// alias=dbtable_31
+[dbtable_31]
+column=col0,string,string,string,REQUIRED,LIST,CLIENTSIDE
+
+// 32
+// alias=dbtable_32
+[dbtable_32]
+column=col0,graphic,int,int,int,string,string,string,REQUIRED,LIST,CLIENTSIDE
+
+// 33
+// alias=dbtable_33
+[dbtable_33]
+column=col0,graphic,string,int,REQUIRED,LIST,CLIENTSIDE
+
+// 34
+// alias=dbtable_34
+[dbtable_34]
+column=col0,int,REQUIRED,INDEXED,CLIENTSIDE
+column=col1,int,REQUIRED,INDEXED,CLIENTSIDE
+column=col2,namedobj,REQUIRED,INDEXED,CLIENTSIDE
+column=col3,string,CLIENTSIDE
+default=col3,
+column=col4,string,CLIENTSIDE
+default=col4,
+column=col5,string,CLIENTSIDE
+default=col5,
+
+// 35
+// alias=dbtable_35
+[dbtable_35]
+column=col0,int,REQUIRED,CLIENTSIDE
+column=col1,int,REQUIRED,CLIENTSIDE
+column=col2,int,REQUIRED,CLIENTSIDE
+column=col3,dbrow,REQUIRED,LIST,CLIENTSIDE
+column=col4,boolean,CLIENTSIDE
+default=col4,false
+
+// 36
+// alias=dbtable_36
+[dbtable_36]
+column=col0,string,LIST,CLIENTSIDE
+column=col1,graphic,LIST,CLIENTSIDE
+
+// 37
+// alias=dbtable_37
+[dbtable_37]
+column=col0,string,REQUIRED,CLIENTSIDE
+column=col1,idkit,REQUIRED,CLIENTSIDE
+column=col2,idkit,REQUIRED,CLIENTSIDE
+column=col3,model,CLIENTSIDE
+default=col3,model_47771
+column=col4,idkit,CLIENTSIDE
+column=col5,idkit,CLIENTSIDE
+
+// 38
+// alias=dbtable_38
+[dbtable_38]
+column=col0,string,REQUIRED,CLIENTSIDE
+column=col1,idkit,REQUIRED,CLIENTSIDE
+column=col2,idkit,REQUIRED,CLIENTSIDE
+column=col3,model,CLIENTSIDE
+default=col3,model_81
+
+// 39
+// alias=dbtable_39
+[dbtable_39]
+column=col0,string,REQUIRED,CLIENTSIDE
+column=col1,inv,CLIENTSIDE
+column=col2,dbrow,CLIENTSIDE
+column=col3,enum,CLIENTSIDE
+column=col4
+column=col5,dbrow,LIST,CLIENTSIDE
+column=col6,int,CLIENTSIDE
+default=col6,1000
+column=col7,int,CLIENTSIDE
+default=col7,400
+column=col8,int,CLIENTSIDE
+default=col8,0
+column=col9,dbrow,CLIENTSIDE
+default=col9,dbrow_2467
+column=col10,string,REQUIRED,CLIENTSIDE
+column=col11,string,CLIENTSIDE
+default=col11,Feel free to peruse our stock.
+column=col12,string,CLIENTSIDE
+column=col13,string,CLIENTSIDE
+default=col13,Buy
+column=col14,string,CLIENTSIDE
+default=col14,Sell
+
+// 40
+// alias=dbtable_40
+[dbtable_40]
+column=col0,namedobj,REQUIRED,CLIENTSIDE
+column=col1
+column=col2
+column=col3
+column=col4,int,LIST,CLIENTSIDE
+column=col5,dbrow,int,LIST,CLIENTSIDE
+column=col6,int,CLIENTSIDE
+default=col6,^min_32bit_int
+column=col7,int,CLIENTSIDE
+default=col7,^min_32bit_int
+column=col8,int,CLIENTSIDE
+default=col8,^min_32bit_int
+column=col9,int,CLIENTSIDE
+default=col9,1
+column=col10,int,CLIENTSIDE
+default=col10,0
+column=col11,int,CLIENTSIDE
+default=col11,0
+column=col12,boolean,CLIENTSIDE
+default=col12,true
+column=col13,boolean,CLIENTSIDE
+default=col13,false
+
+// 41
+// alias=dbtable_41
+[dbtable_41]
+column=col0,namedobj,LIST,CLIENTSIDE
+column=col1,string,REQUIRED,CLIENTSIDE
+column=col2,string,REQUIRED,CLIENTSIDE
+
+// 42
+// alias=dbtable_42
+[dbtable_42]
+
+// 43
+// alias=dbtable_43
+[dbtable_43]
+
+// 44
+// alias=dbtable_44
+[dbtable_44]
+column=col0,string,REQUIRED,CLIENTSIDE
+column=col1,string,REQUIRED,CLIENTSIDE
+column=col2,string,CLIENTSIDE
+default=col2,somewhere.
+column=col3,int,REQUIRED,CLIENTSIDE
+column=col4,midi,REQUIRED,CLIENTSIDE
+column=col5,int,int,CLIENTSIDE
+default=col5,-1,-1
+column=col6,int,INDEXED,CLIENTSIDE
+default=col6,-1
+column=col7,boolean,INDEXED,CLIENTSIDE
+default=col7,false
+column=col8,boolean,INDEXED,CLIENTSIDE
+default=col8,false
+column=col9,int,INDEXED,CLIENTSIDE
+default=col9,-1
+column=col10,dbrow,CLIENTSIDE
+
+// 45
+// alias=dbtable_45
+[dbtable_45]
+
+// 46
+// alias=dbtable_46
+[dbtable_46]
+
+// 47
+// alias=dbtable_47
+[dbtable_47]
+
+// 48
+// alias=dbtable_48
+[dbtable_48]
+
+// 49
+// alias=dbtable_49
+[dbtable_49]
+
+// 50
+// alias=dbtable_50
+[dbtable_50]
+
+// 51
+// alias=dbtable_51
+[dbtable_51]
+
+// 52
+// alias=dbtable_52
+[dbtable_52]
+
+// 53
+// alias=dbtable_53
+[dbtable_53]
+
+// 54
+// alias=dbtable_54
+[dbtable_54]
+
+// 55
+// alias=dbtable_55
+[dbtable_55]
+
+// 56
+// alias=dbtable_56
+[dbtable_56]
+
+// 57
+// alias=dbtable_57
+[dbtable_57]
+
+// 58
+// alias=dbtable_58
+[dbtable_58]
+
+// 59
+// alias=dbtable_59
+[dbtable_59]
+
+// 60
+// alias=dbtable_60
+[dbtable_60]

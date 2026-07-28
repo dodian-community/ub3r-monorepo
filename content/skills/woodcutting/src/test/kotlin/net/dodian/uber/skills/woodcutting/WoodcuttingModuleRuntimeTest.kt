@@ -42,9 +42,9 @@ class WoodcuttingModuleRuntimeTest {
         val yew = WoodcuttingModule.trees.single { it.name == "yew" }
         val magic = WoodcuttingModule.trees.single { it.name == "magic" }
 
-        assertEquals(setOf(10820, 4533, 4540, 9734, 8463, 8464, 8465, 8466, 8467), oak.objectIds.toSet())
+        assertEquals(setOf(10820, 9734, 8467), oak.objectIds.toSet())
         assertEquals(setOf(10819, 10829, 10831, 10833), willow.objectIds.toSet())
-        assertTrue(4674 in maple.objectIds)
+        assertEquals(setOf(4674, 10832, 36681, 40754, 8444), maple.objectIds.toSet())
         assertEquals(listOf(10822), yew.objectIds)
         assertEquals(listOf(10834), magic.objectIds)
         assertEquals(735, yew.experience)
@@ -52,6 +52,7 @@ class WoodcuttingModuleRuntimeTest {
 
         val runtimeIds = WoodcuttingModule.trees.flatMap { it.objectIds }.toSet()
         assertFalse(runtimeIds.any { it in setOf(1281, 3037, 1308, 5551, 5552, 1307, 1309, 1754, 1306, 1762) })
+        assertFalse(runtimeIds.any { it in setOf(1287, 4533, 4540, 8463, 8464, 8465, 8466, 36682, 40755, 4535, 5126, 8435, 8436, 8437, 8438, 8439, 8440, 8441, 8442, 8443) })
     }
 
     @Test

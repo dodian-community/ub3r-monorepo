@@ -1,0 +1,494 @@
+// 0
+// alias=varclansetting_0
+[varclansetting_0]
+type=int
+
+// 1
+// alias=varclansetting_1
+[varclansetting_1]
+type=int
+
+// 2
+// alias=varclansetting_2
+[varclansetting_2]
+type=int
+
+// 3
+// alias=varclansetting_3
+[varclansetting_3]
+type=int
+
+// 4
+// alias=varclansetting_4
+[varclansetting_4]
+type=int
+
+// 5
+// alias=varclansetting_5
+[varclansetting_5]
+type=int
+
+// 6
+// alias=varclansetting_6
+[varclansetting_6]
+type=int
+
+// 7
+// alias=varclansetting_7
+[varclansetting_7]
+type=int
+
+// 8
+// alias=varclansetting_8
+[varclansetting_8]
+type=int
+
+// 9
+// alias=varclansetting_9
+[varclansetting_9]
+type=int
+
+// 10
+// alias=varclansetting_10
+[varclansetting_10]
+type=int
+
+// 11
+// alias=varclansetting_11
+[varclansetting_11]
+type=int
+
+// 12
+// alias=varclansetting_12
+[varclansetting_12]
+type=int
+
+// 13
+// alias=varclansetting_13
+[varclansetting_13]
+type=int
+
+// 14
+// alias=varclansetting_14
+[varclansetting_14]
+type=int
+
+// 15
+// alias=varclansetting_15
+[varclansetting_15]
+type=int
+
+// 16
+// alias=varclansetting_16
+[varclansetting_16]
+type=int
+
+// 17
+// alias=varclansetting_17
+[varclansetting_17]
+type=int
+
+// 18
+// alias=varclansetting_18
+[varclansetting_18]
+type=int
+
+// 19
+// alias=varclansetting_19
+[varclansetting_19]
+type=int
+
+// 20
+// alias=varclansetting_20
+[varclansetting_20]
+type=int
+
+// 21
+// alias=varclansetting_21
+[varclansetting_21]
+type=int
+
+// 22
+// alias=varclansetting_22
+[varclansetting_22]
+type=int
+
+// 23
+// alias=varclansetting_23
+[varclansetting_23]
+type=int
+
+// 24
+// alias=varclansetting_24
+[varclansetting_24]
+type=int
+
+// 25
+// alias=varclansetting_25
+[varclansetting_25]
+type=int
+
+// 26
+// alias=varclansetting_26
+[varclansetting_26]
+type=int
+
+// 27
+// alias=varclansetting_27
+[varclansetting_27]
+type=int
+
+// 28
+// alias=varclansetting_28
+[varclansetting_28]
+type=int
+
+// 29
+// alias=varclansetting_29
+[varclansetting_29]
+type=int
+
+// 30
+// alias=varclansetting_30
+[varclansetting_30]
+type=int
+
+// 31
+// alias=varclansetting_31
+[varclansetting_31]
+type=int
+
+// 32
+// alias=varclansetting_32
+[varclansetting_32]
+type=int
+
+// 33
+// alias=varclansetting_33
+[varclansetting_33]
+type=int
+
+// 34
+// alias=varclansetting_34
+[varclansetting_34]
+type=int
+
+// 35
+// alias=varclansetting_35
+[varclansetting_35]
+type=int
+
+// 36
+// alias=varclansetting_36
+[varclansetting_36]
+type=hash64
+
+// 37
+// alias=varclansetting_37
+[varclansetting_37]
+type=int
+
+// 38
+// alias=varclansetting_38
+[varclansetting_38]
+type=int
+
+// 39
+// alias=varclansetting_39
+[varclansetting_39]
+type=int
+
+// 40
+// alias=varclansetting_40
+[varclansetting_40]
+type=int
+
+// 41
+// alias=varclansetting_41
+[varclansetting_41]
+type=int
+
+// 42
+// alias=varclansetting_42
+[varclansetting_42]
+type=int
+
+// 43
+// alias=varclansetting_43
+[varclansetting_43]
+type=int
+
+// 44
+// alias=varclansetting_44
+[varclansetting_44]
+type=int
+
+// 45
+// alias=varclansetting_45
+[varclansetting_45]
+type=int
+
+// 46
+// alias=varclansetting_46
+[varclansetting_46]
+type=int
+
+// 47
+// alias=varclansetting_47
+[varclansetting_47]
+type=hash64
+
+// 48
+// alias=varclansetting_48
+[varclansetting_48]
+type=int
+
+// 49
+// alias=varclansetting_49
+[varclansetting_49]
+type=int
+
+// 50
+// alias=varclansetting_50
+[varclansetting_50]
+type=int
+
+// 51
+// alias=varclansetting_51
+[varclansetting_51]
+type=int
+
+// 52
+// alias=varclansetting_52
+[varclansetting_52]
+type=int
+
+// 53
+// alias=varclansetting_53
+[varclansetting_53]
+type=int
+
+// 54
+// alias=varclansetting_54
+[varclansetting_54]
+type=int
+
+// 55
+// alias=varclansetting_55
+[varclansetting_55]
+type=int
+
+// 56
+// alias=varclansetting_56
+[varclansetting_56]
+type=int
+
+// 57
+// alias=varclansetting_57
+[varclansetting_57]
+type=int
+
+// 58
+// alias=varclansetting_58
+[varclansetting_58]
+type=int
+
+// 59
+// alias=varclansetting_59
+[varclansetting_59]
+type=int
+
+// 60
+// alias=varclansetting_60
+[varclansetting_60]
+type=int
+
+// 61
+// alias=varclansetting_61
+[varclansetting_61]
+type=int
+
+// 62
+// alias=varclansetting_62
+[varclansetting_62]
+type=int
+
+// 63
+// alias=varclansetting_63
+[varclansetting_63]
+type=int
+
+// 64
+// alias=varclansetting_64
+[varclansetting_64]
+type=int
+
+// 65
+// alias=varclansetting_65
+[varclansetting_65]
+type=int
+
+// 66
+// alias=varclansetting_66
+[varclansetting_66]
+type=int
+
+// 67
+// alias=varclansetting_67
+[varclansetting_67]
+type=int
+
+// 68
+// alias=varclansetting_68
+[varclansetting_68]
+type=int
+
+// 69
+// alias=varclansetting_69
+[varclansetting_69]
+type=int
+
+// 70
+// alias=varclansetting_70
+[varclansetting_70]
+type=int
+
+// 71
+// alias=varclansetting_71
+[varclansetting_71]
+type=int
+
+// 72
+// alias=varclansetting_72
+[varclansetting_72]
+type=int
+
+// 73
+// alias=varclansetting_73
+[varclansetting_73]
+type=int
+
+// 74
+// alias=varclansetting_74
+[varclansetting_74]
+type=int
+
+// 75
+// alias=varclansetting_75
+[varclansetting_75]
+type=int
+
+// 76
+// alias=varclansetting_76
+[varclansetting_76]
+type=int
+
+// 77
+// alias=varclansetting_77
+[varclansetting_77]
+type=int
+
+// 78
+// alias=varclansetting_78
+[varclansetting_78]
+type=int
+
+// 79
+// alias=varclansetting_79
+[varclansetting_79]
+type=int
+
+// 80
+// alias=varclansetting_80
+[varclansetting_80]
+type=int
+
+// 81
+// alias=varclansetting_81
+[varclansetting_81]
+type=int
+
+// 82
+// alias=varclansetting_82
+[varclansetting_82]
+type=int
+
+// 83
+// alias=varclansetting_83
+[varclansetting_83]
+type=int
+
+// 84
+// alias=varclansetting_84
+[varclansetting_84]
+type=int
+
+// 85
+// alias=varclansetting_85
+[varclansetting_85]
+type=int
+
+// 86
+// alias=varclansetting_86
+[varclansetting_86]
+type=int
+
+// 87
+// alias=varclansetting_87
+[varclansetting_87]
+type=int
+
+// 88
+// alias=varclansetting_88
+[varclansetting_88]
+type=int
+
+// 89
+// alias=varclansetting_89
+[varclansetting_89]
+type=int
+
+// 90
+// alias=varclansetting_90
+[varclansetting_90]
+type=int
+
+// 91
+// alias=varclansetting_91
+[varclansetting_91]
+type=int
+
+// 92
+// alias=varclansetting_92
+[varclansetting_92]
+type=int
+
+// 93
+// alias=varclansetting_93
+[varclansetting_93]
+type=int
+
+// 94
+// alias=varclansetting_94
+[varclansetting_94]
+type=int
+
+// 95
+// alias=varclansetting_95
+[varclansetting_95]
+type=int
+
+// 96
+// alias=varclansetting_96
+[varclansetting_96]
+type=int
+
+// 97
+// alias=varclansetting_97
+[varclansetting_97]
+type=int
+
+// 98
+// alias=varclansetting_98
+[varclansetting_98]
+type=int

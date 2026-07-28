@@ -24,6 +24,14 @@ object ObjectExamines {
         try {
             val gson = GsonBuilder().create()
             val examinesArray = gson.fromJson(file.readText(), Array<ObjectExamine>::class.java)
+            examinesMap.clear()
+            val duplicateIds = examinesArray.groupingBy { it.id }.eachCount().filterValues { it > 1 }.keys.sorted()
+            if (duplicateIds.isNotEmpty()) {
+                logger.warn(
+                    "Object examine data contains duplicate IDs; preserving existing last-entry-wins behavior for: {}",
+                    duplicateIds.joinToString(),
+                )
+            }
             for (entry in examinesArray) {
                 val processedExamine = entry.examine.replace("%SERVER_NAME%", "Dodian")
                 examinesMap[entry.id] = processedExamine

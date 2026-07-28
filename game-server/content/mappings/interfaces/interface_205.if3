@@ -1,0 +1,128 @@
+// 205:0
+[com_0]
+type=layer
+width=488
+height=305
+xmode=abs_centre
+ymode=abs_centre
+
+// 205:1
+[com_1]
+type=layer
+widthmode=minus
+heightmode=minus
+xmode=abs_centre
+ymode=abs_centre
+layer=com_0
+onload=steelborder(event_com, "Select skin colour and gender")
+
+// 205:2
+[com_2]
+type=layer
+y=40
+width=227
+height=220
+layer=com_0
+events=2
+op1=Male
+onload=makeovermage_gender(event_com, interface_205:com_5, 0, true)
+
+// 205:3
+[com_3]
+type=model
+width=227
+height=250
+layer=com_2
+model=model_63
+modelangley=1800
+modelzoom=500
+
+// 205:4
+[com_4]
+type=model
+width=227
+height=250
+layer=com_2
+model=model_81
+modelangley=1800
+modelzoom=500
+
+// 205:5
+[com_5]
+type=text
+height=20
+widthmode=minus
+xmode=abs_centre
+ymode=abs_bottom
+layer=com_2
+textfont=b12_full
+text=MALE
+textalignh=centre
+textalignv=centre
+textshadow=yes
+colour=0x000000
+
+// 205:6
+[com_6]
+type=layer
+y=40
+width=227
+height=220
+xmode=abs_right
+layer=com_0
+events=2
+op1=Female
+onload=makeovermage_gender(event_com, interface_205:com_8, 1, true)
+
+// 205:7
+[com_7]
+type=model
+width=227
+height=250
+layer=com_6
+model=model_103
+modelangley=200
+modelzoom=500
+
+// 205:8
+[com_8]
+type=text
+height=20
+widthmode=minus
+xmode=abs_centre
+ymode=abs_bottom
+layer=com_6
+textfont=b12_full
+text=FEMALE
+textalignh=centre
+textalignv=centre
+textshadow=yes
+colour=0x000000
+
+// 205:9
+[com_9]
+type=layer
+y=40
+width=454
+height=235
+widthmode=minus
+xmode=abs_centre
+layer=com_0
+onload=makeovermage_colour_init(event_com)
+
+// 205:10
+[com_10]
+type=text
+y=10
+height=20
+widthmode=minus
+ymode=abs_bottom
+layer=com_0
+textfont=b12_full
+textalignh=centre
+textalignv=centre
+textshadow=yes
+colour=0x00ff00
+events=2
+op1=Confirm
+

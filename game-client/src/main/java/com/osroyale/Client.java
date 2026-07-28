@@ -11864,13 +11864,14 @@ public class Client extends GameEngine
                     com.osroyale.login.impl.MainScreen.accountCreationStatus = "Discord authorization expired, please try again.";
                     com.osroyale.login.impl.MainScreen.loginScreenState = 0;
                 }
-                System.out.println("[Client Login] Sending discordAuthCode='" + discordAuthCode + "' for username='" + username + "'");
+                System.out.println("[Client Login] Sending Discord authorization=" + (discordAuthCode != null) + " for username='" + username + "'");
                 outgoing.writeString(discordAuthCode != null ? discordAuthCode : "");
                 outgoing.writeString("");
                 outgoing.writeString(username);
                 outgoing.writeString(password);
-                discordAuthCode = null;
-                discordAuthCodeReceivedAtMillis = 0L;
+                // Keep a fresh OAuth code until the server replies. In particular, response 33
+                // means the requested username is taken; the server has not consumed this code,
+                // so the player can choose another name without re-authorizing with Discord.
                 outgoing.encodeRSA(NetworkConstants.RSA_EXPONENT, NetworkConstants.RSA_MODULUS);
                 aStream_847.position = 0;
                 if (reconnecting) {
@@ -11907,6 +11908,8 @@ public class Client extends GameEngine
                 return;
             }
             if (response == 2) {
+                discordAuthCode = null;
+                discordAuthCodeReceivedAtMillis = 0L;
                 myPrivilege = socketStream.read();
                 flagged = socketStream.read() == 1;
                 aLong1220 = 0L;
@@ -11995,6 +11998,11 @@ public class Client extends GameEngine
                 localPlayer.saveProfile(this);
                 Profile.modelCache.unlinkAll();
                 return;
+            }
+
+            if (response != 1 && response != 33) {
+                discordAuthCode = null;
+                discordAuthCodeReceivedAtMillis = 0L;
             }
 
             if (response == 3) {
@@ -12191,6 +12199,14 @@ public class Client extends GameEngine
             if (response == 32) {
                 loginMessage1 = "Your Discord email is not verified.";
                 loginMessage2 = "Please verify it with Discord and try again.";
+                return;
+            }
+
+            if (response == 33) {
+                loginMessage1 = "That username is already taken.";
+                loginMessage2 = "Please choose another username.";
+                com.osroyale.login.impl.MainScreen.accountCreationStatus = "Choose another username";
+                com.osroyale.login.impl.MainScreen.loginScreenState = 2;
                 return;
             }
 

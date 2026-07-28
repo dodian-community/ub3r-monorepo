@@ -18,4 +18,12 @@ class CraftingModuleRuntimeTest {
         assertTrue(CraftingModule.gems.isNotEmpty())
         assertTrue(CraftingModule.hides.isNotEmpty())
     }
+
+    @Test
+    fun `revision 218 spinning wheels use the Spin option`() {
+        setOf(14889, 25824).forEach { objectId ->
+            assertTrue(CraftingModule.definition.objectBindings.any { it.option == 2 && objectId in it.objectIds })
+        }
+        assertTrue(CraftingModule.definition.objectBindings.none { it.option == 1 && it.objectIds.any { id -> id in setOf(14889, 25824) } })
+    }
 }

@@ -1,12 +1,13 @@
 schema_version = 1
 
-# Fishing spot definitions. Spots are NPCs (npcId), clicked via clickOption (1 or 2).
+# Fishing spot definitions. Spots are NPCs (npcId), clicked through their
+# revision-218 cache option (primary option 1 or alternate option 3).
 # bigCatch* fields are optional: when set, there's a chance to land bigCatchItemId
 # instead of fishItemId once the player meets bigCatchRequiredLevel.
 
 [[spot]]
 index = 0
-npcId = 1510
+npcId = 1514
 clickOption = 1
 fishItemId = 317
 animationId = 621
@@ -17,8 +18,8 @@ experience = 110
 
 [[spot]]
 index = 1
-npcId = 1510
-clickOption = 2
+npcId = 1506
+clickOption = 1
 fishItemId = 335
 animationId = 622
 requiredLevel = 20
@@ -32,7 +33,7 @@ bigCatchBonusXp = 100
 
 [[spot]]
 index = 2
-npcId = 1511
+npcId = 1510
 clickOption = 1
 fishItemId = 377
 animationId = 619
@@ -43,8 +44,8 @@ experience = 440
 
 [[spot]]
 index = 3
-npcId = 1511
-clickOption = 2
+npcId = 1510
+clickOption = 3
 fishItemId = 371
 animationId = 618
 requiredLevel = 50
@@ -54,7 +55,7 @@ experience = 650
 
 [[spot]]
 index = 4
-npcId = 1514
+npcId = 1511
 clickOption = 1
 fishItemId = 7944
 animationId = 621
@@ -66,8 +67,8 @@ premiumOnly = true
 
 [[spot]]
 index = 5
-npcId = 1514
-clickOption = 2
+npcId = 1511
+clickOption = 3
 fishItemId = 383
 animationId = 618
 requiredLevel = 70
@@ -78,7 +79,7 @@ premiumOnly = true
 
 [[spot]]
 index = 6
-npcId = 1517
+npcId = 1520
 clickOption = 1
 fishItemId = 395
 animationId = 619
@@ -90,8 +91,8 @@ premiumOnly = true
 
 [[spot]]
 index = 7
-npcId = 1517
-clickOption = 2
+npcId = 1520
+clickOption = 3
 fishItemId = 389
 animationId = 618
 requiredLevel = 95

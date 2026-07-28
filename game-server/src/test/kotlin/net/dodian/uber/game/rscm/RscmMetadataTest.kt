@@ -10,7 +10,7 @@ class RscmMetadataTest {
     fun `npc metadata exposes right click options`() {
         val record = Files.readString(Path.of("content/mappings/metadata/npc.jsonl"))
             .lineSequence()
-            .first { it.contains("\"id\":7402") }
+            .first { it.contains("\"namespace\":\"npc\",\"id\":7402,") }
         assertTrue(record.contains("\"options\":{\"op2\":\"Attack\"}"))
         assertTrue(record.contains("\"walkanim\":\"seq_6372\""))
     }
@@ -19,9 +19,9 @@ class RscmMetadataTest {
     fun `component metadata exposes its dumped definition`() {
         val record = Files.readString(Path.of("content/mappings/metadata/component.jsonl"))
             .lineSequence()
-            .first { it.contains("\"id\":4,") }
+            .first { it.contains("\"namespace\":\"component\",\"id\":4,") }
         assertTrue(record.contains("\"type\":\"model\""))
         assertTrue(record.contains("\"model\":\"model_13369\""))
-        assertTrue(record.contains("\"sourceFile\":\"interface_0.if3\""))
+        assertTrue(record.contains("\"sourceFile\":\"interface/interface_0.if3\""))
     }
 }

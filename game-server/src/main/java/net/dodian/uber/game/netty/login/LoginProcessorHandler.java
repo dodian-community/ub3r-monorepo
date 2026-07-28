@@ -503,6 +503,8 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
                 return "Discord account limit reached";
             case 32:
                 return "Discord email not verified";
+            case 33:
+                return "Username already exists; choose another username";
             default:
                 return "Unknown error (" + code + ")";
         }

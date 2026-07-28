@@ -283,8 +283,8 @@ object SkillDoctor {
         // baseline-correct plugin fail startup. Promote them to this exact ownership check only
         // when the full state machine has been ported and Thieving becomes STABLE.
         if (SkillMigrationCatalog.state(Skill.THIEVING) == SkillMigrationState.STABLE) {
-            val requiredOptionOne = intArrayOf(20873, 20885, 375, 6847)
-            val requiredOptionTwo = intArrayOf(20885, 11729, 11730, 11731, 11732, 11733, 11734, 378, 4877)
+            val requiredOptionOne = intArrayOf(20873, 375, 6847)
+            val requiredOptionTwo = intArrayOf(11729, 11730, 11731, 11732, 11733, 11734, 378, 4877)
             requiredOptionOne.forEach { objectId ->
                 if (skillSnapshot.objectBinding(option = 1, objectId = objectId) == null) {
                     findings += SkillDoctorFinding("missing-route-ownership", "Thieving route ownership missing object click option=1 binding for objectId=$objectId.")

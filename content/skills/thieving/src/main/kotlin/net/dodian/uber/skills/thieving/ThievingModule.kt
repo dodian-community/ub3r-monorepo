@@ -47,7 +47,7 @@ object ThievingModule : SkillPlugin {
     private val npcIds by lazy { targets.filter { it.targetType == "npc" }.map { it.id }.toIntArray() }
 
     private val stallIds by lazy { targets.filter { it.targetType == "stall" }.map { it.id }.toIntArray() }
-    private val cageIds = intArrayOf(20873, 20885)
+    private val cageIds = intArrayOf(20873)
 
     // Object 375 is reused at two unrelated real-world locations for two distinct one-off reward
     // chests (legacy content.objects.impl.thieving.ChestObjects); 378 is the empty/looted state
@@ -67,14 +67,14 @@ object ThievingModule : SkillPlugin {
 
     override val definition: SkillPluginDefinition = skillPlugin("Thieving", Skill.THIEVING) {
         if (npcIds.isNotEmpty()) {
-            npcClick(preset = PolicyPreset.GATHERING, option = 2, *npcIds) { interaction ->
+            npcClick(preset = PolicyPreset.GATHERING, option = 3, *npcIds) { interaction ->
                 pickpocketNpc(interaction)
             }
         }
-        // Exact legacy options: cages are first-click (the alternate cage also supports second),
-        // while stalls are second-click only.  The remaining historical IDs were handled no-ops.
+        // Revision-218 cache options: the cage is first-click Unlock, while stalls are
+        // second-click Steal-from. Object 20885 is a Buy-option crate in this cache.
         objectClick(preset = PolicyPreset.GATHERING, option = 1, *cageIds) { stealFromTarget(it) }
-        objectClick(preset = PolicyPreset.GATHERING, option = 2, 20885, *stallIds) { stealFromTarget(it) }
+        objectClick(preset = PolicyPreset.GATHERING, option = 2, *stallIds) { stealFromTarget(it) }
         objectClick(preset = PolicyPreset.GATHERING, option = 1, 6847) { true }
         objectClick(preset = PolicyPreset.GATHERING, option = 2, 11729, 4877) { true }
         objectClick(preset = PolicyPreset.GATHERING, option = 1, SPECIAL_CHEST_OBJECT_ID) { interaction ->

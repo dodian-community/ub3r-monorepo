@@ -1,6 +1,6 @@
 package net.dodian.uber.game.npc
 
-internal object DeadlyRedSpider : NpcFamily by npcFamily("Deadly red spider", 63, block = {
+internal object DeadlyRedSpider : NpcFamily by npcFamily("Deadly red spider", 3021, block = {
     server {
         defenceAnimation = 5573
         deathAnimation = 2304

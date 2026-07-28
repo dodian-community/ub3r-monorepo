@@ -26,14 +26,20 @@ class ThievingModuleRuntimeTest {
 
     @Test
     fun `toml targets are loaded`() {
-        assertEquals(9, ThievingModule.targets.size)
+        assertEquals(8, ThievingModule.targets.size)
         assertTrue(ThievingModule.targets.any { it.name == "farmer" })
         assertFalse(ThievingModule.targets.any { it.name == "man" })
     }
 
     @Test
-    fun `cage_alt 20885 is registered as the baseline other target`() {
-        assertTrue(ThievingModule.targets.any { it.id == 20885 && it.targetType == "other" })
+    fun `pickpocket and cage routes use revision 218 ids and options`() {
+        assertEquals(setOf(3114, 5730), ThievingModule.targets.filter { it.targetType == "npc" }.map { it.id }.toSet())
+        assertTrue(ThievingModule.definition.npcBindings.any { it.option == 3 && 3114 in it.npcIds })
+        assertTrue(ThievingModule.definition.npcBindings.any { it.option == 3 && 5730 in it.npcIds })
+        assertFalse(ThievingModule.definition.npcBindings.any { 3086 in it.npcIds || 3257 in it.npcIds })
+        assertTrue(ThievingModule.targets.any { it.id == 20873 && it.targetType == "other" })
+        assertFalse(ThievingModule.targets.any { it.id == 20885 })
+        assertFalse(ThievingModule.definition.objectBindings.any { 20885 in it.objectIds })
     }
 
     // Regression test for the reported bug: clicking the Yanille chest produced no loot message,

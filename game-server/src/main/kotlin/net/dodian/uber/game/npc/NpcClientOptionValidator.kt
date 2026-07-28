@@ -253,6 +253,26 @@ object NpcClientOptionValidator {
             }
         }
 
+        val replacementCandidates = identityMismatches.map { mismatch ->
+            val handlers = modulesByNpcId[mismatch.npcId]
+                .orEmpty()
+                .flatMap { handlerLabels(it.definition) }
+                .distinct()
+                .sortedBy { it.first }
+            NpcReplacementAudit(
+                npcId = mismatch.npcId,
+                module = mismatch.module,
+                cacheName = mismatch.cacheName,
+                handlers = handlers.map { (option, label) -> NpcHandlerDump(option, label) },
+                candidates = rawDefinitions.values
+                    .asSequence()
+                    .filter { candidate -> candidate.id != mismatch.npcId && sameVisibleName(candidate.name, mismatch.module) }
+                    .map { candidate -> replacementCandidate(candidate, handlers) }
+                    .sortedBy { it.npcId }
+                    .toList(),
+            )
+        }
+
         return NpcClientOptionValidationReport(
             moduleCount = modules.size,
             contentIdsChecked = contentIdsChecked,
@@ -265,6 +285,7 @@ object NpcClientOptionValidator {
             missingVisibleHandlers = missingVisibleHandlers,
             effectiveClientOverrideConflicts = effectiveClientOverrideConflicts,
             liveCapabilities = liveCapabilities,
+            replacementCandidates = replacementCandidates,
         )
     }
 
@@ -319,6 +340,7 @@ object NpcClientOptionValidator {
                 identityMismatches = validation.identityMismatches,
                 missingVisibleHandlers = validation.missingVisibleHandlers,
                 effectiveClientOverrideConflicts = validation.effectiveClientOverrideConflicts,
+                replacementCandidates = validation.replacementCandidates,
             ),
         )
         logger.info("NPC diagnostics wrote {}, {}, and {}", cachePath, runtimePath, backlogPath)
@@ -447,6 +469,35 @@ object NpcClientOptionValidator {
         return labels
     }
 
+    private fun replacementCandidate(
+        candidate: CacheNpcDefinition,
+        handlers: List<Pair<Int, String>>,
+    ): NpcReplacementCandidate {
+        val visibleActions = candidate.actions.mapIndexedNotNull { index, action ->
+            action?.trim()?.takeIf(String::isNotEmpty)?.let { index + 1 to it }
+        }
+        val missingHandlers = handlers.filter { (option, label) ->
+            if (option == 5) visibleActions.none { (_, action) -> action.equals("attack", ignoreCase = true) }
+            else visibleActions.none { (candidateOption, action) -> candidateOption == option && sameVisibleName(action, label) }
+        }
+        val unownedActions = visibleActions.filter { (option, action) ->
+            !action.equals("attack", ignoreCase = true) && handlers.none { (handlerOption, label) ->
+                handlerOption == option && sameVisibleName(action, label)
+            }
+        }
+        val reasons = buildList {
+            if (missingHandlers.isNotEmpty()) add("missing required handlers: ${missingHandlers.joinToString { "${it.first}:${it.second}" }}")
+            if (unownedActions.isNotEmpty()) add("adds unowned visible actions: ${unownedActions.joinToString { "${it.first}:${it.second}" }}")
+        }
+        return NpcReplacementCandidate(
+            npcId = candidate.id,
+            cacheName = candidate.name,
+            visibleActions = visibleActions.map { (option, action) -> NpcHandlerDump(option, action) },
+            eligible = reasons.isEmpty(),
+            reasons = reasons,
+        )
+    }
+
     private fun describeHandlers(content: NpcContentDefinition): String =
         handlerLabels(content).joinToString("|") { (option, label) -> "$option:$label" }
 
@@ -480,6 +531,7 @@ data class NpcClientOptionValidationReport(
     val missingVisibleHandlers: List<NpcMissingVisibleHandler> = emptyList(),
     val effectiveClientOverrideConflicts: List<NpcEffectiveClientOverrideConflict> = emptyList(),
     val liveCapabilities: List<NpcLiveCapability> = emptyList(),
+    val replacementCandidates: List<NpcReplacementAudit> = emptyList(),
 ) {
     val optionViolations: List<String> get() = failures
     val nameWarnings: List<String> get() = warnings
@@ -527,6 +579,23 @@ data class NpcInteractionMigrationBacklog(
     val identityMismatches: List<NpcIdentityMismatch>,
     val missingVisibleHandlers: List<NpcMissingVisibleHandler>,
     val effectiveClientOverrideConflicts: List<NpcEffectiveClientOverrideConflict>,
+    val replacementCandidates: List<NpcReplacementAudit> = emptyList(),
+)
+
+data class NpcReplacementAudit(
+    val npcId: Int,
+    val module: String,
+    val cacheName: String,
+    val handlers: List<NpcHandlerDump>,
+    val candidates: List<NpcReplacementCandidate>,
+)
+
+data class NpcReplacementCandidate(
+    val npcId: Int,
+    val cacheName: String,
+    val visibleActions: List<NpcHandlerDump>,
+    val eligible: Boolean,
+    val reasons: List<String>,
 )
 
 data class NpcLiveCapability(

@@ -145,5 +145,8 @@
         <Logger name="net.dodian.consoleaudit.interface" level="${consoleAuditInterfaceLevel}" additivity="false">
             <AppenderRef ref="AsyncConsoleAudit"/>
         </Logger>
+        <Logger name="net.dodian.consoleaudit.npc" level="${consoleAuditNpcLevel:-info}" additivity="false">
+            <AppenderRef ref="AsyncConsoleAudit"/>
+        </Logger>
     </Loggers>
 </Configuration>

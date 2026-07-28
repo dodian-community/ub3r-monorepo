@@ -1,0 +1,8974 @@
+// 0
+// alias=param_0
+[param_0]
+
+// 1
+// alias=param_1
+[param_1]
+
+// 2
+// alias=param_2
+[param_2]
+
+// 3
+// alias=param_3
+[param_3]
+
+// 4
+// alias=param_4
+[param_4]
+
+// 5
+// alias=param_5
+[param_5]
+
+// 6
+// alias=param_6
+[param_6]
+
+// 7
+// alias=param_7
+[param_7]
+
+// 8
+// alias=param_8
+[param_8]
+
+// 9
+// alias=param_9
+[param_9]
+
+// 10
+// alias=param_10
+[param_10]
+
+// 11
+// alias=param_11
+[param_11]
+
+// 12
+// alias=param_12
+[param_12]
+
+// 13
+// alias=param_13
+[param_13]
+
+// 14
+// alias=param_14
+[param_14]
+
+// 15
+// alias=param_15
+[param_15]
+
+// 16
+// alias=param_16
+[param_16]
+
+// 17
+// alias=param_17
+[param_17]
+
+// 18
+// alias=param_18
+[param_18]
+
+// 19
+// alias=param_19
+[param_19]
+
+// 20
+// alias=param_20
+[param_20]
+
+// 21
+// alias=param_21
+[param_21]
+
+// 22
+// alias=param_22
+[param_22]
+
+// 23
+// alias=param_23
+[param_23]
+type=int
+default=0
+
+// 24
+// alias=param_24
+[param_24]
+
+// 25
+// alias=param_25
+[param_25]
+
+// 26
+// alias=param_26
+[param_26]
+
+// 27
+// alias=param_27
+[param_27]
+
+// 28
+// alias=param_28
+[param_28]
+
+// 29
+// alias=param_29
+[param_29]
+
+// 30
+// alias=param_30
+[param_30]
+
+// 31
+// alias=param_31
+[param_31]
+autodisable=no
+
+// 32
+// alias=param_32
+[param_32]
+
+// 33
+// alias=param_33
+[param_33]
+
+// 34
+// alias=param_34
+[param_34]
+
+// 35
+// alias=param_35
+[param_35]
+
+// 36
+// alias=param_36
+[param_36]
+
+// 37
+// alias=param_37
+[param_37]
+
+// 38
+// alias=param_38
+[param_38]
+
+// 39
+// alias=param_39
+[param_39]
+
+// 40
+// alias=param_40
+[param_40]
+type=int
+default=0
+
+// 41
+// alias=param_41
+[param_41]
+type=int
+default=0
+
+// 42
+// alias=param_42
+[param_42]
+type=int
+default=0
+
+// 43
+// alias=param_43
+[param_43]
+
+// 44
+// alias=param_44
+[param_44]
+
+// 45
+// alias=param_45
+[param_45]
+
+// 46
+// alias=param_46
+[param_46]
+
+// 47
+// alias=param_47
+[param_47]
+
+// 48
+// alias=param_48
+[param_48]
+
+// 49
+// alias=param_49
+[param_49]
+
+// 50
+// alias=param_50
+[param_50]
+
+// 51
+// alias=param_51
+[param_51]
+
+// 52
+// alias=param_52
+[param_52]
+
+// 53
+// alias=param_53
+[param_53]
+
+// 54
+// alias=param_54
+[param_54]
+
+// 55
+// alias=param_55
+[param_55]
+
+// 56
+// alias=param_56
+[param_56]
+
+// 57
+// alias=param_57
+[param_57]
+
+// 58
+// alias=param_58
+[param_58]
+
+// 59
+// alias=param_59
+[param_59]
+autodisable=no
+
+// 60
+// alias=param_60
+[param_60]
+
+// 61
+// alias=param_61
+[param_61]
+
+// 62
+// alias=param_62
+[param_62]
+
+// 63
+// alias=param_63
+[param_63]
+
+// 64
+// alias=param_64
+[param_64]
+
+// 65
+// alias=param_65
+[param_65]
+
+// 66
+// alias=param_66
+[param_66]
+
+// 67
+// alias=param_67
+[param_67]
+
+// 68
+// alias=param_68
+[param_68]
+
+// 69
+// alias=param_69
+[param_69]
+
+// 70
+// alias=param_70
+[param_70]
+
+// 71
+// alias=param_71
+[param_71]
+
+// 72
+// alias=param_72
+[param_72]
+
+// 73
+// alias=param_73
+[param_73]
+
+// 74
+// alias=param_74
+[param_74]
+
+// 75
+// alias=param_75
+[param_75]
+
+// 76
+// alias=param_76
+[param_76]
+
+// 77
+// alias=param_77
+[param_77]
+
+// 78
+// alias=param_78
+[param_78]
+
+// 79
+// alias=param_79
+[param_79]
+
+// 80
+// alias=param_80
+[param_80]
+
+// 81
+// alias=param_81
+[param_81]
+
+// 82
+// alias=param_82
+[param_82]
+
+// 83
+// alias=param_83
+[param_83]
+
+// 84
+// alias=param_84
+[param_84]
+
+// 85
+// alias=param_85
+[param_85]
+
+// 86
+// alias=param_86
+[param_86]
+
+// 87
+// alias=param_87
+[param_87]
+type=enum
+default=null
+
+// 88
+// alias=param_88
+[param_88]
+
+// 89
+// alias=param_89
+[param_89]
+
+// 90
+// alias=param_90
+[param_90]
+
+// 91
+// alias=param_91
+[param_91]
+
+// 92
+// alias=param_92
+[param_92]
+
+// 93
+// alias=param_93
+[param_93]
+
+// 94
+// alias=param_94
+[param_94]
+
+// 95
+// alias=param_95
+[param_95]
+
+// 96
+// alias=param_96
+[param_96]
+
+// 97
+// alias=param_97
+[param_97]
+
+// 98
+// alias=param_98
+[param_98]
+
+// 99
+// alias=param_99
+[param_99]
+
+// 100
+// alias=param_100
+[param_100]
+
+// 101
+// alias=param_101
+[param_101]
+
+// 102
+// alias=param_102
+[param_102]
+
+// 103
+// alias=param_103
+[param_103]
+
+// 104
+// alias=param_104
+[param_104]
+
+// 105
+// alias=param_105
+[param_105]
+
+// 106
+// alias=param_106
+[param_106]
+
+// 107
+// alias=param_107
+[param_107]
+
+// 108
+// alias=param_108
+[param_108]
+
+// 109
+// alias=param_109
+[param_109]
+
+// 110
+// alias=param_110
+[param_110]
+
+// 111
+// alias=param_111
+[param_111]
+
+// 112
+// alias=param_112
+[param_112]
+
+// 113
+// alias=param_113
+[param_113]
+
+// 114
+// alias=param_114
+[param_114]
+
+// 115
+// alias=param_115
+[param_115]
+
+// 116
+// alias=param_116
+[param_116]
+
+// 117
+// alias=param_117
+[param_117]
+
+// 118
+// alias=param_118
+[param_118]
+
+// 119
+// alias=param_119
+[param_119]
+
+// 120
+// alias=param_120
+[param_120]
+
+// 121
+// alias=param_121
+[param_121]
+
+// 122
+// alias=param_122
+[param_122]
+
+// 123
+// alias=param_123
+[param_123]
+type=int
+default=0
+
+// 124
+// alias=param_124
+[param_124]
+
+// 125
+// alias=param_125
+[param_125]
+
+// 126
+// alias=param_126
+[param_126]
+
+// 127
+// alias=param_127
+[param_127]
+
+// 128
+// alias=param_128
+[param_128]
+
+// 129
+// alias=param_129
+[param_129]
+
+// 130
+// alias=param_130
+[param_130]
+
+// 131
+// alias=param_131
+[param_131]
+
+// 132
+// alias=param_132
+[param_132]
+
+// 133
+// alias=param_133
+[param_133]
+
+// 134
+// alias=param_134
+[param_134]
+
+// 135
+// alias=param_135
+[param_135]
+
+// 136
+// alias=param_136
+[param_136]
+
+// 137
+// alias=param_137
+[param_137]
+
+// 138
+// alias=param_138
+[param_138]
+
+// 139
+// alias=param_139
+[param_139]
+
+// 140
+// alias=param_140
+[param_140]
+
+// 141
+// alias=param_141
+[param_141]
+
+// 142
+// alias=param_142
+[param_142]
+
+// 143
+// alias=param_143
+[param_143]
+
+// 144
+// alias=param_144
+[param_144]
+
+// 145
+// alias=param_145
+[param_145]
+
+// 146
+// alias=param_146
+[param_146]
+
+// 147
+// alias=param_147
+[param_147]
+
+// 148
+// alias=param_148
+[param_148]
+autodisable=no
+type=int
+default=2
+
+// 149
+// alias=param_149
+[param_149]
+type=graphic
+default=null
+
+// 150
+// alias=param_150
+[param_150]
+type=namedobj
+default=null
+
+// 151
+// alias=param_151
+[param_151]
+type=int
+default=-1
+
+// 152
+// alias=param_152
+[param_152]
+type=int
+default=^max_32bit_int
+
+// 153
+// alias=param_153
+[param_153]
+
+// 154
+// alias=param_154
+[param_154]
+
+// 155
+// alias=param_155
+[param_155]
+type=int
+default=0
+
+// 156
+// alias=param_156
+[param_156]
+
+// 157
+// alias=param_157
+[param_157]
+
+// 158
+// alias=param_158
+[param_158]
+
+// 159
+// alias=param_159
+[param_159]
+
+// 160
+// alias=param_160
+[param_160]
+
+// 161
+// alias=param_161
+[param_161]
+
+// 162
+// alias=param_162
+[param_162]
+
+// 163
+// alias=param_163
+[param_163]
+
+// 164
+// alias=param_164
+[param_164]
+
+// 165
+// alias=param_165
+[param_165]
+
+// 166
+// alias=param_166
+[param_166]
+
+// 167
+// alias=param_167
+[param_167]
+
+// 168
+// alias=param_168
+[param_168]
+
+// 169
+// alias=param_169
+[param_169]
+
+// 170
+// alias=param_170
+[param_170]
+
+// 171
+// alias=param_171
+[param_171]
+
+// 172
+// alias=param_172
+[param_172]
+autodisable=no
+
+// 173
+// alias=param_173
+[param_173]
+
+// 174
+// alias=param_174
+[param_174]
+
+// 175
+// alias=param_175
+[param_175]
+autodisable=no
+
+// 176
+// alias=param_176
+[param_176]
+autodisable=no
+
+// 177
+// alias=param_177
+[param_177]
+
+// 178
+// alias=param_178
+[param_178]
+
+// 179
+// alias=param_179
+[param_179]
+
+// 180
+// alias=param_180
+[param_180]
+
+// 181
+// alias=param_181
+[param_181]
+
+// 182
+// alias=param_182
+[param_182]
+
+// 183
+// alias=param_183
+[param_183]
+
+// 184
+// alias=param_184
+[param_184]
+
+// 185
+// alias=param_185
+[param_185]
+
+// 186
+// alias=param_186
+[param_186]
+autodisable=no
+type=model
+default=null
+
+// 187
+// alias=param_187
+[param_187]
+
+// 188
+// alias=param_188
+[param_188]
+
+// 189
+// alias=param_189
+[param_189]
+
+// 190
+// alias=param_190
+[param_190]
+
+// 191
+// alias=param_191
+[param_191]
+type=stat
+default=null
+
+// 192
+// alias=param_192
+[param_192]
+
+// 193
+// alias=param_193
+[param_193]
+
+// 194
+// alias=param_194
+[param_194]
+
+// 195
+// alias=param_195
+[param_195]
+
+// 196
+// alias=param_196
+[param_196]
+
+// 197
+// alias=param_197
+[param_197]
+
+// 198
+// alias=param_198
+[param_198]
+
+// 199
+// alias=param_199
+[param_199]
+
+// 200
+// alias=param_200
+[param_200]
+autodisable=no
+
+// 201
+// alias=param_201
+[param_201]
+
+// 202
+// alias=param_202
+[param_202]
+
+// 203
+// alias=param_203
+[param_203]
+
+// 204
+// alias=param_204
+[param_204]
+
+// 205
+// alias=param_205
+[param_205]
+
+// 206
+// alias=param_206
+[param_206]
+
+// 207
+// alias=param_207
+[param_207]
+
+// 208
+// alias=param_208
+[param_208]
+
+// 209
+// alias=param_209
+[param_209]
+
+// 210
+// alias=param_210
+[param_210]
+
+// 211
+// alias=param_211
+[param_211]
+
+// 212
+// alias=param_212
+[param_212]
+
+// 213
+// alias=param_213
+[param_213]
+
+// 214
+// alias=param_214
+[param_214]
+
+// 215
+// alias=param_215
+[param_215]
+
+// 216
+// alias=param_216
+[param_216]
+
+// 217
+// alias=param_217
+[param_217]
+
+// 218
+// alias=param_218
+[param_218]
+
+// 219
+// alias=param_219
+[param_219]
+
+// 220
+// alias=param_220
+[param_220]
+
+// 221
+// alias=param_221
+[param_221]
+
+// 222
+// alias=param_222
+[param_222]
+
+// 223
+// alias=param_223
+[param_223]
+
+// 224
+// alias=param_224
+[param_224]
+
+// 225
+// alias=param_225
+[param_225]
+
+// 226
+// alias=param_226
+[param_226]
+
+// 227
+// alias=param_227
+[param_227]
+
+// 228
+// alias=param_228
+[param_228]
+
+// 229
+// alias=param_229
+[param_229]
+
+// 230
+// alias=param_230
+[param_230]
+
+// 231
+// alias=param_231
+[param_231]
+
+// 232
+// alias=param_232
+[param_232]
+
+// 233
+// alias=param_233
+[param_233]
+
+// 234
+// alias=param_234
+[param_234]
+
+// 235
+// alias=param_235
+[param_235]
+
+// 236
+// alias=param_236
+[param_236]
+
+// 237
+// alias=param_237
+[param_237]
+
+// 238
+// alias=param_238
+[param_238]
+
+// 239
+// alias=param_239
+[param_239]
+
+// 240
+// alias=param_240
+[param_240]
+
+// 241
+// alias=param_241
+[param_241]
+
+// 242
+// alias=param_242
+[param_242]
+
+// 243
+// alias=param_243
+[param_243]
+
+// 244
+// alias=param_244
+[param_244]
+
+// 245
+// alias=param_245
+[param_245]
+
+// 246
+// alias=param_246
+[param_246]
+autodisable=no
+
+// 247
+// alias=param_247
+[param_247]
+
+// 248
+// alias=param_248
+[param_248]
+
+// 249
+// alias=param_249
+[param_249]
+
+// 250
+// alias=param_250
+[param_250]
+
+// 251
+// alias=param_251
+[param_251]
+
+// 252
+// alias=param_252
+[param_252]
+
+// 253
+// alias=param_253
+[param_253]
+
+// 254
+// alias=param_254
+[param_254]
+
+// 255
+// alias=param_255
+[param_255]
+
+// 256
+// alias=param_256
+[param_256]
+
+// 257
+// alias=param_257
+[param_257]
+autodisable=no
+
+// 258
+// alias=param_258
+[param_258]
+type=int
+default=0
+
+// 259
+// alias=param_259
+[param_259]
+
+// 260
+// alias=param_260
+[param_260]
+autodisable=no
+
+// 261
+// alias=param_261
+[param_261]
+autodisable=no
+
+// 262
+// alias=param_262
+[param_262]
+
+// 263
+// alias=param_263
+[param_263]
+
+// 264
+// alias=param_264
+[param_264]
+
+// 265
+// alias=param_265
+[param_265]
+
+// 266
+// alias=param_266
+[param_266]
+
+// 267
+// alias=param_267
+[param_267]
+
+// 268
+// alias=param_268
+[param_268]
+
+// 269
+// alias=param_269
+[param_269]
+
+// 270
+// alias=param_270
+[param_270]
+
+// 271
+// alias=param_271
+[param_271]
+autodisable=no
+
+// 272
+// alias=param_272
+[param_272]
+
+// 273
+// alias=param_273
+[param_273]
+
+// 274
+// alias=param_274
+[param_274]
+
+// 275
+// alias=param_275
+[param_275]
+
+// 276
+// alias=param_276
+[param_276]
+
+// 277
+// alias=param_277
+[param_277]
+autodisable=no
+
+// 278
+// alias=param_278
+[param_278]
+
+// 279
+// alias=param_279
+[param_279]
+
+// 280
+// alias=param_280
+[param_280]
+
+// 281
+// alias=param_281
+[param_281]
+
+// 282
+// alias=param_282
+[param_282]
+
+// 283
+// alias=param_283
+[param_283]
+
+// 284
+// alias=param_284
+[param_284]
+
+// 285
+// alias=param_285
+[param_285]
+
+// 286
+// alias=param_286
+[param_286]
+
+// 287
+// alias=param_287
+[param_287]
+
+// 288
+// alias=param_288
+[param_288]
+
+// 289
+// alias=param_289
+[param_289]
+
+// 290
+// alias=param_290
+[param_290]
+autodisable=no
+
+// 291
+// alias=param_291
+[param_291]
+
+// 292
+// alias=param_292
+[param_292]
+
+// 293
+// alias=param_293
+[param_293]
+
+// 294
+// alias=param_294
+[param_294]
+
+// 295
+// alias=param_295
+[param_295]
+type=int
+default=0
+
+// 296
+// alias=param_296
+[param_296]
+autodisable=no
+
+// 297
+// alias=param_297
+[param_297]
+
+// 298
+// alias=param_298
+[param_298]
+
+// 299
+// alias=param_299
+[param_299]
+
+// 300
+// alias=param_300
+[param_300]
+
+// 301
+// alias=param_301
+[param_301]
+autodisable=no
+
+// 302
+// alias=param_302
+[param_302]
+
+// 303
+// alias=param_303
+[param_303]
+
+// 304
+// alias=param_304
+[param_304]
+
+// 305
+// alias=param_305
+[param_305]
+
+// 306
+// alias=param_306
+[param_306]
+
+// 307
+// alias=param_307
+[param_307]
+
+// 308
+// alias=param_308
+[param_308]
+
+// 309
+// alias=param_309
+[param_309]
+
+// 310
+// alias=param_310
+[param_310]
+
+// 311
+// alias=param_311
+[param_311]
+
+// 312
+// alias=param_312
+[param_312]
+
+// 313
+// alias=param_313
+[param_313]
+
+// 314
+// alias=param_314
+[param_314]
+
+// 315
+// alias=param_315
+[param_315]
+
+// 316
+// alias=param_316
+[param_316]
+
+// 317
+// alias=param_317
+[param_317]
+
+// 318
+// alias=param_318
+[param_318]
+
+// 319
+// alias=param_319
+[param_319]
+
+// 320
+// alias=param_320
+[param_320]
+
+// 321
+// alias=param_321
+[param_321]
+autodisable=no
+
+// 322
+// alias=param_322
+[param_322]
+autodisable=no
+
+// 323
+// alias=param_323
+[param_323]
+
+// 324
+// alias=param_324
+[param_324]
+
+// 325
+// alias=param_325
+[param_325]
+
+// 326
+// alias=param_326
+[param_326]
+
+// 327
+// alias=param_327
+[param_327]
+
+// 328
+// alias=param_328
+[param_328]
+
+// 329
+// alias=param_329
+[param_329]
+
+// 330
+// alias=param_330
+[param_330]
+
+// 331
+// alias=param_331
+[param_331]
+
+// 332
+// alias=param_332
+[param_332]
+
+// 333
+// alias=param_333
+[param_333]
+
+// 334
+// alias=param_334
+[param_334]
+
+// 335
+// alias=param_335
+[param_335]
+autodisable=no
+
+// 336
+// alias=param_336
+[param_336]
+autodisable=no
+type=int
+default=-1
+
+// 337
+// alias=param_337
+[param_337]
+autodisable=no
+
+// 338
+// alias=param_338
+[param_338]
+autodisable=no
+
+// 339
+// alias=param_339
+[param_339]
+autodisable=no
+
+// 340
+// alias=param_340
+[param_340]
+
+// 341
+// alias=param_341
+[param_341]
+
+// 342
+// alias=param_342
+[param_342]
+
+// 343
+// alias=param_343
+[param_343]
+
+// 344
+// alias=param_344
+[param_344]
+
+// 345
+// alias=param_345
+[param_345]
+
+// 346
+// alias=param_346
+[param_346]
+
+// 347
+// alias=param_347
+[param_347]
+autodisable=no
+type=int
+default=0
+
+// 348
+// alias=param_348
+[param_348]
+autodisable=no
+type=int
+default=0
+
+// 349
+// alias=param_349
+[param_349]
+autodisable=no
+type=int
+default=0
+
+// 350
+// alias=param_350
+[param_350]
+autodisable=no
+type=int
+default=0
+
+// 351
+// alias=param_351
+[param_351]
+autodisable=no
+
+// 352
+// alias=param_352
+[param_352]
+
+// 353
+// alias=param_353
+[param_353]
+autodisable=no
+
+// 354
+// alias=param_354
+[param_354]
+
+// 355
+// alias=param_355
+[param_355]
+autodisable=no
+
+// 356
+// alias=param_356
+[param_356]
+autodisable=no
+
+// 357
+// alias=param_357
+[param_357]
+
+// 358
+// alias=param_358
+[param_358]
+
+// 359
+// alias=param_359
+[param_359]
+
+// 360
+// alias=param_360
+[param_360]
+
+// 361
+// alias=param_361
+[param_361]
+
+// 362
+// alias=param_362
+[param_362]
+
+// 363
+// alias=param_363
+[param_363]
+type=string
+default=null
+
+// 364
+// alias=param_364
+[param_364]
+autodisable=no
+
+// 365
+// alias=param_365
+[param_365]
+autodisable=no
+type=obj
+default=null
+
+// 366
+// alias=param_366
+[param_366]
+autodisable=no
+type=int
+default=0
+
+// 367
+// alias=param_367
+[param_367]
+autodisable=no
+type=obj
+default=null
+
+// 368
+// alias=param_368
+[param_368]
+autodisable=no
+type=int
+default=0
+
+// 369
+// alias=param_369
+[param_369]
+autodisable=no
+type=obj
+default=null
+
+// 370
+// alias=param_370
+[param_370]
+autodisable=no
+type=int
+default=0
+
+// 371
+// alias=param_371
+[param_371]
+
+// 372
+// alias=param_372
+[param_372]
+
+// 373
+// alias=param_373
+[param_373]
+
+// 374
+// alias=param_374
+[param_374]
+
+// 375
+// alias=param_375
+[param_375]
+autodisable=no
+
+// 376
+// alias=param_376
+[param_376]
+
+// 377
+// alias=param_377
+[param_377]
+
+// 378
+// alias=param_378
+[param_378]
+
+// 379
+// alias=param_379
+[param_379]
+
+// 380
+// alias=param_380
+[param_380]
+
+// 381
+// alias=param_381
+[param_381]
+autodisable=no
+
+// 382
+// alias=param_382
+[param_382]
+autodisable=no
+
+// 383
+// alias=param_383
+[param_383]
+
+// 384
+// alias=param_384
+[param_384]
+
+// 385
+// alias=param_385
+[param_385]
+type=int
+default=0
+
+// 386
+// alias=param_386
+[param_386]
+
+// 387
+// alias=param_387
+[param_387]
+
+// 388
+// alias=param_388
+[param_388]
+
+// 389
+// alias=param_389
+[param_389]
+autodisable=no
+
+// 390
+// alias=param_390
+[param_390]
+
+// 391
+// alias=param_391
+[param_391]
+autodisable=no
+
+// 392
+// alias=param_392
+[param_392]
+
+// 393
+// alias=param_393
+[param_393]
+autodisable=no
+type=int
+default=0
+
+// 394
+// alias=param_394
+[param_394]
+autodisable=no
+
+// 395
+// alias=param_395
+[param_395]
+autodisable=no
+
+// 396
+// alias=param_396
+[param_396]
+autodisable=no
+
+// 397
+// alias=param_397
+[param_397]
+autodisable=no
+
+// 398
+// alias=param_398
+[param_398]
+autodisable=no
+
+// 399
+// alias=param_399
+[param_399]
+autodisable=no
+
+// 400
+// alias=param_400
+[param_400]
+autodisable=no
+
+// 401
+// alias=param_401
+[param_401]
+autodisable=no
+type=int
+default=0
+
+// 402
+// alias=param_402
+[param_402]
+autodisable=no
+
+// 403
+// alias=param_403
+[param_403]
+
+// 404
+// alias=param_404
+[param_404]
+
+// 405
+// alias=param_405
+[param_405]
+
+// 406
+// alias=param_406
+[param_406]
+
+// 407
+// alias=param_407
+[param_407]
+
+// 408
+// alias=param_408
+[param_408]
+
+// 409
+// alias=param_409
+[param_409]
+
+// 410
+// alias=param_410
+[param_410]
+
+// 411
+// alias=param_411
+[param_411]
+
+// 412
+// alias=param_412
+[param_412]
+autodisable=no
+
+// 413
+// alias=param_413
+[param_413]
+
+// 414
+// alias=param_414
+[param_414]
+
+// 415
+// alias=param_415
+[param_415]
+
+// 416
+// alias=param_416
+[param_416]
+
+// 417
+// alias=param_417
+[param_417]
+
+// 418
+// alias=param_418
+[param_418]
+
+// 419
+// alias=param_419
+[param_419]
+
+// 420
+// alias=param_420
+[param_420]
+
+// 421
+// alias=param_421
+[param_421]
+
+// 422
+// alias=param_422
+[param_422]
+
+// 423
+// alias=param_423
+[param_423]
+
+// 424
+// alias=param_424
+[param_424]
+
+// 425
+// alias=param_425
+[param_425]
+
+// 426
+// alias=param_426
+[param_426]
+
+// 427
+// alias=param_427
+[param_427]
+
+// 428
+// alias=param_428
+[param_428]
+
+// 429
+// alias=param_429
+[param_429]
+
+// 430
+// alias=param_430
+[param_430]
+
+// 431
+// alias=param_431
+[param_431]
+
+// 432
+// alias=param_432
+[param_432]
+autodisable=no
+
+// 433
+// alias=param_433
+[param_433]
+
+// 434
+// alias=param_434
+[param_434]
+type=stat
+default=null
+
+// 435
+// alias=param_435
+[param_435]
+type=stat
+default=null
+
+// 436
+// alias=param_436
+[param_436]
+type=int
+default=0
+
+// 437
+// alias=param_437
+[param_437]
+type=int
+default=0
+
+// 438
+// alias=param_438
+[param_438]
+
+// 439
+// alias=param_439
+[param_439]
+
+// 440
+// alias=param_440
+[param_440]
+
+// 441
+// alias=param_441
+[param_441]
+
+// 442
+// alias=param_442
+[param_442]
+
+// 443
+// alias=param_443
+[param_443]
+
+// 444
+// alias=param_444
+[param_444]
+
+// 445
+// alias=param_445
+[param_445]
+autodisable=no
+
+// 446
+// alias=param_446
+[param_446]
+type=enum
+default=null
+
+// 447
+// alias=param_447
+[param_447]
+
+// 448
+// alias=param_448
+[param_448]
+
+// 449
+// alias=param_449
+[param_449]
+
+// 450
+// alias=param_450
+[param_450]
+
+// 451
+// alias=param_451
+[param_451]
+type=string
+default=
+
+// 452
+// alias=param_452
+[param_452]
+type=string
+default=
+
+// 453
+// alias=param_453
+[param_453]
+type=string
+default=
+
+// 454
+// alias=param_454
+[param_454]
+type=string
+default=
+
+// 455
+// alias=param_455
+[param_455]
+type=string
+default=
+
+// 456
+// alias=param_456
+[param_456]
+type=string
+default=
+
+// 457
+// alias=param_457
+[param_457]
+type=string
+default=
+
+// 458
+// alias=param_458
+[param_458]
+type=string
+default=
+
+// 459
+// alias=param_459
+[param_459]
+autodisable=no
+type=graphic
+default="worldmap_marker,0"
+
+// 460
+// alias=param_460
+[param_460]
+autodisable=no
+type=graphic
+default="worldmap_marker,1"
+
+// 461
+// alias=param_461
+[param_461]
+autodisable=no
+type=graphic
+default="worldmap_marker,2"
+
+// 462
+// alias=param_462
+[param_462]
+autodisable=no
+type=int
+default=52
+
+// 463
+// alias=param_463
+[param_463]
+
+// 464
+// alias=param_464
+[param_464]
+
+// 465
+// alias=param_465
+[param_465]
+type=obj
+default=null
+
+// 466
+// alias=param_466
+[param_466]
+
+// 467
+// alias=param_467
+[param_467]
+
+// 468
+// alias=param_468
+[param_468]
+
+// 469
+// alias=param_469
+[param_469]
+
+// 470
+// alias=param_470
+[param_470]
+
+// 471
+// alias=param_471
+[param_471]
+
+// 472
+// alias=param_472
+[param_472]
+autodisable=no
+
+// 473
+// alias=param_473
+[param_473]
+
+// 474
+// alias=param_474
+[param_474]
+
+// 475
+// alias=param_475
+[param_475]
+autodisable=no
+
+// 476
+// alias=param_476
+[param_476]
+autodisable=no
+
+// 477
+// alias=param_477
+[param_477]
+
+// 478
+// alias=param_478
+[param_478]
+
+// 479
+// alias=param_479
+[param_479]
+
+// 480
+// alias=param_480
+[param_480]
+
+// 481
+// alias=param_481
+[param_481]
+
+// 482
+// alias=param_482
+[param_482]
+
+// 483
+// alias=param_483
+[param_483]
+
+// 484
+// alias=param_484
+[param_484]
+
+// 485
+// alias=param_485
+[param_485]
+
+// 486
+// alias=param_486
+[param_486]
+
+// 487
+// alias=param_487
+[param_487]
+
+// 488
+// alias=param_488
+[param_488]
+
+// 489
+// alias=param_489
+[param_489]
+
+// 490
+// alias=param_490
+[param_490]
+
+// 491
+// alias=param_491
+[param_491]
+
+// 492
+// alias=param_492
+[param_492]
+
+// 493
+// alias=param_493
+[param_493]
+
+// 494
+// alias=param_494
+[param_494]
+
+// 495
+// alias=param_495
+[param_495]
+
+// 496
+// alias=param_496
+[param_496]
+
+// 497
+// alias=param_497
+[param_497]
+
+// 498
+// alias=param_498
+[param_498]
+
+// 499
+// alias=param_499
+[param_499]
+autodisable=no
+
+// 500
+// alias=param_500
+[param_500]
+
+// 501
+// alias=param_501
+[param_501]
+
+// 502
+// alias=param_502
+[param_502]
+
+// 503
+// alias=param_503
+[param_503]
+
+// 504
+// alias=param_504
+[param_504]
+
+// 505
+// alias=param_505
+[param_505]
+
+// 506
+// alias=param_506
+[param_506]
+type=string
+default=
+
+// 507
+// alias=param_507
+[param_507]
+
+// 508
+// alias=param_508
+[param_508]
+
+// 509
+// alias=param_509
+[param_509]
+type=int
+default=1
+
+// 510
+// alias=param_510
+[param_510]
+type=string
+default=
+
+// 511
+// alias=param_511
+[param_511]
+
+// 512
+// alias=param_512
+[param_512]
+
+// 513
+// alias=param_513
+[param_513]
+
+// 514
+// alias=param_514
+[param_514]
+
+// 515
+// alias=param_515
+[param_515]
+
+// 516
+// alias=param_516
+[param_516]
+
+// 517
+// alias=param_517
+[param_517]
+
+// 518
+// alias=param_518
+[param_518]
+
+// 519
+// alias=param_519
+[param_519]
+
+// 520
+// alias=param_520
+[param_520]
+
+// 521
+// alias=param_521
+[param_521]
+
+// 522
+// alias=param_522
+[param_522]
+
+// 523
+// alias=param_523
+[param_523]
+
+// 524
+// alias=param_524
+[param_524]
+
+// 525
+// alias=param_525
+[param_525]
+
+// 526
+// alias=param_526
+[param_526]
+
+// 527
+// alias=param_527
+[param_527]
+
+// 528
+// alias=param_528
+[param_528]
+type=int
+default=0
+
+// 529
+// alias=param_529
+[param_529]
+
+// 530
+// alias=param_530
+[param_530]
+
+// 531
+// alias=param_531
+[param_531]
+
+// 532
+// alias=param_532
+[param_532]
+
+// 533
+// alias=param_533
+[param_533]
+
+// 534
+// alias=param_534
+[param_534]
+
+// 535
+// alias=param_535
+[param_535]
+
+// 536
+// alias=param_536
+[param_536]
+
+// 537
+// alias=param_537
+[param_537]
+
+// 538
+// alias=param_538
+[param_538]
+
+// 539
+// alias=param_539
+[param_539]
+
+// 540
+// alias=param_540
+[param_540]
+
+// 541
+// alias=param_541
+[param_541]
+
+// 542
+// alias=param_542
+[param_542]
+
+// 543
+// alias=param_543
+[param_543]
+
+// 544
+// alias=param_544
+[param_544]
+
+// 545
+// alias=param_545
+[param_545]
+
+// 546
+// alias=param_546
+[param_546]
+type=int
+default=0
+
+// 547
+// alias=param_547
+[param_547]
+
+// 548
+// alias=param_548
+[param_548]
+
+// 549
+// alias=param_549
+[param_549]
+
+// 550
+// alias=param_550
+[param_550]
+
+// 551
+// alias=param_551
+[param_551]
+
+// 552
+// alias=param_552
+[param_552]
+type=int
+default=0
+
+// 553
+// alias=param_553
+[param_553]
+
+// 554
+// alias=param_554
+[param_554]
+
+// 555
+// alias=param_555
+[param_555]
+autodisable=no
+
+// 556
+// alias=param_556
+[param_556]
+
+// 557
+// alias=param_557
+[param_557]
+
+// 558
+// alias=param_558
+[param_558]
+
+// 559
+// alias=param_559
+[param_559]
+type=string
+default=
+
+// 560
+// alias=param_560
+[param_560]
+
+// 561
+// alias=param_561
+[param_561]
+
+// 562
+// alias=param_562
+[param_562]
+
+// 563
+// alias=param_563
+[param_563]
+
+// 564
+// alias=param_564
+[param_564]
+
+// 565
+// alias=param_565
+[param_565]
+
+// 566
+// alias=param_566
+[param_566]
+
+// 567
+// alias=param_567
+[param_567]
+
+// 568
+// alias=param_568
+[param_568]
+type=int
+default=0
+
+// 569
+// alias=param_569
+[param_569]
+type=namedobj
+default=null
+
+// 570
+// alias=param_570
+[param_570]
+
+// 571
+// alias=param_571
+[param_571]
+
+// 572
+// alias=param_572
+[param_572]
+
+// 573
+// alias=param_573
+[param_573]
+
+// 574
+// alias=param_574
+[param_574]
+
+// 575
+// alias=param_575
+[param_575]
+
+// 576
+// alias=param_576
+[param_576]
+
+// 577
+// alias=param_577
+[param_577]
+
+// 578
+// alias=param_578
+[param_578]
+type=namedobj
+default=null
+
+// 579
+// alias=param_579
+[param_579]
+type=stat
+default=null
+
+// 580
+// alias=param_580
+[param_580]
+
+// 581
+// alias=param_581
+[param_581]
+
+// 582
+// alias=param_582
+[param_582]
+
+// 583
+// alias=param_583
+[param_583]
+
+// 584
+// alias=param_584
+[param_584]
+
+// 585
+// alias=param_585
+[param_585]
+
+// 586
+// alias=param_586
+[param_586]
+
+// 587
+// alias=param_587
+[param_587]
+
+// 588
+// alias=param_588
+[param_588]
+
+// 589
+// alias=param_589
+[param_589]
+
+// 590
+// alias=param_590
+[param_590]
+
+// 591
+// alias=param_591
+[param_591]
+
+// 592
+// alias=param_592
+[param_592]
+
+// 593
+// alias=param_593
+[param_593]
+
+// 594
+// alias=param_594
+[param_594]
+
+// 595
+// alias=param_595
+[param_595]
+type=string
+default=
+
+// 596
+// alias=param_596
+[param_596]
+autodisable=no
+type=component
+default=null
+
+// 597
+// alias=param_597
+[param_597]
+autodisable=no
+type=graphic
+default=null
+
+// 598
+// alias=param_598
+[param_598]
+autodisable=no
+type=graphic
+default=null
+
+// 599
+// alias=param_599
+[param_599]
+autodisable=no
+type=graphic
+default=null
+
+// 600
+// alias=param_600
+[param_600]
+autodisable=no
+type=graphic
+default=null
+
+// 601
+// alias=param_601
+[param_601]
+autodisable=no
+type=string
+default=Spell
+
+// 602
+// alias=param_602
+[param_602]
+autodisable=no
+type=string
+default=It does magic!
+
+// 603
+// alias=param_603
+[param_603]
+autodisable=no
+type=boolean
+default=false
+
+// 604
+// alias=param_604
+[param_604]
+autodisable=no
+type=int
+default=0
+
+// 605
+// alias=param_605
+[param_605]
+autodisable=no
+type=int
+default=-1
+
+// 606
+// alias=param_606
+[param_606]
+autodisable=no
+type=obj
+default=null
+
+// 607
+// alias=param_607
+[param_607]
+autodisable=no
+type=int
+default=0
+
+// 608
+// alias=param_608
+[param_608]
+autodisable=no
+type=obj
+default=null
+
+// 609
+// alias=param_609
+[param_609]
+
+// 610
+// alias=param_610
+[param_610]
+type=stat
+default=null
+
+// 611
+// alias=param_611
+[param_611]
+type=stat
+default=null
+
+// 612
+// alias=param_612
+[param_612]
+type=stat
+default=null
+
+// 613
+// alias=param_613
+[param_613]
+type=int
+default=0
+
+// 614
+// alias=param_614
+[param_614]
+type=int
+default=0
+
+// 615
+// alias=param_615
+[param_615]
+type=int
+default=0
+
+// 616
+// alias=param_616
+[param_616]
+type=int
+default=0
+
+// 617
+// alias=param_617
+[param_617]
+type=int
+default=0
+
+// 618
+// alias=param_618
+[param_618]
+type=int
+default=0
+
+// 619
+// alias=param_619
+[param_619]
+type=boolean
+default=false
+
+// 620
+// alias=param_620
+[param_620]
+type=boolean
+default=false
+
+// 621
+// alias=param_621
+[param_621]
+type=boolean
+default=false
+
+// 622
+// alias=param_622
+[param_622]
+type=boolean
+default=false
+
+// 623
+// alias=param_623
+[param_623]
+autodisable=no
+type=dbrow
+default=null
+
+// 624
+// alias=param_624
+[param_624]
+autodisable=no
+type=graphic
+default="worldmap_marker_mini,0"
+
+// 625
+// alias=param_625
+[param_625]
+
+// 626
+// alias=param_626
+[param_626]
+autodisable=no
+type=int
+default=-1
+
+// 627
+// alias=param_627
+[param_627]
+autodisable=no
+type=int
+default=0
+
+// 628
+// alias=param_628
+[param_628]
+
+// 629
+// alias=param_629
+[param_629]
+
+// 630
+// alias=param_630
+[param_630]
+type=int
+default=-1
+
+// 631
+// alias=param_631
+[param_631]
+
+// 632
+// alias=param_632
+[param_632]
+
+// 633
+// alias=param_633
+[param_633]
+
+// 634
+// alias=param_634
+[param_634]
+
+// 635
+// alias=param_635
+[param_635]
+
+// 636
+// alias=param_636
+[param_636]
+
+// 637
+// alias=param_637
+[param_637]
+
+// 638
+// alias=param_638
+[param_638]
+
+// 639
+// alias=param_639
+[param_639]
+
+// 640
+// alias=param_640
+[param_640]
+
+// 641
+// alias=param_641
+[param_641]
+
+// 642
+// alias=param_642
+[param_642]
+
+// 643
+// alias=param_643
+[param_643]
+
+// 644
+// alias=param_644
+[param_644]
+
+// 645
+// alias=param_645
+[param_645]
+
+// 646
+// alias=param_646
+[param_646]
+
+// 647
+// alias=param_647
+[param_647]
+
+// 648
+// alias=param_648
+[param_648]
+
+// 649
+// alias=param_649
+[param_649]
+
+// 650
+// alias=param_650
+[param_650]
+
+// 651
+// alias=param_651
+[param_651]
+
+// 652
+// alias=param_652
+[param_652]
+
+// 653
+// alias=param_653
+[param_653]
+
+// 654
+// alias=param_654
+[param_654]
+
+// 655
+// alias=param_655
+[param_655]
+
+// 656
+// alias=param_656
+[param_656]
+
+// 657
+// alias=param_657
+[param_657]
+
+// 658
+// alias=param_658
+[param_658]
+
+// 659
+// alias=param_659
+[param_659]
+type=int
+default=-1
+
+// 660
+// alias=param_660
+[param_660]
+type=string
+default=
+
+// 661
+// alias=param_661
+[param_661]
+type=loc
+default=loc_33408
+
+// 662
+// alias=param_662
+[param_662]
+type=loc
+default=loc_33409
+
+// 663
+// alias=param_663
+[param_663]
+type=loc
+default=loc_33410
+
+// 664
+// alias=param_664
+[param_664]
+type=namedobj
+default=null
+
+// 665
+// alias=param_665
+[param_665]
+type=namedobj
+default=null
+
+// 666
+// alias=param_666
+[param_666]
+type=namedobj
+default=null
+
+// 667
+// alias=param_667
+[param_667]
+type=namedobj
+default=null
+
+// 668
+// alias=param_668
+[param_668]
+type=int
+default=0
+
+// 669
+// alias=param_669
+[param_669]
+type=int
+default=0
+
+// 670
+// alias=param_670
+[param_670]
+type=int
+default=0
+
+// 671
+// alias=param_671
+[param_671]
+type=int
+default=0
+
+// 672
+// alias=param_672
+[param_672]
+type=stat
+default=null
+
+// 673
+// alias=param_673
+[param_673]
+type=int
+default=0
+
+// 674
+// alias=param_674
+[param_674]
+type=int
+default=0
+
+// 675
+// alias=param_675
+[param_675]
+type=graphic
+default=null
+
+// 676
+// alias=param_676
+[param_676]
+type=graphic
+default=null
+
+// 677
+// alias=param_677
+[param_677]
+type=graphic
+default=null
+
+// 678
+// alias=param_678
+[param_678]
+type=graphic
+default=null
+
+// 679
+// alias=param_679
+[param_679]
+type=struct
+default=null
+
+// 680
+// alias=param_680
+[param_680]
+type=struct
+default=null
+
+// 681
+// alias=param_681
+[param_681]
+type=int
+default=-1
+
+// 682
+// alias=param_682
+[param_682]
+type=string
+default=
+
+// 683
+// alias=param_683
+[param_683]
+type=enum
+default=null
+
+// 684
+// alias=param_684
+[param_684]
+type=int
+default=-1
+
+// 685
+// alias=param_685
+[param_685]
+type=component
+default=null
+
+// 686
+// alias=param_686
+[param_686]
+type=component
+default=null
+
+// 687
+// alias=param_687
+[param_687]
+type=component
+default=null
+
+// 688
+// alias=param_688
+[param_688]
+type=component
+default=null
+
+// 689
+// alias=param_689
+[param_689]
+type=string
+default=
+
+// 690
+// alias=param_690
+[param_690]
+type=enum
+default=null
+
+// 691
+// alias=param_691
+[param_691]
+
+// 692
+// alias=param_692
+[param_692]
+
+// 693
+// alias=param_693
+[param_693]
+
+// 694
+// alias=param_694
+[param_694]
+
+// 695
+// alias=param_695
+[param_695]
+
+// 696
+// alias=param_696
+[param_696]
+
+// 697
+// alias=param_697
+[param_697]
+
+// 698
+// alias=param_698
+[param_698]
+
+// 699
+// alias=param_699
+[param_699]
+
+// 700
+// alias=param_700
+[param_700]
+
+// 701
+// alias=param_701
+[param_701]
+
+// 702
+// alias=param_702
+[param_702]
+
+// 703
+// alias=param_703
+[param_703]
+
+// 704
+// alias=param_704
+[param_704]
+
+// 705
+// alias=param_705
+[param_705]
+
+// 706
+// alias=param_706
+[param_706]
+autodisable=no
+
+// 707
+// alias=param_707
+[param_707]
+autodisable=no
+
+// 708
+// alias=param_708
+[param_708]
+autodisable=no
+
+// 709
+// alias=param_709
+[param_709]
+type=int
+default=0
+
+// 710
+// alias=param_710
+[param_710]
+
+// 711
+// alias=param_711
+[param_711]
+
+// 712
+// alias=param_712
+[param_712]
+
+// 713
+// alias=param_713
+[param_713]
+
+// 714
+// alias=param_714
+[param_714]
+
+// 715
+// alias=param_715
+[param_715]
+
+// 716
+// alias=param_716
+[param_716]
+
+// 717
+// alias=param_717
+[param_717]
+
+// 718
+// alias=param_718
+[param_718]
+
+// 719
+// alias=param_719
+[param_719]
+
+// 720
+// alias=param_720
+[param_720]
+
+// 721
+// alias=param_721
+[param_721]
+
+// 722
+// alias=param_722
+[param_722]
+
+// 723
+// alias=param_723
+[param_723]
+
+// 724
+// alias=param_724
+[param_724]
+
+// 725
+// alias=param_725
+[param_725]
+
+// 726
+// alias=param_726
+[param_726]
+autodisable=no
+type=int
+default=0
+
+// 727
+// alias=param_727
+[param_727]
+autodisable=no
+
+// 728
+// alias=param_728
+[param_728]
+autodisable=no
+
+// 729
+// alias=param_729
+[param_729]
+type=string
+default=
+
+// 730
+// alias=param_730
+[param_730]
+
+// 731
+// alias=param_731
+[param_731]
+autodisable=no
+
+// 732
+// alias=param_732
+[param_732]
+type=string
+default=item
+
+// 733
+// alias=param_733
+[param_733]
+type=obj
+default=obj_526
+
+// 734
+// alias=param_734
+[param_734]
+type=obj
+default=obj_526
+
+// 735
+// alias=param_735
+[param_735]
+type=int
+default=1
+
+// 736
+// alias=param_736
+[param_736]
+type=int
+default=100
+
+// 737
+// alias=param_737
+[param_737]
+type=obj
+default=obj_526
+
+// 738
+// alias=param_738
+[param_738]
+type=string
+default=column
+
+// 739
+// alias=param_739
+[param_739]
+type=boolean
+default=false
+
+// 740
+// alias=param_740
+[param_740]
+type=boolean
+default=false
+
+// 741
+// alias=param_741
+[param_741]
+type=boolean
+default=false
+
+// 742
+// alias=param_742
+[param_742]
+type=boolean
+default=false
+
+// 743
+// alias=param_743
+[param_743]
+type=int
+default=0
+
+// 744
+// alias=param_744
+[param_744]
+type=string
+default=Missing name
+
+// 745
+// alias=param_745
+[param_745]
+type=enum
+default=null
+
+// 746
+// alias=param_746
+[param_746]
+autodisable=no
+
+// 747
+// alias=param_747
+[param_747]
+
+// 748
+// alias=param_748
+[param_748]
+
+// 749
+// alias=param_749
+[param_749]
+
+// 750
+// alias=param_750
+[param_750]
+
+// 751
+// alias=param_751
+[param_751]
+
+// 752
+// alias=param_752
+[param_752]
+
+// 753
+// alias=param_753
+[param_753]
+
+// 754
+// alias=param_754
+[param_754]
+type=int
+default=100
+
+// 755
+// alias=param_755
+[param_755]
+
+// 756
+// alias=param_756
+[param_756]
+
+// 757
+// alias=param_757
+[param_757]
+
+// 758
+// alias=param_758
+[param_758]
+
+// 759
+// alias=param_759
+[param_759]
+
+// 760
+// alias=param_760
+[param_760]
+
+// 761
+// alias=param_761
+[param_761]
+
+// 762
+// alias=param_762
+[param_762]
+
+// 763
+// alias=param_763
+[param_763]
+
+// 764
+// alias=param_764
+[param_764]
+
+// 765
+// alias=param_765
+[param_765]
+
+// 766
+// alias=param_766
+[param_766]
+
+// 767
+// alias=param_767
+[param_767]
+
+// 768
+// alias=param_768
+[param_768]
+
+// 769
+// alias=param_769
+[param_769]
+
+// 770
+// alias=param_770
+[param_770]
+
+// 771
+// alias=param_771
+[param_771]
+
+// 772
+// alias=param_772
+[param_772]
+
+// 773
+// alias=param_773
+[param_773]
+
+// 774
+// alias=param_774
+[param_774]
+
+// 775
+// alias=param_775
+[param_775]
+
+// 776
+// alias=param_776
+[param_776]
+
+// 777
+// alias=param_777
+[param_777]
+
+// 778
+// alias=param_778
+[param_778]
+
+// 779
+// alias=param_779
+[param_779]
+
+// 780
+// alias=param_780
+[param_780]
+
+// 781
+// alias=param_781
+[param_781]
+
+// 782
+// alias=param_782
+[param_782]
+
+// 783
+// alias=param_783
+[param_783]
+
+// 784
+// alias=param_784
+[param_784]
+
+// 785
+// alias=param_785
+[param_785]
+
+// 786
+// alias=param_786
+[param_786]
+
+// 787
+// alias=param_787
+[param_787]
+
+// 788
+// alias=param_788
+[param_788]
+
+// 789
+// alias=param_789
+[param_789]
+
+// 790
+// alias=param_790
+[param_790]
+
+// 791
+// alias=param_791
+[param_791]
+
+// 792
+// alias=param_792
+[param_792]
+
+// 793
+// alias=param_793
+[param_793]
+
+// 794
+// alias=param_794
+[param_794]
+
+// 795
+// alias=param_795
+[param_795]
+
+// 796
+// alias=param_796
+[param_796]
+
+// 797
+// alias=param_797
+[param_797]
+
+// 798
+// alias=param_798
+[param_798]
+
+// 799
+// alias=param_799
+[param_799]
+
+// 800
+// alias=param_800
+[param_800]
+
+// 801
+// alias=param_801
+[param_801]
+
+// 802
+// alias=param_802
+[param_802]
+
+// 803
+// alias=param_803
+[param_803]
+
+// 804
+// alias=param_804
+[param_804]
+
+// 805
+// alias=param_805
+[param_805]
+
+// 806
+// alias=param_806
+[param_806]
+type=int
+default=0
+
+// 807
+// alias=param_807
+[param_807]
+type=int
+default=-1
+
+// 808
+// alias=param_808
+[param_808]
+type=struct
+default=null
+
+// 809
+// alias=param_809
+[param_809]
+type=int
+default=^max_32bit_int
+
+// 810
+// alias=param_810
+[param_810]
+type=string
+default=You forgot to give this task a name
+
+// 811
+// alias=param_811
+[param_811]
+type=graphic
+default="staticons,4"
+
+// 812
+// alias=param_812
+[param_812]
+type=string
+default=You forgot to give this task a description
+
+// 813
+// alias=param_813
+[param_813]
+type=string
+default=You forgot to give this task a hint
+
+// 814
+// alias=param_814
+[param_814]
+type=string
+default=You forgot to give this task a more hint
+
+// 815
+// alias=param_815
+[param_815]
+type=stat
+default=null
+
+// 816
+// alias=param_816
+[param_816]
+type=int
+default=-1
+
+// 817
+// alias=param_817
+[param_817]
+
+// 818
+// alias=param_818
+[param_818]
+type=int
+default=0
+
+// 819
+// alias=param_819
+[param_819]
+type=obj
+default=null
+
+// 820
+// alias=param_820
+[param_820]
+type=enum
+default=null
+
+// 821
+// alias=param_821
+[param_821]
+type=enum
+default=null
+
+// 822
+// alias=param_822
+[param_822]
+type=graphic
+default=adventurepath_placeholder
+
+// 823
+// alias=param_823
+[param_823]
+type=string
+default=There seems to be no helpful image for this task. So enjoy this one instead.
+
+// 824
+// alias=param_824
+[param_824]
+type=string
+default=
+
+// 825
+// alias=param_825
+[param_825]
+type=boolean
+default=null
+
+// 826
+// alias=param_826
+[param_826]
+type=int
+default=10000
+
+// 827
+// alias=param_827
+[param_827]
+type=struct
+default=null
+
+// 828
+// alias=param_828
+[param_828]
+type=string
+default=You forgot to give the path a name.
+
+// 829
+// alias=param_829
+[param_829]
+type=int
+default=^max_32bit_int
+
+// 830
+// alias=param_830
+[param_830]
+type=graphic
+default="ap_path_banner,0"
+
+// 831
+// alias=param_831
+[param_831]
+type=graphic
+default="ap_path_icon,1"
+
+// 832
+// alias=param_832
+[param_832]
+
+// 833
+// alias=param_833
+[param_833]
+type=enum
+default=null
+
+// 834
+// alias=param_834
+[param_834]
+type=boolean
+default=false
+
+// 835
+// alias=param_835
+[param_835]
+
+// 836
+// alias=param_836
+[param_836]
+
+// 837
+// alias=param_837
+[param_837]
+type=npc
+default=null
+
+// 838
+// alias=param_838
+[param_838]
+type=enum
+default=null
+
+// 839
+// alias=param_839
+[param_839]
+type=enum
+default=null
+
+// 840
+// alias=param_840
+[param_840]
+type=enum
+default=null
+
+// 841
+// alias=param_841
+[param_841]
+type=enum
+default=null
+
+// 842
+// alias=param_842
+[param_842]
+type=string
+default=You forgot to add a description to adventurepath_description_free
+
+// 843
+// alias=param_843
+[param_843]
+type=string
+default=You forgot to add a description to adventurepath_description_member
+
+// 844
+// alias=param_844
+[param_844]
+type=int
+default=-1
+
+// 845
+// alias=param_845
+[param_845]
+type=int
+default=-1
+
+// 846
+// alias=param_846
+[param_846]
+
+// 847
+// alias=param_847
+[param_847]
+autodisable=no
+
+// 848
+// alias=param_848
+[param_848]
+autodisable=no
+
+// 849
+// alias=param_849
+[param_849]
+autodisable=no
+
+// 850
+// alias=param_850
+[param_850]
+
+// 851
+// alias=param_851
+[param_851]
+
+// 852
+// alias=param_852
+[param_852]
+type=int
+default=1
+
+// 853
+// alias=param_853
+[param_853]
+type=string
+default=
+
+// 854
+// alias=param_854
+[param_854]
+type=string
+default=
+
+// 855
+// alias=param_855
+[param_855]
+type=obj
+default=null
+
+// 856
+// alias=param_856
+[param_856]
+autodisable=no
+
+// 857
+// alias=param_857
+[param_857]
+
+// 858
+// alias=param_858
+[param_858]
+type=string
+default=
+
+// 859
+// alias=param_859
+[param_859]
+
+// 860
+// alias=param_860
+[param_860]
+
+// 861
+// alias=param_861
+[param_861]
+
+// 862
+// alias=param_862
+[param_862]
+
+// 863
+// alias=param_863
+[param_863]
+
+// 864
+// alias=param_864
+[param_864]
+type=coord
+default=null
+
+// 865
+// alias=param_865
+[param_865]
+type=int
+default=1
+
+// 866
+// alias=param_866
+[param_866]
+type=enum
+default=null
+
+// 867
+// alias=param_867
+[param_867]
+type=enum
+default=null
+
+// 868
+// alias=param_868
+[param_868]
+type=enum
+default=null
+
+// 869
+// alias=param_869
+[param_869]
+type=enum
+default=null
+
+// 870
+// alias=param_870
+[param_870]
+type=enum
+default=null
+
+// 871
+// alias=param_871
+[param_871]
+type=int
+default=0
+
+// 872
+// alias=param_872
+[param_872]
+type=int
+default=0
+
+// 873
+// alias=param_873
+[param_873]
+type=int
+default=-1
+
+// 874
+// alias=param_874
+[param_874]
+type=string
+default=
+
+// 875
+// alias=param_875
+[param_875]
+type=string
+default=
+
+// 876
+// alias=param_876
+[param_876]
+type=int
+default=0
+
+// 877
+// alias=param_877
+[param_877]
+type=int
+default=0
+
+// 878
+// alias=param_878
+[param_878]
+type=enum
+default=null
+
+// 879
+// alias=param_879
+[param_879]
+type=string
+default=
+
+// 880
+// alias=param_880
+[param_880]
+type=string
+default=
+
+// 881
+// alias=param_881
+[param_881]
+type=graphic
+default=null
+
+// 882
+// alias=param_882
+[param_882]
+type=graphic
+default=null
+
+// 883
+// alias=param_883
+[param_883]
+type=graphic
+default=null
+
+// 884
+// alias=param_884
+[param_884]
+type=graphic
+default=null
+
+// 885
+// alias=param_885
+[param_885]
+type=int
+default=-1
+
+// 886
+// alias=param_886
+[param_886]
+type=enum
+default=null
+
+// 887
+// alias=param_887
+[param_887]
+type=enum
+default=null
+
+// 888
+// alias=param_888
+[param_888]
+type=enum
+default=null
+
+// 889
+// alias=param_889
+[param_889]
+type=enum
+default=null
+
+// 890
+// alias=param_890
+[param_890]
+type=enum
+default=null
+
+// 891
+// alias=param_891
+[param_891]
+type=enum
+default=null
+
+// 892
+// alias=param_892
+[param_892]
+type=enum
+default=null
+
+// 893
+// alias=param_893
+[param_893]
+type=enum
+default=null
+
+// 894
+// alias=param_894
+[param_894]
+type=enum
+default=null
+
+// 895
+// alias=param_895
+[param_895]
+type=enum
+default=null
+
+// 896
+// alias=param_896
+[param_896]
+type=int
+default=-1
+
+// 897
+// alias=param_897
+[param_897]
+
+// 898
+// alias=param_898
+[param_898]
+
+// 899
+// alias=param_899
+[param_899]
+
+// 900
+// alias=param_900
+[param_900]
+
+// 901
+// alias=param_901
+[param_901]
+type=namedobj
+default=null
+
+// 902
+// alias=param_902
+[param_902]
+type=namedobj
+default=null
+
+// 903
+// alias=param_903
+[param_903]
+type=namedobj
+default=null
+
+// 904
+// alias=param_904
+[param_904]
+type=string
+default=
+
+// 905
+// alias=param_905
+[param_905]
+type=string
+default=
+
+// 906
+// alias=param_906
+[param_906]
+type=string
+default=
+
+// 907
+// alias=param_907
+[param_907]
+type=int
+default=0
+
+// 908
+// alias=param_908
+[param_908]
+type=int
+default=0
+
+// 909
+// alias=param_909
+[param_909]
+type=int
+default=0
+
+// 910
+// alias=param_910
+[param_910]
+type=graphic
+default=null
+
+// 911
+// alias=param_911
+[param_911]
+type=graphic
+default=null
+
+// 912
+// alias=param_912
+[param_912]
+type=graphic
+default=null
+
+// 913
+// alias=param_913
+[param_913]
+type=boolean
+default=false
+
+// 914
+// alias=param_914
+[param_914]
+type=string
+default=null
+
+// 915
+// alias=param_915
+[param_915]
+type=enum
+default=null
+
+// 916
+// alias=param_916
+[param_916]
+type=int
+default=0
+
+// 917
+// alias=param_917
+[param_917]
+type=int
+default=999999
+
+// 918
+// alias=param_918
+[param_918]
+type=int
+default=0
+
+// 919
+// alias=param_919
+[param_919]
+
+// 920
+// alias=param_920
+[param_920]
+
+// 921
+// alias=param_921
+[param_921]
+
+// 922
+// alias=param_922
+[param_922]
+
+// 923
+// alias=param_923
+[param_923]
+type=int
+default=0
+
+// 924
+// alias=param_924
+[param_924]
+
+// 925
+// alias=param_925
+[param_925]
+type=boolean
+default=true
+
+// 926
+// alias=param_926
+[param_926]
+type=int
+default=1
+
+// 927
+// alias=param_927
+[param_927]
+type=coord
+default=null
+
+// 928
+// alias=param_928
+[param_928]
+type=mapelement
+default=null
+
+// 929
+// alias=param_929
+[param_929]
+type=boolean
+default=false
+
+// 930
+// alias=param_930
+[param_930]
+type=npc
+default=null
+
+// 931
+// alias=param_931
+[param_931]
+type=int
+default=0
+
+// 932
+// alias=param_932
+[param_932]
+type=coord
+default=null
+
+// 933
+// alias=param_933
+[param_933]
+type=category
+default=null
+
+// 934
+// alias=param_934
+[param_934]
+type=enum
+default=null
+
+// 935
+// alias=param_935
+[param_935]
+type=category
+default=null
+
+// 936
+// alias=param_936
+[param_936]
+type=string
+default=A hint arrow has been added to the world to show you where to go for this task.
+
+// 937
+// alias=param_937
+[param_937]
+
+// 938
+// alias=param_938
+[param_938]
+type=string
+default=A hint arrow has been added to the world to show you where to go for this task.
+
+// 939
+// alias=param_939
+[param_939]
+
+// 940
+// alias=param_940
+[param_940]
+
+// 941
+// alias=param_941
+[param_941]
+
+// 942
+// alias=param_942
+[param_942]
+
+// 943
+// alias=param_943
+[param_943]
+type=int
+default=^max_32bit_int
+
+// 944
+// alias=param_944
+[param_944]
+type=int
+default=^max_32bit_int
+
+// 945
+// alias=param_945
+[param_945]
+type=int
+default=0
+
+// 946
+// alias=param_946
+[param_946]
+type=int
+default=0
+
+// 947
+// alias=param_947
+[param_947]
+type=int
+default=0
+
+// 948
+// alias=param_948
+[param_948]
+type=int
+default=0
+
+// 949
+// alias=param_949
+[param_949]
+
+// 950
+// alias=param_950
+[param_950]
+
+// 951
+// alias=param_951
+[param_951]
+
+// 952
+// alias=param_952
+[param_952]
+
+// 953
+// alias=param_953
+[param_953]
+
+// 954
+// alias=param_954
+[param_954]
+
+// 955
+// alias=param_955
+[param_955]
+
+// 956
+// alias=param_956
+[param_956]
+
+// 957
+// alias=param_957
+[param_957]
+
+// 958
+// alias=param_958
+[param_958]
+
+// 959
+// alias=param_959
+[param_959]
+
+// 960
+// alias=param_960
+[param_960]
+
+// 961
+// alias=param_961
+[param_961]
+
+// 962
+// alias=param_962
+[param_962]
+
+// 963
+// alias=param_963
+[param_963]
+
+// 964
+// alias=param_964
+[param_964]
+
+// 965
+// alias=param_965
+[param_965]
+
+// 966
+// alias=param_966
+[param_966]
+
+// 967
+// alias=param_967
+[param_967]
+
+// 968
+// alias=param_968
+[param_968]
+
+// 969
+// alias=param_969
+[param_969]
+
+// 970
+// alias=param_970
+[param_970]
+
+// 971
+// alias=param_971
+[param_971]
+
+// 972
+// alias=param_972
+[param_972]
+
+// 973
+// alias=param_973
+[param_973]
+
+// 974
+// alias=param_974
+[param_974]
+
+// 975
+// alias=param_975
+[param_975]
+
+// 976
+// alias=param_976
+[param_976]
+
+// 977
+// alias=param_977
+[param_977]
+
+// 978
+// alias=param_978
+[param_978]
+
+// 979
+// alias=param_979
+[param_979]
+
+// 980
+// alias=param_980
+[param_980]
+
+// 981
+// alias=param_981
+[param_981]
+
+// 982
+// alias=param_982
+[param_982]
+
+// 983
+// alias=param_983
+[param_983]
+autodisable=no
+type=enum
+default=null
+
+// 984
+// alias=param_984
+[param_984]
+
+// 985
+// alias=param_985
+[param_985]
+autodisable=no
+type=string
+default=Marker
+
+// 986
+// alias=param_986
+[param_986]
+autodisable=no
+type=boolean
+default=false
+
+// 987
+// alias=param_987
+[param_987]
+autodisable=no
+
+// 988
+// alias=param_988
+[param_988]
+autodisable=no
+
+// 989
+// alias=param_989
+[param_989]
+type=enum
+default=null
+
+// 990
+// alias=param_990
+[param_990]
+
+// 991
+// alias=param_991
+[param_991]
+autodisable=no
+
+// 992
+// alias=param_992
+[param_992]
+
+// 993
+// alias=param_993
+[param_993]
+
+// 994
+// alias=param_994
+[param_994]
+
+// 995
+// alias=param_995
+[param_995]
+
+// 996
+// alias=param_996
+[param_996]
+
+// 997
+// alias=param_997
+[param_997]
+
+// 998
+// alias=param_998
+[param_998]
+
+// 999
+// alias=param_999
+[param_999]
+
+// 1000
+// alias=param_1000
+[param_1000]
+
+// 1001
+// alias=param_1001
+[param_1001]
+
+// 1002
+// alias=param_1002
+[param_1002]
+
+// 1003
+// alias=param_1003
+[param_1003]
+
+// 1004
+// alias=param_1004
+[param_1004]
+
+// 1005
+// alias=param_1005
+[param_1005]
+
+// 1006
+// alias=param_1006
+[param_1006]
+
+// 1007
+// alias=param_1007
+[param_1007]
+
+// 1008
+// alias=param_1008
+[param_1008]
+
+// 1009
+// alias=param_1009
+[param_1009]
+
+// 1010
+// alias=param_1010
+[param_1010]
+type=int
+default=0
+
+// 1011
+// alias=param_1011
+[param_1011]
+type=enum
+default=null
+
+// 1012
+// alias=param_1012
+[param_1012]
+type=string
+default=null
+
+// 1013
+// alias=param_1013
+[param_1013]
+type=string
+default=null
+
+// 1014
+// alias=param_1014
+[param_1014]
+type=string
+default=null
+
+// 1015
+// alias=param_1015
+[param_1015]
+type=string
+default=null
+
+// 1016
+// alias=param_1016
+[param_1016]
+type=int
+default=6
+
+// 1017
+// alias=param_1017
+[param_1017]
+type=int
+default=0
+
+// 1018
+// alias=param_1018
+[param_1018]
+type=int
+default=0
+
+// 1019
+// alias=param_1019
+[param_1019]
+type=struct
+default=null
+
+// 1020
+// alias=param_1020
+[param_1020]
+type=string
+default=
+
+// 1021
+// alias=param_1021
+[param_1021]
+type=spotanim
+default=null
+
+// 1022
+// alias=param_1022
+[param_1022]
+type=graphic
+default="league_relics,0"
+
+// 1023
+// alias=param_1023
+[param_1023]
+type=graphic
+default="league_relics,0"
+
+// 1024
+// alias=param_1024
+[param_1024]
+type=graphic
+default="league_progress_bar,0"
+
+// 1025
+// alias=param_1025
+[param_1025]
+type=graphic
+default="league_progress_bar,1"
+
+// 1026
+// alias=param_1026
+[param_1026]
+type=graphic
+default="league_relics_outline,0"
+
+// 1027
+// alias=param_1027
+[param_1027]
+type=int
+default=16750623
+
+// 1028
+// alias=param_1028
+[param_1028]
+type=int
+default=16754735
+
+// 1029
+// alias=param_1029
+[param_1029]
+type=int
+default=16777215
+
+// 1030
+// alias=param_1030
+[param_1030]
+type=boolean
+default=true
+
+// 1031
+// alias=param_1031
+[param_1031]
+type=graphic
+default=league_progress_bar_indicator
+
+// 1032
+// alias=param_1032
+[param_1032]
+type=graphic
+default=p12_full
+
+// 1033
+// alias=param_1033
+[param_1033]
+type=struct
+default=null
+
+// 1034
+// alias=param_1034
+[param_1034]
+type=enum
+default=null
+
+// 1035
+// alias=param_1035
+[param_1035]
+type=enum
+default=null
+
+// 1036
+// alias=param_1036
+[param_1036]
+type=enum
+default=null
+
+// 1037
+// alias=param_1037
+[param_1037]
+type=enum
+default=null
+
+// 1038
+// alias=param_1038
+[param_1038]
+type=enum
+default=null
+
+// 1039
+// alias=param_1039
+[param_1039]
+type=int
+default=-1
+
+// 1040
+// alias=param_1040
+[param_1040]
+type=int
+default=-1
+
+// 1041
+// alias=param_1041
+[param_1041]
+type=int
+default=-1
+
+// 1042
+// alias=param_1042
+[param_1042]
+type=string
+default=-
+
+// 1043
+// alias=param_1043
+[param_1043]
+type=string
+default=-
+
+// 1044
+// alias=param_1044
+[param_1044]
+type=string
+default=-
+
+// 1045
+// alias=param_1045
+[param_1045]
+
+// 1046
+// alias=param_1046
+[param_1046]
+
+// 1047
+// alias=param_1047
+[param_1047]
+
+// 1048
+// alias=param_1048
+[param_1048]
+
+// 1049
+// alias=param_1049
+[param_1049]
+
+// 1050
+// alias=param_1050
+[param_1050]
+
+// 1051
+// alias=param_1051
+[param_1051]
+
+// 1052
+// alias=param_1052
+[param_1052]
+
+// 1053
+// alias=param_1053
+[param_1053]
+
+// 1054
+// alias=param_1054
+[param_1054]
+
+// 1055
+// alias=param_1055
+[param_1055]
+type=string
+default=
+
+// 1056
+// alias=param_1056
+[param_1056]
+type=int
+default=0
+
+// 1057
+// alias=param_1057
+[param_1057]
+type=obj
+default=null
+
+// 1058
+// alias=param_1058
+[param_1058]
+type=int
+default=0
+
+// 1059
+// alias=param_1059
+[param_1059]
+type=int
+default=0
+
+// 1060
+// alias=param_1060
+[param_1060]
+type=int
+default=0
+
+// 1061
+// alias=param_1061
+[param_1061]
+type=obj
+default=obj_9489
+
+// 1062
+// alias=param_1062
+[param_1062]
+type=int
+default=5
+
+// 1063
+// alias=param_1063
+[param_1063]
+type=obj
+default=null
+
+// 1064
+// alias=param_1064
+[param_1064]
+type=int
+default=0
+
+// 1065
+// alias=param_1065
+[param_1065]
+type=obj
+default=null
+
+// 1066
+// alias=param_1066
+[param_1066]
+type=int
+default=0
+
+// 1067
+// alias=param_1067
+[param_1067]
+type=obj
+default=null
+
+// 1068
+// alias=param_1068
+[param_1068]
+type=int
+default=-1
+
+// 1069
+// alias=param_1069
+[param_1069]
+type=obj
+default=null
+
+// 1070
+// alias=param_1070
+[param_1070]
+type=int
+default=-1
+
+// 1071
+// alias=param_1071
+[param_1071]
+type=obj
+default=null
+
+// 1072
+// alias=param_1072
+[param_1072]
+type=int
+default=-1
+
+// 1073
+// alias=param_1073
+[param_1073]
+autodisable=no
+
+// 1074
+// alias=param_1074
+[param_1074]
+autodisable=no
+
+// 1075
+// alias=param_1075
+[param_1075]
+
+// 1076
+// alias=param_1076
+[param_1076]
+
+// 1077
+// alias=param_1077
+[param_1077]
+type=int
+default=0
+
+// 1078
+// alias=param_1078
+[param_1078]
+type=int
+default=0
+
+// 1079
+// alias=param_1079
+[param_1079]
+type=int
+default=0
+
+// 1080
+// alias=param_1080
+[param_1080]
+type=enum
+default=null
+
+// 1081
+// alias=param_1081
+[param_1081]
+type=enum
+default=enum_1565
+
+// 1082
+// alias=param_1082
+[param_1082]
+type=enum
+default=null
+
+// 1083
+// alias=param_1083
+[param_1083]
+type=enum
+default=null
+
+// 1084
+// alias=param_1084
+[param_1084]
+type=boolean
+default=false
+
+// 1085
+// alias=param_1085
+[param_1085]
+type=boolean
+default=false
+
+// 1086
+// alias=param_1086
+[param_1086]
+type=string
+default=Missing name
+
+// 1087
+// alias=param_1087
+[param_1087]
+type=string
+default=
+
+// 1088
+// alias=param_1088
+[param_1088]
+type=string
+default=
+
+// 1089
+// alias=param_1089
+[param_1089]
+type=int
+default=0
+
+// 1090
+// alias=param_1090
+[param_1090]
+type=int
+default=0
+
+// 1091
+// alias=param_1091
+[param_1091]
+type=enum
+default=null
+
+// 1092
+// alias=param_1092
+[param_1092]
+type=enum
+default=null
+
+// 1093
+// alias=param_1093
+[param_1093]
+type=int
+default=0
+
+// 1094
+// alias=param_1094
+[param_1094]
+type=boolean
+default=false
+
+// 1095
+// alias=param_1095
+[param_1095]
+type=boolean
+default=false
+
+// 1096
+// alias=param_1096
+[param_1096]
+type=string
+default=
+
+// 1097
+// alias=param_1097
+[param_1097]
+type=string
+default=
+
+// 1098
+// alias=param_1098
+[param_1098]
+type=graphic
+default=null
+
+// 1099
+// alias=param_1099
+[param_1099]
+type=coord
+default=0_0_0_0_0
+
+// 1100
+// alias=param_1100
+[param_1100]
+type=int
+default=0
+
+// 1101
+// alias=param_1101
+[param_1101]
+type=int
+default=5
+
+// 1102
+// alias=param_1102
+[param_1102]
+type=int
+default=5
+
+// 1103
+// alias=param_1103
+[param_1103]
+type=enum
+default=null
+
+// 1104
+// alias=param_1104
+[param_1104]
+type=string
+default=Select
+
+// 1105
+// alias=param_1105
+[param_1105]
+type=boolean
+default=true
+
+// 1106
+// alias=param_1106
+[param_1106]
+type=boolean
+default=false
+
+// 1107
+// alias=param_1107
+[param_1107]
+type=boolean
+default=false
+
+// 1108
+// alias=param_1108
+[param_1108]
+type=boolean
+default=false
+
+// 1109
+// alias=param_1109
+[param_1109]
+type=int
+default=5
+
+// 1110
+// alias=param_1110
+[param_1110]
+type=int
+default=5
+
+// 1111
+// alias=param_1111
+[param_1111]
+type=string
+default=coin
+
+// 1112
+// alias=param_1112
+[param_1112]
+type=string
+default=coins
+
+// 1113
+// alias=param_1113
+[param_1113]
+type=string
+default=Input value
+
+// 1114
+// alias=param_1114
+[param_1114]
+type=string
+default=2,147,483,647 coins
+
+// 1115
+// alias=param_1115
+[param_1115]
+type=boolean
+default=null
+
+// 1116
+// alias=param_1116
+[param_1116]
+type=string
+default=You can't change this setting at the moment.
+
+// 1117
+// alias=param_1117
+[param_1117]
+type=string
+default=
+
+// 1118
+// alias=param_1118
+[param_1118]
+type=boolean
+default=false
+
+// 1119
+// alias=param_1119
+[param_1119]
+type=boolean
+default=false
+
+// 1120
+// alias=param_1120
+[param_1120]
+
+// 1121
+// alias=param_1121
+[param_1121]
+
+// 1122
+// alias=param_1122
+[param_1122]
+
+// 1123
+// alias=param_1123
+[param_1123]
+
+// 1124
+// alias=param_1124
+[param_1124]
+
+// 1125
+// alias=param_1125
+[param_1125]
+
+// 1126
+// alias=param_1126
+[param_1126]
+
+// 1127
+// alias=param_1127
+[param_1127]
+
+// 1128
+// alias=param_1128
+[param_1128]
+
+// 1129
+// alias=param_1129
+[param_1129]
+
+// 1130
+// alias=param_1130
+[param_1130]
+
+// 1131
+// alias=param_1131
+[param_1131]
+
+// 1132
+// alias=param_1132
+[param_1132]
+
+// 1133
+// alias=param_1133
+[param_1133]
+
+// 1134
+// alias=param_1134
+[param_1134]
+type=coord
+default=null
+
+// 1135
+// alias=param_1135
+[param_1135]
+type=coord
+default=null
+
+// 1136
+// alias=param_1136
+[param_1136]
+type=coord
+default=null
+
+// 1137
+// alias=param_1137
+[param_1137]
+type=int
+default=0
+
+// 1138
+// alias=param_1138
+[param_1138]
+
+// 1139
+// alias=param_1139
+[param_1139]
+
+// 1140
+// alias=param_1140
+[param_1140]
+
+// 1141
+// alias=param_1141
+[param_1141]
+
+// 1142
+// alias=param_1142
+[param_1142]
+
+// 1143
+// alias=param_1143
+[param_1143]
+type=graphic
+default="trailblazer_relics,39"
+
+// 1144
+// alias=param_1144
+[param_1144]
+type=graphic
+default="trailblazer_relics,38"
+
+// 1145
+// alias=param_1145
+[param_1145]
+type=enum
+default=null
+
+// 1146
+// alias=param_1146
+[param_1146]
+type=enum
+default=null
+
+// 1147
+// alias=param_1147
+[param_1147]
+type=enum
+default=null
+
+// 1148
+// alias=param_1148
+[param_1148]
+
+// 1149
+// alias=param_1149
+[param_1149]
+
+// 1150
+// alias=param_1150
+[param_1150]
+
+// 1151
+// alias=param_1151
+[param_1151]
+
+// 1152
+// alias=param_1152
+[param_1152]
+type=int
+default=3
+
+// 1153
+// alias=param_1153
+[param_1153]
+
+// 1154
+// alias=param_1154
+[param_1154]
+
+// 1155
+// alias=param_1155
+[param_1155]
+autodisable=no
+
+// 1156
+// alias=param_1156
+[param_1156]
+
+// 1157
+// alias=param_1157
+[param_1157]
+type=boolean
+default=false
+
+// 1158
+// alias=param_1158
+[param_1158]
+type=boolean
+default=false
+
+// 1159
+// alias=param_1159
+[param_1159]
+type=int
+default=-1
+
+// 1160
+// alias=param_1160
+[param_1160]
+type=string
+default=
+
+// 1161
+// alias=param_1161
+[param_1161]
+type=int
+default=0
+
+// 1162
+// alias=param_1162
+[param_1162]
+type=int
+default=0
+
+// 1163
+// alias=param_1163
+[param_1163]
+type=string
+default=
+
+// 1164
+// alias=param_1164
+[param_1164]
+
+// 1165
+// alias=param_1165
+[param_1165]
+
+// 1166
+// alias=param_1166
+[param_1166]
+
+// 1167
+// alias=param_1167
+[param_1167]
+
+// 1168
+// alias=param_1168
+[param_1168]
+
+// 1169
+// alias=param_1169
+[param_1169]
+
+// 1170
+// alias=param_1170
+[param_1170]
+
+// 1171
+// alias=param_1171
+[param_1171]
+
+// 1172
+// alias=param_1172
+[param_1172]
+autodisable=no
+
+// 1173
+// alias=param_1173
+[param_1173]
+
+// 1174
+// alias=param_1174
+[param_1174]
+
+// 1175
+// alias=param_1175
+[param_1175]
+
+// 1176
+// alias=param_1176
+[param_1176]
+
+// 1177
+// alias=param_1177
+[param_1177]
+
+// 1178
+// alias=param_1178
+[param_1178]
+
+// 1179
+// alias=param_1179
+[param_1179]
+
+// 1180
+// alias=param_1180
+[param_1180]
+autodisable=no
+
+// 1181
+// alias=param_1181
+[param_1181]
+
+// 1182
+// alias=param_1182
+[param_1182]
+type=string
+default=
+
+// 1183
+// alias=param_1183
+[param_1183]
+type=string
+default=
+
+// 1184
+// alias=param_1184
+[param_1184]
+type=model
+default=null
+
+// 1185
+// alias=param_1185
+[param_1185]
+type=int
+default=0
+
+// 1186
+// alias=param_1186
+[param_1186]
+type=boolean
+default=false
+
+// 1187
+// alias=param_1187
+[param_1187]
+autodisable=no
+type=stat
+default=null
+
+// 1188
+// alias=param_1188
+[param_1188]
+autodisable=no
+type=int
+default=0
+
+// 1189
+// alias=param_1189
+[param_1189]
+autodisable=no
+type=dbrow
+default=null
+
+// 1190
+// alias=param_1190
+[param_1190]
+autodisable=no
+type=int
+default=0
+
+// 1191
+// alias=param_1191
+[param_1191]
+
+// 1192
+// alias=param_1192
+[param_1192]
+
+// 1193
+// alias=param_1193
+[param_1193]
+
+// 1194
+// alias=param_1194
+[param_1194]
+
+// 1195
+// alias=param_1195
+[param_1195]
+
+// 1196
+// alias=param_1196
+[param_1196]
+
+// 1197
+// alias=param_1197
+[param_1197]
+
+// 1198
+// alias=param_1198
+[param_1198]
+
+// 1199
+// alias=param_1199
+[param_1199]
+
+// 1200
+// alias=param_1200
+[param_1200]
+
+// 1201
+// alias=param_1201
+[param_1201]
+
+// 1202
+// alias=param_1202
+[param_1202]
+
+// 1203
+// alias=param_1203
+[param_1203]
+
+// 1204
+// alias=param_1204
+[param_1204]
+
+// 1205
+// alias=param_1205
+[param_1205]
+
+// 1206
+// alias=param_1206
+[param_1206]
+
+// 1207
+// alias=param_1207
+[param_1207]
+
+// 1208
+// alias=param_1208
+[param_1208]
+
+// 1209
+// alias=param_1209
+[param_1209]
+
+// 1210
+// alias=param_1210
+[param_1210]
+
+// 1211
+// alias=param_1211
+[param_1211]
+
+// 1212
+// alias=param_1212
+[param_1212]
+
+// 1213
+// alias=param_1213
+[param_1213]
+
+// 1214
+// alias=param_1214
+[param_1214]
+
+// 1215
+// alias=param_1215
+[param_1215]
+
+// 1216
+// alias=param_1216
+[param_1216]
+autodisable=no
+
+// 1217
+// alias=param_1217
+[param_1217]
+
+// 1218
+// alias=param_1218
+[param_1218]
+
+// 1219
+// alias=param_1219
+[param_1219]
+
+// 1220
+// alias=param_1220
+[param_1220]
+
+// 1221
+// alias=param_1221
+[param_1221]
+
+// 1222
+// alias=param_1222
+[param_1222]
+
+// 1223
+// alias=param_1223
+[param_1223]
+
+// 1224
+// alias=param_1224
+[param_1224]
+
+// 1225
+// alias=param_1225
+[param_1225]
+
+// 1226
+// alias=param_1226
+[param_1226]
+
+// 1227
+// alias=param_1227
+[param_1227]
+
+// 1228
+// alias=param_1228
+[param_1228]
+autodisable=no
+type=boolean
+default=false
+
+// 1229
+// alias=param_1229
+[param_1229]
+type=boolean
+default=false
+
+// 1230
+// alias=param_1230
+[param_1230]
+type=int
+default=0
+
+// 1231
+// alias=param_1231
+[param_1231]
+type=int
+default=0
+
+// 1232
+// alias=param_1232
+[param_1232]
+type=string
+default=
+
+// 1233
+// alias=param_1233
+[param_1233]
+type=string
+default=
+
+// 1234
+// alias=param_1234
+[param_1234]
+type=int
+default=0
+
+// 1235
+// alias=param_1235
+[param_1235]
+type=component
+default=null
+
+// 1236
+// alias=param_1236
+[param_1236]
+type=component
+default=null
+
+// 1237
+// alias=param_1237
+[param_1237]
+type=model
+default=null
+
+// 1238
+// alias=param_1238
+[param_1238]
+type=model
+default=null
+
+// 1239
+// alias=param_1239
+[param_1239]
+type=synth
+default=null
+
+// 1240
+// alias=param_1240
+[param_1240]
+type=string
+default=
+
+// 1241
+// alias=param_1241
+[param_1241]
+type=int
+default=0
+
+// 1242
+// alias=param_1242
+[param_1242]
+
+// 1243
+// alias=param_1243
+[param_1243]
+type=int
+default=2631720
+
+// 1244
+// alias=param_1244
+[param_1244]
+type=int
+default=2105376
+
+// 1245
+// alias=param_1245
+[param_1245]
+
+// 1246
+// alias=param_1246
+[param_1246]
+
+// 1247
+// alias=param_1247
+[param_1247]
+
+// 1248
+// alias=param_1248
+[param_1248]
+
+// 1249
+// alias=param_1249
+[param_1249]
+
+// 1250
+// alias=param_1250
+[param_1250]
+
+// 1251
+// alias=param_1251
+[param_1251]
+type=string
+default=
+
+// 1252
+// alias=param_1252
+[param_1252]
+type=string
+default=
+
+// 1253
+// alias=param_1253
+[param_1253]
+type=int
+default=0
+
+// 1254
+// alias=param_1254
+[param_1254]
+type=struct
+default=null
+
+// 1255
+// alias=param_1255
+[param_1255]
+type=boolean
+default=false
+
+// 1256
+// alias=param_1256
+[param_1256]
+autodisable=no
+
+// 1257
+// alias=param_1257
+[param_1257]
+
+// 1258
+// alias=param_1258
+[param_1258]
+
+// 1259
+// alias=param_1259
+[param_1259]
+
+// 1260
+// alias=param_1260
+[param_1260]
+
+// 1261
+// alias=param_1261
+[param_1261]
+
+// 1262
+// alias=param_1262
+[param_1262]
+type=string
+default=
+
+// 1263
+// alias=param_1263
+[param_1263]
+
+// 1264
+// alias=param_1264
+[param_1264]
+type=boolean
+default=false
+
+// 1265
+// alias=param_1265
+[param_1265]
+type=namedobj
+default=null
+
+// 1266
+// alias=param_1266
+[param_1266]
+type=enum
+default=null
+
+// 1267
+// alias=param_1267
+[param_1267]
+type=boolean
+default=false
+
+// 1268
+// alias=param_1268
+[param_1268]
+type=namedobj
+default=null
+
+// 1269
+// alias=param_1269
+[param_1269]
+type=enum
+default=null
+
+// 1270
+// alias=param_1270
+[param_1270]
+type=namedobj
+default=null
+
+// 1271
+// alias=param_1271
+[param_1271]
+type=boolean
+default=false
+
+// 1272
+// alias=param_1272
+[param_1272]
+type=boolean
+default=false
+
+// 1273
+// alias=param_1273
+[param_1273]
+type=boolean
+default=false
+
+// 1274
+// alias=param_1274
+[param_1274]
+type=struct
+default=null
+
+// 1275
+// alias=param_1275
+[param_1275]
+type=int
+default=-1
+
+// 1276
+// alias=param_1276
+[param_1276]
+type=int
+default=12303291
+
+// 1277
+// alias=param_1277
+[param_1277]
+type=int
+default=1
+
+// 1278
+// alias=param_1278
+[param_1278]
+type=graphic
+default=null
+
+// 1279
+// alias=param_1279
+[param_1279]
+type=string
+default=Buff
+
+// 1280
+// alias=param_1280
+[param_1280]
+type=coord
+default=0_0_0_0_0
+
+// 1281
+// alias=param_1281
+[param_1281]
+type=namedobj
+default=null
+
+// 1282
+// alias=param_1282
+[param_1282]
+type=boolean
+default=false
+
+// 1283
+// alias=param_1283
+[param_1283]
+type=inv
+default=null
+
+// 1284
+// alias=param_1284
+[param_1284]
+type=coord
+default=0_0_0_0_0
+
+// 1285
+// alias=param_1285
+[param_1285]
+type=enum
+default=null
+
+// 1286
+// alias=param_1286
+[param_1286]
+type=enum
+default=null
+
+// 1287
+// alias=param_1287
+[param_1287]
+
+// 1288
+// alias=param_1288
+[param_1288]
+type=boolean
+default=false
+
+// 1289
+// alias=param_1289
+[param_1289]
+type=int
+default=-1
+
+// 1290
+// alias=param_1290
+[param_1290]
+type=boolean
+default=false
+
+// 1291
+// alias=param_1291
+[param_1291]
+type=obj
+default=null
+
+// 1292
+// alias=param_1292
+[param_1292]
+type=boolean
+default=false
+
+// 1293
+// alias=param_1293
+[param_1293]
+autodisable=no
+
+// 1294
+// alias=param_1294
+[param_1294]
+
+// 1295
+// alias=param_1295
+[param_1295]
+
+// 1296
+// alias=param_1296
+[param_1296]
+
+// 1297
+// alias=param_1297
+[param_1297]
+type=graphic
+default=null
+
+// 1298
+// alias=param_1298
+[param_1298]
+type=graphic
+default=null
+
+// 1299
+// alias=param_1299
+[param_1299]
+type=int
+default=0
+
+// 1300
+// alias=param_1300
+[param_1300]
+type=string
+default=
+
+// 1301
+// alias=param_1301
+[param_1301]
+type=string
+default=
+
+// 1302
+// alias=param_1302
+[param_1302]
+type=int
+default=14733725
+
+// 1303
+// alias=param_1303
+[param_1303]
+type=int
+default=15787191
+
+// 1304
+// alias=param_1304
+[param_1304]
+type=string
+default=<col=06600c>
+
+// 1305
+// alias=param_1305
+[param_1305]
+type=string
+default=<col=0cc919>
+
+// 1306
+// alias=param_1306
+[param_1306]
+type=int
+default=-1
+
+// 1307
+// alias=param_1307
+[param_1307]
+type=struct
+default=null
+
+// 1308
+// alias=param_1308
+[param_1308]
+type=string
+default=
+
+// 1309
+// alias=param_1309
+[param_1309]
+type=string
+default=
+
+// 1310
+// alias=param_1310
+[param_1310]
+type=int
+default=0
+
+// 1311
+// alias=param_1311
+[param_1311]
+type=int
+default=0
+
+// 1312
+// alias=param_1312
+[param_1312]
+type=int
+default=0
+
+// 1313
+// alias=param_1313
+[param_1313]
+type=string
+default=0
+
+// 1314
+// alias=param_1314
+[param_1314]
+type=int
+default=0
+
+// 1315
+// alias=param_1315
+[param_1315]
+type=int
+default=0
+
+// 1316
+// alias=param_1316
+[param_1316]
+type=graphic
+default=friends_changed_name
+
+// 1317
+// alias=param_1317
+[param_1317]
+type=coord
+default=null
+
+// 1318
+// alias=param_1318
+[param_1318]
+type=mapelement
+default=null
+
+// 1319
+// alias=param_1319
+[param_1319]
+type=string
+default=
+
+// 1320
+// alias=param_1320
+[param_1320]
+type=string
+default=
+
+// 1321
+// alias=param_1321
+[param_1321]
+type=string
+default=
+
+// 1322
+// alias=param_1322
+[param_1322]
+type=model
+default=model_32523
+
+// 1323
+// alias=param_1323
+[param_1323]
+type=seq
+default=seq_7336
+
+// 1324
+// alias=param_1324
+[param_1324]
+type=int
+default=100
+
+// 1325
+// alias=param_1325
+[param_1325]
+type=int
+default=400
+
+// 1326
+// alias=param_1326
+[param_1326]
+type=int
+default=160
+
+// 1327
+// alias=param_1327
+[param_1327]
+type=int
+default=233
+
+// 1328
+// alias=param_1328
+[param_1328]
+type=int
+default=0
+
+// 1329
+// alias=param_1329
+[param_1329]
+type=int
+default=4300
+
+// 1330
+// alias=param_1330
+[param_1330]
+type=string
+default=
+
+// 1331
+// alias=param_1331
+[param_1331]
+type=graphic
+default=null
+
+// 1332
+// alias=param_1332
+[param_1332]
+type=graphic
+default=null
+
+// 1333
+// alias=param_1333
+[param_1333]
+type=obj
+default=null
+
+// 1334
+// alias=param_1334
+[param_1334]
+type=enum
+default=null
+
+// 1335
+// alias=param_1335
+[param_1335]
+type=obj
+default=null
+
+// 1336
+// alias=param_1336
+[param_1336]
+type=enum
+default=null
+
+// 1337
+// alias=param_1337
+[param_1337]
+type=obj
+default=null
+
+// 1338
+// alias=param_1338
+[param_1338]
+type=obj
+default=null
+
+// 1339
+// alias=param_1339
+[param_1339]
+type=enum
+default=null
+
+// 1340
+// alias=param_1340
+[param_1340]
+
+// 1341
+// alias=param_1341
+[param_1341]
+
+// 1342
+// alias=param_1342
+[param_1342]
+
+// 1343
+// alias=param_1343
+[param_1343]
+
+// 1344
+// alias=param_1344
+[param_1344]
+
+// 1345
+// alias=param_1345
+[param_1345]
+
+// 1346
+// alias=param_1346
+[param_1346]
+type=struct
+default=null
+
+// 1347
+// alias=param_1347
+[param_1347]
+type=loc
+default=null
+
+// 1348
+// alias=param_1348
+[param_1348]
+type=coord
+default=null
+
+// 1349
+// alias=param_1349
+[param_1349]
+type=npc
+default=null
+
+// 1350
+// alias=param_1350
+[param_1350]
+type=enum
+default=null
+
+// 1351
+// alias=param_1351
+[param_1351]
+type=int
+default=0
+
+// 1352
+// alias=param_1352
+[param_1352]
+type=boolean
+default=false
+
+// 1353
+// alias=param_1353
+[param_1353]
+
+// 1354
+// alias=param_1354
+[param_1354]
+
+// 1355
+// alias=param_1355
+[param_1355]
+
+// 1356
+// alias=param_1356
+[param_1356]
+
+// 1357
+// alias=param_1357
+[param_1357]
+autodisable=no
+
+// 1358
+// alias=param_1358
+[param_1358]
+type=boolean
+default=false
+
+// 1359
+// alias=param_1359
+[param_1359]
+
+// 1360
+// alias=param_1360
+[param_1360]
+type=string
+default=Input value
+
+// 1361
+// alias=param_1361
+[param_1361]
+type=int
+default=1
+
+// 1362
+// alias=param_1362
+[param_1362]
+
+// 1363
+// alias=param_1363
+[param_1363]
+
+// 1364
+// alias=param_1364
+[param_1364]
+
+// 1365
+// alias=param_1365
+[param_1365]
+
+// 1366
+// alias=param_1366
+[param_1366]
+
+// 1367
+// alias=param_1367
+[param_1367]
+
+// 1368
+// alias=param_1368
+[param_1368]
+
+// 1369
+// alias=param_1369
+[param_1369]
+
+// 1370
+// alias=param_1370
+[param_1370]
+
+// 1371
+// alias=param_1371
+[param_1371]
+type=int
+default=0
+
+// 1372
+// alias=param_1372
+[param_1372]
+type=string
+default=
+
+// 1373
+// alias=param_1373
+[param_1373]
+type=string
+default=
+
+// 1374
+// alias=param_1374
+[param_1374]
+type=int
+default=0
+
+// 1375
+// alias=param_1375
+[param_1375]
+type=int
+default=0
+
+// 1376
+// alias=param_1376
+[param_1376]
+
+// 1377
+// alias=param_1377
+[param_1377]
+
+// 1378
+// alias=param_1378
+[param_1378]
+
+// 1379
+// alias=param_1379
+[param_1379]
+
+// 1380
+// alias=param_1380
+[param_1380]
+
+// 1381
+// alias=param_1381
+[param_1381]
+
+// 1382
+// alias=param_1382
+[param_1382]
+
+// 1383
+// alias=param_1383
+[param_1383]
+
+// 1384
+// alias=param_1384
+[param_1384]
+type=graphic
+default=null
+
+// 1385
+// alias=param_1385
+[param_1385]
+
+// 1386
+// alias=param_1386
+[param_1386]
+
+// 1387
+// alias=param_1387
+[param_1387]
+type=graphic
+default=null
+
+// 1388
+// alias=param_1388
+[param_1388]
+type=graphic
+default=null
+
+// 1389
+// alias=param_1389
+[param_1389]
+type=graphic
+default=null
+
+// 1390
+// alias=param_1390
+[param_1390]
+type=graphic
+default=null
+
+// 1391
+// alias=param_1391
+[param_1391]
+type=graphic
+default=null
+
+// 1392
+// alias=param_1392
+[param_1392]
+type=graphic
+default=null
+
+// 1393
+// alias=param_1393
+[param_1393]
+type=graphic
+default=null
+
+// 1394
+// alias=param_1394
+[param_1394]
+type=graphic
+default=null
+
+// 1395
+// alias=param_1395
+[param_1395]
+type=graphic
+default=null
+
+// 1396
+// alias=param_1396
+[param_1396]
+
+// 1397
+// alias=param_1397
+[param_1397]
+type=int
+default=0
+
+// 1398
+// alias=param_1398
+[param_1398]
+type=boolean
+default=false
+
+// 1399
+// alias=param_1399
+[param_1399]
+
+// 1400
+// alias=param_1400
+[param_1400]
+
+// 1401
+// alias=param_1401
+[param_1401]
+type=int
+default=0
+
+// 1402
+// alias=param_1402
+[param_1402]
+type=int
+default=0
+
+// 1403
+// alias=param_1403
+[param_1403]
+type=int
+default=0
+
+// 1404
+// alias=param_1404
+[param_1404]
+type=int
+default=0
+
+// 1405
+// alias=param_1405
+[param_1405]
+type=int
+default=0
+
+// 1406
+// alias=param_1406
+[param_1406]
+type=int
+default=0
+
+// 1407
+// alias=param_1407
+[param_1407]
+type=string
+default=
+
+// 1408
+// alias=param_1408
+[param_1408]
+type=boolean
+default=false
+
+// 1409
+// alias=param_1409
+[param_1409]
+type=int
+default=-1
+
+// 1410
+// alias=param_1410
+[param_1410]
+type=int
+default=0
+
+// 1411
+// alias=param_1411
+[param_1411]
+type=boolean
+default=false
+
+// 1412
+// alias=param_1412
+[param_1412]
+type=graphic
+default=null
+
+// 1413
+// alias=param_1413
+[param_1413]
+type=string
+default=
+
+// 1414
+// alias=param_1414
+[param_1414]
+type=boolean
+default=false
+
+// 1415
+// alias=param_1415
+[param_1415]
+
+// 1416
+// alias=param_1416
+[param_1416]
+autodisable=no
+type=boolean
+default=false
+
+// 1417
+// alias=param_1417
+[param_1417]
+autodisable=no
+
+// 1418
+// alias=param_1418
+[param_1418]
+
+// 1419
+// alias=param_1419
+[param_1419]
+
+// 1420
+// alias=param_1420
+[param_1420]
+
+// 1421
+// alias=param_1421
+[param_1421]
+type=boolean
+default=false
+
+// 1422
+// alias=param_1422
+[param_1422]
+
+// 1423
+// alias=param_1423
+[param_1423]
+
+// 1424
+// alias=param_1424
+[param_1424]
+
+// 1425
+// alias=param_1425
+[param_1425]
+type=int
+default=0
+
+// 1426
+// alias=param_1426
+[param_1426]
+
+// 1427
+// alias=param_1427
+[param_1427]
+
+// 1428
+// alias=param_1428
+[param_1428]
+
+// 1429
+// alias=param_1429
+[param_1429]
+type=int
+default=0
+
+// 1430
+// alias=param_1430
+[param_1430]
+type=enum
+default=null
+
+// 1431
+// alias=param_1431
+[param_1431]
+type=enum
+default=null
+
+// 1432
+// alias=param_1432
+[param_1432]
+type=struct
+default=null
+
+// 1433
+// alias=param_1433
+[param_1433]
+type=enum
+default=null
+
+// 1434
+// alias=param_1434
+[param_1434]
+type=struct
+default=struct_1239
+
+// 1435
+// alias=param_1435
+[param_1435]
+type=stat
+default=null
+
+// 1436
+// alias=param_1436
+[param_1436]
+type=npc
+default=null
+
+// 1437
+// alias=param_1437
+[param_1437]
+type=string
+default=
+
+// 1438
+// alias=param_1438
+[param_1438]
+type=string
+default=
+
+// 1439
+// alias=param_1439
+[param_1439]
+type=string
+default=null
+
+// 1440
+// alias=param_1440
+[param_1440]
+type=graphic
+default=null
+
+// 1441
+// alias=param_1441
+[param_1441]
+type=graphic
+default=null
+
+// 1442
+// alias=param_1442
+[param_1442]
+type=int
+default=0
+
+// 1443
+// alias=param_1443
+[param_1443]
+type=struct
+default=null
+
+// 1444
+// alias=param_1444
+[param_1444]
+type=int
+default=0
+
+// 1445
+// alias=param_1445
+[param_1445]
+type=string
+default=
+
+// 1446
+// alias=param_1446
+[param_1446]
+type=string
+default=
+
+// 1447
+// alias=param_1447
+[param_1447]
+type=string
+default=
+
+// 1448
+// alias=param_1448
+[param_1448]
+type=string
+default=
+
+// 1449
+// alias=param_1449
+[param_1449]
+type=string
+default=
+
+// 1450
+// alias=param_1450
+[param_1450]
+type=string
+default=
+
+// 1451
+// alias=param_1451
+[param_1451]
+type=string
+default=
+
+// 1452
+// alias=param_1452
+[param_1452]
+type=string
+default=
+
+// 1453
+// alias=param_1453
+[param_1453]
+type=int
+default=0
+
+// 1454
+// alias=param_1454
+[param_1454]
+type=int
+default=0
+
+// 1455
+// alias=param_1455
+[param_1455]
+type=int
+default=0
+
+// 1456
+// alias=param_1456
+[param_1456]
+type=int
+default=0
+
+// 1457
+// alias=param_1457
+[param_1457]
+type=int
+default=0
+
+// 1458
+// alias=param_1458
+[param_1458]
+type=int
+default=0
+
+// 1459
+// alias=param_1459
+[param_1459]
+type=int
+default=0
+
+// 1460
+// alias=param_1460
+[param_1460]
+type=int
+default=0
+
+// 1461
+// alias=param_1461
+[param_1461]
+type=int
+default=-1
+
+// 1462
+// alias=param_1462
+[param_1462]
+type=obj
+default=null
+
+// 1463
+// alias=param_1463
+[param_1463]
+type=stat
+default=null
+
+// 1464
+// alias=param_1464
+[param_1464]
+type=int
+default=0
+
+// 1465
+// alias=param_1465
+[param_1465]
+type=string
+default=
+
+// 1466
+// alias=param_1466
+[param_1466]
+type=string
+default=
+
+// 1467
+// alias=param_1467
+[param_1467]
+type=string
+default=
+
+// 1468
+// alias=param_1468
+[param_1468]
+type=int
+default=0
+
+// 1469
+// alias=param_1469
+[param_1469]
+type=string
+default=
+
+// 1470
+// alias=param_1470
+[param_1470]
+type=int
+default=0
+
+// 1471
+// alias=param_1471
+[param_1471]
+type=obj
+default=null
+
+// 1472
+// alias=param_1472
+[param_1472]
+type=graphic
+default=null
+
+// 1473
+// alias=param_1473
+[param_1473]
+type=int
+default=0
+
+// 1474
+// alias=param_1474
+[param_1474]
+type=graphic
+default=null
+
+// 1475
+// alias=param_1475
+[param_1475]
+type=graphic
+default=null
+
+// 1476
+// alias=param_1476
+[param_1476]
+type=graphic
+default=null
+
+// 1477
+// alias=param_1477
+[param_1477]
+type=graphic
+default=null
+
+// 1478
+// alias=param_1478
+[param_1478]
+type=int
+default=0
+
+// 1479
+// alias=param_1479
+[param_1479]
+type=graphic
+default=null
+
+// 1480
+// alias=param_1480
+[param_1480]
+type=boolean
+default=false
+
+// 1481
+// alias=param_1481
+[param_1481]
+type=boolean
+default=false
+
+// 1482
+// alias=param_1482
+[param_1482]
+type=boolean
+default=false
+
+// 1483
+// alias=param_1483
+[param_1483]
+type=coord
+default=0_0_0_0_0
+
+// 1484
+// alias=param_1484
+[param_1484]
+type=coord
+default=0_0_0_0_0
+
+// 1485
+// alias=param_1485
+[param_1485]
+
+// 1486
+// alias=param_1486
+[param_1486]
+
+// 1487
+// alias=param_1487
+[param_1487]
+
+// 1488
+// alias=param_1488
+[param_1488]
+
+// 1489
+// alias=param_1489
+[param_1489]
+
+// 1490
+// alias=param_1490
+[param_1490]
+
+// 1491
+// alias=param_1491
+[param_1491]
+
+// 1492
+// alias=param_1492
+[param_1492]
+
+// 1493
+// alias=param_1493
+[param_1493]
+
+// 1494
+// alias=param_1494
+[param_1494]
+
+// 1495
+// alias=param_1495
+[param_1495]
+
+// 1496
+// alias=param_1496
+[param_1496]
+
+// 1497
+// alias=param_1497
+[param_1497]
+
+// 1498
+// alias=param_1498
+[param_1498]
+
+// 1499
+// alias=param_1499
+[param_1499]
+
+// 1500
+// alias=param_1500
+[param_1500]
+
+// 1501
+// alias=param_1501
+[param_1501]
+
+// 1502
+// alias=param_1502
+[param_1502]
+
+// 1503
+// alias=param_1503
+[param_1503]
+
+// 1504
+// alias=param_1504
+[param_1504]
+
+// 1505
+// alias=param_1505
+[param_1505]
+
+// 1506
+// alias=param_1506
+[param_1506]
+
+// 1507
+// alias=param_1507
+[param_1507]
+
+// 1508
+// alias=param_1508
+[param_1508]
+
+// 1509
+// alias=param_1509
+[param_1509]
+
+// 1510
+// alias=param_1510
+[param_1510]
+
+// 1511
+// alias=param_1511
+[param_1511]
+
+// 1512
+// alias=param_1512
+[param_1512]
+
+// 1513
+// alias=param_1513
+[param_1513]
+
+// 1514
+// alias=param_1514
+[param_1514]
+
+// 1515
+// alias=param_1515
+[param_1515]
+
+// 1516
+// alias=param_1516
+[param_1516]
+
+// 1517
+// alias=param_1517
+[param_1517]
+
+// 1518
+// alias=param_1518
+[param_1518]
+
+// 1519
+// alias=param_1519
+[param_1519]
+
+// 1520
+// alias=param_1520
+[param_1520]
+
+// 1521
+// alias=param_1521
+[param_1521]
+type=int
+default=0
+
+// 1522
+// alias=param_1522
+[param_1522]
+autodisable=no
+
+// 1523
+// alias=param_1523
+[param_1523]
+
+// 1524
+// alias=param_1524
+[param_1524]
+
+// 1525
+// alias=param_1525
+[param_1525]
+type=string
+default=Title
+
+// 1526
+// alias=param_1526
+[param_1526]
+type=string
+default=Description
+
+// 1527
+// alias=param_1527
+[param_1527]
+type=graphic
+default="clan_rank_icons,24"
+
+// 1528
+// alias=param_1528
+[param_1528]
+type=int
+default=0
+
+// 1529
+// alias=param_1529
+[param_1529]
+type=int
+default=1
+
+// 1530
+// alias=param_1530
+[param_1530]
+
+// 1531
+// alias=param_1531
+[param_1531]
+
+// 1532
+// alias=param_1532
+[param_1532]
+
+// 1533
+// alias=param_1533
+[param_1533]
+
+// 1534
+// alias=param_1534
+[param_1534]
+
+// 1535
+// alias=param_1535
+[param_1535]
+
+// 1536
+// alias=param_1536
+[param_1536]
+type=string
+default=
+
+// 1537
+// alias=param_1537
+[param_1537]
+type=boolean
+default=false
+
+// 1538
+// alias=param_1538
+[param_1538]
+type=int
+default=18
+
+// 1539
+// alias=param_1539
+[param_1539]
+type=int
+default=600
+
+// 1540
+// alias=param_1540
+[param_1540]
+type=int
+default=0
+
+// 1541
+// alias=param_1541
+[param_1541]
+type=int
+default=30
+
+// 1542
+// alias=param_1542
+[param_1542]
+type=int
+default=0
+
+// 1543
+// alias=param_1543
+[param_1543]
+type=int
+default=0
+
+// 1544
+// alias=param_1544
+[param_1544]
+type=int
+default=0
+
+// 1545
+// alias=param_1545
+[param_1545]
+type=boolean
+default=false
+
+// 1546
+// alias=param_1546
+[param_1546]
+type=string
+default=
+
+// 1547
+// alias=param_1547
+[param_1547]
+type=int
+default=0
+
+// 1548
+// alias=param_1548
+[param_1548]
+type=graphic
+default=null
+
+// 1549
+// alias=param_1549
+[param_1549]
+type=boolean
+default=false
+
+// 1550
+// alias=param_1550
+[param_1550]
+type=string
+default=
+
+// 1551
+// alias=param_1551
+[param_1551]
+type=boolean
+default=false
+
+// 1552
+// alias=param_1552
+[param_1552]
+type=string
+default=
+
+// 1553
+// alias=param_1553
+[param_1553]
+type=boolean
+default=false
+
+// 1554
+// alias=param_1554
+[param_1554]
+type=int
+default=600
+
+// 1555
+// alias=param_1555
+[param_1555]
+type=int
+default=18
+
+// 1556
+// alias=param_1556
+[param_1556]
+type=int
+default=0
+
+// 1557
+// alias=param_1557
+[param_1557]
+
+// 1558
+// alias=param_1558
+[param_1558]
+
+// 1559
+// alias=param_1559
+[param_1559]
+
+// 1560
+// alias=param_1560
+[param_1560]
+
+// 1561
+// alias=param_1561
+[param_1561]
+
+// 1562
+// alias=param_1562
+[param_1562]
+type=int
+default=0
+
+// 1563
+// alias=param_1563
+[param_1563]
+type=int
+default=0
+
+// 1564
+// alias=param_1564
+[param_1564]
+type=int
+default=^max_32bit_int
+
+// 1565
+// alias=param_1565
+[param_1565]
+type=boolean
+default=false
+
+// 1566
+// alias=param_1566
+[param_1566]
+
+// 1567
+// alias=param_1567
+[param_1567]
+
+// 1568
+// alias=param_1568
+[param_1568]
+
+// 1569
+// alias=param_1569
+[param_1569]
+
+// 1570
+// alias=param_1570
+[param_1570]
+
+// 1571
+// alias=param_1571
+[param_1571]
+
+// 1572
+// alias=param_1572
+[param_1572]
+
+// 1573
+// alias=param_1573
+[param_1573]
+
+// 1574
+// alias=param_1574
+[param_1574]
+
+// 1575
+// alias=param_1575
+[param_1575]
+
+// 1576
+// alias=param_1576
+[param_1576]
+
+// 1577
+// alias=param_1577
+[param_1577]
+
+// 1578
+// alias=param_1578
+[param_1578]
+
+// 1579
+// alias=param_1579
+[param_1579]
+
+// 1580
+// alias=param_1580
+[param_1580]
+
+// 1581
+// alias=param_1581
+[param_1581]
+
+// 1582
+// alias=param_1582
+[param_1582]
+
+// 1583
+// alias=param_1583
+[param_1583]
+
+// 1584
+// alias=param_1584
+[param_1584]
+
+// 1585
+// alias=param_1585
+[param_1585]
+type=int
+default=0
+
+// 1586
+// alias=param_1586
+[param_1586]
+type=int
+default=0
+
+// 1587
+// alias=param_1587
+[param_1587]
+type=int
+default=0
+
+// 1588
+// alias=param_1588
+[param_1588]
+type=int
+default=0
+
+// 1589
+// alias=param_1589
+[param_1589]
+type=int
+default=0
+
+// 1590
+// alias=param_1590
+[param_1590]
+
+// 1591
+// alias=param_1591
+[param_1591]
+
+// 1592
+// alias=param_1592
+[param_1592]
+
+// 1593
+// alias=param_1593
+[param_1593]
+
+// 1594
+// alias=param_1594
+[param_1594]
+
+// 1595
+// alias=param_1595
+[param_1595]
+
+// 1596
+// alias=param_1596
+[param_1596]
+
+// 1597
+// alias=param_1597
+[param_1597]
+
+// 1598
+// alias=param_1598
+[param_1598]
+
+// 1599
+// alias=param_1599
+[param_1599]
+
+// 1600
+// alias=param_1600
+[param_1600]
+type=int
+default=0
+
+// 1601
+// alias=param_1601
+[param_1601]
+
+// 1602
+// alias=param_1602
+[param_1602]
+
+// 1603
+// alias=param_1603
+[param_1603]
+
+// 1604
+// alias=param_1604
+[param_1604]
+
+// 1605
+// alias=param_1605
+[param_1605]
+
+// 1606
+// alias=param_1606
+[param_1606]
+
+// 1607
+// alias=param_1607
+[param_1607]
+
+// 1608
+// alias=param_1608
+[param_1608]
+type=boolean
+default=false
+
+// 1609
+// alias=param_1609
+[param_1609]
+type=npc
+default=null
+
+// 1610
+// alias=param_1610
+[param_1610]
+
+// 1611
+// alias=param_1611
+[param_1611]
+
+// 1612
+// alias=param_1612
+[param_1612]
+type=int
+default=0
+
+// 1613
+// alias=param_1613
+[param_1613]
+type=int
+default=0
+
+// 1614
+// alias=param_1614
+[param_1614]
+type=string
+default=
+
+// 1615
+// alias=param_1615
+[param_1615]
+type=string
+default=
+
+// 1616
+// alias=param_1616
+[param_1616]
+type=int
+default=0
+
+// 1617
+// alias=param_1617
+[param_1617]
+type=int
+default=0
+
+// 1618
+// alias=param_1618
+[param_1618]
+type=boolean
+default=false
+
+// 1619
+// alias=param_1619
+[param_1619]
+
+// 1620
+// alias=param_1620
+[param_1620]
+
+// 1621
+// alias=param_1621
+[param_1621]
+type=string
+default=Unnamed
+
+// 1622
+// alias=param_1622
+[param_1622]
+type=int
+default=0
+
+// 1623
+// alias=param_1623
+[param_1623]
+type=graphic
+default=null
+
+// 1624
+// alias=param_1624
+[param_1624]
+type=graphic
+default=null
+
+// 1625
+// alias=param_1625
+[param_1625]
+type=int
+default=0
+
+// 1626
+// alias=param_1626
+[param_1626]
+type=int
+default=0
+
+// 1627
+// alias=param_1627
+[param_1627]
+type=int
+default=0
+
+// 1628
+// alias=param_1628
+[param_1628]
+type=enum
+default=null
+
+// 1629
+// alias=param_1629
+[param_1629]
+
+// 1630
+// alias=param_1630
+[param_1630]
+
+// 1631
+// alias=param_1631
+[param_1631]
+
+// 1632
+// alias=param_1632
+[param_1632]
+
+// 1633
+// alias=param_1633
+[param_1633]
+
+// 1634
+// alias=param_1634
+[param_1634]
+
+// 1635
+// alias=param_1635
+[param_1635]
+
+// 1636
+// alias=param_1636
+[param_1636]
+type=obj
+default=null
+
+// 1637
+// alias=param_1637
+[param_1637]
+type=struct
+default=null
+
+// 1638
+// alias=param_1638
+[param_1638]
+type=int
+default=0
+
+// 1639
+// alias=param_1639
+[param_1639]
+type=string
+default=0
+
+// 1640
+// alias=param_1640
+[param_1640]
+type=int
+default=0
+
+// 1641
+// alias=param_1641
+[param_1641]
+type=int
+default=0
+
+// 1642
+// alias=param_1642
+[param_1642]
+type=spotanim
+default=null
+
+// 1643
+// alias=param_1643
+[param_1643]
+type=dbrow
+default=null
+
+// 1644
+// alias=param_1644
+[param_1644]
+type=dbrow
+default=null
+
+// 1645
+// alias=param_1645
+[param_1645]
+type=dbrow
+default=null
+
+// 1646
+// alias=param_1646
+[param_1646]
+type=dbrow
+default=null
+
+// 1647
+// alias=param_1647
+[param_1647]
+type=dbrow
+default=null
+
+// 1648
+// alias=param_1648
+[param_1648]
+
+// 1649
+// alias=param_1649
+[param_1649]
+
+// 1650
+// alias=param_1650
+[param_1650]
+
+// 1651
+// alias=param_1651
+[param_1651]
+
+// 1652
+// alias=param_1652
+[param_1652]
+
+// 1653
+// alias=param_1653
+[param_1653]
+
+// 1654
+// alias=param_1654
+[param_1654]
+
+// 1655
+// alias=param_1655
+[param_1655]
+
+// 1656
+// alias=param_1656
+[param_1656]
+
+// 1657
+// alias=param_1657
+[param_1657]
+
+// 1658
+// alias=param_1658
+[param_1658]
+
+// 1659
+// alias=param_1659
+[param_1659]
+
+// 1660
+// alias=param_1660
+[param_1660]
+
+// 1661
+// alias=param_1661
+[param_1661]
+
+// 1662
+// alias=param_1662
+[param_1662]
+
+// 1663
+// alias=param_1663
+[param_1663]
+
+// 1664
+// alias=param_1664
+[param_1664]
+
+// 1665
+// alias=param_1665
+[param_1665]
+
+// 1666
+// alias=param_1666
+[param_1666]
+
+// 1667
+// alias=param_1667
+[param_1667]
+
+// 1668
+// alias=param_1668
+[param_1668]
+
+// 1669
+// alias=param_1669
+[param_1669]
+
+// 1670
+// alias=param_1670
+[param_1670]
+
+// 1671
+// alias=param_1671
+[param_1671]
+
+// 1672
+// alias=param_1672
+[param_1672]
+
+// 1673
+// alias=param_1673
+[param_1673]
+
+// 1674
+// alias=param_1674
+[param_1674]
+
+// 1675
+// alias=param_1675
+[param_1675]
+
+// 1676
+// alias=param_1676
+[param_1676]
+
+// 1677
+// alias=param_1677
+[param_1677]
+
+// 1678
+// alias=param_1678
+[param_1678]
+
+// 1679
+// alias=param_1679
+[param_1679]
+
+// 1680
+// alias=param_1680
+[param_1680]
+
+// 1681
+// alias=param_1681
+[param_1681]
+
+// 1682
+// alias=param_1682
+[param_1682]
+
+// 1683
+// alias=param_1683
+[param_1683]
+
+// 1684
+// alias=param_1684
+[param_1684]
+
+// 1685
+// alias=param_1685
+[param_1685]
+
+// 1686
+// alias=param_1686
+[param_1686]
+
+// 1687
+// alias=param_1687
+[param_1687]
+
+// 1688
+// alias=param_1688
+[param_1688]
+
+// 1689
+// alias=param_1689
+[param_1689]
+
+// 1690
+// alias=param_1690
+[param_1690]
+
+// 1691
+// alias=param_1691
+[param_1691]
+
+// 1692
+// alias=param_1692
+[param_1692]
+
+// 1693
+// alias=param_1693
+[param_1693]
+
+// 1694
+// alias=param_1694
+[param_1694]
+
+// 1695
+// alias=param_1695
+[param_1695]
+
+// 1696
+// alias=param_1696
+[param_1696]
+
+// 1697
+// alias=param_1697
+[param_1697]
+
+// 1698
+// alias=param_1698
+[param_1698]
+
+// 1699
+// alias=param_1699
+[param_1699]
+
+// 1700
+// alias=param_1700
+[param_1700]
+
+// 1701
+// alias=param_1701
+[param_1701]
+
+// 1702
+// alias=param_1702
+[param_1702]
+
+// 1703
+// alias=param_1703
+[param_1703]
+
+// 1704
+// alias=param_1704
+[param_1704]
+type=obj
+default=obj_1965
+
+// 1705
+// alias=param_1705
+[param_1705]
+
+// 1706
+// alias=param_1706
+[param_1706]
+
+// 1707
+// alias=param_1707
+[param_1707]
+
+// 1708
+// alias=param_1708
+[param_1708]
+
+// 1709
+// alias=param_1709
+[param_1709]
+
+// 1710
+// alias=param_1710
+[param_1710]
+
+// 1711
+// alias=param_1711
+[param_1711]
+
+// 1712
+// alias=param_1712
+[param_1712]
+
+// 1713
+// alias=param_1713
+[param_1713]
+
+// 1714
+// alias=param_1714
+[param_1714]
+
+// 1715
+// alias=param_1715
+[param_1715]
+
+// 1716
+// alias=param_1716
+[param_1716]
+
+// 1717
+// alias=param_1717
+[param_1717]
+
+// 1718
+// alias=param_1718
+[param_1718]
+
+// 1719
+// alias=param_1719
+[param_1719]
+
+// 1720
+// alias=param_1720
+[param_1720]
+
+// 1721
+// alias=param_1721
+[param_1721]
+
+// 1722
+// alias=param_1722
+[param_1722]
+autodisable=no
+
+// 1723
+// alias=param_1723
+[param_1723]
+type=int
+default=-1
+
+// 1724
+// alias=param_1724
+[param_1724]
+type=namedobj
+default=null
+
+// 1725
+// alias=param_1725
+[param_1725]
+type=int
+default=-1
+
+// 1726
+// alias=param_1726
+[param_1726]
+type=string
+default=null
+
+// 1727
+// alias=param_1727
+[param_1727]
+type=string
+default=null
+
+// 1728
+// alias=param_1728
+[param_1728]
+type=enum
+default=null
+
+// 1729
+// alias=param_1729
+[param_1729]
+type=boolean
+default=false
+
+// 1730
+// alias=param_1730
+[param_1730]
+
+// 1731
+// alias=param_1731
+[param_1731]
+
+// 1732
+// alias=param_1732
+[param_1732]
+
+// 1733
+// alias=param_1733
+[param_1733]
+type=string
+default=
+
+// 1734
+// alias=param_1734
+[param_1734]
+
+// 1735
+// alias=param_1735
+[param_1735]
+autodisable=no
+
+// 1736
+// alias=param_1736
+[param_1736]
+
+// 1737
+// alias=param_1737
+[param_1737]
+type=boolean
+default=false
+
+// 1738
+// alias=param_1738
+[param_1738]
+
+// 1739
+// alias=param_1739
+[param_1739]
+
+// 1740
+// alias=param_1740
+[param_1740]
+
+// 1741
+// alias=param_1741
+[param_1741]
+
+// 1742
+// alias=param_1742
+[param_1742]
+
+// 1743
+// alias=param_1743
+[param_1743]
+
+// 1744
+// alias=param_1744
+[param_1744]
+
+// 1745
+// alias=param_1745
+[param_1745]
+
+// 1746
+// alias=param_1746
+[param_1746]
+
+// 1747
+// alias=param_1747
+[param_1747]
+
+// 1748
+// alias=param_1748
+[param_1748]
+
+// 1749
+// alias=param_1749
+[param_1749]
+
+// 1750
+// alias=param_1750
+[param_1750]
+
+// 1751
+// alias=param_1751
+[param_1751]
+type=component
+default=null
+
+// 1752
+// alias=param_1752
+[param_1752]
+type=string
+default=Prayer
+
+// 1753
+// alias=param_1753
+[param_1753]
+type=int
+default=^max_32bit_int
+
+// 1754
+// alias=param_1754
+[param_1754]
+type=string
+default=?
+
+// 1755
+// alias=param_1755
+[param_1755]
+type=synth
+default=null
+
+// 1756
+// alias=param_1756
+[param_1756]
+type=graphic
+default=null
+
+// 1757
+// alias=param_1757
+[param_1757]
+type=graphic
+default=null
+
+// 1758
+// alias=param_1758
+[param_1758]
+type=int
+default=0
+
+// 1759
+// alias=param_1759
+[param_1759]
+type=int
+default=0
+
+// 1760
+// alias=param_1760
+[param_1760]
+type=obj
+default=null
+
+// 1761
+// alias=param_1761
+[param_1761]
+
+// 1762
+// alias=param_1762
+[param_1762]
+
+// 1763
+// alias=param_1763
+[param_1763]
+
+// 1764
+// alias=param_1764
+[param_1764]
+
+// 1765
+// alias=param_1765
+[param_1765]
+
+// 1766
+// alias=param_1766
+[param_1766]
+
+// 1767
+// alias=param_1767
+[param_1767]
+
+// 1768
+// alias=param_1768
+[param_1768]
+
+// 1769
+// alias=param_1769
+[param_1769]
+
+// 1770
+// alias=param_1770
+[param_1770]
+
+// 1771
+// alias=param_1771
+[param_1771]
+
+// 1772
+// alias=param_1772
+[param_1772]
+autodisable=no
+
+// 1773
+// alias=param_1773
+[param_1773]
+
+// 1774
+// alias=param_1774
+[param_1774]
+
+// 1775
+// alias=param_1775
+[param_1775]
+
+// 1776
+// alias=param_1776
+[param_1776]
+
+// 1777
+// alias=param_1777
+[param_1777]
+
+// 1778
+// alias=param_1778
+[param_1778]
+
+// 1779
+// alias=param_1779
+[param_1779]
+
+// 1780
+// alias=param_1780
+[param_1780]
+
+// 1781
+// alias=param_1781
+[param_1781]
+
+// 1782
+// alias=param_1782
+[param_1782]
+
+// 1783
+// alias=param_1783
+[param_1783]
+
+// 1784
+// alias=param_1784
+[param_1784]
+type=string
+default=
+
+// 1785
+// alias=param_1785
+[param_1785]
+
+// 1786
+// alias=param_1786
+[param_1786]
+
+// 1787
+// alias=param_1787
+[param_1787]
+type=int
+default=-1
+
+// 1788
+// alias=param_1788
+[param_1788]
+type=string
+default=-
+
+// 1789
+// alias=param_1789
+[param_1789]
+type=graphic
+default=blank
+
+// 1790
+// alias=param_1790
+[param_1790]
+
+// 1791
+// alias=param_1791
+[param_1791]
+autodisable=no
+type=int
+default=0
+
+// 1792
+// alias=param_1792
+[param_1792]
+autodisable=no
+type=int
+default=0
+
+// 1793
+// alias=param_1793
+[param_1793]
+type=boolean
+default=null
+
+// 1794
+// alias=param_1794
+[param_1794]
+
+// 1795
+// alias=param_1795
+[param_1795]
+
+// 1796
+// alias=param_1796
+[param_1796]
+autodisable=no
+
+// 1797
+// alias=param_1797
+[param_1797]
+autodisable=no
+
+// 1798
+// alias=param_1798
+[param_1798]
+
+// 1799
+// alias=param_1799
+[param_1799]
+type=boolean
+default=false
+
+// 1800
+// alias=param_1800
+[param_1800]
+type=string
+default=
+
+// 1801
+// alias=param_1801
+[param_1801]
+type=string
+default=
+
+// 1802
+// alias=param_1802
+[param_1802]
+type=string
+default=
+
+// 1803
+// alias=param_1803
+[param_1803]
+type=boolean
+default=false
+
+// 1804
+// alias=param_1804
+[param_1804]
+type=boolean
+default=false
+
+// 1805
+// alias=param_1805
+[param_1805]
+
+// 1806
+// alias=param_1806
+[param_1806]
+
+// 1807
+// alias=param_1807
+[param_1807]
+
+// 1808
+// alias=param_1808
+[param_1808]
+
+// 1809
+// alias=param_1809
+[param_1809]
+
+// 1810
+// alias=param_1810
+[param_1810]
+
+// 1811
+// alias=param_1811
+[param_1811]
+
+// 1812
+// alias=param_1812
+[param_1812]
+
+// 1813
+// alias=param_1813
+[param_1813]
+
+// 1814
+// alias=param_1814
+[param_1814]
+
+// 1815
+// alias=param_1815
+[param_1815]
+
+// 1816
+// alias=param_1816
+[param_1816]
+
+// 1817
+// alias=param_1817
+[param_1817]
+
+// 1818
+// alias=param_1818
+[param_1818]
+
+// 1819
+// alias=param_1819
+[param_1819]
+type=boolean
+default=true
+
+// 1820
+// alias=param_1820
+[param_1820]
+type=boolean
+default=false
+
+// 1821
+// alias=param_1821
+[param_1821]
+
+// 1822
+// alias=param_1822
+[param_1822]
+
+// 1823
+// alias=param_1823
+[param_1823]
+
+// 1824
+// alias=param_1824
+[param_1824]
+
+// 1825
+// alias=param_1825
+[param_1825]
+
+// 1826
+// alias=param_1826
+[param_1826]
+
+// 1827
+// alias=param_1827
+[param_1827]
+
+// 1828
+// alias=param_1828
+[param_1828]
+
+// 1829
+// alias=param_1829
+[param_1829]
+
+// 1830
+// alias=param_1830
+[param_1830]
+
+// 1831
+// alias=param_1831
+[param_1831]
+type=boolean
+default=false
+
+// 1832
+// alias=param_1832
+[param_1832]
+
+// 1833
+// alias=param_1833
+[param_1833]
+
+// 1834
+// alias=param_1834
+[param_1834]
+
+// 1835
+// alias=param_1835
+[param_1835]
+
+// 1836
+// alias=param_1836
+[param_1836]
+
+// 1837
+// alias=param_1837
+[param_1837]
+
+// 1838
+// alias=param_1838
+[param_1838]
+
+// 1839
+// alias=param_1839
+[param_1839]
+
+// 1840
+// alias=param_1840
+[param_1840]
+
+// 1841
+// alias=param_1841
+[param_1841]
+
+// 1842
+// alias=param_1842
+[param_1842]
+
+// 1843
+// alias=param_1843
+[param_1843]
+
+// 1844
+// alias=param_1844
+[param_1844]
+
+// 1845
+// alias=param_1845
+[param_1845]
+
+// 1846
+// alias=param_1846
+[param_1846]
+
+// 1847
+// alias=param_1847
+[param_1847]
+
+// 1848
+// alias=param_1848
+[param_1848]
+type=int
+default=0
+
+// 1849
+// alias=param_1849
+[param_1849]
+type=int
+default=0
+
+// 1850
+// alias=param_1850
+[param_1850]
+type=int
+default=0
+
+// 1851
+// alias=param_1851
+[param_1851]
+type=int
+default=0
+
+// 1852
+// alias=param_1852
+[param_1852]
+type=int
+default=0
+
+// 1853
+// alias=param_1853
+[param_1853]
+type=graphic
+default=null
+
+// 1854
+// alias=param_1854
+[param_1854]
+type=graphic
+default=null
+
+// 1855
+// alias=param_1855
+[param_1855]
+type=boolean
+default=false
+
+// 1856
+// alias=param_1856
+[param_1856]
+type=graphic
+default=graphic_5273
+
+// 1857
+// alias=param_1857
+[param_1857]
+type=enum
+default=null
+
+// 1858
+// alias=param_1858
+[param_1858]
+type=string
+default=Location
+
+// 1859
+// alias=param_1859
+[param_1859]
+type=coord
+default=null
+
+// 1860
+// alias=param_1860
+[param_1860]
+type=boolean
+default=false
+
+// 1861
+// alias=param_1861
+[param_1861]
+
+// 1862
+// alias=param_1862
+[param_1862]
+type=boolean
+default=false
+
+// 1863
+// alias=param_1863
+[param_1863]
+type=int
+default=0
+
+// 1864
+// alias=param_1864
+[param_1864]
+
+// 1865
+// alias=param_1865
+[param_1865]
+
+// 1866
+// alias=param_1866
+[param_1866]
+type=int
+default=0

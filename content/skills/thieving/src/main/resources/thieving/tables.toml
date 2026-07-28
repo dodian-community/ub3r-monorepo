@@ -3,7 +3,7 @@ schema_version = 1
 [[target]]
 name = "farmer"
 target_type = "npc"
-id = 3086
+id = 3114
 level = 10
 experience = 800
 loot_items = [314]
@@ -14,7 +14,7 @@ loot_max_amounts = [5]
 [[target]]
 name = "master_farmer"
 target_type = "npc"
-id = 3257
+id = 5730
 level = 70
 experience = 1200
 loot_items = [314]
@@ -26,17 +26,6 @@ loot_max_amounts = [10]
 name = "cage"
 target_type = "other"
 id = 20873
-level = 1
-experience = 150
-loot_items = [995]
-loot_chances = [100]
-loot_min_amounts = [20]
-loot_max_amounts = [50]
-
-[[target]]
-name = "cage_alt"
-target_type = "other"
-id = 20885
 level = 1
 experience = 150
 loot_items = [995]

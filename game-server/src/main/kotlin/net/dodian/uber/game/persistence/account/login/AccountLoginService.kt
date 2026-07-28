@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory
 object AccountLoginService {
     private val logger = LoggerFactory.getLogger(AccountLoginService::class.java)
     const val FINAL_SAVE_PENDING_INTERNAL = 98
+    const val USERNAME_TAKEN = 33
 
     @JvmStatic
     @JvmOverloads
@@ -30,6 +31,7 @@ object AccountLoginService {
         discordId: String = "",
         discordUsername: String = "",
         discordVerified: Boolean = false,
+        accountCreationRequested: Boolean = false,
     ): PreparedLogin {
         val prepared = try {
             DbAsyncRepository.withConnection { connection ->
@@ -41,6 +43,7 @@ object AccountLoginService {
                     discordId = discordId,
                     discordUsername = discordUsername,
                     discordVerified = discordVerified,
+                    accountCreationRequested = accountCreationRequested,
                     connection = connection,
                     allowDevAutoCreate = isDevAutoCreateEnabled(),
                     allowDevPasswordBypass = isDevPasswordBypassEnabled(),
@@ -82,6 +85,13 @@ object AccountLoginService {
             AccountLoginRepository.isBanned(connection, id)
         }
 
+    /** Fast preflight used before exchanging a one-time Discord OAuth code. */
+    @JvmStatic
+    fun usernameExists(playerName: String): Boolean =
+        DbAsyncRepository.withConnection { connection ->
+            AccountLoginRepository.loadWebUser(connection, playerName) != null
+        }
+
     internal fun prepareGame(
         player: Client,
         playerName: String,
@@ -90,6 +100,7 @@ object AccountLoginService {
         discordId: String = "",
         discordUsername: String = "",
         discordVerified: Boolean = false,
+        accountCreationRequested: Boolean = false,
         connection: Connection,
         allowDevAutoCreate: Boolean,
         allowDevPasswordBypass: Boolean,
@@ -128,6 +139,11 @@ object AccountLoginService {
                 AccountLoginRepository.insertWebUser(connection, playerName, playerPass, email, discordId, discordUsername)
             }
             webUser = AccountLoginRepository.loadWebUser(connection, playerName) ?: return PreparedLogin.failure(13)
+        } else if (accountCreationRequested) {
+            // A Discord authorization code explicitly means this is the Create Account flow, not
+            // an ordinary login. Never attach it to or log into an existing username.
+            logger.info("Account creation rejected: username already exists username={}", playerName)
+            return PreparedLogin.failure(USERNAME_TAKEN)
         } else if (webUser.password.isEmpty() && playerPass.isNotEmpty()) {
             AccountLoginRepository.updateWebUserCredentials(connection, webUser.dbId, playerPass, email)
             webUser = AccountLoginRepository.loadWebUser(connection, playerName) ?: return PreparedLogin.failure(13)
