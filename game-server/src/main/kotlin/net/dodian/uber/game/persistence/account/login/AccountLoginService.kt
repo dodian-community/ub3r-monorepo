@@ -133,12 +133,18 @@ object AccountLoginService {
                     return PreparedLogin.failure(32)
                 }
                 val maxAllowed = discordMaxAccountsPerDiscord
-                val inserted = AccountLoginRepository.insertWebUserIfUnderDiscordLimit(
+                when (AccountLoginRepository.insertWebUserIfUnderDiscordLimit(
                     connection, playerName, playerPass, email, discordId, discordUsername, maxAllowed,
-                )
-                if (!inserted) {
-                    logger.warn("Account creation rejected for discord_id {}: limit of {} accounts reached", discordId, maxAllowed)
-                    return PreparedLogin.failure(31)
+                )) {
+                    AccountLoginRepository.AccountCreationInsertResult.INSERTED -> Unit
+                    AccountLoginRepository.AccountCreationInsertResult.DISCORD_LIMIT_REACHED -> {
+                        logger.warn("Account creation rejected for discord_id {}: limit of {} accounts reached", discordId, maxAllowed)
+                        return PreparedLogin.failure(31)
+                    }
+                    AccountLoginRepository.AccountCreationInsertResult.USERNAME_TAKEN -> {
+                        logger.info("Account creation rejected after concurrent username collision username={}", playerName)
+                        return PreparedLogin.failure(USERNAME_TAKEN)
+                    }
                 }
             } else {
                 AccountLoginRepository.insertWebUser(connection, playerName, playerPass, email, discordId, discordUsername)

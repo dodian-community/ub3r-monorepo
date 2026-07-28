@@ -258,10 +258,7 @@ public class Client extends Player implements Runnable {
 
     public boolean wearing = false;
 
-    /**
-     * Refreshes a skill's level and experience on the client.
-     * @param skill The skill to refresh
-     */
+    /** Sends interface text only when the component value has changed. */
     public void sendCachedString(String text, int lineId) {
         String previous = uiTextCache.get(lineId);
         if (previous != null && previous.equals(text)) {
@@ -3105,10 +3102,10 @@ public class Client extends Player implements Runnable {
         boolean stack = Server.itemManager.isStackable(original);
         amount = Math.min(amount, getInvAmt(original));
         amount = Math.min(Integer.MAX_VALUE - ShopManager.ShopItemsN[MyShopID][slot], amount);
-        amount = Integer.MAX_VALUE - getInvAmt(currency) < amount * price ? (Integer.MAX_VALUE - getInvAmt(currency)) / price : amount;
+        amount = capShopSellAmountForCurrency(amount, price, getInvAmt(currency));
 
         if (amount > 0) { // Code to check if there is any amount to sell!
-            int totalPrice = amount * price;
+            int totalPrice = (int) ((long) amount * price);
             // Grant payment before removing the item/crediting shop stock: if addItem fails
             // (e.g. inventory full for a non-stackable currency), nothing else happens, so the
             // player never loses the item without being paid.
@@ -3125,7 +3122,7 @@ public class Client extends Player implements Runnable {
             }
             ShopManager.ShopItems[MyShopID][slot] = itemID + 1;
             ShopManager.ShopItemsN[MyShopID][slot] += amount;
-            ShopLog.recordSell(this, MyShopID, slot, itemID, amount, currency, (long) totalPrice);
+            ShopLog.recordSell(this, MyShopID, slot, itemID, amount, currency, totalPrice);
         } else
             send(new SendMessage("Could not sell anything!"));
         /* Store update! */
@@ -3202,13 +3199,32 @@ public class Client extends Player implements Runnable {
 
     public void UpdatePlayerShop() {
         for (int i = 1; i < DotEnvKt.getGameMaxPlayers(); i++) {
-            if (net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[i] != null) {
-                if (net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[i].isShopping() && net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[i].MyShopID == MyShopID
-                        && i != getSlot()) {
-                    ((Client) net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[i]).checkItemUpdate();
-                }
+            Player candidate = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[i];
+            Client viewer = eligibleShopViewer(candidate, MyShopID, getSlot());
+            if (viewer != null) {
+                viewer.checkItemUpdate();
             }
         }
+    }
+
+    static int capShopSellAmountForCurrency(int requestedAmount, int unitPrice, int currentCurrencyAmount) {
+        if (requestedAmount <= 0 || unitPrice <= 0) {
+            return requestedAmount;
+        }
+        long normalizedCurrentAmount = Math.max(0L, currentCurrencyAmount);
+        long currencySpace = Math.max(0L, (long) Integer.MAX_VALUE - normalizedCurrentAmount);
+        long affordableAmount = currencySpace / unitPrice;
+        return (int) Math.min(requestedAmount, affordableAmount);
+    }
+
+    static Client eligibleShopViewer(Player candidate, int shopId, int ownerSlot) {
+        if (!(candidate instanceof Client)) {
+            return null;
+        }
+        Client viewer = (Client) candidate;
+        return viewer.getSlot() != ownerSlot && viewer.isShopping() && viewer.MyShopID == shopId
+                ? viewer
+                : null;
     }
 
     /* NPC Talking */

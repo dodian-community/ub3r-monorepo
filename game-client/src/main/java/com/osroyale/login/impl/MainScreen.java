@@ -4,6 +4,7 @@ import com.osroyale.*;
 import com.osroyale.engine.impl.KeyHandler;
 import com.osroyale.engine.impl.MouseHandler;
 import com.osroyale.login.LoginComponent;
+import com.osroyale.login.LoginModeState;
 import com.osroyale.login.ScreenType;
 
 /**
@@ -14,6 +15,7 @@ public class MainScreen extends LoginComponent {
 	private static final int EMAIL_CHARACTER_LIMIT = 28;
 	public static int loginScreenState = 0;
 	public static String accountCreationStatus = "";
+	public static final LoginModeState loginMode = new LoginModeState();
 
 	public MainScreen() {
 	}
@@ -68,7 +70,6 @@ public class MainScreen extends LoginComponent {
 		}
 
 		int btnW = titlebuttonSprite != null ? titlebuttonSprite.width : 147;
-		int btnH = titlebuttonSprite != null ? titlebuttonSprite.height : 41;
 
 		/* State 0: Elvarg Landing Screen (Welcome to Dodian + Create Account / Existing User) */
 		if (loginScreenState == 0) {
@@ -131,7 +132,7 @@ public class MainScreen extends LoginComponent {
 			// Left Button: Log In / Create Account
 			int btn1X = boxX + 25;
 			int btnY = boxY + 135;
-			String btn1Text = !accountCreationStatus.isEmpty() ? "Create Account" : "Log In";
+			String btn1Text = loginMode.isAccountCreation() ? "Create Account" : "Log In";
 			if (titlebuttonSprite != null) {
 				titlebuttonSprite.drawARGBSprite(btn1X, btnY, alpha);
 				client.boldText.drawCenteredText(0xFFFFFF, btn1X + (btnW / 2), btn1Text, btnY + 25, true);
@@ -167,6 +168,7 @@ public class MainScreen extends LoginComponent {
 				DiscordOAuth.getInstance().startAuthFlow(code -> {
 					Client.discordAuthCode = code;
 					Client.discordAuthCodeReceivedAtMillis = System.currentTimeMillis();
+					loginMode.beginAccountCreation();
 					accountCreationStatus = "You can now create your account";
 					client.myUsername = "";
 					client.myPassword = "";
@@ -177,6 +179,7 @@ public class MainScreen extends LoginComponent {
 
 			// Existing User Click
 			if (MouseHandler.clickMode3 == 1 && client.mouseInRegion(btn2X, btnY, btn2X + btnW, btnY + btnH)) {
+				loginMode.selectExistingAccount();
 				accountCreationStatus = "";
 				loginScreenState = 2;
 			}
@@ -190,6 +193,7 @@ public class MainScreen extends LoginComponent {
 			// Cancel Button Click
 			if (MouseHandler.clickMode3 == 1 && client.mouseInRegion(btn1X, btnY, btn1X + btnW, btnY + btnH)) {
 				DiscordOAuth.getInstance().cancelAuthFlow();
+				loginMode.selectExistingAccount();
 				loginScreenState = 0;
 			}
 			return;
@@ -226,6 +230,7 @@ public class MainScreen extends LoginComponent {
 
 			/* Cancel Button Click */
 			if (MouseHandler.clickMode3 == 1 && client.mouseInRegion(btn2X, btnY, btn2X + btnW, btnY + btnH)) {
+				loginMode.selectExistingAccount();
 				accountCreationStatus = "";
 				loginScreenState = 0;
 			}

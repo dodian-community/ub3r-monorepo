@@ -16,7 +16,6 @@ import net.dodian.uber.game.persistence.account.login.AccountLoginService
 import net.dodian.uber.game.persistence.player.PlayerSaveService
 import net.dodian.uber.game.persistence.repository.DbAsyncRepository
 import net.dodian.uber.game.persistence.repository.DbResult
-import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.engine.loop.GameThreadTaskQueue
 import net.dodian.uber.game.engine.tasking.PlayerScopedCoroutineService
 import net.dodian.uber.game.engine.loop.TickThreadBlockingGuard
@@ -47,19 +46,22 @@ object AccountPersistenceService {
             var pendingRetries = 0
             val prepared =
                 try {
-                    if (accountCreationRequested && discordAuthCode.isBlank()) {
-                        logger.debug("Account creation rejected for {}: missing Discord authorization", username)
-                        val durationMs = (System.nanoTime() - startedAt) / 1_000_000L
-                        onComplete.accept(LoginLoadResult(29, durationMs, 0, null))
-                        return@launch
-                    }
                     // Check before exchanging the one-time Discord OAuth code. This lets the
                     // client keep that authorization and submit a different username instead of
                     // forcing the player through Discord again for a simple name collision.
-                    if (accountCreationRequested && AccountLoginService.usernameExists(username)) {
-                        logger.info("Account creation rejected: username already exists username={}", username)
+                    val creationPreflightCode = accountCreationPreflightCode(
+                        accountCreationRequested = accountCreationRequested,
+                        discordAuthCode = discordAuthCode,
+                        usernameExists = { AccountLoginService.usernameExists(username) },
+                    )
+                    if (creationPreflightCode != null) {
+                        if (creationPreflightCode == AccountLoginService.USERNAME_TAKEN) {
+                            logger.info("Account creation rejected: username already exists username={}", username)
+                        } else {
+                            logger.debug("Account creation rejected for {}: missing Discord authorization", username)
+                        }
                         val durationMs = (System.nanoTime() - startedAt) / 1_000_000L
-                        onComplete.accept(LoginLoadResult(AccountLoginService.USERNAME_TAKEN, durationMs, 0, null))
+                        onComplete.accept(LoginLoadResult(creationPreflightCode, durationMs, 0, null))
                         return@launch
                     }
                     val discordUser = if (accountCreationRequested) {
@@ -113,7 +115,7 @@ object AccountPersistenceService {
                         delay(50L)
                     }
                     finalResult
-                } catch (exception: CancellationException) {
+                } catch (_: CancellationException) {
                     logger.info("Account load cancelled for {}", username)
                     AccountLoginService.PreparedLogin.failure(13)
                 } catch (exception: RuntimeException) {
@@ -133,6 +135,16 @@ object AccountPersistenceService {
         onComplete: IntConsumer,
     ) {
         submitLoginLoad(client, username, password) { result -> onComplete.accept(result.code) }
+    }
+
+    internal fun accountCreationPreflightCode(
+        accountCreationRequested: Boolean,
+        discordAuthCode: String,
+        usernameExists: () -> Boolean,
+    ): Int? {
+        if (!accountCreationRequested) return null
+        if (discordAuthCode.isBlank()) return 29
+        return if (usernameExists()) AccountLoginService.USERNAME_TAKEN else null
     }
 
     @JvmStatic

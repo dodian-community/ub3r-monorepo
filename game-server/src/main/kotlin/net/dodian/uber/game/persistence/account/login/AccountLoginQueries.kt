@@ -6,7 +6,7 @@ import net.dodian.uber.game.persistence.db.DbTables
 internal object AccountLoginQueries {
     val webUserSelect =
         "SELECT userid, username, usergroupid, membergroupids, salt, password, pmunread FROM " +
-            "${DbTables.WEB_USERS_TABLE} WHERE username = ?"
+            "${DbTables.WEB_USERS_TABLE} WHERE LOWER(username) = LOWER(?)"
 
     val webUserInsert =
         "INSERT INTO ${DbTables.WEB_USERS_TABLE} (username, password, salt, email, discord_id, discord_username, passworddate, birthday_search) VALUES (?, ?, ?, ?, ?, ?, '', '')"
@@ -14,8 +14,8 @@ internal object AccountLoginQueries {
     val countAccountsByDiscordId =
         "SELECT COUNT(*) AS total FROM ${DbTables.WEB_USERS_TABLE} WHERE discord_id = ? AND discord_id != ''"
 
-    val countAccountsByDiscordIdForUpdate =
-        "SELECT COUNT(*) AS total FROM ${DbTables.WEB_USERS_TABLE} WHERE discord_id = ? AND discord_id != '' FOR UPDATE"
+    val accountsByDiscordIdForUpdate =
+        "SELECT userid FROM ${DbTables.WEB_USERS_TABLE} WHERE discord_id = ? AND discord_id != '' FOR UPDATE"
 
     val statsBackfillInsert =
         "INSERT INTO ${DbTables.GAME_CHARACTERS_STATS} (uid) VALUES (?) ON DUPLICATE KEY UPDATE uid = uid"

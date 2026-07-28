@@ -74,6 +74,8 @@ private class MinimalQuestPlayer : QuestPlayer {
         override fun activeSessionKey(): String? = null
         override fun triggerRandomEvent(experience: Int) {}
         override fun logGathering(itemId: Int, amount: Int, reason: String) {}
+        override fun yell(message: String) {}
+        override fun tryThrottle(key: String, cooldownMs: Long) = true
     }
     override val ui = object : SkillUi {
         override fun message(text: String) {}
@@ -87,15 +89,25 @@ private class MinimalQuestPlayer : QuestPlayer {
         override fun menuGrid(entries: List<SkillItemGridEntry>) {}
         override fun npcDialogue(dialogueId: Int, npcId: Int) {}
         override fun varbit(id: Int, value: Int) {}
+        override fun skillGuide(skillId: Int, tab: Int) {}
+        override fun guideBook() {}
     }
     override val world = object : SkillWorld {
         override val position = SkillPosition(3200, 3200, 0)
         override fun distanceTo(x: Int, y: Int) = 0
         override fun teleport(destination: SkillPosition) {}
+        override fun resetPosition() {}
         override fun anchor(position: SkillPosition) {}
         override fun face(position: SkillPosition) {}
         override fun graphic(id: Int, height: Int) {}
-        override fun replaceObject(target: SkillObjectRef, replacementId: Int, restoreTicks: Int) {}
+        override fun graphic(id: Int, position: SkillPosition, height: Int) {}
+        override fun replaceObject(
+            target: SkillObjectRef,
+            replacementId: Int,
+            restoreTicks: Int,
+            type: Int,
+            face: Int,
+        ) {}
         override fun withinObjectBoundary(target: SkillObjectRef) = true
         override fun spawnTemporaryObject(objectId: Int, durationTicks: Int, onExpire: () -> Unit) {}
         override fun dropItem(itemId: Int, amount: Int) {}

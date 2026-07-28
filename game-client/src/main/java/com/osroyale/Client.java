@@ -6862,6 +6862,7 @@ public class Client extends GameEngine
         localPlayer.saveProfile(this);
         setGameState(GameState.LOGIN_SCREEN);
         Settings.save();
+        com.osroyale.login.impl.MainScreen.loginMode.selectExistingAccount();
         com.osroyale.login.impl.MainScreen.accountCreationStatus = "";
         com.osroyale.login.impl.MainScreen.loginScreenState = 2;
         spriteCache.clear();
@@ -11917,12 +11918,13 @@ public class Client extends GameEngine
                 if (discordAuthCode != null && System.currentTimeMillis() - discordAuthCodeReceivedAtMillis > DISCORD_AUTH_CODE_TTL_MILLIS) {
                     discordAuthCode = null;
                     discordAuthCodeReceivedAtMillis = 0L;
+                    com.osroyale.login.impl.MainScreen.loginMode.selectExistingAccount();
                     com.osroyale.login.impl.MainScreen.accountCreationStatus = "Discord authorization expired, please try again.";
                     com.osroyale.login.impl.MainScreen.loginScreenState = 0;
                 }
-                boolean accountCreationRequested = !com.osroyale.login.impl.MainScreen.accountCreationStatus.isEmpty();
-                outgoing.writeByte(accountCreationRequested ? 1 : 0);
-                outgoing.writeString(discordAuthCode != null ? discordAuthCode : "");
+                int loginMode = com.osroyale.login.impl.MainScreen.loginMode.protocolValue(reconnecting);
+                outgoing.writeByte(loginMode);
+                outgoing.writeString(loginMode == 1 && discordAuthCode != null ? discordAuthCode : "");
                 outgoing.writeString("");
                 outgoing.writeString(username);
                 outgoing.writeString(password);
@@ -12050,6 +12052,7 @@ public class Client extends GameEngine
                 sendFrame36(429, 1);
                 setBounds();
                 loggedIn = true;
+                com.osroyale.login.impl.MainScreen.loginMode.selectExistingAccount();
                 com.osroyale.login.impl.MainScreen.accountCreationStatus = "";
                 com.osroyale.login.impl.MainScreen.loginScreenState = 2;
                 localPlayer.saveProfile(this);
@@ -12238,6 +12241,7 @@ public class Client extends GameEngine
             if (response == 29) {
                 loginMessage1 = "Discord authorization is missing or failed.";
                 loginMessage2 = "Please try Create Account again.";
+                com.osroyale.login.impl.MainScreen.loginMode.selectExistingAccount();
                 com.osroyale.login.impl.MainScreen.accountCreationStatus = "";
                 com.osroyale.login.impl.MainScreen.loginScreenState = 0;
                 return;
@@ -12264,6 +12268,7 @@ public class Client extends GameEngine
             if (response == 33) {
                 loginMessage1 = "That username is already taken.";
                 loginMessage2 = "Please choose another username.";
+                com.osroyale.login.impl.MainScreen.loginMode.usernameTaken();
                 com.osroyale.login.impl.MainScreen.accountCreationStatus = "Choose another username";
                 com.osroyale.login.impl.MainScreen.loginScreenState = 2;
                 return;

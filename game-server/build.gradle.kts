@@ -127,14 +127,16 @@ tasks.register<Test>("syncTest") {
 
 tasks.register("betaCheck") {
     group = "verification"
-    description = "Comprehensive beta-readiness gate: server, sync, and independently compiled skill tests"
+    description = "Comprehensive beta-readiness gate: client, server, sync, skill, and quest tests"
 
     dependsOn(":skillsCheck")
+    dependsOn(":questsCheck")
+    dependsOn(":game-client:test")
     dependsOn(":game-server:check")
     dependsOn(":game-server:syncTest")
 
     doLast {
-        println("Beta readiness gate passed: server, sync, and skill-module tests completed.")
+        println("Beta readiness gate passed: client, server, sync, skill-module, and quest-module tests completed.")
     }
 }
 

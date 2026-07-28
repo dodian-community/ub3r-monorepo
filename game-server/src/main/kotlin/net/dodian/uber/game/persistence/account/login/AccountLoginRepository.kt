@@ -2,10 +2,17 @@ package net.dodian.uber.game.persistence.account.login
 
 import java.sql.Connection
 import java.sql.ResultSet
+import java.sql.SQLException
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.persistence.account.AccountPasswordRepository
 
 object AccountLoginRepository {
+    enum class AccountCreationInsertResult {
+        INSERTED,
+        DISCORD_LIMIT_REACHED,
+        USERNAME_TAKEN,
+    }
+
     data class WebUserRow(
         val dbId: Int,
         val username: String,
@@ -104,27 +111,51 @@ object AccountLoginRepository {
         discordId: String,
         discordUsername: String,
         maxAllowed: Int,
-    ): Boolean {
+    ): AccountCreationInsertResult {
         val previousAutoCommit = connection.autoCommit
         connection.autoCommit = false
         try {
-            val count = connection.prepareStatement(AccountLoginQueries.countAccountsByDiscordIdForUpdate).use { statement ->
+            val count = connection.prepareStatement(AccountLoginQueries.accountsByDiscordIdForUpdate).use { statement ->
                 statement.setString(1, discordId)
-                statement.executeQuery().use { results -> if (results.next()) results.getInt("total") else 0 }
+                statement.executeQuery().use { results ->
+                    var total = 0
+                    while (results.next()) total++
+                    total
+                }
             }
             if (count >= maxAllowed) {
                 connection.rollback()
-                return false
+                return AccountCreationInsertResult.DISCORD_LIMIT_REACHED
             }
             insertWebUser(connection, playerName, playerPass, email, discordId, discordUsername)
             connection.commit()
-            return true
+            return AccountCreationInsertResult.INSERTED
+        } catch (exception: SQLException) {
+            connection.rollback()
+            if (isUniqueConstraintViolation(exception) && loadWebUser(connection, playerName) != null) {
+                return AccountCreationInsertResult.USERNAME_TAKEN
+            }
+            throw exception
         } catch (exception: Exception) {
             connection.rollback()
             throw exception
         } finally {
             connection.autoCommit = previousAutoCommit
         }
+    }
+
+    private fun isUniqueConstraintViolation(exception: SQLException): Boolean {
+        var current: SQLException? = exception
+        while (current != null) {
+            if (current.errorCode == 1062 ||
+                current.sqlState == "23000" ||
+                current.sqlState == "23505"
+            ) {
+                return true
+            }
+            current = current.nextException
+        }
+        return false
     }
 
     fun countAccountsByDiscordId(connection: Connection, discordId: String): Int {
