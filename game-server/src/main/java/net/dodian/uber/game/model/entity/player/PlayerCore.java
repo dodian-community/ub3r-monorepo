@@ -1506,20 +1506,10 @@ public abstract class PlayerCore extends Entity {
         return progressState.isSongUnlocked(songId);
     }
     public boolean blackMaskEffect(int npcId) {
-        SlayerTaskState state = getSlayerTaskState();
-        String taskName = state.getMasterNpcId() == -1 || state.getRemainingAmount() <= 0 ? "" : Objects.requireNonNull(net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forOrdinal(state.getTaskOrdinal())).getTextRepresentation();
-        net.dodian.uber.game.skill.slayer.SlayerTaskDefinition slayerTask = net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forNpc(npcId);
-        boolean onTask = slayerTask != null && slayerTask.getTextRepresentation().equals(taskName) && state.getRemainingAmount() > 0;
-        int itemId = getEquipment()[Equipment.Slot.HEAD.getId()];
-        return (itemId == 8921 || itemId == 11864) && onTask;
+        return net.dodian.uber.game.engine.systems.skills.SlayerCombatBridge.damageBonus((Client) this, npcId, false) == 1;
     }
     public boolean blackMaskImbueEffect(int npcId) {
-        SlayerTaskState state = getSlayerTaskState();
-        String taskName = state.getMasterNpcId() == -1 || state.getRemainingAmount() <= 0 ? "" : Objects.requireNonNull(net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forOrdinal(state.getTaskOrdinal())).getTextRepresentation();
-        net.dodian.uber.game.skill.slayer.SlayerTaskDefinition slayerTask = net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forNpc(npcId);
-        boolean onTask = slayerTask != null && slayerTask.getTextRepresentation().equals(taskName) && state.getRemainingAmount() > 0;
-        String headName = ((Client) this).getItemName(getEquipment()[Equipment.Slot.HEAD.getId()]).toLowerCase();
-        return (headName.contains("black mask (i)") || headName.contains("slayer helmet (i)")) && onTask;
+        return net.dodian.uber.game.engine.systems.skills.SlayerCombatBridge.damageBonus((Client) this, npcId, true) == 2;
     }
 
     public int getEquipment(int slot) {
@@ -1565,7 +1555,7 @@ public abstract class PlayerCore extends Entity {
         return false;
     }
     public boolean gotSlayerHelmet(Client c) {
-        return c.getItemName(getEquipment()[Equipment.Slot.HEAD.getId()]).toLowerCase().contains("slayer helm");
+        return net.dodian.uber.game.engine.systems.skills.SlayerCombatBridge.hasSlayerHelmet(c);
     }
 
     public boolean areAllSongsUnlocked() {

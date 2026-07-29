@@ -1745,7 +1745,7 @@ public class Client extends Player implements Runnable {
                             wearLog("[WEAR:WEAR] rejected busy={} interface={}", isBusy(), interFace);
             return;
         }
-        if (net.dodian.uber.game.skill.runecrafting.Runecrafting.emptyPouch(this, wearID)) { //Runecrafting Pouches
+        if (net.dodian.uber.game.engine.systems.skills.RunecraftingPouchPacketService.empty(this, wearID)) { //Runecrafting Pouches
             return;
         }
         if (wearID == 5733) { //Potato

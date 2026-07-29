@@ -19,6 +19,8 @@ import net.dodian.uber.game.api.plugin.skills.SkillClock
 import net.dodian.uber.game.api.plugin.skills.SkillModuleState
 import net.dodian.uber.game.api.plugin.skills.SkillAmountPrompt
 import net.dodian.uber.game.api.plugin.skills.SkillVitals
+import net.dodian.uber.game.api.plugin.skills.SkillPrayer
+import net.dodian.uber.game.api.plugin.skills.SkillRunePouches
 import net.dodian.uber.game.api.plugin.skills.SkillSlayerTask
 import net.dodian.uber.game.api.plugin.skills.SkillItemGridEntry
 import net.dodian.uber.game.api.plugin.skills.SkillValidationResult
@@ -33,6 +35,8 @@ import net.dodian.uber.skills.runtime.SkillRecipePlanner
 
 /** Protocol-free deterministic player double for modular skill tests. */
 class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
+    val activePrayers = mutableSetOf<SkillPrayer>()
+    private val runePouchAmounts = IntArray(4)
     val messages = mutableListOf<String>()
     val animations = mutableListOf<Pair<Int, Int>>()
     val strings = mutableMapOf<Int, String>()
@@ -298,6 +302,10 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
     override val vitals = object : SkillVitals {
         override val currentPrayer: Int get() = currentPrayerValue
         override val maximumPrayer: Int get() = maximumPrayerValue
+        override fun isPrayerActive(prayer: SkillPrayer): Boolean = prayer in activePrayers
+        override fun togglePrayer(prayer: SkillPrayer) {
+            if (!activePrayers.add(prayer)) activePrayers.remove(prayer)
+        }
         override fun setPrayer(amount: Int) { currentPrayerValue = amount.coerceIn(0, maximumPrayerValue) }
         override fun damage(amount: Int) { damageTaken += amount.coerceAtLeast(0) }
         override fun restorePrayer(amount: Int) {
@@ -307,13 +315,23 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
         }
         override fun stun(ticks: Int) { stunTicks = ticks.coerceAtLeast(0) }
     }
+    override val runePouches = object : SkillRunePouches {
+        override fun amount(slot: Int): Int = runePouchAmounts[slot]
+        override fun addAmount(slot: Int, amount: Int) { runePouchAmounts[slot] += amount }
+        override fun levelRequirement(slot: Int): Int = intArrayOf(1, 20, 40, 60)[slot]
+        override fun capacity(slot: Int): Int = intArrayOf(4, 7, 10, 13)[slot]
+    }
     var slayerMasterNpcId = -1
+    var slayerTaskOrdinal = -1
+    var slayerAssignmentAmount = 0
     var slayerTaskName = ""
     var slayerRemainingAmount = 0
     var slayerStreak = 0
     var slayerKillCountValue = -1
     override val slayerTask = object : SkillSlayerTask {
         override val masterNpcId: Int get() = slayerMasterNpcId
+        override val ordinal: Int get() = slayerTaskOrdinal
+        override val assignmentAmount: Int get() = slayerAssignmentAmount
         override val taskName: String get() = slayerTaskName
         override val remainingAmount: Int get() = slayerRemainingAmount
         override val streak: Int get() = slayerStreak

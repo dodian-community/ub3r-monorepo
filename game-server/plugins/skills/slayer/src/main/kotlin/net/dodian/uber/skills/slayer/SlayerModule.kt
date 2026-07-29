@@ -11,7 +11,6 @@ import net.dodian.uber.game.api.plugin.skills.skillPlugin
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.skills.api.SkillModuleDescriptor
-import net.dodian.uber.game.api.plugin.runtime.TomlRecordReader
 
 data class SlayerTaskDef(
     val name: String,
@@ -25,7 +24,7 @@ data class SlayerTaskDef(
 
 object SlayerModule : SkillPlugin {
     val descriptor = SkillModuleDescriptor("skill.slayer", "Slayer")
-    val tasks: List<SlayerTaskDef> by lazy { loadTasks() }
+    val tasks: List<SlayerTaskDef> = SlayerTaskRegistry.tasks
 
     // Master conversations and assignment selection remain on the legacy route until the
     // complete 34-task dialogue/state machine is transferred.  Registering a simplified
@@ -186,17 +185,4 @@ object SlayerModule : SkillPlugin {
         return true
     }
 
-    private fun loadTasks(): List<SlayerTaskDef> =
-        TomlRecordReader.readRecords("slayer/tasks.toml", "task").map { row ->
-            val npcsStr = row.getValue("npc_ids").removeSurrounding("[", "]").split(",")
-            SlayerTaskDef(
-                name = row.getValue("name"),
-                slayerOnly = row.getValue("slayer_only").toBoolean(),
-                levelMin = row.getValue("level_min").toInt(),
-                levelMax = row.getValue("level_max").toInt(),
-                amountMin = row.getValue("amount_min").toInt(),
-                amountMax = row.getValue("amount_max").toInt(),
-                npcIds = npcsStr.map { it.trim().toInt() },
-            )
-        }
 }

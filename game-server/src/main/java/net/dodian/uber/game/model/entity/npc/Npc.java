@@ -728,28 +728,7 @@ public class Npc extends Entity {
             p.yellAreaKilled("<col=006400>" + yell, miniBoss);
         }
 
-        net.dodian.uber.game.skill.slayer.SlayerTaskDefinition task = net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forNpc(id);
-        if (task != null) {
-            if (task.ordinal() == p.getSlayerData().get(1) && p.getSlayerData().get(3) > 0) {
-                p.getSlayerData().set(3, p.getSlayerData().get(3) - 1);
-                ProgressionService.addXp(p, maxHealth * 11, Skill.SLAYER);
-                SkillingRandomEventService.trigger(p, maxHealth * 11);
-                    if(p.getSlayerData().get(3) == 0) { // Finish task!
-                        p.getSlayerData().set(4, p.getSlayerData().get(4) + 1);
-                        /* Bonus slayer experience 1k, 500, 250, 100, 50 and 10 tasks! */
-                        int[] taskStreak = {1000, 500, 250, 100, 50, 10};
-                        int[] experience = {50, 30, 20, 11, 6, 2};
-                        int bonusXp = -1;
-                        p.send(new SendMessage("<col=FF8C00>You have completed your slayer task! <col=FF0000>|</col> Current streak is " + p.getSlayerData().get(4) + "."));
-                        for(int i = 0; i < taskStreak.length && bonusXp == -1; i++)
-                            if(p.getSlayerData().get(4)%taskStreak[i] == 0) {
-                                bonusXp = experience[i] * p.getSlayerData().get(2) * maxHealth;
-                                ProgressionService.addXp(p, bonusXp, Skill.SLAYER);
-                                p.send(new SendMessage("<col=FF8C00>You have gained some bonus experience from finishing your " + taskStreak[i] + " task in a row."));
-                            }
-                    }
-            }
-        }
+        net.dodian.uber.game.engine.systems.skills.SlayerDeathBridge.onNpcDeath(p, id, maxHealth);
     }
 
     public void drop() {

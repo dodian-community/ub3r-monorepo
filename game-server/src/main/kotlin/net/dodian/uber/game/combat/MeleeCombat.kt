@@ -8,7 +8,9 @@ import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.skill.prayer.PrayerManager
+import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
+import net.dodian.uber.skills.prayer.PrayerCombatService
+import net.dodian.uber.skills.agility.AgilityCombatService
 import net.dodian.uber.game.engine.systems.animation.PlayerAnimationService
 import net.dodian.uber.game.engine.systems.combat.CombatAttackResult
 import net.dodian.uber.game.engine.systems.combat.CombatLogoutLockService
@@ -62,7 +64,7 @@ fun Client.handleMeleeAttack(): CombatAttackResult? {
              if(keris) maxHit *= 2
          }
         hit = Utils.random(maxHit.toInt())
-        var criticalChance = getLevel(Skill.AGILITY) / 9
+        var criticalChance = AgilityCombatService.criticalChance(asSkillPlayer())
         val extra = getLevel(Skill.STRENGTH) * 0.195
         if(equipment[Equipment.Slot.SHIELD.id]==4224) criticalChance = (criticalChance * 1.5).toInt()
         val landCrit = Math.random() * 100 <= criticalChance
@@ -135,7 +137,7 @@ fun Client.handleMeleeAttack(): CombatAttackResult? {
             val player = resolveCombatTargetPlayer(target.slot) ?: return CombatAttackResult(getbattleTimer(equipment[Equipment.Slot.WEAPON.id]))
             if (landCrit && landHit) hit += Utils.dRandom2(extra).toInt()
             else if(!landHit) hit = 0
-            if (player.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_MELEE)) hit = (hit * 0.6).toInt()
+            if (PrayerCombatService.protectsFromMelee(player.asSkillPlayer())) hit = (hit * 0.6).toInt()
             if(!handleSpecial(landCrit)) { //Do stuff here!
                 if(hit >= player.currentHealth) hit = player.currentHealth
                 player.dealDamage(this, hit, if(landCrit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
@@ -178,23 +180,13 @@ fun highestAttackBonus(p: Client): Int {
 fun landHit(p: Client, t: Entity): Boolean {
     val hitChance: Double
     val chance = Misc.chance(100_000) / 1_000
-    val prayerBonus = if(p.prayerManager.isPrayerOn(PrayerManager.Prayer.CLARITY_OF_THOUGHT)) 1.05
-    else if(p.prayerManager.isPrayerOn(PrayerManager.Prayer.IMPROVED_REFLEXES)) 1.1
-    else if(p.prayerManager.isPrayerOn(PrayerManager.Prayer.INCREDIBLE_REFLEXES)) 1.15
-    else if(p.prayerManager.isPrayerOn(PrayerManager.Prayer.CHIVALRY)) 1.18
-    else if(p.prayerManager.isPrayerOn(PrayerManager.Prayer.PIETY)) 1.22
-    else 1.0
+    val prayerBonus = PrayerCombatService.meleeAttackMultiplier(p.asSkillPlayer())
     if(t is Client) { //Pvp
         var atkLevel = p.getLevel(Skill.ATTACK)
         val atkBonus = highestAttackBonus(p)
         var defLevel = t.getLevel(Skill.DEFENCE)
         val defBonus = highestDefensiveBonus(t)
-        val prayerDefBonus = if(t.prayerManager.isPrayerOn(PrayerManager.Prayer.THICK_SKIN)) 1.05
-        else if(t.prayerManager.isPrayerOn(PrayerManager.Prayer.ROCK_SKIN)) 1.1
-        else if(t.prayerManager.isPrayerOn(PrayerManager.Prayer.STEEL_SKIN)) 1.15
-        else if(t.prayerManager.isPrayerOn(PrayerManager.Prayer.CHIVALRY)) 1.18
-        else if(t.prayerManager.isPrayerOn(PrayerManager.Prayer.PIETY)) 1.22
-        else 1.0
+        val prayerDefBonus = PrayerCombatService.defenceMultiplier(t.asSkillPlayer())
         /* Various bonuses for styles! */
         if(p.fightType == 0) atkLevel += 3
         if(t.fightType == 1) defLevel += 3

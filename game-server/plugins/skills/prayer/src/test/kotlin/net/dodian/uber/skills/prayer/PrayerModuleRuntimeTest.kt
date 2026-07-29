@@ -4,6 +4,7 @@ import net.dodian.uber.game.api.plugin.skills.SkillItemInteraction
 import net.dodian.uber.game.api.plugin.skills.SkillObjectInteraction
 import net.dodian.uber.game.api.plugin.skills.SkillObjectRef
 import net.dodian.uber.game.api.plugin.skills.SkillPosition
+import net.dodian.uber.game.api.plugin.skills.SkillPrayer
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.skills.testkit.FakeSkillPlayer
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -26,5 +27,14 @@ class PrayerModuleRuntimeTest {
         val binding = PrayerModule.definition.objectBindings.single { 409 in it.objectIds }
         assertTrue(binding.handler(SkillObjectInteraction(player, 1, SkillObjectRef(409, SkillPosition(3200, 3200)))))
         assertEquals(50, player.currentPrayerValue)
+    }
+
+    @Test
+    fun `prayer tab buttons are owned by the prayer plugin`() {
+        val player = FakeSkillPlayer()
+        val binding = PrayerModule.definition.buttonBindings.single { SkillPrayer.PIETY.buttonId in it.rawButtonIds }
+
+        assertTrue(binding.handler(net.dodian.uber.game.api.plugin.skills.SkillButtonInteraction(player, SkillPrayer.PIETY.buttonId, -1, 5608)))
+        assertTrue(SkillPrayer.PIETY in player.activePrayers)
     }
 }

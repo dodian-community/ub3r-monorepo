@@ -9,7 +9,9 @@ import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
-import net.dodian.uber.game.skill.prayer.PrayerManager
+import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
+import net.dodian.uber.skills.prayer.PrayerCombatService
+import net.dodian.uber.skills.agility.AgilityCombatService
 import net.dodian.uber.game.engine.systems.animation.PlayerAnimationService
 import net.dodian.uber.game.engine.systems.combat.CombatAttackResult
 import net.dodian.uber.game.engine.systems.combat.CombatHitQueueService
@@ -84,7 +86,7 @@ fun Client.handleRangedAttack(): CombatAttackResult? {
             maxHit *= 1.2
     }
     var hit = Utils.random(maxHit.toInt())
-    var criticalChance = getLevel(Skill.AGILITY) / 9
+    var criticalChance = AgilityCombatService.criticalChance(asSkillPlayer())
     val extra = getLevel(Skill.RANGED) * 0.195
     if(equipment[Equipment.Slot.SHIELD.id]==4224) criticalChance = (criticalChance * 1.5).toInt()
     val landCrit = Math.random() * 100 <= criticalChance
@@ -173,21 +175,13 @@ fun Client.handleRangedAttack(): CombatAttackResult? {
 fun landHitRanged(p: Client, t: Entity): Boolean {
     val hitChance: Double
     val chance = Misc.chance(100_000) / 1_000
-    val prayerBonus = if(p.prayerManager.isPrayerOn(PrayerManager.Prayer.SHARP_EYE)) 1.025
-    else if(p.prayerManager.isPrayerOn(PrayerManager.Prayer.HAWK_EYE)) 1.05
-    else if(p.prayerManager.isPrayerOn(PrayerManager.Prayer.EAGLE_EYE)) 1.075
-    else 1.0
+    val prayerBonus = PrayerCombatService.rangedAttackMultiplier(p.asSkillPlayer())
     if(t is Client) { //Pvp
         val atkBonus = p.playerBonus[4]
         var atkLevel = p.getLevel(Skill.RANGED)
         val defBonus = t.playerBonus[9]
         var defLevel = t.getLevel(Skill.DEFENCE)
-        val prayerDefBonus = if(t.prayerManager.isPrayerOn(PrayerManager.Prayer.THICK_SKIN)) 1.05
-        else if(t.prayerManager.isPrayerOn(PrayerManager.Prayer.ROCK_SKIN)) 1.1
-        else if(t.prayerManager.isPrayerOn(PrayerManager.Prayer.STEEL_SKIN)) 1.15
-        else if(t.prayerManager.isPrayerOn(PrayerManager.Prayer.CHIVALRY)) 1.18
-        else if(t.prayerManager.isPrayerOn(PrayerManager.Prayer.PIETY)) 1.22
-        else 1.0
+        val prayerDefBonus = PrayerCombatService.defenceMultiplier(t.asSkillPlayer())
         /* Various bonuses for styles! */
         if(p.fightType == 0) atkLevel += 3
         if(t.fightType == 1) defLevel += 3

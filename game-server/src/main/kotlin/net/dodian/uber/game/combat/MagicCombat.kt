@@ -8,7 +8,6 @@ import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.skill.prayer.PrayerManager
 import net.dodian.uber.game.engine.systems.animation.PlayerAnimationService
 import net.dodian.uber.game.engine.systems.combat.CombatAttackResult
 import net.dodian.uber.game.engine.systems.combat.CombatHitQueueService
@@ -20,6 +19,8 @@ import net.dodian.uber.game.engine.util.Misc
 import net.dodian.uber.game.engine.systems.cache.CacheSpotAnimDefinitions
 import net.dodian.utilities.Utils
 import net.dodian.uber.game.combat.AncientSpellRegistry
+import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
+import net.dodian.uber.skills.agility.AgilityCombatService
 import kotlin.math.min
 
 
@@ -76,7 +77,7 @@ fun Client.handleMagicAttack(): CombatAttackResult? {
         }
     }
     var hit = Utils.random(maxHit.toInt())
-    var criticalChance = getLevel(Skill.AGILITY) / 9
+    var criticalChance = AgilityCombatService.criticalChance(asSkillPlayer())
     val extra = getLevel(Skill.MAGIC) * 0.195
     if(equipment[Equipment.Slot.SHIELD.id]==4224) criticalChance = (criticalChance * 1.5).toInt()
     val landCrit = Math.random() * 100 <= criticalChance

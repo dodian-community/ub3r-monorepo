@@ -4,6 +4,7 @@ import net.dodian.uber.game.api.plugin.ContentMaturity
 import net.dodian.uber.game.api.plugin.ContentModuleManifest
 import net.dodian.uber.game.api.plugin.skills.SkillItemInteraction
 import net.dodian.uber.game.api.plugin.skills.SkillItemOnObjectInteraction
+import net.dodian.uber.game.api.plugin.skills.SkillPrayer
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
 import net.dodian.uber.game.api.plugin.skills.SkillPluginDefinition
 import net.dodian.uber.game.api.plugin.skills.manifest
@@ -24,6 +25,12 @@ object PrayerModule : SkillPlugin {
     val altars: List<PrayerAltar> by lazy { loadAltars() }
 
     override val definition: SkillPluginDefinition = skillPlugin("Prayer", Skill.PRAYER) {
+        SkillPrayer.entries.forEach { prayer ->
+            button(PolicyPreset.DIALOGUE, PRAYER_INTERFACE_ID, null, prayer.buttonId) {
+                it.player.vitals.togglePrayer(prayer)
+                true
+            }
+        }
         objectClick(PolicyPreset.PRODUCTION, 1, *altars.map { it.objectId }.toIntArray()) { restorePrayer(it.player) }
         val offeringAltars = altars.filter { it.offeringEnabled }.map { it.objectId }.toIntArray()
         bones.forEach { bone ->
@@ -95,4 +102,5 @@ object PrayerModule : SkillPlugin {
     private const val BURY_ANIMATION = 827
     private const val ALTAR_ANIMATION = 3705
     private const val ALTAR_GFX = 624
+    private const val PRAYER_INTERFACE_ID = 5608
 }

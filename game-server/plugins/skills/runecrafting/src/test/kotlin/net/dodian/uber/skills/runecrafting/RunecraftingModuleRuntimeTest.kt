@@ -79,4 +79,26 @@ class RunecraftingModuleRuntimeTest {
 
         assertTrue((player.attributes.get(RunecraftingModule.LAST_ALTAR_CRAFT_KEY) ?: 0L) > 0L)
     }
+
+    @Test
+    fun `pouch fill and empty preserve essence through the plugin service`() {
+        val player = FakeSkillPlayer(mapOf(RUNE_ESSENCE to 4)).apply { setLevel(Skill.RUNECRAFTING, 99) }
+
+        assertTrue(RunecraftingPouchService.fill(player, 5509))
+        assertEquals(0, player.amount(RUNE_ESSENCE))
+        assertEquals(4, player.runePouches.amount(0))
+        assertTrue(RunecraftingPouchService.empty(player, 5509))
+        assertEquals(4, player.amount(RUNE_ESSENCE))
+        assertEquals(0, player.runePouches.amount(0))
+    }
+
+    @Test
+    fun `pouch inspect and level rejection are handled by the plugin`() {
+        val lowLevel = FakeSkillPlayer()
+
+        assertTrue(RunecraftingPouchService.fill(lowLevel, 5511))
+        assertEquals(listOf("You need level 20 runecrafting to do this!"), lowLevel.messages)
+        assertTrue(RunecraftingPouchService.check(lowLevel, 5509))
+        assertEquals("There is 0 rune essence in this pouch!", lowLevel.messages.last())
+    }
 }

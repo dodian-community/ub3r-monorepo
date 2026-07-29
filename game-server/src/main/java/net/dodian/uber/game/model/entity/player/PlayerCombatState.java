@@ -46,8 +46,7 @@ class PlayerCombatState {
             mitigationBranch = "clamped_to_current_hp";
         }
         double rolledChance = Math.random();
-        double level = ((owner.getLevel(Skill.PRAYER) + 1) / 8D) / 100D;
-        double chance = level + 0.025;
+        double chance = net.dodian.uber.skills.prayer.PrayerCombatService.damageNeglectChance(owner.getLevel(Skill.PRAYER));
         double damageNeglect = player.neglectDmg() / 10D;
         double reduceDamage = 1.0 - (damageNeglect / 100);
         int oldDamage = amt;

@@ -26,6 +26,8 @@ import net.dodian.uber.game.api.plugin.skills.SkillClock
 import net.dodian.uber.game.api.plugin.skills.SkillModuleState
 import net.dodian.uber.game.api.plugin.skills.SkillAmountPrompt
 import net.dodian.uber.game.api.plugin.skills.SkillVitals
+import net.dodian.uber.game.api.plugin.skills.SkillPrayer
+import net.dodian.uber.game.api.plugin.skills.SkillRunePouches
 import net.dodian.uber.game.engine.config.FeatureStateService
 import net.dodian.uber.game.engine.event.GameEventScheduler
 import net.dodian.uber.game.engine.systems.inventory.inventoryTransaction
@@ -333,13 +335,30 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
     override val vitals = object : SkillVitals {
         override val currentPrayer: Int get() = client.currentPrayer
         override val maximumPrayer: Int get() = client.maxPrayer
+        override fun isPrayerActive(prayer: SkillPrayer): Boolean =
+            client.prayerManager.isPrayerOn(
+                net.dodian.uber.game.skill.prayer.PrayerManager.Prayer.valueOf(prayer.name),
+            )
+        override fun togglePrayer(prayer: SkillPrayer) {
+            client.prayerManager.togglePrayer(
+                net.dodian.uber.game.skill.prayer.PrayerManager.Prayer.valueOf(prayer.name),
+            )
+        }
         override fun setPrayer(amount: Int) { client.currentPrayer = amount.coerceIn(0, client.maxPrayer) }
         override fun damage(amount: Int) { if (amount > 0) client.dealDamage(null, amount, Entity.hitType.STANDARD) }
         override fun restorePrayer(amount: Int) { client.currentPrayer = (client.currentPrayer + amount).coerceAtMost(client.maxPrayer) }
         override fun stun(ticks: Int) { client.stunTimer = ticks.coerceAtLeast(0) }
     }
+    override val runePouches = object : SkillRunePouches {
+        override fun amount(slot: Int): Int = client.runePouchState.amount(slot)
+        override fun addAmount(slot: Int, amount: Int) = client.runePouchState.addAmount(slot, amount)
+        override fun levelRequirement(slot: Int): Int = client.runePouchState.levelRequirement(slot)
+        override fun capacity(slot: Int): Int = client.runePouchState.capacity(slot)
+    }
     override val slayerTask = object : net.dodian.uber.game.api.plugin.skills.SkillSlayerTask {
         override val masterNpcId: Int get() = client.slayerTaskState.masterNpcId
+        override val ordinal: Int get() = client.slayerTaskState.taskOrdinal
+        override val assignmentAmount: Int get() = client.slayerTaskState.assignmentAmount
         override val taskName: String get() =
             net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forOrdinal(client.slayerTaskState.taskOrdinal)?.textRepresentation ?: ""
         override val remainingAmount: Int get() = client.slayerTaskState.remainingAmount

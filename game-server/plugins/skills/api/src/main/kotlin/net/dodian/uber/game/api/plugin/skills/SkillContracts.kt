@@ -33,6 +33,7 @@ interface SkillPlayer {
     val random: SkillRandom
     val clock: SkillClock
     val vitals: SkillVitals
+    val runePouches: SkillRunePouches
     val slayerTask: SkillSlayerTask
     /** Plugin-owned temporary state; cleared when the player logs out. */
     val attributes: ContentAttributes
@@ -225,6 +226,9 @@ interface SkillWorld {
 interface SkillSlayerTask {
     /** NPC id of the slayer master who assigned the current task, or -1 if none. */
     val masterNpcId: Int
+    /** Persisted task-table ordinal, or -1 when no task is assigned. */
+    val ordinal: Int
+    val assignmentAmount: Int
     /** Display name of the assigned task, or an empty string when no task is active. */
     val taskName: String
     val remainingAmount: Int
@@ -259,10 +263,68 @@ fun interface SkillClock { fun nowMillis(): Long }
 interface SkillVitals {
     val currentPrayer: Int
     val maximumPrayer: Int
+    /**
+     * Whether a prayer is currently active.  Skill modules use this stable
+     * identifier instead of reaching into the engine's prayer manager.
+     */
+    fun isPrayerActive(prayer: SkillPrayer): Boolean
+    /** Toggles a prayer while preserving the engine's level, drain, and UI rules. */
+    fun togglePrayer(prayer: SkillPrayer)
     fun setPrayer(amount: Int)
     fun damage(amount: Int)
     fun restorePrayer(amount: Int)
     fun stun(ticks: Int)
+}
+
+/** Persisted rune-pouch state exposed to the Runecrafting plugin only. */
+interface SkillRunePouches {
+    fun amount(slot: Int): Int
+    fun addAmount(slot: Int, amount: Int)
+    fun levelRequirement(slot: Int): Int
+    fun capacity(slot: Int): Int
+}
+
+/** Protocol- and engine-independent prayer identifiers used by skill modules. */
+enum class SkillPrayer {
+    THICK_SKIN,
+    BURST_OF_STRENGTH,
+    CLARITY_OF_THOUGHT,
+    SHARP_EYE,
+    MYSTIC_WILL,
+    ROCK_SKIN,
+    SUPERHUMAN_STRENGTH,
+    IMPROVED_REFLEXES,
+    HAWK_EYE,
+    MYSTIC_LORE,
+    RAPID_RESTORE,
+    RAPID_HEAL,
+    PROTECT_ITEM,
+    STEEL_SKIN,
+    ULTIMATE_STRENGTH,
+    INCREDIBLE_REFLEXES,
+    EAGLE_EYE,
+    MYSTIC_MIGHT,
+    PROTECT_MAGIC,
+    PROTECT_RANGE,
+    PROTECT_MELEE,
+    RETRIBUTION,
+    REDEMPTION,
+    SMITE,
+    CHIVALRY,
+    PIETY,
+    ;
+
+    /** The legacy client button id; protocol details stay data-only at the module boundary. */
+    val buttonId: Int
+        get() = BUTTON_IDS[ordinal]
+
+    private companion object {
+        val BUTTON_IDS = intArrayOf(
+            5609, 5610, 5611, 19812, 19814, 5612, 5613, 5614, 19816, 19818,
+            5615, 5616, 5617, 5618, 5619, 5620, 19821, 19823, 5621, 5622, 5623,
+            683, 684, 685, 19825, 19827,
+        )
+    }
 }
 
 class SkillObjectInteraction(val player: SkillPlayer, val option: Int, val target: SkillObjectRef) {
