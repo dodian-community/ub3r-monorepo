@@ -3,6 +3,7 @@ package net.dodian.uber.game.model.entity.player;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 class PlayerAccountState {
     private final Player owner;
@@ -172,7 +173,7 @@ class PlayerAccountState {
     }
 
     void defaultDailyReward(Client client) {
-        owner.dailyReward.add(0, client.today.getTime() + "");
+        owner.dailyReward.add(0, new Date().getTime() + "");
         owner.dailyReward.add(1, "6000");
         owner.dailyReward.add(2, "0");
         owner.dailyReward.add(3, "0");

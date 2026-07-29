@@ -1,7 +1,7 @@
 package net.dodian.uber.game.model.entity.player
 
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 class BossKillLogStateTest {
     @Test

@@ -100,6 +100,10 @@ object UiInterface : InterfaceButtonContent {
                     client.clearBankStyleView()
                     refreshItems = true
                 }
+                if (client.checkInv) {
+                    client.checkInv = false
+                    client.resetItems(3214)
+                }
                 if (wasPartyInterface) {
                     client.isPartyInterface = false
                     refreshItems = true

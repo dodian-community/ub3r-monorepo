@@ -68,7 +68,14 @@ import java.util.concurrent.atomic.AtomicLong;
  * New gameplay state and behavior must live in named Kotlin services/state components,
  * not in this compatibility core.
  */
-abstract class PlayerCore extends Entity {
+/**
+ * Transitional Java implementation behind the public Kotlin {@link Player} entity.
+ *
+ * Kotlin's public Player subclass cannot extend a package-private JVM superclass.
+ * Keep this visible only for the migration boundary; gameplay callers should use
+ * Player and focused services rather than depend on this type.
+ */
+public abstract class PlayerCore extends Entity {
     private static final AtomicLong NEXT_SESSION_GENERATION = new AtomicLong(1L);
     private static final Logger logger = LoggerFactory.getLogger(PlayerCore.class);
     public boolean yellOn = true, genie = false, antique = false, instaLoot = false, autoRetaliate = false, debugPackets = false;
@@ -83,7 +90,7 @@ abstract class PlayerCore extends Entity {
     public int playerGroup = 3, latestNews = 0, dbId = -1, questPage = 0, playerRights; //Online stuff!
     public int[] playerLooks = new int[13];
     public boolean saveNeeded = true, lookNeeded = false, discord = false, lockExperience = false;
-    private final PlayerAccountState accountState = new PlayerAccountState(this);
+    private final PlayerAccountState accountState = new PlayerAccountState(asPlayer());
     private final PlayerContentRuntimeState interactionState = new PlayerContentRuntimeState();
     private final PlayerQuestProgressState questProgressState = new PlayerQuestProgressState();
     private final HerbloreDialogueState herbloreDialogueState = new HerbloreDialogueState();
@@ -113,8 +120,8 @@ abstract class PlayerCore extends Entity {
     public BossKillLogState getBossKillLogState() {
         return bossKillLogState;
     }
-    private final PlayerMovementState movementState = new PlayerMovementState(this);
-    private final PlayerUpdateState updateState = new PlayerUpdateState(this);
+    private final PlayerMovementState movementState = new PlayerMovementState(asPlayer());
+    private final PlayerUpdateState updateState = new PlayerUpdateState(asPlayer());
     int lastCombat = 0, combatTimer = 0, snareTimer = 0, stunTimer = 0;
     public int poisonDamage = 0;
     public int poisonTimer = 0;
@@ -207,10 +214,10 @@ abstract class PlayerCore extends Entity {
     public int dailyLogin = 1;
     public ArrayList<String> dailyReward = new ArrayList<>();
     public int staffSize = 5;
-    private final PlayerStats stats = new PlayerStats(this);
-    private final PlayerAppearanceState appearanceState = new PlayerAppearanceState(this);
-    private final PlayerProgressState progressState = new PlayerProgressState(this);
-    private final PlayerCombatState combatState = new PlayerCombatState(this);
+    private final PlayerStats stats = new PlayerStats(asPlayer());
+    private final PlayerAppearanceState appearanceState = new PlayerAppearanceState(asPlayer());
+    private final PlayerProgressState progressState = new PlayerProgressState(asPlayer());
+    private final PlayerCombatState combatState = new PlayerCombatState(asPlayer());
 
     protected PlayerCore(int slot) {
         super(new Position(-1, -1, 0), slot, Entity.Type.PLAYER);
@@ -219,6 +226,11 @@ abstract class PlayerCore extends Entity {
         currentPrayer = maxPrayer;
         movementState.initializeRegionState();
         resetWalkingQueue();
+    }
+
+    /** The only concrete PlayerCore instances are Kotlin Player subclasses. */
+    private Player asPlayer() {
+        return (Player) (Object) this;
     }
 
     public void applyWalkBlockMs(long durationMs) {
@@ -1150,7 +1162,7 @@ abstract class PlayerCore extends Entity {
         SkillingEventState state = interactionState.getSkillingEventState();
         if (state == null) {
             int randomSkillId = this instanceof Client ? ((Client) this).random_skill : -1;
-            state = new SkillingEventState(randomed, randomSkillId, chestEvent, chestEventOccur);
+            state = new SkillingEventState(randomed, randomSkillId, chestEvent, chestEventOccur, false);
             interactionState.setSkillingEventState(state);
         }
         return state;
@@ -1488,7 +1500,7 @@ abstract class PlayerCore extends Entity {
         teleportToZ = getPosition().getZ();
     }
 
-    PrayerManager prayerManager = new PrayerManager(this);
+    PrayerManager prayerManager = new PrayerManager(asPlayer());
 
     public boolean isSongUnlocked(int songId) {
         return progressState.isSongUnlocked(songId);
@@ -2011,14 +2023,6 @@ abstract class PlayerCore extends Entity {
                 return pos.name;
         }
         return "exploring the world.";
-    }
-
-    public static void openPage(Client c, String pageName) {
-        try {
-            c.send(new SendMessage(pageName + "#url#"));
-        } catch (Exception e) {
-            logger.warn("error opening page..", e);
-        }
     }
 
     public boolean inWildy() {

@@ -1,6 +1,6 @@
 package net.dodian.uber.game.ui
 
-import net.dodian.uber.game.model.entity.player.Player
+import net.dodian.uber.game.model.entity.player.PlayerCore as Player
 import net.dodian.uber.game.ui.combat.CombatStyleService
 import net.dodian.uber.game.engine.systems.combat.CombatSpecialService
 import net.dodian.uber.game.ui.buttons.InterfaceButtonContent

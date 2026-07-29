@@ -1,8 +1,9 @@
 package net.dodian.uber.game.skill.herblore
 
 import net.dodian.uber.game.activity.partyroom.PartyRoomRewardItem
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
 
 class HerbloreDialogueStateTest {
     @Test
@@ -14,6 +15,6 @@ class HerbloreDialogueStateTest {
         state.clear()
 
         assertEquals(-1, state.page)
-        assertEquals(emptyList(), state.options)
+        assertTrue(state.options.isEmpty())
     }
 }

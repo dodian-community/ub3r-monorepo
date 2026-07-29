@@ -3,7 +3,6 @@ package net.dodian.uber.game.ui
 import java.text.DecimalFormat
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendString
 import net.dodian.uber.game.engine.systems.quests.asQuestPlayer
@@ -185,12 +184,12 @@ enum class QuestTabEntry(
                     }
 
                     7383 -> {
-                        Player.openPage(client, "https://dodian.net/showthread.php?t=" + client.latestNews)
+                        ExternalUrlService.open(client, "https://dodian.net/showthread.php?t=" + client.latestNews)
                         return true
                     }
 
                     7339 -> {
-                        Player.openPage(client, "https://dodian.net/forumdisplay.php?f=22")
+                        ExternalUrlService.open(client, "https://dodian.net/forumdisplay.php?f=22")
                         return true
                     }
 

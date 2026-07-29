@@ -3,7 +3,7 @@ package net.dodian.uber.game.ui.combat
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.CombatStyle
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.Player
+import net.dodian.uber.game.model.entity.player.PlayerCore as Player
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString

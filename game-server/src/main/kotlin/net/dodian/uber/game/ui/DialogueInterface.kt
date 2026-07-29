@@ -2,7 +2,6 @@ package net.dodian.uber.game.ui
 
 import net.dodian.uber.game.api.content.ContentEvents
 import net.dodian.uber.game.events.widget.DialogueOptionEvent
-import net.dodian.uber.game.model.entity.player.Player
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendFrame27
 import net.dodian.uber.game.ui.buttons.InterfaceButtonContent
@@ -81,7 +80,7 @@ object DialogueInterface : InterfaceButtonContent {
             2461, 9157 -> {
                 if (client.discord) {
                     client.send(RemoveInterfaces())
-                    Player.openPage(client, "https://discord.gg/WZP5mByJ8e")
+                    ExternalUrlService.open(client, "https://discord.gg/WZP5mByJ8e")
                     client.discord = false
                 }
                 client.triggerChat(1)

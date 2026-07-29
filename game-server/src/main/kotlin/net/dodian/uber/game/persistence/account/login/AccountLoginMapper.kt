@@ -367,13 +367,14 @@ internal object AccountLoginMapper {
             player.defaultDailyReward(player)
             return
         }
+        val today = Date()
         val lines = dailyReward.split(";")
         for (index in lines.indices) {
             val parts = lines[index].split(",")
-            val newDay = player.dateDays(Date(parts[0].toLong()), player.today) > 0
+            val newDay = player.dateDays(Date(parts[0].toLong()), today) > 0
             if (index == 0) {
                 if (newDay) {
-                    player.dailyReward.add(0, player.today.time.toString())
+                    player.dailyReward.add(0, today.time.toString())
                     player.dailyReward.add(1, "6000")
                     player.dailyReward.add(2, parts[2])
                     player.dailyReward.add(3, "0")

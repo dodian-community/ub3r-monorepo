@@ -8,7 +8,7 @@ import net.dodian.uber.game.item.ItemWeaponDef
 import net.dodian.uber.game.item.ItemWeaponStance
 import net.dodian.uber.game.item.EquipmentAppearanceType
 import net.dodian.uber.game.item.toRequiredArray
-import net.dodian.uber.game.model.entity.player.Player
+import net.dodian.uber.game.model.entity.player.PlayerCore as Player
 import net.dodian.uber.game.engine.systems.animation.AttackAnimationService
 import net.dodian.uber.game.engine.systems.animation.toAttackStyleKey
 

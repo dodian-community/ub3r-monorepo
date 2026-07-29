@@ -56,6 +56,10 @@ object PacketInterfaceCloseService {
             client.clearBankStyleView()
             client.checkItemUpdate()
         }
+        if (client.checkInv) {
+            client.checkInv = false
+            client.resetItems(3214)
+        }
         if (client.isPartyInterface) {
             client.isPartyInterface = false
             client.checkItemUpdate()

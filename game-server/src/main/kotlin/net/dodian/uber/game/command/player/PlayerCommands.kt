@@ -7,7 +7,7 @@ import net.dodian.uber.game.combat.getRangedStr
 import net.dodian.uber.game.combat.magicBonusDamage
 import net.dodian.uber.game.combat.meleeMaxHit
 import net.dodian.uber.game.combat.rangedMaxHit
-import net.dodian.uber.game.model.entity.player.Player
+import net.dodian.uber.game.ui.ExternalUrlService
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SendString
@@ -30,19 +30,19 @@ private fun handlePlayerUtility(context: CommandContext): Boolean {
     val command = context.rawCommand
     val cmd = context.parts
     when {
-        context.alias == "request" -> Player.openPage(client, "https://dodian.net/forumdisplay.php?f=83")
-        context.alias == "report" -> Player.openPage(client, "https://dodian.net/forumdisplay.php?f=118")
-        context.alias == "suggest" -> Player.openPage(client, "https://dodian.net/forumdisplay.php?f=4")
-        context.alias == "bug" -> Player.openPage(client, "https://dodian.net/forumdisplay.php?f=120")
-        context.alias == "rules" -> Player.openPage(client, "https://dodian.net/index.php?pageid=rules")
+        context.alias == "request" -> ExternalUrlService.open(client, "https://dodian.net/forumdisplay.php?f=83")
+        context.alias == "report" -> ExternalUrlService.open(client, "https://dodian.net/forumdisplay.php?f=118")
+        context.alias == "suggest" -> ExternalUrlService.open(client, "https://dodian.net/forumdisplay.php?f=4")
+        context.alias == "bug" -> ExternalUrlService.open(client, "https://dodian.net/forumdisplay.php?f=120")
+        context.alias == "rules" -> ExternalUrlService.open(client, "https://dodian.net/index.php?pageid=rules")
         context.alias == "droplist" || (context.alias == "drops" && client.playerRights < 2) ->
-            Player.openPage(client, "https://dodian.net/index.php?pageid=droplist")
-        context.alias == "latestclient" -> Player.openPage(client, "https://dodian.net/client/DodianClient.jar")
-        context.alias == "news" -> Player.openPage(client, "https://dodian.net/showthread.php?t=${client.latestNews}")
+            ExternalUrlService.open(client, "https://dodian.net/index.php?pageid=droplist")
+        context.alias == "latestclient" -> ExternalUrlService.open(client, "https://dodian.net/client/DodianClient.jar")
+        context.alias == "news" -> ExternalUrlService.open(client, "https://dodian.net/showthread.php?t=${client.latestNews}")
     }
     if (context.alias == "thread") {
         return try {
-            Player.openPage(client, "https://dodian.net/showthread.php?t=${cmd[1].toInt()}")
+            ExternalUrlService.open(client, "https://dodian.net/showthread.php?t=${cmd[1].toInt()}")
             true
         } catch (_: Exception) {
             context.usage("Wrong usage.. ::${cmd[0]} page")
@@ -60,7 +60,7 @@ private fun handlePlayerUtility(context: CommandContext): Boolean {
                 } else {
                     "https://dodian.net/index.php?pageid=highscores&player1=$firstPerson&player2=$secondPerson"
                 }
-            Player.openPage(client, url)
+            ExternalUrlService.open(client, url)
             true
         } catch (_: Exception) {
             client.sendMessage("Wrong usage.. ::${cmd[0]} or ::${cmd[0]} First_name or")

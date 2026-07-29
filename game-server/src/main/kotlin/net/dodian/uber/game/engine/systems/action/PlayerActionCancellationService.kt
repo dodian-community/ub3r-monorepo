@@ -60,7 +60,7 @@ object PlayerActionCancellationService {
         WoodcuttingModule.stopAction(player.asSkillPlayer())
         MiningModule.stopAction(player.asSkillPlayer())
         player.clearFletchingState()
-        player.contentRuntimeState.resourcesGathered = 0
+        player.contentRuntimeState.setResourcesGathered(0)
         if (player.activeSmithingSelection != null || player.IsAnvil) {
             SmithingInterface.resetRuntimeState(player)
             player.send(RemoveInterfaces())

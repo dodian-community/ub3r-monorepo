@@ -13,7 +13,7 @@ object SkillGuide {
 
     @JvmStatic
     fun open(client: Client, skillId: Int, child: Int) {
-        val switchingSkill = client.contentRuntimeState.selectedSkillGuideSkillId != skillId
+        val switchingSkill = client.contentRuntimeState.getSelectedSkillGuideSkillId() != skillId
         if (switchingSkill) {
             client.send(RemoveInterfaces())
         }
@@ -55,7 +55,7 @@ object SkillGuide {
         if (switchingSkill) {
             client.openInterface(8714)
         }
-        client.contentRuntimeState.selectedSkillGuideSkillId = skillId
+        client.contentRuntimeState.setSelectedSkillGuideSkillId(skillId)
     }
 
     @JvmStatic

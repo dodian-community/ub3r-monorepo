@@ -68,10 +68,10 @@ object DoorToggleObjectContent : ObjectContent {
         if (matchingIndices.isEmpty()) {
             return false
         }
-        if (GameCycleClock.currentCycle() - client.contentRuntimeState.lastDoorToggleCycle <= 2) {
+        if (GameCycleClock.currentCycle() - client.contentRuntimeState.getLastDoorToggleCycle() <= 2) {
             return true
         }
-        client.contentRuntimeState.lastDoorToggleCycle = GameCycleClock.currentCycle()
+        client.contentRuntimeState.setLastDoorToggleCycle(GameCycleClock.currentCycle())
 
         for (index in matchingIndices) {
             val newFace = if (DoorRegistry.doorState[index] == 0) {

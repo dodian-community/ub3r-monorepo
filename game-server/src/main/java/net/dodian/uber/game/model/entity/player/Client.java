@@ -2529,17 +2529,17 @@ public class Client extends Player implements Runnable {
                 showPlayerOption(new String[]{"Manage " + targetName, "Teleport Actions", "Moderator Actions", "Check Containers", "Cancel"});
                 return;
             }
-            if (other == null) {
-                sendMessage("Player is offline.");
-                return;
-            }
-            if (option == 1) { // Check Bank
-                net.dodian.uber.game.economy.AdminContainerInspectionService.openBank(this, other.playerName);
-            } else if (option == 2) { // Check Inventory
-                net.dodian.uber.game.economy.AdminContainerInspectionService.openInventory(this, other.playerName);
-            }
+            // Close the option dialogue before opening the read-only inspection view.
+            // Sending RemoveInterfaces afterwards would immediately close the newly
+            // opened bank-style view, which made both ModCP container actions appear
+            // to do nothing. The inspection service handles online and offline names.
             modcpDialogState = 0;
             send(new net.dodian.uber.game.netty.listener.out.RemoveInterfaces());
+            if (option == 1) { // Check Bank
+                net.dodian.uber.game.economy.AdminContainerInspectionService.openBank(this, targetName);
+            } else if (option == 2) { // Check Inventory
+                net.dodian.uber.game.economy.AdminContainerInspectionService.openInventory(this, targetName);
+            }
         }
     }
 

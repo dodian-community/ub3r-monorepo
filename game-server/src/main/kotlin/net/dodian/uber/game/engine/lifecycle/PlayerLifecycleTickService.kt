@@ -4,7 +4,7 @@ import net.dodian.uber.game.api.content.ContentActions
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.entity.player.Player.positions
+import net.dodian.uber.game.model.entity.player.PlayerCore.positions
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.engine.util.Misc
@@ -163,11 +163,11 @@ object PlayerLifecycleTickService {
 
     @JvmStatic
     fun processEffectsPeriodicPersistence(player: Client, wallClockNow: Long) {
-        if (!shouldPersistActiveEffects(player.effects, player.contentRuntimeState.effectsPeriodicDirtyAtMillis, wallClockNow)) {
+        if (!shouldPersistActiveEffects(player.effects, player.contentRuntimeState.getEffectsPeriodicDirtyAtMillis(), wallClockNow)) {
             return
         }
         player.markSaveDirty(PlayerSaveSegment.EFFECTS.mask)
-        player.contentRuntimeState.effectsPeriodicDirtyAtMillis = wallClockNow
+        player.contentRuntimeState.setEffectsPeriodicDirtyAtMillis(wallClockNow)
     }
 
     private fun handlePrayerDrain(player: Client) {

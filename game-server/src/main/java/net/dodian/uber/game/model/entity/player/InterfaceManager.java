@@ -124,6 +124,11 @@ public class InterfaceManager {
             refreshItems = true;
         }
 
+        if (player.checkInv) {
+            player.checkInv = false;
+            player.resetItems(3214);
+        }
+
         if (player.isPartyInterface) {
             player.isPartyInterface = false;
             refreshItems = true;
