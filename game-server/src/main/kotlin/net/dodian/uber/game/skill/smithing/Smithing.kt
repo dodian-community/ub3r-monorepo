@@ -22,9 +22,11 @@ import net.dodian.uber.game.api.plugin.skills.skillPlugin
 import net.dodian.uber.game.engine.systems.skills.SkillPolicyMetrics
 import net.dodian.uber.game.engine.systems.skills.SkillPolicyResult
 import net.dodian.uber.game.engine.systems.skills.SkillPolicyRoute
+import net.dodian.uber.game.engine.systems.skills.SmithingSmeltingBridge
 import net.dodian.uber.game.skill.runtime.action.productionAction
 import net.dodian.uber.game.api.plugin.skills.skillPlugin
 import net.dodian.utilities.Range
+import net.dodian.uber.skills.smithing.SmeltingRecipe
 
 object Smithing {
     private const val SMELT_ANIMATION = 0x383
@@ -109,7 +111,7 @@ object Smithing {
         return true
     }
 
-    private fun missingRequirementMessage(player: Client, recipe: SmeltingRecipe, missing: OreRequirement): SendMessage {
+    private fun missingRequirementMessage(player: Client, recipe: SmeltingRecipe, missing: net.dodian.uber.skills.smithing.OreRequirement): SendMessage {
         val message = when (recipe.barId) {
             2349 -> "You need a tin and copper to do this!"
             2353 -> "You need a iron ore and 2 coal to do this!"
@@ -122,14 +124,14 @@ object Smithing {
     }
 
     @JvmStatic
-    fun openSmelting(client: Client) = SmithingInterface.open(client)
+    fun openSmelting(client: Client) = SmithingSmeltingBridge.open(client)
 
     @JvmStatic
-    fun startSmelting(client: Client, amount: Int) = SmithingInterface.startFromPending(client, amount)
+    fun startSmelting(client: Client, amount: Int) = SmithingSmeltingBridge.startFromPending(client, amount)
 
     @JvmStatic
     fun startSmeltingFromItem(client: Client, itemId: Int, amount: Int) =
-        SmithingInterface.startFromInterfaceItem(client, itemId, amount)
+        SmithingSmeltingBridge.startFromInterfaceItem(client, itemId, amount)
 
     @JvmStatic
     fun openSmithing(client: Client, barId: Int, anvilX: Int, anvilY: Int) =
@@ -151,4 +153,3 @@ object SmithingObjectComponents {
     val furnaceObjects = intArrayOf(2150, 2151, 2152, 2153, 3994, 2030, 16469, 29662)
     val smeltingInterfaceFurnaces = intArrayOf(3994, 2030, 16469, 29662)
 }
-

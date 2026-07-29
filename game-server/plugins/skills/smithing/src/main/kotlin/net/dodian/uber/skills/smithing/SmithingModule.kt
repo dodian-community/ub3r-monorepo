@@ -17,19 +17,10 @@ import net.dodian.uber.skills.api.SkillMultiConfig
 import net.dodian.uber.skills.api.SkillMultiEntry
 import net.dodian.uber.skills.api.SkillMultiLayout
 import net.dodian.uber.skills.api.skillRecipe
-import net.dodian.uber.game.api.plugin.runtime.TomlRecordReader
-
-data class SmeltingRecipeDef(
-    val barId: Int,
-    val level: Int,
-    val experience: Int,
-    val ores: List<Int>,
-    val oreAmounts: List<Int>,
-)
 
 object SmithingModule : SkillPlugin {
     val descriptor = SkillModuleDescriptor("skill.smithing", "Smithing")
-    val smeltingRecipes: List<SmeltingRecipeDef> by lazy { loadSmeltingRecipes() }
+    val smeltingRecipes: List<SmeltingRecipe> get() = SmeltingRegistry.recipes
 
     /** Verified live-cache furnace IDs. Do not resolve gameplay routes through RSCM. */
     val furnaceObjectIds = intArrayOf(2030, 3994, 16469)
@@ -59,18 +50,18 @@ object SmithingModule : SkillPlugin {
 
     private fun handleFurnace(interaction: SkillItemOnObjectInteraction): Boolean {
         val player = interaction.player
-        val recipe = smeltingRecipes.firstOrNull { it.ores.contains(interaction.itemId) } ?: return false
+        val recipe = smeltingRecipes.firstOrNull { recipe -> recipe.oreRequirements.any { it.itemId == interaction.itemId } } ?: return false
         smeltOnce(player, recipe)
         return true
     }
 
-    private fun smeltOnce(player: SkillPlayer, recipe: SmeltingRecipeDef): Boolean {
-        if (player.skills.current(Skill.SMITHING) < recipe.level) {
-            player.ui.message("You need level ${recipe.level} smithing to smelt this bar.")
+    private fun smeltOnce(player: SkillPlayer, recipe: SmeltingRecipe): Boolean {
+        if (player.skills.current(Skill.SMITHING) < recipe.levelRequired) {
+            player.ui.message("You need level ${recipe.levelRequired} smithing to smelt this bar.")
             return false
         }
         val committed = player.inventory.transaction {
-            recipe.ores.forEachIndexed { index, oreId -> remove(oreId, recipe.oreAmounts.getOrElse(index) { 1 }) }
+            recipe.oreRequirements.forEach { requirement -> remove(requirement.itemId, requirement.amount) }
             add(recipe.barId, 1)
         }
         if (!committed) {
@@ -86,17 +77,17 @@ object SmithingModule : SkillPlugin {
     private fun openSmeltingPicker(interaction: SkillObjectInteraction): Boolean {
         val player = interaction.player
         val candidates = smeltingRecipes
-            .filter { recipe -> recipe.ores.any { player.inventory.amount(it) > 0 } }
+            .filter { recipe -> recipe.oreRequirements.any { player.inventory.amount(it.itemId) > 0 } }
             .take(3)
         if (candidates.isEmpty()) {
             player.ui.message("You don't have any ore to smelt.")
             return true
         }
-        fun recipeKey(recipe: SmeltingRecipeDef) = "smithing.recipe.${recipe.barId}"
+        fun recipeKey(recipe: SmeltingRecipe) = "smithing.recipe.${recipe.barId}"
         val entries = candidates.map { recipe ->
             val skillRecipe = skillRecipe(recipeKey(recipe), recipe.barId) {
-                recipe.ores.forEachIndexed { index, oreId -> material(oreId, recipe.oreAmounts.getOrElse(index) { 1 }) }
-                requirement(recipe.level)
+                recipe.oreRequirements.forEach { requirement -> material(requirement.itemId, requirement.amount) }
+                requirement(recipe.levelRequired)
                 experience(recipe.experience)
             }
             SkillMultiEntry(skillRecipe)
@@ -118,23 +109,10 @@ object SmithingModule : SkillPlugin {
     private fun handleAnvil(interaction: SkillItemOnObjectInteraction): Boolean {
         val player = interaction.player
         val recipe = smeltingRecipes.firstOrNull { it.barId == interaction.itemId } ?: return false
-        if (player.skills.current(Skill.SMITHING) < recipe.level) {
-            player.ui.message("You need level ${recipe.level} smithing to smith this bar.")
+        if (player.skills.current(Skill.SMITHING) < recipe.levelRequired) {
+            player.ui.message("You need level ${recipe.levelRequired} smithing to smith this bar.")
             return true
         }
         return true
     }
-
-    private fun loadSmeltingRecipes(): List<SmeltingRecipeDef> =
-        TomlRecordReader.readRecords("smithing/recipes.toml", "smelt").map { row ->
-            val oresStr = row.getValue("ores").removeSurrounding("[", "]").split(",")
-            val oreAmountsStr = row.getValue("ore_amounts").removeSurrounding("[", "]").split(",")
-            SmeltingRecipeDef(
-                barId = row.getValue("bar_id").toInt(),
-                level = row.getValue("level").toInt(),
-                experience = row.getValue("experience").toInt(),
-                ores = oresStr.map { it.trim().toInt() },
-                oreAmounts = oreAmountsStr.map { it.trim().toInt() },
-            )
-        }
 }

@@ -6,6 +6,7 @@ import net.dodian.uber.game.skill.smithing.SmithingInterface
 import net.dodian.uber.game.skill.smithing.Smithing
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.engine.systems.skills.SkillInteractionDispatcher
+import net.dodian.uber.game.engine.systems.skills.SmithingSmeltingBridge
 
 object SkillingInterfaceItemService {
     @JvmStatic
@@ -18,8 +19,8 @@ object SkillingInterfaceItemService {
     ): Boolean {
         if (SkillInteractionDispatcher.tryHandleItemGrid(client, interfaceId, itemId, slot, amount)) return true
         return when {
-            SmithingInterface.isSmeltingInterfaceFrame(interfaceId) -> {
-                Smithing.startSmeltingFromItem(client, itemId, amount)
+            SmithingSmeltingBridge.isFurnaceFrame(interfaceId) -> {
+                SmithingSmeltingBridge.startFromInterfaceItem(client, itemId, amount)
                 true
             }
             interfaceId in 1119..1123 -> {

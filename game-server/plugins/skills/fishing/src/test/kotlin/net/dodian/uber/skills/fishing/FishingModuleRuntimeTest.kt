@@ -11,8 +11,9 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
-private const val NET_SPOT_NPC_ID = 1514
-private const val ROD_SPOT_NPC_ID = 1506
+private const val NET_SPOT_NPC_ID = 1518
+private const val ROD_SPOT_NPC_ID = 1526
+private const val CAGE_SPOT_NPC_ID = 1519
 private const val SHRIMP = 317
 private const val SMALL_NET = 303
 
@@ -115,9 +116,9 @@ class FishingModuleRuntimeTest {
     }
 
     @Test
-    fun `all eight methods use revision 218 fishing spot actions`() {
+    fun `all eight methods use Tarnish client fishing spot actions`() {
         assertEquals(
-            setOf(1514 to 1, 1506 to 1, 1510 to 1, 1510 to 3, 1511 to 1, 1511 to 3, 1520 to 1, 1520 to 3),
+            setOf(NET_SPOT_NPC_ID to 1, ROD_SPOT_NPC_ID to 1, CAGE_SPOT_NPC_ID to 1, CAGE_SPOT_NPC_ID to 3, 1511 to 1, 1511 to 3, 1520 to 1, 1520 to 3),
             FishingModule.spots.map { it.npcId to it.clickOption }.toSet(),
         )
         assertTrue(FishingModule.spots.none { it.clickOption == 2 })

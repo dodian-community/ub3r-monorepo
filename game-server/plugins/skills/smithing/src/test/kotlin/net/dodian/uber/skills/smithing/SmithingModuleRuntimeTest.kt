@@ -27,7 +27,9 @@ class SmithingModuleRuntimeTest {
         assertEquals("You fail to refine the iron", iron.failureMessage)
         assertEquals(8, SmeltingRegistry.recipes.size)
         assertEquals(FurnaceButtonMapping(15147, 2349, 1), SmeltingRegistry.mapping(15147))
+        assertEquals(FurnaceButtonMapping(2414, 2349, 0), SmeltingRegistry.mapping(2414))
         assertTrue(SmeltingRegistry.isFurnaceFrame(2405))
+        assertTrue(SmeltingRegistry.isFurnaceButton(2414))
     }
 
     @Test

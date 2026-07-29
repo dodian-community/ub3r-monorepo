@@ -13,6 +13,7 @@ import net.dodian.uber.game.skill.herblore.HerbloreData
 import net.dodian.uber.skills.mining.MiningModule
 import net.dodian.uber.game.skill.smithing.SmithingFrameDefinitions
 import net.dodian.uber.game.skill.smithing.SmithingData
+import net.dodian.uber.skills.smithing.SmeltingRegistry
 import net.dodian.uber.game.skill.thieving.Thieving
 import net.dodian.uber.skills.woodcutting.WoodcuttingModule
 
@@ -87,7 +88,7 @@ object SkillTestItemCatalog {
     private fun smithingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
         addAll(items, 2347)
-        SmithingData.smeltingRecipes.forEach { addIfValid(items, it.barId) }
+        SmeltingRegistry.recipes.forEach { addIfValid(items, it.barId) }
         for (row in SmithingFrameDefinitions.smithingFrame) {
             for (entry in row) {
                 addIfValid(items, entry.itemId)

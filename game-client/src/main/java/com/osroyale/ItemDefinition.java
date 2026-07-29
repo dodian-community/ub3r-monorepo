@@ -939,7 +939,7 @@ public final class ItemDefinition implements RSItemComposition {
         return flag;
     }
 
-    Model method196(int i) {
+    public Model method196(int i) {
         int j = maleWield;
         int k = maleWield2;
         int l = maleModel2;

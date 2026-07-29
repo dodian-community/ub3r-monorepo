@@ -7,11 +7,11 @@ import net.dodian.uber.skills.cooking.CookingModule
 import net.dodian.uber.skills.fishing.FishingModule
 import net.dodian.uber.game.skill.crafting.Crafting
 import net.dodian.uber.game.skill.prayer.Prayer
-import net.dodian.uber.game.skill.smithing.Smithing
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.skill.smithing.SmithingInterface
 import net.dodian.uber.game.engine.systems.combat.CombatPreemptionPolicy
+import net.dodian.uber.game.engine.systems.skills.SmithingSmeltingBridge
 import net.dodian.uber.skills.mining.MiningModule
 import net.dodian.uber.skills.woodcutting.WoodcuttingModule
 
@@ -51,7 +51,7 @@ object PlayerActionCancellationService {
         player: Client,
         fullResetAnimation: Boolean,
     ) {
-        Smithing.stopFromReset(player, fullResetAnimation)
+        SmithingSmeltingBridge.clearSelection(player)
         Prayer.stopFromReset(player, fullResetAnimation)
         Crafting.stopFromReset(player, fullResetAnimation)
         FishingModule.stopAction(player.asSkillPlayer(), ActionStopReason.USER_INTERRUPT)

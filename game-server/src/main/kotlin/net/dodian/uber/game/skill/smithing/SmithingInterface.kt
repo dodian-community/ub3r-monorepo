@@ -3,76 +3,14 @@ package net.dodian.uber.game.skill.smithing
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
-import net.dodian.uber.game.netty.listener.out.SendFrame27
 import net.dodian.uber.game.netty.listener.out.SetSmithing
-import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason
 import net.dodian.uber.skills.smithing.ActiveSmithingSelection
-import net.dodian.uber.game.api.content.ContentActions
 import org.slf4j.LoggerFactory
 
 object SmithingInterface {
     private val logger = LoggerFactory.getLogger(SmithingInterface::class.java)
     private val frameIds = intArrayOf(1119, 1120, 1121, 1122, 1123)
     private val possibleBars = intArrayOf(2349, 2351, 2353, 2359, 2361, 2363)
-    private val furnaceFrameIds = SmithingData.frameIds()
-
-    @JvmStatic
-    fun open(client: Client) {
-        SmithingData.smeltingRecipes.forEachIndexed { index, recipe ->
-            client.sendInterfaceModel(furnaceFrameIds[index], 150, recipe.barId)
-        }
-        client.sendChatboxInterface(2400)
-    }
-
-    @JvmStatic
-    fun isSmeltingInterfaceFrame(interfaceId: Int): Boolean = furnaceFrameIds.contains(interfaceId)
-
-    @JvmStatic
-    fun startFromMapping(client: Client, mapping: FurnaceButtonMapping): Boolean {
-        val recipe = SmithingData.findSmeltingRecipe(mapping.barId) ?: return false
-        client.pendingSmeltingBarId = recipe.barId
-        return if (mapping.amount <= 0) {
-            promptPendingX(client)
-        } else {
-            startSmelting(client, SmeltingRequest(recipe, mapping.amount))
-        }
-    }
-
-    @JvmStatic
-    fun startFromInterfaceItem(client: Client, barId: Int, amount: Int): Boolean {
-        val recipe = SmithingData.findSmeltingRecipe(barId) ?: return false
-        client.pendingSmeltingBarId = recipe.barId
-        return startSmelting(client, SmeltingRequest(recipe, amount))
-    }
-
-    @JvmStatic
-    fun selectPendingRecipe(client: Client, barId: Int): Boolean {
-        val recipe = SmithingData.findSmeltingRecipe(barId) ?: return false
-        client.pendingSmeltingBarId = recipe.barId
-        return true
-    }
-
-    @JvmStatic
-    fun selectPendingRecipeFromOre(client: Client, itemId: Int): Boolean {
-        val recipe = SmithingData.findSmeltingRecipeByOre(itemId) ?: return false
-        client.pendingSmeltingBarId = recipe.barId
-        return true
-    }
-
-    @JvmStatic
-    fun startFromPending(client: Client, amount: Int): Boolean {
-        val recipe = SmithingData.findSmeltingRecipe(client.pendingSmeltingBarId) ?: return false
-        return startSmelting(client, SmeltingRequest(recipe, amount))
-    }
-
-    @JvmStatic
-    fun promptPendingX(client: Client): Boolean {
-        if (SmithingData.findSmeltingRecipe(client.pendingSmeltingBarId) == null) return false
-        client.enterAmountId = 2
-        client.send(SendFrame27())
-        return true
-    }
-
     @JvmStatic
     fun resolveTierId(barId: Int): Int = SmithingData.findSmithingTierByBar(barId)?.typeId ?: -1
 
@@ -220,25 +158,6 @@ object SmithingInterface {
         val tier: SmithingTier,
         val product: SmithingProduct,
     )
-
-    private fun startSmelting(client: Client, request: SmeltingRequest): Boolean {
-        if (client.getLevel(Skill.SMITHING) < request.recipe.levelRequired) {
-            client.sendMessage("You need level ${request.recipe.levelRequired} smithing to do this!")
-            return true
-        }
-        client.pendingSmeltingBarId = request.recipe.barId
-        client.send(RemoveInterfaces())
-        ContentActions.cancel(
-            client,
-            PlayerActionCancelReason.NEW_ACTION,
-            fullResetAnimation = false,
-            closeInterfaces = false,
-            resetCompatibilityState = false,
-        )
-        client.smeltingSelection = SmeltingSelection(request.recipe, request.amount.coerceAtLeast(1))
-        Smithing.startSmelting(client)
-        return true
-    }
 
     private fun sendSmithingUi(client: Client, tier: SmithingTier) {
         clearSpecialLines(client)

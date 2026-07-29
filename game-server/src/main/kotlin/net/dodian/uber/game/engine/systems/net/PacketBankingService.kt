@@ -4,7 +4,7 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.engine.config.FeatureStateService
 import net.dodian.uber.game.activity.partyroom.PartyRoomBalloons
 import net.dodian.uber.game.skill.herblore.Herblore
-import net.dodian.uber.game.skill.smithing.SmithingInterface
+import net.dodian.uber.game.engine.systems.skills.SmithingSmeltingBridge
 import net.dodian.uber.game.shop.ShopRulesService
 import net.dodian.uber.game.economy.PriceCheckerService
 import net.dodian.uber.game.economy.ShopTransactionService
@@ -423,7 +423,7 @@ object PacketBankingService {
             interfaceId == 3900 ||
             interfaceId == 3823 ||
             interfaceId in 4233..4257 ||
-            SmithingInterface.isSmeltingInterfaceFrame(interfaceId)
+            SmithingSmeltingBridge.isFurnaceFrame(interfaceId)
         ) {
             client.send(SendFrame27())
         }
@@ -465,7 +465,7 @@ object PacketBankingService {
                 }
                 if (client.enterAmountId == 2) {
                     client.send(RemoveInterfaces())
-                    SmithingInterface.startFromPending(client, enteredAmount)
+                    SmithingSmeltingBridge.startFromPending(client, enteredAmount)
                     return
                 }
                 if (client.enterAmountId == net.dodian.uber.game.engine.systems.skills.SkillMultiButtonService.ENTER_AMOUNT_SKILL_MULTI) {
@@ -560,8 +560,8 @@ object PacketBankingService {
                     client.send(InventoryInterface(3824, 3822))
                 }
 
-                SmithingInterface.isSmeltingInterfaceFrame(client.XinterfaceID) -> {
-                    SmithingInterface.startFromInterfaceItem(client, client.XremoveID, enteredAmount)
+                SmithingSmeltingBridge.isFurnaceFrame(client.XinterfaceID) -> {
+                    SmithingSmeltingBridge.startFromInterfaceItem(client, client.XremoveID, enteredAmount)
                 }
 
                 SkillingInterfaceItemService.handleContainerAmount(

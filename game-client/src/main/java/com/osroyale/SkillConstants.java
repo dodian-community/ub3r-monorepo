@@ -5,14 +5,14 @@ package com.osroyale;
  *
  * @author Daniel
  */
-final class SkillConstants {
+public final class SkillConstants {
 
 	/**  The total skill count. */
-	static final int SKILL_COUNT = 23;
+	public static final int SKILL_COUNT = 23;
 
 	/** An array of skill names.  */
 
-	static final String[] SKILL_NAMES = {
+	public static final String[] SKILL_NAMES = {
 	    /* 00 */ "Attack",
         /* 01 */ "Defence",
         /* 02 */ "Strength",

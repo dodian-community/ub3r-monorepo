@@ -6858,7 +6858,7 @@ public class Client extends GameEngine
         }
     }
 
-    private void resetLogout() {
+    public void resetLogout() {
         localPlayer.saveProfile(this);
         setGameState(GameState.LOGIN_SCREEN);
         Settings.save();
@@ -12309,6 +12309,10 @@ public class Client extends GameEngine
                 loginMessage2 = "Please try using a different world.";
                 return;
             }
+        } catch (java.net.ConnectException _ex) {
+            loginMessage1 = "Error connecting to server.";
+            loginMessage2 = "Server is currently offline.";
+            return;
         } catch (IOException _ex) {
             _ex.printStackTrace();
             loginMessage1 = "";

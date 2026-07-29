@@ -1,7 +1,7 @@
 package net.dodian.uber.game.netty.listener.in;
 
 import io.netty.buffer.ByteBuf;
-import net.dodian.uber.game.skill.smithing.SmithingInterface;
+import net.dodian.uber.game.engine.systems.skills.SmithingSmeltingBridge;
 import net.dodian.uber.game.model.entity.player.Client;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.codec.ByteOrder;
@@ -36,7 +36,7 @@ public class BankX1Listener implements PacketListener {
             logger.trace("BankX1 slot={} interface={} item={} player={}", slot, interfaceId, itemId, client.getPlayerName());
         }
 
-        if (SmithingInterface.isSmeltingInterfaceFrame(interfaceId)) {
+        if (SmithingSmeltingBridge.isFurnaceFrame(interfaceId)) {
             logger.warn("Smelting interface item click amount=X-prompt interfaceId={} itemId={} slot={} player={}",
                     interfaceId, itemId, slot, client.getPlayerName());
         }

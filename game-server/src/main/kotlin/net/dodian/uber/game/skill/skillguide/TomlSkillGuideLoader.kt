@@ -6,8 +6,6 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.skill.herblore.HerbloreData
 import net.dodian.uber.game.skill.smithing.SmithingFrameDefinitions
-import net.dodian.uber.game.engine.config.ServerPaths
-import java.nio.file.Files
 import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger(TomlSkillGuideLoader::class.java)
@@ -47,63 +45,57 @@ object TomlSkillGuideLoader {
 
     @JvmStatic
     fun load(): Map<Int, SkillGuideDefinition> {
-        val dir = ServerPaths.definition("skill_guides")
-        if (!Files.isDirectory(dir)) {
-            logger.warn("Skill guides definitions directory not found at {}", dir)
-            return emptyMap()
-        }
-
         val definitions = mutableMapOf<Int, SkillGuideDefinition>()
 
-        Files.list(dir).use { stream ->
-            stream.filter { Files.isRegularFile(it) && it.toString().endsWith(".toml") }
-                .forEach { path ->
-                    try {
-                        val toml = mapper.readValue(path.toFile(), TomlSkillGuide::class.java)
-                        val skill = Skill.values().firstOrNull { it.name.lowercase() == toml.skill.lowercase() }
-                        if (skill == null) {
-                            logger.error("Invalid skill name '{}' in guide file: {}", toml.skill, path.fileName)
-                            return@forEach
-                        }
+        for (skill in Skill.values()) {
+            val resourceName = "skillguide/${skill.name.lowercase()}.toml"
+            val stream = TomlSkillGuideLoader::class.java.classLoader.getResourceAsStream(resourceName)
+            if (stream == null) {
+                logger.warn("Skill guide resource not found: {}", resourceName)
+                continue
+            }
 
-                        val skillId = skill.id
-                        val tabLabels = toml.tab.map { SkillGuideTabLabel(it.component, it.label) }
-                        val layout = SkillGuideLayout(
-                            showComponents = toml.layout.show.toIntArray(),
-                            hideComponents = toml.layout.hide.toIntArray(),
-                        )
+            try {
+                stream.use { input ->
+                    val toml = mapper.readValue(input, TomlSkillGuide::class.java)
+                    val skillId = skill.id
+                    val tabLabels = toml.tab.map { SkillGuideTabLabel(it.component, it.label) }
+                    val layout = SkillGuideLayout(
+                        showComponents = toml.layout.show.toIntArray(),
+                        hideComponents = toml.layout.hide.toIntArray(),
+                    )
 
-                        // Map tabs to pages/providers
-                        val pagesByTab = toml.page.associateBy { it.tab }
+                    // Map tabs to pages/providers
+                    val pagesByTab = toml.page.associateBy { it.tab }
 
-                        val pageProvider: (Client, Int) -> SkillGuidePage? = { client, child ->
-                            val pageConfig = pagesByTab[child]
-                            when {
-                                pageConfig == null -> SkillGuidePage()
-                                pageConfig.dynamic_source != null -> loadDynamicPage(client, pageConfig.dynamic_source)
-                                else -> {
-                                    SkillGuidePage(
-                                        entries = pageConfig.entry.map { entry ->
-                                            SkillGuideEntry(
-                                                text = entry.name,
-                                                levelText = entry.level,
-                                                itemId = entry.item,
-                                                itemAmount = entry.amount
-                                            )
-                                        }
-                                    )
-                                }
+                    val pageProvider: (Client, Int) -> SkillGuidePage? = { client, child ->
+                        val pageConfig = pagesByTab[child]
+                        when {
+                            pageConfig == null -> SkillGuidePage()
+                            pageConfig.dynamic_source != null -> loadDynamicPage(client, pageConfig.dynamic_source)
+                            else -> {
+                                SkillGuidePage(
+                                    entries = pageConfig.entry.map { entry ->
+                                        SkillGuideEntry(
+                                            text = entry.name,
+                                            levelText = entry.level,
+                                            itemId = entry.item,
+                                            itemAmount = entry.amount
+                                        )
+                                    }
+                                )
                             }
                         }
-
-                        definitions[skillId] = SkillGuideDefinition(skillId, tabLabels, layout, pageProvider)
-                    } catch (e: Exception) {
-                        logger.error("Failed to load skill guide from {}: {}", path, e.message, e)
                     }
+
+                    definitions[skillId] = SkillGuideDefinition(skillId, tabLabels, layout, pageProvider)
                 }
+            } catch (e: Exception) {
+                logger.error("Failed to load skill guide resource {}: {}", resourceName, e.message, e)
+            }
         }
 
-        logger.info("Loaded {} skill guide definitions from TOML.", definitions.size)
+        logger.info("Loaded {} skill guide definitions from classpath resources.", definitions.size)
         return definitions
     }
 

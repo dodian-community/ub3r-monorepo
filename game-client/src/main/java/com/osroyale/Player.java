@@ -516,7 +516,15 @@ public final class Player extends Entity implements RSPlayer {
         if (!Settings.REMEMBER_ME) {
             return;
         }
-        ProfileManager.add(new Profile(client.myUsername, client.myPassword, gender, appearanceModels, appearanceColors));
+        int[] skills = new int[23];
+        if (client.maxStats != null && client.maxStats.length >= 23) {
+            System.arraycopy(client.maxStats, 0, skills, 0, 23);
+        } else {
+            java.util.Arrays.fill(skills, 1);
+            skills[3] = 10;
+        }
+        long lastLogin = System.currentTimeMillis();
+        ProfileManager.add(new Profile(client.myUsername, client.myPassword, gender, appearanceModels, appearanceColors, skills, lastLogin));
     }
 
     @Override

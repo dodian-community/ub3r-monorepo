@@ -1,8 +1,8 @@
 package net.dodian.uber.game.engine.systems.net
 
-import net.dodian.uber.game.skill.smithing.SmithingData
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.engine.systems.skills.SkillMultiButtonService
+import net.dodian.uber.game.engine.systems.skills.SmithingSmeltingBridge
 
 object PacketButtonService {
 
@@ -29,7 +29,7 @@ object PacketButtonService {
             client.actionButtonId = actionButton
         }
         val preserveSmeltingSelection = client.activeInterfaceId == 2400 &&
-            SmithingData.isSmeltingInterfaceButton(actionButton)
+            SmithingSmeltingBridge.isFurnaceButton(actionButton)
         val preserveSmithingSelection = client.activeInterfaceId in 1119..1123
         val preserveCombatConfig = actionButton in combatConfigButtons
         val preserveSkillMulti = SkillMultiButtonService.isSelectionButton(actionButton)

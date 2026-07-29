@@ -7,7 +7,7 @@ schema_version = 1
 
 [[spot]]
 index = 0
-npcId = 1514
+npcId = 1518
 clickOption = 1
 fishItemId = 317
 animationId = 621
@@ -18,7 +18,7 @@ experience = 110
 
 [[spot]]
 index = 1
-npcId = 1506
+npcId = 1526
 clickOption = 1
 fishItemId = 335
 animationId = 622
@@ -33,7 +33,7 @@ bigCatchBonusXp = 100
 
 [[spot]]
 index = 2
-npcId = 1510
+npcId = 1519
 clickOption = 1
 fishItemId = 377
 animationId = 619
@@ -44,7 +44,7 @@ experience = 440
 
 [[spot]]
 index = 3
-npcId = 1510
+npcId = 1519
 clickOption = 3
 fishItemId = 371
 animationId = 618

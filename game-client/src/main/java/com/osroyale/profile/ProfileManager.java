@@ -24,7 +24,7 @@ public class ProfileManager {
 
     private static final Logger logger = LoggerFactory.getLogger(ProfileManager.class);
 
-    public static final int MAX_PROFILES = 3;
+    public static final int MAX_PROFILES = 10;
     public static final List<Profile> profiles = Collections.synchronizedList(new ArrayList<>(MAX_PROFILES));
 
     static {
@@ -91,8 +91,15 @@ public class ProfileManager {
                 for (int i = 0; i < profile.getRecolours().length; i++) {
                     output.writeShort(profile.getRecolours()[i]);
                 }
+                output.writeLong(profile.getLastLogin());
+                output.writeByte(profile.getSkillLevels().length);
+                for (int i = 0; i < profile.getSkillLevels().length; i++) {
+                    output.writeShort(profile.getSkillLevels()[i]);
+                }
+
                 if(!profile.getUsername().isEmpty() && Client.loggedIn) {
                     saveImage(createImageFromPixels(profile.convertModelToSprite(profile.getModel()).getPixels(), 50, 50), PROFILES_DIR + "/" + profile.getUsername() + ".png");
+                    saveImage(createImageFromPixels(profile.convertBodyModelToSprite(profile.getBodyModel()).getPixels(), 100, 150), PROFILES_DIR + "/" + profile.getUsername() + "_body.png");
                 }
             }
         } catch (IOException e) {
@@ -123,7 +130,25 @@ public class ProfileManager {
                 for (int j = 0; j < recolours.length; j++) {
                     recolours[j] = input.readShort();
                 }
-                profiles.add(i, new Profile(username, password, gender, equipment, recolours));
+
+                long lastLogin = 0L;
+                int[] skillLevels = null;
+                try {
+                    lastLogin = input.readLong();
+                    int skillLen = input.readByte();
+                    skillLevels = new int[skillLen];
+                    for (int j = 0; j < skillLen; j++) {
+                        skillLevels[j] = input.readShort();
+                    }
+                } catch (EOFException e) {
+                    // Backwards compatibility fallback
+                }
+
+                if (skillLevels != null) {
+                    profiles.add(i, new Profile(username, password, gender, equipment, recolours, skillLevels, lastLogin));
+                } else {
+                    profiles.add(i, new Profile(username, password, gender, equipment, recolours));
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();

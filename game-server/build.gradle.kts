@@ -225,6 +225,15 @@ tasks.register<JavaExec>("dumpInterfaceDefs") {
     args = listOf("data/cache")
 }
 
+tasks.register<JavaExec>("runSkillTargetAudit") {
+    group = "tools"
+    description = "Audit active skill object/NPC bindings against committed rev218 mappings and an optional Tarnish root"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("net.dodian.uber.game.engine.systems.audit.SkillTargetCompatibilityAuditMain")
+    val tarnishRoot = providers.gradleProperty("tarnishRoot")
+    args = tarnishRoot.map { listOf(it) }.getOrElse(emptyList())
+}
+
 tasks.register<JavaExec>("generateRscm") {
     group = "tools"
     description = "Generate developer-reference mappings from a pinned OSRS dump"

@@ -30,6 +30,12 @@ class PrayerModuleRuntimeTest {
     }
 
     @Test
+    fun `tarnish only chaos altar is not registered as local content`() {
+        assertTrue(PrayerModule.definition.objectBindings.none { 411 in it.objectIds })
+        assertTrue(PrayerModule.definition.itemOnObjectBindings.none { 411 in it.objectIds })
+    }
+
+    @Test
     fun `prayer tab buttons are owned by the prayer plugin`() {
         val player = FakeSkillPlayer()
         val binding = PrayerModule.definition.buttonBindings.single { SkillPrayer.PIETY.buttonId in it.rawButtonIds }

@@ -144,6 +144,54 @@ public class MainScreen extends LoginComponent {
 				titlebuttonSprite.drawARGBSprite(btn2X, btnY, alpha);
 				client.boldText.drawCenteredText(0xFFFFFF, btn2X + (btnW / 2), "Cancel", btnY + 25, true);
 			}
+
+			// Draw saved accounts box on the right
+			int accountsBoxX = 580;
+			int accountsBoxY = 180;
+			int accountsBoxW = 165;
+			int accountsBoxH = 190;
+
+			// Draw box background and border
+			Rasterizer2D.fillRectangle(accountsBoxX, accountsBoxY, accountsBoxW, accountsBoxH, 0x1A2530, 200);
+			Rasterizer2D.drawRectangle(accountsBoxX, accountsBoxY, accountsBoxW, accountsBoxH, 0x475E75);
+
+			client.boldText.drawCenteredText(0xFFFF00, accountsBoxX + (accountsBoxW / 2), "Saved Accounts", accountsBoxY + 20, true);
+
+			int drawY = accountsBoxY + 30;
+			int count = 0;
+			if (com.osroyale.profile.ProfileManager.profiles != null) {
+				for (int i = 0; i < com.osroyale.profile.ProfileManager.profiles.size(); i++) {
+					com.osroyale.profile.Profile p = com.osroyale.profile.ProfileManager.profiles.get(i);
+					if (p == null || p.emptySlot()) {
+						continue;
+					}
+					// Only show up to 3 accounts in this mini sidebar to fit the box height
+					if (count >= 3) {
+						break;
+					}
+
+					// Draw profile head if available
+					p.drawProfileHead(accountsBoxX + 10, drawY + 5);
+
+					// Draw username label
+					String label = Utility.formatName(p.getUsername());
+					if (label.length() > 10) {
+						label = label.substring(0, 8) + "...";
+					}
+					client.regularText.drawText(true, accountsBoxX + 65, 0xFFFFFF, label, drawY + 30);
+
+					// Draw a red delete button
+					client.boldText.drawText(true, accountsBoxX + accountsBoxW - 20, 0xFF0000, "X", drawY + 30);
+
+					drawY += 50;
+					count++;
+				}
+			}
+
+			if (count == 0) {
+				client.regularText.drawCenteredText(0x888888, accountsBoxX + (accountsBoxW / 2), "No accounts saved yet", accountsBoxY + 80, true);
+				client.regularText.drawCenteredText(0x888888, accountsBoxX + (accountsBoxW / 2), "Log in once to save!", accountsBoxY + 100, true);
+			}
 		}
 	}
 
@@ -233,6 +281,44 @@ public class MainScreen extends LoginComponent {
 				loginMode.selectExistingAccount();
 				accountCreationStatus = "";
 				loginScreenState = 0;
+			}
+
+			// Saved Accounts click handling
+			int accountsBoxX = 580;
+			int accountsBoxY = 180;
+			int accountsBoxW = 165;
+
+			int clickY = accountsBoxY + 30;
+			int activeCount = 0;
+			if (com.osroyale.profile.ProfileManager.profiles != null) {
+				for (int i = 0; i < com.osroyale.profile.ProfileManager.profiles.size(); i++) {
+					com.osroyale.profile.Profile p = com.osroyale.profile.ProfileManager.profiles.get(i);
+					if (p == null || p.emptySlot()) {
+						continue;
+					}
+					if (activeCount >= 3) {
+						break;
+					}
+
+					// Click on delete button X
+					if (MouseHandler.clickMode3 == 1 && client.mouseInRegion(accountsBoxX + accountsBoxW - 25, clickY + 10, accountsBoxX + accountsBoxW - 5, clickY + 40)) {
+						com.osroyale.profile.ProfileManager.delete(p);
+						MouseHandler.clickMode3 = 0; // Consume click
+						return;
+					}
+
+					// Click on account row (to auto-fill and login immediately)
+					if (MouseHandler.clickMode3 == 1 && client.mouseInRegion(accountsBoxX + 5, clickY + 5, accountsBoxX + accountsBoxW - 30, clickY + 45)) {
+						client.myUsername = p.getUsername();
+						client.myPassword = p.getPassword();
+						client.attemptLogin(client.myUsername, client.myPassword, false);
+						MouseHandler.clickMode3 = 0; // Consume click
+						return;
+					}
+
+					clickY += 50;
+					activeCount++;
+				}
 			}
 
 			/* Writing */
