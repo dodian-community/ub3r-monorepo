@@ -270,6 +270,7 @@ interface SkillVitals {
     fun isPrayerActive(prayer: SkillPrayer): Boolean
     /** Toggles a prayer while preserving the engine's level, drain, and UI rules. */
     fun togglePrayer(prayer: SkillPrayer)
+    fun deactivatePrayer(prayer: SkillPrayer)
     fun setPrayer(amount: Int)
     fun damage(amount: Int)
     fun restorePrayer(amount: Int)

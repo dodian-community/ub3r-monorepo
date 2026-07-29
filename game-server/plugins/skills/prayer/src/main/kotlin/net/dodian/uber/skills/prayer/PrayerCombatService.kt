@@ -8,6 +8,9 @@ import net.dodian.uber.game.api.plugin.skills.SkillPrayer
  * active-prayer view; prayer rules remain with the Prayer skill module.
  */
 object PrayerCombatService {
+    fun disableProtectionPrayers(player: SkillPlayer) {
+        PROTECTION_PRAYERS.forEach(player.vitals::deactivatePrayer)
+    }
     /** Legacy prayer-level contribution to the damage-neglect proc chance. */
     @JvmStatic fun damageNeglectChance(prayerLevel: Int): Double = ((prayerLevel + 1) / 8.0) / 100.0 + 0.025
 
@@ -38,6 +41,8 @@ object PrayerCombatService {
 
     fun protectsFromMelee(player: SkillPlayer): Boolean =
         player.vitals.isPrayerActive(SkillPrayer.PROTECT_MELEE)
+
+    private val PROTECTION_PRAYERS = listOf(SkillPrayer.PROTECT_MELEE, SkillPrayer.PROTECT_RANGE, SkillPrayer.PROTECT_MAGIC)
 
     fun magicDamageBonus(player: SkillPlayer): Double = when {
         player.vitals.isPrayerActive(SkillPrayer.MYSTIC_WILL) -> 0.05

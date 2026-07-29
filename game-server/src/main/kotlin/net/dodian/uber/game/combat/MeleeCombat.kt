@@ -11,6 +11,8 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
 import net.dodian.uber.skills.prayer.PrayerCombatService
 import net.dodian.uber.skills.agility.AgilityCombatService
+import net.dodian.uber.skills.woodcutting.WoodcuttingCombatService
+import net.dodian.uber.skills.mining.MiningCombatService
 import net.dodian.uber.game.engine.systems.animation.PlayerAnimationService
 import net.dodian.uber.game.engine.systems.combat.CombatAttackResult
 import net.dodian.uber.game.engine.systems.combat.CombatLogoutLockService
@@ -515,13 +517,7 @@ private fun Client.handleDragonScimitarSpec(crit: Boolean): Boolean {
         val player = resolveCombatTargetPlayer(target.slot) ?: return false
         if (hit >= player.currentHealth) hit = player.currentHealth
         player.dealDamage(this, hit, if (crit) Entity.hitType.CRIT else Entity.hitType.STANDARD)
-        val pm = player.prayerManager
-        if (pm.isPrayerOn(net.dodian.uber.game.skill.prayer.PrayerManager.Prayer.PROTECT_MELEE))
-            pm.togglePrayer(net.dodian.uber.game.skill.prayer.PrayerManager.Prayer.PROTECT_MELEE)
-        if (pm.isPrayerOn(net.dodian.uber.game.skill.prayer.PrayerManager.Prayer.PROTECT_RANGE))
-            pm.togglePrayer(net.dodian.uber.game.skill.prayer.PrayerManager.Prayer.PROTECT_RANGE)
-        if (pm.isPrayerOn(net.dodian.uber.game.skill.prayer.PrayerManager.Prayer.PROTECT_MAGIC))
-            pm.togglePrayer(net.dodian.uber.game.skill.prayer.PrayerManager.Prayer.PROTECT_MAGIC)
+        PrayerCombatService.disableProtectionPrayers(player.asSkillPlayer())
     }
     return true
 }
@@ -647,7 +643,7 @@ private fun Client.handleStaffOfDeadSpec(crit: Boolean): Boolean {
 private fun Client.handleDragonAxeSpec(crit: Boolean): Boolean {
     callGfxMask(479, 100)
     PlayerAnimationService.requestAttack(this, 2876)
-    setLevel((getLevel(Skill.WOODCUTTING) + 3), Skill.WOODCUTTING)
+    setLevel(WoodcuttingCombatService.dragonAxeBoost(getLevel(Skill.WOODCUTTING)), Skill.WOODCUTTING)
     send(SendMessage("Your woodcutting level has been boosted!"))
     if (target is Npc) {
         val npc = Server.npcManager.getNpc(target.slot)
@@ -663,7 +659,7 @@ private fun Client.handleDragonAxeSpec(crit: Boolean): Boolean {
 
 private fun Client.handleDragonPickaxeSpec(crit: Boolean): Boolean {
     PlayerAnimationService.requestAttack(this, 7138)
-    setLevel((getLevel(Skill.MINING) + 3), Skill.MINING)
+    setLevel(MiningCombatService.dragonPickaxeBoost(getLevel(Skill.MINING)), Skill.MINING)
     send(SendMessage("Your mining level has been boosted!"))
     if (target is Npc) {
         val npc = Server.npcManager.getNpc(target.slot)

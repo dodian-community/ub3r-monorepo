@@ -306,6 +306,7 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
         override fun togglePrayer(prayer: SkillPrayer) {
             if (!activePrayers.add(prayer)) activePrayers.remove(prayer)
         }
+        override fun deactivatePrayer(prayer: SkillPrayer) { activePrayers.remove(prayer) }
         override fun setPrayer(amount: Int) { currentPrayerValue = amount.coerceIn(0, maximumPrayerValue) }
         override fun damage(amount: Int) { damageTaken += amount.coerceAtLeast(0) }
         override fun restorePrayer(amount: Int) {

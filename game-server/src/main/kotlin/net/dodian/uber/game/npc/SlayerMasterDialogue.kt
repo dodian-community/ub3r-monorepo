@@ -2,7 +2,7 @@ package net.dodian.uber.game.npc
 
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.skill.slayer.Slayer
-import net.dodian.uber.game.skill.slayer.SlayerTaskDefinition
+import net.dodian.uber.skills.slayer.SlayerTaskRegistry
 import net.dodian.uber.game.api.content.dialogue.DialogueEmote
 import net.dodian.uber.game.api.content.dialogue.DialogueFactory
 import net.dodian.uber.game.api.content.dialogue.DialogueOption
@@ -51,10 +51,10 @@ internal object SlayerMasterDialogue {
             return
         }
 
-        val checkTask = SlayerTaskDefinition.forOrdinal(state.taskOrdinal)
+        val checkTask = SlayerTaskRegistry.forOrdinal(state.taskOrdinal)
         val lines = if (checkTask != null && state.remainingAmount > 0) {
             arrayOf(
-                "You're currently assigned to ${checkTask.textRepresentation};",
+                "You're currently assigned to ${checkTask.name};",
                 "you have ${state.remainingAmount} more to go.",
                 "Your current streak is ${state.streak}.",
             )
@@ -69,9 +69,9 @@ internal object SlayerMasterDialogue {
 
     @JvmStatic
     fun showResetCountPrompt(client: Client) {
-        val checkTask = SlayerTaskDefinition.forOrdinal(client.slayerTaskState.taskOrdinal)
+        val checkTask = SlayerTaskRegistry.forOrdinal(client.slayerTaskState.taskOrdinal)
         val title = if (checkTask != null) {
-            "Reset count for ${checkTask.textRepresentation}"
+            "Reset count for ${checkTask.name}"
         } else {
             "Reset count"
         }
@@ -257,8 +257,8 @@ internal object SlayerMasterDialogue {
     }
 
     private fun resetCurrentTaskCount(client: Client) {
-        val checkTask = SlayerTaskDefinition.forOrdinal(client.slayerTaskState.taskOrdinal) ?: return
-        for (npcId in checkTask.npcId) {
+        val checkTask = SlayerTaskRegistry.forOrdinal(client.slayerTaskState.taskOrdinal) ?: return
+        for (npcId in checkTask.npcIds) {
             val npcName = Server.npcManager.getName(npcId)
             for (slot in 0 until client.monsterName.size) {
                 if (client.monsterName[slot].equals(npcName, ignoreCase = true)) {
@@ -266,7 +266,7 @@ internal object SlayerMasterDialogue {
                 }
             }
         }
-        client.sendMessage("${checkTask.textRepresentation} have now been reseted!")
+        client.sendMessage("${checkTask.name} have now been reseted!")
     }
 
     private fun cancelTaskCost(client: Client): Int {
@@ -282,6 +282,6 @@ internal object SlayerMasterDialogue {
         if (state.masterNpcId == -1 || state.remainingAmount <= 0) {
             return ""
         }
-        return SlayerTaskDefinition.forOrdinal(state.taskOrdinal)?.textRepresentation ?: ""
+        return SlayerTaskRegistry.forOrdinal(state.taskOrdinal)?.name ?: ""
     }
 }

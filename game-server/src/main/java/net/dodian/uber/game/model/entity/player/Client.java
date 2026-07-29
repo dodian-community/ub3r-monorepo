@@ -1862,8 +1862,9 @@ public class Client extends Player implements Runnable {
             send(new SendMessage("You need " + CLRanged + " Ranged to equip " + itemName.toLowerCase() + "."));
             failCheck = true;
         }
-        if (Skills.getLevelForExperience(getExperience(Skill.AGILITY)) < 60 && id == 4224) {
-            send(new SendMessage("You need 60 Agility to equip " + itemName.toLowerCase() + "."));
+        Integer agilityRequirement = net.dodian.uber.skills.agility.AgilityCombatService.equipmentLevelRequirement(id);
+        if (agilityRequirement != null && Skills.getLevelForExperience(getExperience(Skill.AGILITY)) < agilityRequirement) {
+            send(new SendMessage("You need " + agilityRequirement + " Agility to equip " + itemName.toLowerCase() + "."));
             failCheck = true;
         }
         if (Skills.getLevelForExperience(getExperience(PRAYER)) < 25 && id == 2952) {
@@ -2546,7 +2547,7 @@ public class Client extends Player implements Runnable {
     public int neglectDmg() {
         int bonus = 0;
         if (getEquipment()[Equipment.Slot.SHIELD.getId()] == 11284)
-            bonus += ((getLevel(Skill.FIREMAKING) + 1) / 5) * 10;
+            bonus += net.dodian.uber.skills.firemaking.FiremakingCombatService.dragonfireNeglectBonus(getLevel(Skill.FIREMAKING));
         return Math.min(1000, playerBonus[13] + bonus);
     }
 
@@ -3293,11 +3294,7 @@ public class Client extends Player implements Runnable {
     public boolean bowWeapon(int weaponId) {
         String weaponType = Server.itemManager.getWeaponType(weaponId);
         if (weaponType.isEmpty()) {
-            boolean bow = net.dodian.uber.game.skill.fletching.FletchingData.isBowWeapon(weaponId);
-            if (weaponId == 839 || weaponId == 841 || weaponId == 4212 || weaponId == 6724 || weaponId == 20997 ||
-                    weaponId == 11235 || weaponId == 4734 || (weaponId >= 12765 && weaponId <= 12768))
-                bow = true;
-            return bow;
+            return net.dodian.uber.skills.fletching.FletchingWeaponService.isBowWeapon(weaponId);
         }
         return weaponType.equals("bow") || weaponType.equals("crossbow") || weaponType.equals("thrown")
             || weaponType.equals("chinchompas") || weaponType.equals("salamander");

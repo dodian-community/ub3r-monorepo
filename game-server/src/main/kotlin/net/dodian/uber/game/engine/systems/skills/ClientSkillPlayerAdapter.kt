@@ -344,6 +344,10 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
                 net.dodian.uber.game.skill.prayer.PrayerManager.Prayer.valueOf(prayer.name),
             )
         }
+        override fun deactivatePrayer(prayer: SkillPrayer) {
+            val legacy = net.dodian.uber.game.skill.prayer.PrayerManager.Prayer.valueOf(prayer.name)
+            if (client.prayerManager.isPrayerOn(legacy)) client.prayerManager.togglePrayer(legacy)
+        }
         override fun setPrayer(amount: Int) { client.currentPrayer = amount.coerceIn(0, client.maxPrayer) }
         override fun damage(amount: Int) { if (amount > 0) client.dealDamage(null, amount, Entity.hitType.STANDARD) }
         override fun restorePrayer(amount: Int) { client.currentPrayer = (client.currentPrayer + amount).coerceAtMost(client.maxPrayer) }
