@@ -27,7 +27,7 @@ object EssenceMineTravel {
 
     @JvmStatic
     fun sendToEssenceMine(client: Client): Boolean {
-        client.queueTransport(essenceMineDestinations[Misc.random(essenceMineDestinations.size - 1)])
+        net.dodian.uber.game.engine.systems.action.VerticalTransitionService.queueTransport(client, essenceMineDestinations[Misc.random(essenceMineDestinations.size - 1)])
         return true
     }
 

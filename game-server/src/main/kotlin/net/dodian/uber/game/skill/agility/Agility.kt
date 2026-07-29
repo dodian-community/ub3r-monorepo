@@ -22,6 +22,7 @@ import net.dodian.uber.game.api.plugin.skills.SkillPlugin
 import net.dodian.uber.game.skill.runtime.action.SkillingRandomEventService
 import net.dodian.uber.game.api.plugin.skills.skillPlugin
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
+import net.dodian.uber.game.engine.systems.action.VerticalTransitionService
 import net.dodian.uber.game.engine.systems.world.npc.NpcSpawnLocator
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.engine.util.Misc
@@ -62,19 +63,18 @@ class Agility(private val c: Client) {
         delayMs: Long = 600L,
         onComplete: () -> Unit,
     ) {
-        val token = c.beginVerticalTransition(delayMs)
-        c.applyWalkBlockMs(delayMs)
+        val token = VerticalTransitionService.begin(c, delayMs)
         ContentTiming.scheduleGameThread(
             "agility-vertical",
             delayMs,
             "player=${c.playerName} destination=$destination pos=${c.position}",
         ) {
             if (c.disconnected) {
-                c.clearVerticalTransition()
+                VerticalTransitionService.clear(c)
                 c.setMovementLocked(false)
                 return@scheduleGameThread
             }
-            c.finishVerticalTransition(token, destination)
+            VerticalTransitionService.finish(c, token, destination)
             onComplete()
         }
     }
@@ -922,4 +922,3 @@ object WerewolfCourseObjectBindings : FirstClickDslObjectContent(
         }
     },
 )
-

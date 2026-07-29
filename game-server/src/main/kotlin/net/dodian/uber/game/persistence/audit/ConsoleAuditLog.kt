@@ -22,6 +22,7 @@ object ConsoleAuditLog {
     private val tradeLogger = LoggerFactory.getLogger("net.dodian.consoleaudit.trade")
     private val duelLogger = LoggerFactory.getLogger("net.dodian.consoleaudit.duel")
     private val bankLogger = LoggerFactory.getLogger("net.dodian.consoleaudit.bank")
+    private val equipmentLogger = LoggerFactory.getLogger("net.dodian.consoleaudit.equipment")
     private val shopLogger = LoggerFactory.getLogger("net.dodian.consoleaudit.shop")
     private val itemLogger = LoggerFactory.getLogger("net.dodian.consoleaudit.item")
     private val buttonLogger = LoggerFactory.getLogger("net.dodian.consoleaudit.button")
@@ -109,6 +110,25 @@ object ConsoleAuditLog {
             amountText,
             bankSlot,
             positionRef(player.position),
+        )
+    }
+
+    @JvmStatic
+    fun equipmentWear(player: Player, itemId: Int, amount: Int, inventorySlot: Int, equipmentSlot: Int, displacedItemId: Int?) {
+        if (!equipmentLogger.isInfoEnabled) return
+        equipmentLogger.info(
+            "EQUIPMENT WEAR | {} | item={} | amount={} | inventorySlot={} | equipmentSlot={} | displacedItem={} | pos={}",
+            playerRef(player), itemRef(itemId), amount, inventorySlot, equipmentSlot,
+            displacedItemId?.let(::itemRef) ?: "none", positionRef(player.position),
+        )
+    }
+
+    @JvmStatic
+    fun equipmentRemove(player: Player, itemId: Int, amount: Int, equipmentSlot: Int) {
+        if (!equipmentLogger.isInfoEnabled) return
+        equipmentLogger.info(
+            "EQUIPMENT REMOVE | {} | item={} | amount={} | equipmentSlot={} | destination=inventory | pos={}",
+            playerRef(player), itemRef(itemId), amount, equipmentSlot, positionRef(player.position),
         )
     }
 

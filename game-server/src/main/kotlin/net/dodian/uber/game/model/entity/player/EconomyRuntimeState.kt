@@ -10,6 +10,5 @@ class EconomyRuntimeState {
     val priceCheckerItems = mutableListOf<GameItem>()
     var priceCheckerOpen = false
     var priceCheckerMode = 0
-    var priceCheckerSearchPendingInput = false
     var priceCheckerSearchedItem: GameItem? = null
 }

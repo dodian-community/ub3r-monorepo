@@ -23,9 +23,10 @@ public class SyntaxInputListener implements PacketListener {
         long nameLong = msg.name();
         String input = net.dodian.utilities.Names.longToPlayerName(nameLong).trim();
 
-        if (client.modcpSearchPendingInput) {
-            client.modcpSearchPendingInput = false;
-            client.openModcp(input);
+        if (client.getContentRuntimeState().getPendingInputState()
+                == net.dodian.uber.game.model.entity.player.PendingInputState.MODERATION_SEARCH) {
+            client.getContentRuntimeState().clearPendingInputState();
+            net.dodian.uber.game.social.moderation.ModerationService.open(client, input);
             return;
         }
 

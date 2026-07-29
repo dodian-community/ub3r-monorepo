@@ -242,7 +242,7 @@ enum class QuestTabEntry(
                     }
 
                     7338 -> {
-                        client.openAccountServices()
+                        AccountServices.open(client)
                         return true
                     }
 

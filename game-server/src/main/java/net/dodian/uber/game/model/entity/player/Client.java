@@ -568,12 +568,6 @@ public class Client extends Player implements Runnable {
     public int previousBankTab = 0;
     public int lastButtonActionIndex = -1;
     public boolean bankSearchActive = false;
-    public boolean bankSearchPendingInput = false;
-    public boolean modcpSearchPendingInput = false;
-    public boolean addFriendPendingInput = false;
-    public boolean removeFriendPendingInput = false;
-    public boolean addIgnorePendingInput = false;
-    public boolean removeIgnorePendingInput = false;
     public int modcpDialogState = 0;
     public int accountServicesDialogState = 0;
     public boolean viewingAccountServices = false;
@@ -595,9 +589,6 @@ public class Client extends Player implements Runnable {
      */
     public int activeInterfaceId = -1;
 
-    private long verticalTransitionSequence = 0L;
-    private long activeVerticalTransitionToken = 0L;
-    private long verticalTransitionUntilMillis = 0L;
     public int WanneBank = 0;
     public int WanneShop = 0;
     public int WanneThieve = 0;
@@ -701,7 +692,7 @@ public class Client extends Player implements Runnable {
         PlayerDeferredLifecycleService.cancelAll(this);
         net.dodian.uber.game.engine.systems.interaction.ui.PlayerSocialApproachService.cancel(this);
         PlayerScopedCoroutineService.cancelForPlayer(this, "Player destruct");
-        clearVerticalTravelState();
+        net.dodian.uber.game.engine.systems.action.VerticalTransitionService.clear(this);
         releaseQueuedInboundPackets();
         releaseQueuedOutboundPackets();
         clearInboundReadyFlag();
@@ -1854,6 +1845,8 @@ public class Client extends Player implements Runnable {
             wearing = false;
             equipmentChanged(targetSlot);
             logger.info("[WEAR] player={} item={} ({}) equipSlot={} invSlot={}", getPlayerName(), wearID, getItemName(wearID), targetSlot, slot);
+            ConsoleAuditLog.equipmentWear(this, wearID, wearAmount, slot, targetSlot,
+                    null);
             wearLog("[WEAR:WEAR] equipped id={} targetSlot={} amount={}", wearID, targetSlot, wearAmount);
         } else {
             wearLog("[WEAR:WEAR] rejected slot/item mismatch playerItems[slot]={} expected={}", playerItems[slot] - 1, wearID);
@@ -2055,50 +2048,6 @@ public class Client extends Player implements Runnable {
 
     public void yellAreaKilled(String message, String area) {
         net.dodian.uber.game.social.WorldAnnouncementService.broadcastArea(message, area);
-    }
-
-    public long beginVerticalTransition(long delayMs) {
-        resetWalkingQueue();
-        long now = System.currentTimeMillis();
-        activeVerticalTransitionToken = ++verticalTransitionSequence;
-        verticalTransitionUntilMillis = now + Math.max(delayMs, 0L);
-        applyWalkBlockMs(Math.max(delayMs, 0L));
-        return activeVerticalTransitionToken;
-    }
-
-    public boolean isVerticalTransitionActive() {
-        return activeVerticalTransitionToken != 0L && verticalTransitionUntilMillis > System.currentTimeMillis();
-    }
-
-    public void clearVerticalTransition() {
-        activeVerticalTransitionToken = 0L;
-        verticalTransitionUntilMillis = 0L;
-    }
-
-    public void clearVerticalTravelState() {
-        clearVerticalTransition();
-    }
-
-    public String verticalTransitionDebugSummary() {
-        return "token=" + activeVerticalTransitionToken +
-                ",until=" + verticalTransitionUntilMillis +
-                ",tele=(" + teleportToX + "," + teleportToY + "," + teleportToZ + ")" +
-                ",pos=" + getPosition();
-    }
-
-    public void queueTransport(Position pos) {
-        resetActionTeleport();
-        teleportToX = pos.getX();
-        teleportToY = pos.getY();
-        teleportToZ = pos.getZ();
-    }
-
-    public void finishVerticalTransition(long token, Position destination) {
-        if (activeVerticalTransitionToken != token || disconnected) {
-            return;
-        }
-        queueTransport(destination);
-        clearVerticalTransition();
     }
 
     public boolean usingBow = false;
@@ -2634,22 +2583,6 @@ public class Client extends Player implements Runnable {
         }
     }
 
-    public void openAccountServices() {
-        net.dodian.uber.game.ui.AccountServices.open(this);
-    }
-
-    public void handleAccountServicesRowClick(int index) {
-        net.dodian.uber.game.ui.AccountServices.handleRowClick(this, index);
-    }
-
-    public void handleAccountServicesDialogue(int option) {
-        net.dodian.uber.game.ui.AccountServices.handleAccountServicesDialogue(this, option);
-    }
-
-    public void showAccountInfo() {
-        net.dodian.uber.game.ui.AccountServices.showDefaultStatus(this);
-    }
-
     public int neglectDmg() {
         int bonus = 0;
         if (getEquipment()[Equipment.Slot.SHIELD.getId()] == 11284)
@@ -3014,30 +2947,6 @@ public class Client extends Player implements Runnable {
         }
     }
 
-    public void openGenie() {
-        if (getInDuel() || getDuelFight() || IsBanking) {
-            send(new SendMessage("Finish what you are doing first!"));
-            return;
-        }
-        send(new SendString("Select a skill in which you wish to gain experience!", 2810));
-        send(new SendString("", 2811));
-        send(new SendString("", 2831));
-        genie = true;
-        openInterface(2808);
-    }
-
-    public void openAntique() {
-        if (getInDuel() || getDuelFight() || IsBanking) {
-            send(new SendMessage("Finish what you are doing first!"));
-            return;
-        }
-        send(new SendString("Select a skill in which you wish to gain experience!", 2810));
-        send(new SendString("", 2811));
-        send(new SendString("", 2831));
-        antique = true;
-        openInterface(2808);
-    }
-
     public int findItem(int id, int[] items, int[] amounts) {
         for (int i = 0; i < playerItems.length; i++) {
             if ((items[i] - 1) == id && amounts[i] > 0) {
@@ -3156,60 +3065,9 @@ public class Client extends Player implements Runnable {
         setVarp(id, value);
     }
 
-    public void addFriend(long name) {
-        // On = 0, Friends = 1, Off = 2
-        for (Friend f : friends) {
-            if (f.name == name) {
-                send(new SendMessage(Utils.longToPlayerName(name) + " is already on your friends list"));
-                return;
-            }
-        }
-        friends.add(new Friend(name, true));
-        for (Client c : PlayerRegistry.playersOnline.values()) {
-            if (c.hasFriend(longName)) {
-                c.refreshFriends();
-            }
-        }
-        refreshFriends();
-    }
-
     public boolean isMuted() {
         long rightNow = System.currentTimeMillis();
         return mutedTill - rightNow > 0;
-    }
-
-    public void sendPmMessage(long friend, byte[] pmchatText, int pmchatTextSize) {
-        if (isMuted()) {
-            send(new SendMessage("You are currently muted!"));
-            return;
-        }
-        boolean found = false;
-        for (Friend f : friends) {
-            if (f.name == friend) {
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            send(new SendMessage("That player is not on your friends list"));
-            return;
-        }
-        if (PlayerRegistry.playersOnline.containsKey(friend)) {
-            Client to = PlayerRegistry.playersOnline.get(friend);
-            boolean specialRights = net.dodian.uber.game.engine.config.DotEnvKt.getRankAdminGroupIds().contains(to.playerGroup);
-            if (specialRights && to.busy && playerRights < 1) {
-                send(new SendMessage("<col=FF0000>This player is busy and did not receive your message."));
-                return;
-            }
-            if (to.Privatechat == 0 || (to.Privatechat == 1 && to.hasFriend(longName))) {
-                to.sendpm(longName, playerRights, pmchatText, pmchatTextSize);
-                ChatLog.recordPrivateChat(this, to, Utils.textUnpack(pmchatText, pmchatTextSize));
-            } else {
-                send(new SendMessage("That player is not available"));
-            }
-        } else {
-            send(new SendMessage("That player is not online"));
-        }
     }
 
     public boolean hasFriend(long name) {
@@ -3236,55 +3094,6 @@ public class Client extends Player implements Runnable {
                 }
             }
             loadpm(f.name, ignored ? 0 : 1);
-        }
-    }
-
-    public void removeFriend(long name) {
-        for (Friend f : friends) {
-            if (f.name == name) {
-                friends.remove(f);
-                // Notify client to remove this friend from its local list (opcode 51)
-                send(new RemoveFriend(name));
-                // Refresh remaining friends' online/offline statuses
-                refreshFriends();
-                return;
-            }
-        }
-    }
-
-    public void removeIgnore(long name) {
-        for (Friend f : ignores) {
-            if (f.name == name) {
-                ignores.remove(f);
-                refreshFriends();
-                Client player = PlayerRegistry.playersOnline.get(f.name);
-                if (player != null) {
-                    player.refreshFriends();
-                }
-                break;
-            }
-        }
-    }
-
-    public void addIgnore(long name) {
-        if (ignores.size() >= 100) {
-            send(new SendMessage("Maximum ignores reached!"));
-            return;
-        }
-        boolean canAdd = true;
-        for (Friend f : ignores) {
-            if (f.name == name) {
-                send(new SendMessage("You already got this guy on your ignoreList!"));
-                canAdd = false;
-                break;
-            }
-        }
-        if (canAdd) {
-            ignores.add(new Friend(name, true));
-            Client player = PlayerRegistry.playersOnline.get(name);
-            if (player != null) {
-                player.refreshFriends();
-            }
         }
     }
 

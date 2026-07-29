@@ -6,6 +6,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.persistence.audit.ConsoleAuditLog
 import net.dodian.uber.game.engine.systems.interaction.commands.CommandDispatcher
 import net.dodian.uber.game.social.PlayerSocialService
+import net.dodian.uber.game.model.entity.player.PendingInputState
 
 /**
  * out of Netty inbound listeners.
@@ -37,55 +38,37 @@ object PacketSocialService {
 
     @JvmStatic
     fun requestAddFriend(client: Client) {
-        clearPendingNameInputs(client)
-        client.addFriendPendingInput = true
+        client.contentRuntimeState.setPendingInputState(PendingInputState.ADD_FRIEND)
         client.send(net.dodian.uber.game.netty.listener.out.SendEnterName("Enter name of friend to add:"))
     }
 
     @JvmStatic
     fun requestRemoveFriend(client: Client) {
-        clearPendingNameInputs(client)
-        client.removeFriendPendingInput = true
+        client.contentRuntimeState.setPendingInputState(PendingInputState.REMOVE_FRIEND)
         client.send(net.dodian.uber.game.netty.listener.out.SendEnterName("Enter name of friend to delete:"))
     }
 
     @JvmStatic
     fun requestAddIgnore(client: Client) {
-        clearPendingNameInputs(client)
-        client.addIgnorePendingInput = true
+        client.contentRuntimeState.setPendingInputState(PendingInputState.ADD_IGNORE)
         client.send(net.dodian.uber.game.netty.listener.out.SendEnterName("Enter name of player to add to ignore list:"))
     }
 
     @JvmStatic
     fun requestRemoveIgnore(client: Client) {
-        clearPendingNameInputs(client)
-        client.removeIgnorePendingInput = true
+        client.contentRuntimeState.setPendingInputState(PendingInputState.REMOVE_IGNORE)
         client.send(net.dodian.uber.game.netty.listener.out.SendEnterName("Enter name of player to delete from ignore list:"))
     }
 
     @JvmStatic
     fun handlePendingNameInput(client: Client, encodedName: Long): Boolean {
-        if (client.addFriendPendingInput) {
-            client.addFriendPendingInput = false
-            handleAddFriend(client, encodedName)
-            return true
+        return when (client.contentRuntimeState.getPendingInputState()) {
+            PendingInputState.ADD_FRIEND -> { client.contentRuntimeState.clearPendingInputState(); handleAddFriend(client, encodedName); true }
+            PendingInputState.REMOVE_FRIEND -> { client.contentRuntimeState.clearPendingInputState(); handleRemoveFriend(client, encodedName); true }
+            PendingInputState.ADD_IGNORE -> { client.contentRuntimeState.clearPendingInputState(); handleAddIgnore(client, encodedName); true }
+            PendingInputState.REMOVE_IGNORE -> { client.contentRuntimeState.clearPendingInputState(); handleRemoveIgnore(client, encodedName); true }
+            else -> false
         }
-        if (client.removeFriendPendingInput) {
-            client.removeFriendPendingInput = false
-            handleRemoveFriend(client, encodedName)
-            return true
-        }
-        if (client.addIgnorePendingInput) {
-            client.addIgnorePendingInput = false
-            handleAddIgnore(client, encodedName)
-            return true
-        }
-        if (client.removeIgnorePendingInput) {
-            client.removeIgnorePendingInput = false
-            handleRemoveIgnore(client, encodedName)
-            return true
-        }
-        return false
     }
 
     @JvmStatic
@@ -103,12 +86,4 @@ object PacketSocialService {
         PlayerSocialService.removeIgnore(client, encodedName)
     }
 
-    private fun clearPendingNameInputs(client: Client) {
-        client.addFriendPendingInput = false
-        client.removeFriendPendingInput = false
-        client.addIgnorePendingInput = false
-        client.removeIgnorePendingInput = false
-        client.bankSearchPendingInput = false
-        client.modcpSearchPendingInput = false
-    }
 }

@@ -7,6 +7,7 @@ import net.dodian.uber.game.ui.bank.PlayerBankService
 import net.dodian.uber.game.ui.buttons.InterfaceButtonContent
 import net.dodian.uber.game.ui.buttons.buttonBinding
 import net.dodian.uber.game.model.entity.UpdateFlag
+import net.dodian.uber.game.model.entity.player.PendingInputState
 
 object BankInterface : InterfaceButtonContent {
     private const val INTERFACE_ID = 60000
@@ -135,7 +136,7 @@ object BankInterface : InterfaceButtonContent {
                     if (client.bankSearchActive) {
                         client.clearBankSearch()
                     } else {
-                        client.bankSearchPendingInput = true
+                        client.contentRuntimeState.setPendingInputState(PendingInputState.BANK_SEARCH)
                         client.send(SendEnterName("Search bank:"))
                     }
                     true

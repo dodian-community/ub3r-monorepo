@@ -42,7 +42,7 @@ object PacketWalkingService {
         if (TeleportIntentStateAdapter.isTeleporting(player) || PyramidPlunder.isLooting(player)) {
             return
         }
-        if (player.isVerticalTransitionActive) {
+        if (net.dodian.uber.game.engine.systems.action.VerticalTransitionService.isActive(player)) {
             player.resetWalkingQueue()
             return
         }

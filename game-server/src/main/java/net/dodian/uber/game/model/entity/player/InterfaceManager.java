@@ -107,7 +107,7 @@ public class InterfaceManager {
         if (player.IsBanking) {
             player.IsBanking = false;
             player.bankSearchActive = false;
-            player.bankSearchPendingInput = false;
+            player.getContentRuntimeState().clearPendingInputState();
             player.bankSearchQuery = "";
             player.currentBankTab = 0;
             refreshItems = true;

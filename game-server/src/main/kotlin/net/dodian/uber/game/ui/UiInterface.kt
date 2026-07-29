@@ -88,7 +88,7 @@ object UiInterface : InterfaceButtonContent {
                 if (wasBanking) {
                     client.IsBanking = false
                     client.bankSearchActive = false
-                    client.bankSearchPendingInput = false
+                    client.contentRuntimeState.clearPendingInputState()
                     client.bankSearchQuery = ""
                     client.currentBankTab = 0
                     refreshItems = true

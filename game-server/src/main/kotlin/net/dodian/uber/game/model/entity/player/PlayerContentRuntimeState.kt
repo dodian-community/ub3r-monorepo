@@ -30,6 +30,7 @@ import net.dodian.uber.game.api.plugin.skills.PendingSkillMulti
  * embedded in Player's Java interaction holder.
  */
 class PlayerContentRuntimeState {
+    @Volatile private var pendingInputState = PendingInputState.NONE
     private val pluginAttributes = ConcurrentHashMap<String, Any>()
     @Volatile private var pendingInteraction: InteractionIntent? = null
     @Volatile private var activeInteraction: ActiveInteraction? = null
@@ -82,6 +83,9 @@ class PlayerContentRuntimeState {
     fun removePluginAttribute(key: String) { pluginAttributes.remove(key) }
     fun clearPluginAttributes() { pluginAttributes.clear() }
     fun getEconomyRuntimeState() = economyRuntimeState
+    fun getPendingInputState() = pendingInputState
+    fun setPendingInputState(value: PendingInputState) { pendingInputState = value }
+    fun clearPendingInputState() { pendingInputState = PendingInputState.NONE }
 
     fun getPendingInteraction() = pendingInteraction
     fun setPendingInteraction(value: InteractionIntent?) { pendingInteraction = value }

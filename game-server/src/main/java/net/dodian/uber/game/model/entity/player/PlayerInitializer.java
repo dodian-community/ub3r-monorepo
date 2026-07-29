@@ -29,7 +29,7 @@ public class PlayerInitializer {
     }
 
     public void initializeCriticalLoginState(Client client) {
-        client.clearVerticalTravelState();
+        net.dodian.uber.game.engine.systems.action.VerticalTransitionService.clear(client);
         /* Login write settings */
         client.send(new PlayerDetails(client.playerIsMember, client.getSlot()));
         client.send(new CameraReset()); // Resets the camera position

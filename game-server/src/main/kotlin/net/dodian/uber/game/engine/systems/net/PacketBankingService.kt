@@ -11,6 +11,7 @@ import net.dodian.uber.game.economy.PriceCheckerService
 import net.dodian.uber.game.economy.ShopTransactionService
 import net.dodian.uber.game.ui.bank.PlayerBankService
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.model.entity.player.PendingInputState
 import net.dodian.uber.game.social.exchange.ExchangeOfferService
 import net.dodian.uber.game.social.exchange.ExchangeRuntime
 import net.dodian.uber.game.netty.listener.out.InventoryInterface
@@ -28,7 +29,7 @@ object PacketBankingService {
 
     
     @JvmStatic
-    fun hasPendingBankSearch(client: Client): Boolean = client.bankSearchPendingInput
+    fun hasPendingBankSearch(client: Client): Boolean = client.contentRuntimeState.getPendingInputState() == PendingInputState.BANK_SEARCH
 
     /**
      * Clears the pending-input flag and applies the bank-item filter.
@@ -36,7 +37,7 @@ object PacketBankingService {
      */
     @JvmStatic
     fun applyPendingBankSearch(client: Client, input: String) {
-        client.bankSearchPendingInput = false
+        client.contentRuntimeState.clearPendingInputState()
         if (!client.IsBanking) return
         ConsoleAuditLog.bankSearch(client, input)
         client.applyBankSearch(input)

@@ -123,7 +123,7 @@ public class ClickingButtonsListener implements PacketListener {
         if (actionButton >= 36731 && actionButton <= 36769) {
             int index = (actionButton - 36731) / 2;
             if (client.viewingAccountServices) {
-                client.handleAccountServicesRowClick(index);
+                net.dodian.uber.game.ui.AccountServices.handleRowClick(client, index);
             } else {
                 handleModcpRowClick(client, index);
             }

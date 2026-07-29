@@ -11,8 +11,8 @@ object LampRewardItemContent : ItemContent {
 
     override fun onFirstClick(client: Client, itemId: Int, itemSlot: Int, interfaceId: Int): Boolean {
         when (itemId) {
-            2528 -> client.openGenie()
-            6543 -> client.openAntique()
+            2528 -> net.dodian.uber.game.engine.systems.skills.ExperienceLampService.openGenie(client)
+            6543 -> net.dodian.uber.game.engine.systems.skills.ExperienceLampService.openAntique(client)
             else -> return false
         }
         return true

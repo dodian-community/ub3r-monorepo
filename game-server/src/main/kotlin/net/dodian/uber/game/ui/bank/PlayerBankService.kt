@@ -65,7 +65,7 @@ object PlayerBankService {
         client.currentBankTab = 0
         client.previousBankTab = 0
         client.bankSearchActive = false
-        client.bankSearchPendingInput = false
+        client.contentRuntimeState.clearPendingInputState()
         client.bankSearchQuery = ""
         clearBankStyleView(client)
 
@@ -88,7 +88,7 @@ object PlayerBankService {
         client.IsBanking = false
         client.checkBankInterface = false
         client.bankSearchActive = false
-        client.bankSearchPendingInput = false
+        client.contentRuntimeState.clearPendingInputState()
         client.bankSearchQuery = ""
         client.currentBankTab = 0
         client.previousBankTab = 0
@@ -150,11 +150,15 @@ object PlayerBankService {
             client.sendMessage("Banking have been disabled!")
             return
         }
-        if (!PlayerInteractionGuardService.canOpenBank(client)) {
-            PlayerInteractionGuardService.blockingInteractionMessage(client)?.let {
-                client.sendMessage(it)
-            }
+        // A bank interaction is an explicit modal transition.  The legacy client
+        // often closes the visible widget before its dialogue/session bookkeeping
+        // has caught up, so make the server state authoritative here as well.
+        if (PlayerInteractionGuardService.isDuelLocked(client)) {
+            client.sendMessage("You can't do that while in a duel.")
             return
+        }
+        if (PlayerInteractionGuardService.hasBlockingInterface(client) || PlayerInteractionGuardService.hasActiveDialogue(client)) {
+            client.closeInterfaces()
         }
         client.resetAction(true)
         client.sendString("Withdraw as:", 5388)
@@ -165,7 +169,7 @@ object PlayerBankService {
         client.currentBankTab = 0
         client.previousBankTab = 0
         client.bankSearchActive = false
-        client.bankSearchPendingInput = false
+        client.contentRuntimeState.clearPendingInputState()
         client.bankSearchQuery = ""
         client.IsBanking = true
         client.checkBankInterface = false
@@ -589,7 +593,7 @@ object PlayerBankService {
             return
         }
         client.bankSearchActive = false
-        client.bankSearchPendingInput = false
+        client.contentRuntimeState.clearPendingInputState()
         client.bankSearchQuery = ""
         client.currentBankTab = clampNormalTab(client.previousBankTab)
         checkItemUpdate(client)

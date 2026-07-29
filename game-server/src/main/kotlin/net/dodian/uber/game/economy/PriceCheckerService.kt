@@ -3,6 +3,7 @@ package net.dodian.uber.game.economy
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.EconomyRuntimeState
+import net.dodian.uber.game.model.entity.player.PendingInputState
 import net.dodian.uber.game.model.item.GameItem
 import net.dodian.uber.game.model.item.transaction.invAdd
 import net.dodian.uber.game.model.item.transaction.invDelAt
@@ -28,8 +29,11 @@ object PriceCheckerService {
     @JvmStatic fun isOpen(client: Client): Boolean = state(client).priceCheckerOpen
     @JvmStatic fun items(client: Client): List<GameItem> = state(client).priceCheckerItems
     @JvmStatic fun itemAt(client: Client, slot: Int): GameItem? = state(client).priceCheckerItems.getOrNull(slot)
-    @JvmStatic fun isSearchPending(client: Client): Boolean = state(client).priceCheckerSearchPendingInput
-    @JvmStatic fun setSearchPending(client: Client, value: Boolean) { state(client).priceCheckerSearchPendingInput = value }
+    @JvmStatic fun isSearchPending(client: Client): Boolean = client.contentRuntimeState.getPendingInputState() == PendingInputState.PRICE_CHECKER_SEARCH
+    @JvmStatic fun setSearchPending(client: Client, value: Boolean) {
+        if (value) client.contentRuntimeState.setPendingInputState(PendingInputState.PRICE_CHECKER_SEARCH)
+        else if (isSearchPending(client)) client.contentRuntimeState.clearPendingInputState()
+    }
 
     @JvmStatic fun open(client: Client) {
         val state = state(client)
@@ -37,7 +41,7 @@ object PriceCheckerService {
         if (state.priceCheckerItems.isNotEmpty()) returnAll(client, state)
         state.priceCheckerOpen = true
         state.priceCheckerSearchedItem = null
-        state.priceCheckerSearchPendingInput = false
+        setSearchPending(client, false)
         state.priceCheckerMode = 0
         client.send(InventoryInterface(48500, 5063))
         refresh(client)
@@ -49,7 +53,7 @@ object PriceCheckerService {
         returnAll(client, state)
         state.priceCheckerOpen = false
         state.priceCheckerSearchedItem = null
-        state.priceCheckerSearchPendingInput = false
+        setSearchPending(client, false)
         if (removeInterfaces) client.send(RemoveInterfaces())
     }
 

@@ -27,7 +27,9 @@ object SkillguideModule : SkillSupportModule {
             true
         }
         skillButtons.forEach { (skillId, rawButtonIds) ->
-            button(PolicyPreset.DIALOGUE, requiredInterfaceId = INTERFACE_ID, rawButtonIds = rawButtonIds) { interaction ->
+            // These are side-tab buttons in the legacy client, so no modal
+            // interface is active when their packets arrive.
+            button(PolicyPreset.DIALOGUE, requiredInterfaceId = -1, rawButtonIds = rawButtonIds) { interaction ->
                 open(interaction.player, skillId, 0)
                 true
             }
@@ -75,7 +77,7 @@ object SkillguideModule : SkillSupportModule {
         Skill.WOODCUTTING.id to intArrayOf(8668, 33220, 94184), Skill.MAGIC.id to intArrayOf(8669, 33221, 94182),
         Skill.FIREMAKING.id to intArrayOf(8670, 33222, 94181), Skill.COOKING.id to intArrayOf(8671, 33223, 94178),
         Skill.RUNECRAFTING.id to intArrayOf(8672, 33224, 95053), Skill.SLAYER.id to intArrayOf(12162, 47130, 95061),
-        Skill.FARMING.id to intArrayOf(95068),
+        Skill.FARMING.id to intArrayOf(13928, 95068),
     )
     private val subTabs = listOf(
         0 to intArrayOf(8846, 34142), 1 to intArrayOf(8823, 34119), 2 to intArrayOf(8824, 34120),

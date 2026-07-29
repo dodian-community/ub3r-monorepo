@@ -4,6 +4,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.item.Equipment
 import net.dodian.uber.game.netty.listener.out.SendMessage
+import net.dodian.uber.game.persistence.audit.ConsoleAuditLog
 
 /** Core equipment boundary; mutations remain on the game thread and reservation-aware APIs. */
 object EquipmentService {
@@ -28,7 +29,7 @@ object EquipmentService {
         val finalAmount = if (existingId == itemId && Server.itemManager.isStackable(itemId)) existingAmount + amount else amount
         val committed = EconomyTransaction.run {
             inventory(client).removeAt(slot, itemId, amount)
-            if (existingId >= 0 && existingId != itemId) inventory(client).add(existingId, existingAmount)
+            if (existingId > 0 && existingAmount > 0 && existingId != itemId) inventory(client).add(existingId, existingAmount)
             equipment(client).setAt(target, itemId, finalAmount)
         }
         if (!committed) {
@@ -36,6 +37,7 @@ object EquipmentService {
             return
         }
         client.wearing = false
+        ConsoleAuditLog.equipmentWear(client, itemId, amount, slot, target, existingId.takeIf { existingAmount > 0 && it > 0 && it != itemId })
     }
     @JvmStatic fun unequip(client: Client, slot: Int, force: Boolean) = client.remove(slot, force)
     @JvmStatic fun refresh(client: Client) = client.refreshEquipmentState()
@@ -60,6 +62,7 @@ object EquipmentService {
             inventory(client).add(itemId, amount)
         }
         if (!committed) client.send(SendMessage("Not enough space to unequip this item!"))
+        else ConsoleAuditLog.equipmentRemove(client, itemId, amount, slot)
         return committed
     }
 

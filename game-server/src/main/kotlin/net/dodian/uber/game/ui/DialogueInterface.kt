@@ -57,7 +57,7 @@ object DialogueInterface : InterfaceButtonContent {
             return true
         }
         if (client.accountServicesDialogState != 0) {
-            client.handleAccountServicesDialogue(optionIndex)
+            AccountServices.handleAccountServicesDialogue(client, optionIndex)
             return true
         }
         if (client.refundSlot != -1) {

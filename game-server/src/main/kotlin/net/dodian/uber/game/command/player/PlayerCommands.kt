@@ -95,7 +95,10 @@ private fun handlePlayerUtility(context: CommandContext): Boolean {
     }
     if (context.alias == "max") {
         client.sendMessage("<col=FF8000>Melee max hit: ${client.meleeMaxHit()} (MeleeStr: ${client.playerBonus[10]})")
-        client.sendMessage("<col=0B610B>Range max hit: ${client.rangedMaxHit()} (RangeStr: ${client.getRangedStr()})")
+        client.sendMessage(
+            "<col=0B610B>Range max hit: ${client.rangedMaxHit()} " +
+                "(RangeAtk: ${client.playerBonus[4]}, RangeStr: ${client.getRangedStr()})",
+        )
         val magicIncrease = String.format("%3.1f", (client.magicBonusDamage() - 1.0) * 100.0)
         if (client.autocast_spellIndex == -1) {
             client.sendMessage("<col=292BA3>Magic max hit (smoke rush): ${(client.baseDamage[0] * client.magicBonusDamage()).toInt()} (Magic damage increase: $magicIncrease%)")

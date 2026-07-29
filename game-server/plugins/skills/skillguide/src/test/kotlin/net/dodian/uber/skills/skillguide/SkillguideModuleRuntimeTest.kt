@@ -21,8 +21,9 @@ class SkillguideModuleRuntimeTest {
         val definition = SkillguideModule.definition
         assertEquals(listOf(1856), definition.itemBindings.single().itemIds.toList())
         assertEquals(29, definition.buttonBindings.size)
-        assertTrue(definition.buttonBindings.all { it.requiredInterfaceId == 8714 })
-        assertTrue(definition.buttonBindings.any { 95068 in it.rawButtonIds })
+        assertEquals(21, definition.buttonBindings.count { it.requiredInterfaceId == -1 })
+        assertEquals(8, definition.buttonBindings.count { it.requiredInterfaceId == 8714 })
+        assertTrue(definition.buttonBindings.any { 13928 in it.rawButtonIds })
         assertTrue(definition.buttonBindings.any { 34155 in it.rawButtonIds })
     }
 }
