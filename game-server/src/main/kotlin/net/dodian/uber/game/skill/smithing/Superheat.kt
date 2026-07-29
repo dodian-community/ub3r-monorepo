@@ -9,6 +9,7 @@ import net.dodian.uber.game.netty.listener.out.SendSideTab
 import net.dodian.uber.game.engine.systems.skills.ProgressionService
 import net.dodian.uber.game.engine.systems.skills.RuneCostService
 import net.dodian.uber.game.engine.util.Misc
+import net.dodian.uber.skills.smithing.SmeltingRegistry
 
 object Superheat {
     private const val NATURE_RUNE = 561
@@ -40,7 +41,7 @@ object Superheat {
     }
 
     private fun superheatRecipe(client: Client, barId: Int) {
-        val recipe = SmithingData.findSmeltingRecipe(barId) ?: run {
+        val recipe = SmeltingRegistry.findRecipe(barId) ?: run {
             client.sendMessage("You can only use this spell on ores or glass material!")
             client.callGfxMask(85, 100)
             client.send(SendSideTab(6))
@@ -122,7 +123,7 @@ object Superheat {
         client.send(SendSideTab(6))
     }
 
-    private fun missingRequirementMessage(client: Client, recipe: SmeltingRecipe): SendMessage =
+    private fun missingRequirementMessage(client: Client, recipe: net.dodian.uber.skills.smithing.SmeltingRecipe): SendMessage =
         when (recipe.barId) {
             2349 -> SendMessage("You need a tin and copper to do this!")
             2353 -> SendMessage("You need a iron ore and 2 coal to do this!")

@@ -8,9 +8,9 @@ import net.dodian.uber.game.skill.herblore.HerbloreData
 import net.dodian.uber.game.skill.smithing.SmithingFrameDefinitions
 import net.dodian.uber.game.engine.config.ServerPaths
 import java.nio.file.Files
-import java.util.logging.Logger
+import org.slf4j.LoggerFactory
 
-private val logger = Logger.getLogger("TomlSkillGuideLoader")
+private val logger = LoggerFactory.getLogger(TomlSkillGuideLoader::class.java)
 
 data class TomlSkillGuide(
     val skill: String = "",
@@ -49,7 +49,7 @@ object TomlSkillGuideLoader {
     fun load(): Map<Int, SkillGuideDefinition> {
         val dir = ServerPaths.definition("skill_guides")
         if (!Files.isDirectory(dir)) {
-            logger.warning("Skill guides definitions directory not found at $dir")
+            logger.warn("Skill guides definitions directory not found at {}", dir)
             return emptyMap()
         }
 
@@ -62,7 +62,7 @@ object TomlSkillGuideLoader {
                         val toml = mapper.readValue(path.toFile(), TomlSkillGuide::class.java)
                         val skill = Skill.values().firstOrNull { it.name.lowercase() == toml.skill.lowercase() }
                         if (skill == null) {
-                            logger.severe("Invalid skill name '${toml.skill}' in guide file: ${path.fileName}")
+                            logger.error("Invalid skill name '{}' in guide file: {}", toml.skill, path.fileName)
                             return@forEach
                         }
 
@@ -98,13 +98,12 @@ object TomlSkillGuideLoader {
 
                         definitions[skillId] = SkillGuideDefinition(skillId, tabLabels, layout, pageProvider)
                     } catch (e: Exception) {
-                        logger.severe("Failed to load skill guide from $path: ${e.message}")
-                        e.printStackTrace()
+                        logger.error("Failed to load skill guide from {}: {}", path, e.message, e)
                     }
                 }
         }
 
-        logger.info("Loaded ${definitions.size} skill guide definitions from TOML.")
+        logger.info("Loaded {} skill guide definitions from TOML.", definitions.size)
         return definitions
     }
 
@@ -145,7 +144,7 @@ object TomlSkillGuideLoader {
                 )
             }
             else -> {
-                logger.warning("Unknown dynamic page source: $source")
+                logger.warn("Unknown dynamic page source: {}", source)
                 SkillGuidePage()
             }
         }

@@ -13,6 +13,8 @@ level = 15
 experience = 260
 ores = [440]
 ore_amounts = [1]
+success_chance = 54
+failure_message = "You fail to refine the iron"
 
 [[smelt]]
 bar_id = 2355

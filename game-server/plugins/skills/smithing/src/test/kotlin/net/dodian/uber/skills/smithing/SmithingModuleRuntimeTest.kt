@@ -21,6 +21,16 @@ class SmithingModuleRuntimeTest {
     }
 
     @Test
+    fun `plugin smelting registry preserves legacy iron chance and furnace mappings`() {
+        val iron = requireNotNull(SmeltingRegistry.findRecipe(2351))
+        assertEquals(54, iron.successChancePercent)
+        assertEquals("You fail to refine the iron", iron.failureMessage)
+        assertEquals(8, SmeltingRegistry.recipes.size)
+        assertEquals(FurnaceButtonMapping(15147, 2349, 1), SmeltingRegistry.mapping(15147))
+        assertTrue(SmeltingRegistry.isFurnaceFrame(2405))
+    }
+
+    @Test
     fun `furnace routes use only verified current cache furnaces`() {
         assertEquals(setOf(2030, 3994, 16469), SmithingModule.furnaceObjectIds.toSet())
         assertFalse(SmithingModule.furnaceObjectIds.any { it in setOf(2150, 2151, 2152, 2153, 11666, 29662) })
