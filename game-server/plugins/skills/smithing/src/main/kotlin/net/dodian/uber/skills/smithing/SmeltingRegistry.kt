@@ -13,7 +13,6 @@ data class SmeltingRecipe(
     val failureMessage: String? = null,
 )
 
-data class SmeltingSelection(val recipe: SmeltingRecipe, val amount: Int)
 data class FurnaceButtonMapping(val buttonId: Int, val barId: Int, val amount: Int)
 
 /** Immutable, plugin-owned source for legacy furnace and Superheat bar rules. */

@@ -6,10 +6,9 @@ import net.dodian.uber.game.api.content.ContentActions
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.netty.listener.out.SendFrame27
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
-import net.dodian.uber.game.skill.smithing.Smithing
-import net.dodian.uber.skills.smithing.SmeltingRecipe
+import net.dodian.uber.game.skill.runtime.action.ActionStopReason
+import net.dodian.uber.skills.smithing.SmithingSmeltingService
 import net.dodian.uber.skills.smithing.SmeltingRegistry
-import net.dodian.uber.skills.smithing.SmeltingSelection
 
 /** Protocol-facing adapter for the legacy furnace UI; recipe ownership remains in the plugin. */
 object SmithingSmeltingBridge {
@@ -39,20 +38,18 @@ object SmithingSmeltingBridge {
 
     @JvmStatic
     fun selectPendingRecipe(client: Client, barId: Int): Boolean {
-        if (SmeltingRegistry.findRecipe(barId) == null) return false
-        client.pendingSmeltingBarId = barId
-        return true
+        return SmithingSmeltingService.selectPending(client.asSkillPlayer(), barId)
     }
 
     @JvmStatic
     fun selectPendingRecipeFromOre(client: Client, itemId: Int): Boolean {
         val recipe = SmeltingRegistry.findRecipeByOre(itemId) ?: return false
-        client.pendingSmeltingBarId = recipe.barId
-        return true
+        return SmithingSmeltingService.selectPending(client.asSkillPlayer(), recipe.barId)
     }
 
     @JvmStatic
-    fun startFromPending(client: Client, amount: Int): Boolean = start(client, client.pendingSmeltingBarId, amount)
+    fun startFromPending(client: Client, amount: Int): Boolean =
+        start(client, SmithingSmeltingService.pendingBar(client.asSkillPlayer()), amount)
 
     @JvmStatic
     fun promptX(client: Client, barId: Int): Boolean {
@@ -62,7 +59,7 @@ object SmithingSmeltingBridge {
 
     @JvmStatic
     fun promptPendingX(client: Client): Boolean {
-        if (SmeltingRegistry.findRecipe(client.pendingSmeltingBarId) == null) return false
+        if (SmeltingRegistry.findRecipe(SmithingSmeltingService.pendingBar(client.asSkillPlayer())) == null) return false
         client.enterAmountId = 2
         client.send(SendFrame27())
         return true
@@ -70,8 +67,7 @@ object SmithingSmeltingBridge {
 
     @JvmStatic
     fun clearSelection(client: Client) {
-        client.clearSmeltingSelection()
-        client.clearPendingSmeltingBarId()
+        SmithingSmeltingService.clear(client.asSkillPlayer(), ActionStopReason.USER_INTERRUPT)
     }
 
     private fun start(client: Client, barId: Int, amount: Int): Boolean {
@@ -80,7 +76,7 @@ object SmithingSmeltingBridge {
             client.sendMessage("You need level ${recipe.levelRequired} smithing to do this!")
             return true
         }
-        client.pendingSmeltingBarId = recipe.barId
+        SmithingSmeltingService.selectPending(client.asSkillPlayer(), recipe.barId)
         client.send(RemoveInterfaces())
         ContentActions.cancel(
             client,
@@ -89,12 +85,6 @@ object SmithingSmeltingBridge {
             closeInterfaces = false,
             resetCompatibilityState = false,
         )
-        begin(client, recipe, amount)
-        return true
-    }
-
-    private fun begin(client: Client, recipe: SmeltingRecipe, amount: Int) {
-        client.smeltingSelection = SmeltingSelection(recipe, amount.coerceAtLeast(1))
-        Smithing.startSmelting(client)
+        return SmithingSmeltingService.start(client.asSkillPlayer(), recipe.barId, amount)
     }
 }

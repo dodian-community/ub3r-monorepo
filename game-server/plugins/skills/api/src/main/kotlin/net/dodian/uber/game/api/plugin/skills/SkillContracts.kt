@@ -124,7 +124,10 @@ data class SkillCycleSignal(
 interface SkillActionHandle { fun cancel(reason: ActionStopReason = ActionStopReason.USER_INTERRUPT) }
 
 interface SkillActions {
+    /** Generic engine action lock exposed without leaking the concrete player implementation. */
+    val busy: Boolean get() = false
     fun animate(id: Int, delay: Int = 0)
+    fun resetAnimation() = animate(-1, 0)
     fun queue(spec: SkillActionSpec, beforeStart: () -> Unit = {}): SkillActionHandle?
     fun stop()
     fun lockMovement(locked: Boolean)

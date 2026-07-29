@@ -107,12 +107,13 @@ object SmithingModule : SkillPlugin {
     }
 
     private fun handleAnvil(interaction: SkillItemOnObjectInteraction): Boolean {
-        val player = interaction.player
-        val recipe = smeltingRecipes.firstOrNull { it.barId == interaction.itemId } ?: return false
-        if (player.skills.current(Skill.SMITHING) < recipe.levelRequired) {
-            player.ui.message("You need level ${recipe.levelRequired} smithing to smith this bar.")
-            return true
-        }
+        if (SmeltingRegistry.findRecipe(interaction.itemId) == null) return false
+        SmithingAnvilService.openForBar(
+            interaction.player,
+            interaction.itemId,
+            interaction.position.x,
+            interaction.position.y,
+        )
         return true
     }
 }

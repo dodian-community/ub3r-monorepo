@@ -4,7 +4,7 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.cache.objects.GameObjectData
 import net.dodian.uber.game.model.Position
-import net.dodian.uber.game.skill.smithing.Smithing
+import net.dodian.uber.game.skill.smithing.Superheat
 import net.dodian.uber.game.model.entity.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
@@ -144,7 +144,7 @@ object PacketMagicService {
         // Superheat
         if (castSpell == 1173) {
             if (!checkLevel(client, 43)) return
-            Smithing.castSuperheat(client, castOnItem)
+            Superheat.cast(client, castOnItem)
             return
         }
 

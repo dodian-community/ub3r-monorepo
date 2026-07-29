@@ -41,8 +41,6 @@ import net.dodian.uber.game.engine.systems.combat.CombatCooldownState;
 import net.dodian.uber.game.engine.systems.combat.CombatEngagementState;
 import net.dodian.uber.game.engine.systems.combat.CombatTargetState;
 import net.dodian.uber.game.engine.lifecycle.DeathTaskState;
-import net.dodian.uber.skills.smithing.ActiveSmithingSelection;
-import net.dodian.uber.skills.smithing.SmeltingSelection;
 import net.dodian.uber.game.skill.thieving.PyramidPlunderPlayerState;
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason;
 import net.dodian.uber.game.engine.systems.action.PendingProductionSelection;
@@ -136,7 +134,7 @@ public abstract class PlayerCore extends Entity {
     public int specialAmount = 100;
     public boolean specialActivated = false;
     public int currentCombatInterface = 5855; // default unarmed
-    public boolean IsCutting = false, IsAnvil = false;
+    public boolean IsCutting = false;
     public int MyShopID = -1;
     public int NpcDialogue = 0, NpcTalkTo = 0, NpcWanneTalk = 0;
     public boolean IsBanking = false, isPartyInterface = false, checkBankInterface, bankStyleViewOpen = false, NpcDialogueSend = false;
@@ -1358,42 +1356,6 @@ public abstract class PlayerCore extends Entity {
 
     public void clearDeathTaskState() {
         interactionState.clearDeathTaskState();
-    }
-
-    public ActiveSmithingSelection getActiveSmithingSelection() {
-        return interactionState.getActiveSmithingSelection();
-    }
-
-    public void setActiveSmithingSelection(ActiveSmithingSelection activeSmithingSelection) {
-        interactionState.setActiveSmithingSelection(activeSmithingSelection);
-    }
-
-    public void clearActiveSmithingSelection() {
-        interactionState.clearActiveSmithingSelection();
-    }
-
-    public SmeltingSelection getSmeltingSelection() {
-        return interactionState.getSmeltingSelection();
-    }
-
-    public void setSmeltingSelection(SmeltingSelection smeltingSelection) {
-        interactionState.setSmeltingSelection(smeltingSelection);
-    }
-
-    public void clearSmeltingSelection() {
-        interactionState.clearSmeltingSelection();
-    }
-
-    public int getPendingSmeltingBarId() {
-        return interactionState.getPendingSmeltingBarId();
-    }
-
-    public void setPendingSmeltingBarId(int barId) {
-        interactionState.setPendingSmeltingBarId(barId);
-    }
-
-    public void clearPendingSmeltingBarId() {
-        interactionState.clearPendingSmeltingBarId();
     }
 
     public PendingProductionSelection getPendingProductionSelection() {

@@ -11,8 +11,8 @@ import net.dodian.uber.skills.fishing.FishingModule
 import net.dodian.uber.skills.fletching.FletchingModule
 import net.dodian.uber.game.skill.herblore.HerbloreData
 import net.dodian.uber.skills.mining.MiningModule
-import net.dodian.uber.game.skill.smithing.SmithingFrameDefinitions
-import net.dodian.uber.game.skill.smithing.SmithingData
+import net.dodian.uber.skills.smithing.SmithingFrameDefinitions
+import net.dodian.uber.skills.smithing.SmithingData
 import net.dodian.uber.skills.smithing.SmeltingRegistry
 import net.dodian.uber.game.skill.thieving.Thieving
 import net.dodian.uber.skills.woodcutting.WoodcuttingModule

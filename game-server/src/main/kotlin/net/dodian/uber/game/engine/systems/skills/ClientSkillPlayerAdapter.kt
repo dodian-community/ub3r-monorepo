@@ -110,7 +110,9 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
         override fun refresh() = client.checkItemUpdate()
     }
     override val actions = object : SkillActions {
+        override val busy: Boolean get() = client.isBusy
         override fun animate(id: Int, delay: Int) = client.performAnimation(id, delay)
+        override fun resetAnimation() = client.rerequestAnim()
         override fun stop() = client.resetAction()
         override fun lockMovement(locked: Boolean) = client.setMovementLocked(locked)
         override fun beginSession(key: String) = SkillStateCoordinator.beginSession(client, key)

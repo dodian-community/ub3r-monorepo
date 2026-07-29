@@ -69,6 +69,7 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
     var maximumPrayerValue = 99
     var damageTaken = 0
     var stunTicks = 0
+    var busy = false
     var nowMillis = 1L
     private val itemAmounts = initialItems.filterValues { it > 0 }.toMutableMap()
     private val xp = mutableMapOf<Skill, Int>()
@@ -158,7 +159,9 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
         override fun refresh() { refreshCount++ }
     }
     override val actions = object : SkillActions {
+        override val busy: Boolean get() = this@FakeSkillPlayer.busy
         override fun animate(id: Int, delay: Int) { animations += id to delay }
+        override fun resetAnimation() { animations += -1 to 0 }
         override fun stop() { sessionKey = null }
         override fun lockMovement(locked: Boolean) = Unit
         override fun beginSession(key: String): Boolean = if (sessionKey == null || sessionKey == key) { sessionKey = key; true } else false

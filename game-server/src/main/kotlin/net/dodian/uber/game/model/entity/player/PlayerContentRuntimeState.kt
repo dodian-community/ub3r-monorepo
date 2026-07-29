@@ -18,8 +18,6 @@ import net.dodian.uber.game.engine.sync.player.PlayerSyncInvariantValidator
 import net.dodian.uber.game.engine.tasking.GameTaskSet
 import net.dodian.uber.game.skill.crafting.CraftingState
 import net.dodian.uber.game.skill.prayer.PrayerOfferingState
-import net.dodian.uber.skills.smithing.ActiveSmithingSelection
-import net.dodian.uber.skills.smithing.SmeltingSelection
 import net.dodian.uber.game.skill.thieving.PyramidPlunderPlayerState
 import net.dodian.uber.game.api.plugin.skills.PendingSkillMulti
 
@@ -57,9 +55,6 @@ class PlayerContentRuntimeState {
     // stale snapshot left behind by a prior session that happened to reuse the same slot.
     @Volatile private var previousSyncSnapshot: PlayerSyncInvariantValidator.ViewerLocalSnapshot? = null
     @Volatile private var deathTaskState: DeathTaskState? = null
-    @Volatile private var activeSmithingSelection: ActiveSmithingSelection? = null
-    @Volatile private var smeltingSelection: SmeltingSelection? = null
-    @Volatile private var pendingSmeltingBarId = -1
     @Volatile private var pendingProductionSelection: PendingProductionSelection? = null
     @Volatile private var activeProductionSelection: ActiveProductionSelection? = null
     @Volatile private var playerTaskSet: GameTaskSet<*>? = null
@@ -191,15 +186,6 @@ class PlayerContentRuntimeState {
     fun setDeathTaskState(value: DeathTaskState?) { deathTaskState = value }
     fun clearDeathTaskState() { deathTaskState = null }
 
-    fun getActiveSmithingSelection() = activeSmithingSelection
-    fun setActiveSmithingSelection(value: ActiveSmithingSelection?) { activeSmithingSelection = value }
-    fun clearActiveSmithingSelection() { activeSmithingSelection = null }
-    fun getSmeltingSelection() = smeltingSelection
-    fun setSmeltingSelection(value: SmeltingSelection?) { smeltingSelection = value }
-    fun clearSmeltingSelection() { smeltingSelection = null }
-    fun getPendingSmeltingBarId() = pendingSmeltingBarId
-    fun setPendingSmeltingBarId(value: Int) { pendingSmeltingBarId = value }
-    fun clearPendingSmeltingBarId() { pendingSmeltingBarId = -1 }
     fun getPendingProductionSelection() = pendingProductionSelection
     fun setPendingProductionSelection(value: PendingProductionSelection?) { pendingProductionSelection = value }
     fun clearPendingProductionSelection() { pendingProductionSelection = null }

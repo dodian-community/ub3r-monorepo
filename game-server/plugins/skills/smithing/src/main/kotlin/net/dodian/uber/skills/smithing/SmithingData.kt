@@ -1,4 +1,4 @@
-package net.dodian.uber.game.skill.smithing
+package net.dodian.uber.skills.smithing
 
 object SmithingData {
     private val smithingPageSlots = mapOf(

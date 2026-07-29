@@ -9,7 +9,7 @@ import net.dodian.uber.game.skill.crafting.Crafting
 import net.dodian.uber.game.skill.prayer.Prayer
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
-import net.dodian.uber.game.skill.smithing.SmithingInterface
+import net.dodian.uber.game.engine.systems.skills.SmithingAnvilBridge
 import net.dodian.uber.game.engine.systems.combat.CombatPreemptionPolicy
 import net.dodian.uber.game.engine.systems.skills.SmithingSmeltingBridge
 import net.dodian.uber.skills.mining.MiningModule
@@ -59,10 +59,7 @@ object PlayerActionCancellationService {
         WoodcuttingModule.stopAction(player.asSkillPlayer())
         MiningModule.stopAction(player.asSkillPlayer())
         player.contentRuntimeState.setResourcesGathered(0)
-        if (player.activeSmithingSelection != null || player.IsAnvil) {
-            SmithingInterface.resetRuntimeState(player)
-            player.send(RemoveInterfaces())
-        }
+        SmithingAnvilBridge.resetRuntimeState(player)
         player.clearPendingProductionSelection()
         player.clearActiveProductionSelection()
         player.contentRuntimeState.clearPendingSkillMulti()

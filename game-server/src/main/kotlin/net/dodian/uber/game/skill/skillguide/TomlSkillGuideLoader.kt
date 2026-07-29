@@ -5,7 +5,7 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.skill.herblore.HerbloreData
-import net.dodian.uber.game.skill.smithing.SmithingFrameDefinitions
+import net.dodian.uber.skills.smithing.SmithingFrameDefinitions
 import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger(TomlSkillGuideLoader::class.java)
