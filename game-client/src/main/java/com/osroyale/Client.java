@@ -76,6 +76,15 @@ public class Client extends GameEngine
      * @param args The main args.
      */
     public static void main(final String[] args) {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                if (loggedIn && localPlayer != null && instance != null) {
+                    localPlayer.saveProfile(instance);
+                }
+            } catch (Exception e) {
+                // ignore
+            }
+        }));
         try {
             net.runelite.client.RuneLite.main(args);
         } catch (final Exception e) {
@@ -12055,7 +12064,6 @@ public class Client extends GameEngine
                 com.osroyale.login.impl.MainScreen.loginMode.selectExistingAccount();
                 com.osroyale.login.impl.MainScreen.accountCreationStatus = "";
                 com.osroyale.login.impl.MainScreen.loginScreenState = 2;
-                localPlayer.saveProfile(this);
                 Profile.modelCache.unlinkAll();
                 return;
             }

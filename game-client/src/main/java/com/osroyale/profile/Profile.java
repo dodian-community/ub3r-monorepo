@@ -65,7 +65,7 @@ public class Profile {
      */
     public void drawProfileHead(int x, int y) {
         if (!username.isEmpty()) {
-            final String imagePath = PROFILES_DIR + "/" + username + ".png";
+            final String imagePath = PROFILES_DIR + "/" + username.toLowerCase() + ".png";
             final Sprite sprite = new Sprite(imagePath, 50, 50);
             if (sprite.raster != null) {
                 if(sprite.raster.length != 0) {
@@ -198,40 +198,7 @@ public class Profile {
     }
 
     public Sprite convertBodyModelToSprite(Model model) {
-        int spriteWidth = 100;
-        int spriteHeight = 150;
-        Sprite sprite = new Sprite(spriteWidth, spriteHeight);
-        int origX = Rasterizer3D.originViewX;
-        int origY = Rasterizer3D.originViewY;
-        int[] scanline = Rasterizer3D.scanOffsets;
-        int[] raster = Rasterizer2D.pixels;
-        int w = Rasterizer2D.width;
-        int h = Rasterizer2D.height;
-        int x1 = Rasterizer2D.leftX;
-        int x2 = Rasterizer2D.bottomX;
-        int y1 = Rasterizer2D.topY;
-        int y2 = Rasterizer2D.bottomY;
-        Rasterizer3D.aBoolean1464 = false;
-        Rasterizer3D.world = false;
-        Rasterizer2D.initDrawingArea(sprite.raster, spriteWidth, spriteHeight);
-        Rasterizer3D.useViewport();
-
-        int rotationX = 150;
-        int rotationY = 0;
-        int zoom = 550;
-        int sine = Model.SINE[rotationY] * zoom >> 16;
-        int cosine = Model.COSINE[rotationY] * zoom >> 16;
-        Rasterizer3D.renderOnGpu = true;
-        model.renderModel(rotationX, 0, rotationY, 0, sine, cosine);
-        Rasterizer3D.renderOnGpu = false;
-        Rasterizer2D.initDrawingArea(raster, w, h);
-        Rasterizer2D.setDrawingArea(x1, y1, x2, y2);
-        Rasterizer3D.originViewX = origX;
-        Rasterizer3D.originViewY = origY;
-        Rasterizer3D.scanOffsets = scanline;
-        Rasterizer3D.aBoolean1464 = true;
-        Rasterizer3D.world = true;
-        return sprite;
+        return ProfilePreviewRenderer.render(model);
     }
 
     public int[] getSkillLevels() {

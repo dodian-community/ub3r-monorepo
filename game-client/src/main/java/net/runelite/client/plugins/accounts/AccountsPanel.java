@@ -18,7 +18,6 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.PluginPanel;
@@ -28,11 +27,13 @@ public class AccountsPanel extends PluginPanel
 	private final JPanel accountsContainer = new JPanel();
 	private Client client;
 	private AccountsConfig config;
+	private Runnable refreshAction;
 
-	public void init(Client client, AccountsConfig config)
+	public void init(Client client, AccountsConfig config, Runnable refreshAction)
 	{
 		this.client = client;
 		this.config = config;
+		this.refreshAction = refreshAction;
 
 		getParent().setLayout(new BorderLayout());
 		getParent().add(this, BorderLayout.CENTER);
@@ -99,7 +100,7 @@ public class AccountsPanel extends PluginPanel
 
 		// Refresh action button
 		JButton refreshBtn = new JButton("Refresh");
-		refreshBtn.addActionListener(e -> updatePanel());
+		refreshBtn.addActionListener(e -> refreshAction.run());
 		accountsContainer.add(refreshBtn);
 
 		accountsContainer.revalidate();
@@ -141,15 +142,20 @@ public class AccountsPanel extends PluginPanel
 		JLabel bodyLabel = new JLabel();
 		bodyLabel.setHorizontalAlignment(JLabel.CENTER);
 		bodyLabel.setPreferredSize(new Dimension(100, 150));
+		bodyLabel.setMinimumSize(new Dimension(100, 150));
 		bodyLabel.setBorder(BorderFactory.createLineBorder(ColorScheme.DARK_GRAY_COLOR, 1));
-		bodyLabel.setToolTipText(getStatsTooltipHtml(p));
+		String tooltipText = (p.getLastLogin() > 0) ? getStatsTooltipHtml(p) : null;
 
-		File bodyImgFile = new File(net.runelite.client.RuneLite.PROFILES_DIR, p.getUsername() + "_body.png");
+		card.setToolTipText(tooltipText);
+		infoPanel.setToolTipText(tooltipText);
+		bodyLabel.setToolTipText(tooltipText);
+
+		File bodyImgFile = new File(net.runelite.client.RuneLite.PROFILES_DIR, p.getUsername().toLowerCase() + "_body.png");
 		if (bodyImgFile.exists())
 		{
 			try
 			{
-				BufferedImage img = ImageIO.read(bodyImgFile);
+				BufferedImage img = normalizeLegacyPreview(ImageIO.read(bodyImgFile));
 				bodyLabel.setIcon(new ImageIcon(img));
 			}
 			catch (Exception ex)
@@ -163,34 +169,81 @@ public class AccountsPanel extends PluginPanel
 		}
 		card.add(bodyLabel, BorderLayout.CENTER);
 
-		// Action Buttons Panel
-		JPanel btnPanel = new JPanel(new GridLayout(1, 2, 5, 0));
+		// Action Buttons Panel - only show Login button if NOT logged in
+		boolean isCurrentlyLoggedIn = Client.loggedIn;
+		JPanel btnPanel = new JPanel(new GridLayout(1, isCurrentlyLoggedIn ? 1 : 2, 5, 0));
 		btnPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 		btnPanel.setBorder(new EmptyBorder(5, 0, 0, 0));
 
-		JButton loginBtn = new JButton("Login");
-		loginBtn.addActionListener(e -> {
-			Client osClient = (Client) client;
-			if (Client.loggedIn)
-			{
-				osClient.resetLogout();
-			}
-			osClient.myUsername = p.getUsername();
-			osClient.myPassword = p.getPassword();
-			osClient.attemptLogin(osClient.myUsername, osClient.myPassword, false);
-		});
-		btnPanel.add(loginBtn);
+		if (!isCurrentlyLoggedIn)
+		{
+			JButton loginBtn = new JButton("Login");
+			loginBtn.addActionListener(e -> {
+				Client osClient = (Client) client;
+				osClient.myUsername = p.getUsername();
+				osClient.myPassword = p.getPassword();
+				osClient.attemptLogin(osClient.myUsername, osClient.myPassword, false);
+			});
+			btnPanel.add(loginBtn);
+		}
 
 		JButton deleteBtn = new JButton("Delete");
 		deleteBtn.addActionListener(e -> {
-			ProfileManager.delete(p);
+			com.osroyale.profile.ProfileManager.delete(p);
 			updatePanel();
 		});
 		btnPanel.add(deleteBtn);
 
 		card.add(btnPanel, BorderLayout.SOUTH);
+		card.setMaximumSize(new Dimension(Integer.MAX_VALUE, card.getPreferredSize().height));
 
 		return card;
+	}
+
+	/**
+	 * Old profile previews were written from the client's RGB raster directly into an ARGB PNG.
+	 * Their character pixels therefore have RGB data but a zero alpha channel. Keep them readable
+	 * in the sidebar until the next logout/save writes the corrected PNG format.
+	 */
+	static BufferedImage normalizeLegacyPreview(BufferedImage source)
+	{
+		if (source == null)
+		{
+			return null;
+		}
+
+		boolean requiresRepair = false;
+		for (int y = 0; y < source.getHeight() && !requiresRepair; y++)
+		{
+			for (int x = 0; x < source.getWidth(); x++)
+			{
+				int pixel = source.getRGB(x, y);
+				if ((pixel >>> 24) == 0 && (pixel & 0x00FFFFFF) != 0)
+				{
+					requiresRepair = true;
+					break;
+				}
+			}
+		}
+		if (!requiresRepair)
+		{
+			return source;
+		}
+
+		BufferedImage repaired = new BufferedImage(source.getWidth(), source.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		for (int y = 0; y < source.getHeight(); y++)
+		{
+			for (int x = 0; x < source.getWidth(); x++)
+			{
+				int pixel = source.getRGB(x, y);
+				if ((pixel >>> 24) == 0 && (pixel & 0x00FFFFFF) != 0)
+				{
+					pixel |= 0xFF000000;
+				}
+				repaired.setRGB(x, y, pixel);
+			}
+		}
+		return repaired;
 	}
 
 	private String getStatsTooltipHtml(Profile p)

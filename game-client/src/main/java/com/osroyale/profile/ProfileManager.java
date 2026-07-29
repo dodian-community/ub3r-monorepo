@@ -1,6 +1,6 @@
 package com.osroyale.profile;
 
-import com.osroyale.Client;
+import com.osroyale.Model;
 import com.osroyale.Utility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,6 +63,21 @@ public class ProfileManager {
         save();
     }
 
+    /** Saves a full appearance preview from the already assembled live-player model. */
+    public static void saveBodyPreview(Profile profile, Model model) {
+        if (profile == null || profile.getUsername().isEmpty() || model == null) {
+            return;
+        }
+        saveImage(
+                createImageFromPixels(
+                        profile.convertBodyModelToSprite(model).getPixels(),
+                        ProfilePreviewRenderer.PREVIEW_WIDTH,
+                        ProfilePreviewRenderer.PREVIEW_HEIGHT
+                ),
+                PROFILES_DIR + "/" + profile.getUsername().toLowerCase() + "_body.png"
+        );
+    }
+
     public static void delete(Profile profile) {
         profiles.remove(profile);
         // add back empty slot
@@ -72,13 +87,21 @@ public class ProfileManager {
 
     public static void save() {
         File file = new File(Utility.findcachedir() + File.separator + "profiles.dat");
-        if (!file.exists()) {
-            System.err.println("profiles.dat doesn't exist in " + file.getAbsolutePath());
-            return;
+        if (file.getParentFile() != null) {
+            file.getParentFile().mkdirs();
         }
         try (DataOutputStream output = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(file)))) {
-            output.write(profiles.size());
+            int validCount = 0;
+            for (Profile p : profiles) {
+                if (p != null && !p.emptySlot()) {
+                    validCount++;
+                }
+            }
+            output.write(validCount);
             for (Profile profile : profiles) {
+                if (profile == null || profile.emptySlot()) {
+                    continue;
+                }
                 output.writeUTF(profile.getUsername());
                 output.writeUTF(profile.getPassword());
 
@@ -97,10 +120,6 @@ public class ProfileManager {
                     output.writeShort(profile.getSkillLevels()[i]);
                 }
 
-                if(!profile.getUsername().isEmpty() && Client.loggedIn) {
-                    saveImage(createImageFromPixels(profile.convertModelToSprite(profile.getModel()).getPixels(), 50, 50), PROFILES_DIR + "/" + profile.getUsername() + ".png");
-                    saveImage(createImageFromPixels(profile.convertBodyModelToSprite(profile.getBodyModel()).getPixels(), 100, 150), PROFILES_DIR + "/" + profile.getUsername() + "_body.png");
-                }
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -116,8 +135,11 @@ public class ProfileManager {
             }
         }
         try (DataInputStream input = new DataInputStream(new BufferedInputStream(new FileInputStream(file)))) {
+            if (input.available() <= 0) {
+                return;
+            }
             int totalProfiles = input.read();
-            for (int i = 0; i < totalProfiles; i++) {
+            for (int i = 0; i < totalProfiles && i < MAX_PROFILES; i++) {
                 String username = input.readUTF();
                 String password = input.readUTF();
 
@@ -144,10 +166,17 @@ public class ProfileManager {
                     // Backwards compatibility fallback
                 }
 
+                Profile loadedProfile;
                 if (skillLevels != null) {
-                    profiles.add(i, new Profile(username, password, gender, equipment, recolours, skillLevels, lastLogin));
+                    loadedProfile = new Profile(username, password, gender, equipment, recolours, skillLevels, lastLogin);
                 } else {
-                    profiles.add(i, new Profile(username, password, gender, equipment, recolours));
+                    loadedProfile = new Profile(username, password, gender, equipment, recolours);
+                }
+
+                if (i < profiles.size()) {
+                    profiles.set(i, loadedProfile);
+                } else {
+                    profiles.add(loadedProfile);
                 }
             }
         } catch (IOException e) {
@@ -165,11 +194,20 @@ public class ProfileManager {
      * @return The created BufferedImage.
      */
     public static BufferedImage createImageFromPixels(int[] pixels, int width, int height) {
+        if (pixels == null || pixels.length < width * height) {
+            throw new IllegalArgumentException("Profile raster does not contain " + (width * height) + " pixels");
+        }
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
-        // Create a WritableRaster to set the pixel data
+        // Client raster pixels are RGB values (0x00RRGGBB). BufferedImage.TYPE_INT_ARGB
+        // interprets the high byte as alpha, so copying them verbatim makes every rendered
+        // model pixel transparent. Preserve a transparent zero background and make rendered
+        // RGB pixels opaque for profile previews.
         int[] dataBuffer = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
-        System.arraycopy(pixels, 0, dataBuffer, 0, pixels.length);
+        for (int index = 0; index < width * height; index++) {
+            int rgb = pixels[index] & 0x00FFFFFF;
+            dataBuffer[index] = rgb == 0 ? 0 : 0xFF000000 | rgb;
+        }
 
         return image;
     }

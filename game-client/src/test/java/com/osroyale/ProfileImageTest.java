@@ -1,5 +1,6 @@
 package com.osroyale;
 
+import com.osroyale.profile.Profile;
 import com.osroyale.profile.ProfileManager;
 import org.junit.Test;
 
@@ -16,6 +17,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 public class ProfileImageTest {
 
@@ -78,6 +81,69 @@ public class ProfileImageTest {
         }
     }
 
+    @Test
+    public void profileRasterConversionKeepsTheBackgroundTransparentAndCharacterPixelsOpaque() {
+        BufferedImage image = ProfileManager.createImageFromPixels(
+                new int[]{0x00000000, 0x00123456, 0x00ABCDEF, 0x00000000}, 2, 2);
+
+        assertEquals(0x00000000, image.getRGB(0, 0));
+        assertEquals(0xFF123456, image.getRGB(1, 0));
+        assertEquals(0xFFABCDEF, image.getRGB(0, 1));
+        assertEquals(0x00000000, image.getRGB(1, 1));
+    }
+
+    @Test
+    public void bodyPreviewRestoresTheLiveRasterStateWhenModelRenderingFails() {
+        int[] originalPixels = Rasterizer2D.pixels;
+        int originalWidth = Rasterizer2D.width;
+        int originalHeight = Rasterizer2D.height;
+        int originalOriginX = Rasterizer3D.originViewX;
+        int originalOriginY = Rasterizer3D.originViewY;
+        int[] originalScanOffsets = Rasterizer3D.scanOffsets;
+        boolean originalRestrictEdges = Rasterizer3D.aBoolean1464;
+        boolean originalWorld = Rasterizer3D.world;
+        boolean originalRenderOnGpu = Rasterizer3D.renderOnGpu;
+
+        int[] expectedPixels = new int[35];
+        int[] expectedScanOffsets = new int[]{1, 2, 3};
+        try {
+            Rasterizer2D.initDrawingArea(expectedPixels, 7, 5);
+            Rasterizer3D.originViewX = 91;
+            Rasterizer3D.originViewY = 73;
+            Rasterizer3D.scanOffsets = expectedScanOffsets;
+            Rasterizer3D.aBoolean1464 = true;
+            Rasterizer3D.world = true;
+            Rasterizer3D.renderOnGpu = false;
+
+            try {
+                new Profile().convertBodyModelToSprite(new FailingModel());
+                throw new AssertionError("Expected model rendering to fail");
+            } catch (ExpectedRenderFailure ignored) {
+                // The renderer must restore the client canvas in its finally block.
+            }
+
+            assertSame(expectedPixels, Rasterizer2D.pixels);
+            assertEquals(7, Rasterizer2D.width);
+            assertEquals(5, Rasterizer2D.height);
+            assertEquals(91, Rasterizer3D.originViewX);
+            assertEquals(73, Rasterizer3D.originViewY);
+            assertSame(expectedScanOffsets, Rasterizer3D.scanOffsets);
+            assertTrue(Rasterizer3D.aBoolean1464);
+            assertTrue(Rasterizer3D.world);
+            assertFalse(Rasterizer3D.renderOnGpu);
+        } finally {
+            Rasterizer2D.pixels = originalPixels;
+            Rasterizer2D.width = originalWidth;
+            Rasterizer2D.height = originalHeight;
+            Rasterizer3D.originViewX = originalOriginX;
+            Rasterizer3D.originViewY = originalOriginY;
+            Rasterizer3D.scanOffsets = originalScanOffsets;
+            Rasterizer3D.aBoolean1464 = originalRestrictEdges;
+            Rasterizer3D.world = originalWorld;
+            Rasterizer3D.renderOnGpu = originalRenderOnGpu;
+        }
+    }
+
     private static BufferedImage image(int width, int height, int color) {
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         for (int y = 0; y < height; y++) {
@@ -99,5 +165,16 @@ public class ProfileImageTest {
     @FunctionalInterface
     private interface ThrowingRunnable {
         void run() throws Exception;
+    }
+
+    private static final class FailingModel extends Model {
+        @Override
+        public void renderModel(int rotationY, int rotationZ, int rotationXW,
+                                int translationX, int translationY, int translationZ) {
+            throw new ExpectedRenderFailure();
+        }
+    }
+
+    private static final class ExpectedRenderFailure extends RuntimeException {
     }
 }

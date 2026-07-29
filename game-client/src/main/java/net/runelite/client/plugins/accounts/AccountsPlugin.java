@@ -5,6 +5,8 @@ import java.awt.image.BufferedImage;
 import javax.inject.Inject;
 import javax.swing.SwingUtilities;
 import net.runelite.api.Client;
+import net.runelite.api.GameState;
+import net.runelite.client.callback.ClientThread;
 import net.runelite.client.events.SessionOpen;
 import net.runelite.client.events.SessionClose;
 import net.runelite.client.config.ConfigManager;
@@ -14,6 +16,8 @@ import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.util.ImageUtil;
+import com.osroyale.profile.Profile;
+import com.osroyale.profile.ProfileManager;
 
 @PluginDescriptor(
 	name = "Accounts Manager",
@@ -28,6 +32,9 @@ public class AccountsPlugin extends Plugin
 
 	@Inject
 	private Client client;
+
+	@Inject
+	private ClientThread clientThread;
 
 	@Inject
 	private AccountsConfig config;
@@ -45,7 +52,7 @@ public class AccountsPlugin extends Plugin
 	protected void startUp() throws Exception
 	{
 		panel = injector.getInstance(AccountsPanel.class);
-		panel.init((com.osroyale.Client) client, config);
+		panel.init((com.osroyale.Client) client, config, this::refreshPanel);
 
 		final BufferedImage icon = ImageUtil.loadImageResource(getClass(), "accounts_icon.png");
 
@@ -66,14 +73,57 @@ public class AccountsPlugin extends Plugin
 	}
 
 	@Subscribe
+	public void onGameStateChanged(net.runelite.api.events.GameStateChanged event)
+	{
+		if (event.getGameState() == GameState.LOGGED_IN)
+		{
+			refreshPanel();
+		}
+		else
+		{
+			SwingUtilities.invokeLater(panel::updatePanel);
+		}
+	}
+
+	@Subscribe
 	public void onSessionOpen(SessionOpen event)
 	{
-		SwingUtilities.invokeLater(() -> panel.updatePanel());
+		refreshPanel();
 	}
 
 	@Subscribe
 	public void onSessionClose(SessionClose event)
 	{
-		SwingUtilities.invokeLater(() -> panel.updatePanel());
+		SwingUtilities.invokeLater(panel::updatePanel);
+	}
+
+	private void refreshPanel()
+	{
+		if (!com.osroyale.Client.loggedIn || com.osroyale.Client.localPlayer == null)
+		{
+			SwingUtilities.invokeLater(panel::updatePanel);
+			return;
+		}
+
+		clientThread.invokeLater(() ->
+		{
+			Profile currentProfile = null;
+			synchronized (ProfileManager.profiles)
+			{
+				for (Profile profile : ProfileManager.profiles)
+				{
+					if (profile != null && profile.getUsername().equalsIgnoreCase(((com.osroyale.Client) client).myUsername))
+					{
+						currentProfile = profile;
+						break;
+					}
+				}
+			}
+			if (currentProfile != null)
+			{
+				com.osroyale.Client.localPlayer.refreshProfilePreview(currentProfile);
+			}
+			SwingUtilities.invokeLater(panel::updatePanel);
+		});
 	}
 }

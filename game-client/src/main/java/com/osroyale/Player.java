@@ -524,7 +524,21 @@ public final class Player extends Entity implements RSPlayer {
             skills[3] = 10;
         }
         long lastLogin = System.currentTimeMillis();
-        ProfileManager.add(new Profile(client.myUsername, client.myPassword, gender, appearanceModels, appearanceColors, skills, lastLogin));
+        Profile profile = new Profile(client.myUsername, client.myPassword, gender, appearanceModels, appearanceColors, skills, lastLogin);
+        ProfileManager.add(profile);
+        refreshProfilePreview(profile);
+    }
+
+    /**
+     * The live player model has already resolved every worn identity-kit and item model.
+     * Use it for account previews so a cache miss cannot silently drop a helm, head, or cape.
+     */
+    public void refreshProfilePreview(Profile profile) {
+        Client activeClient = Client.instance;
+        if (activeClient == null || !activeClient.isClientThread()) {
+            return;
+        }
+        ProfileManager.saveBodyPreview(profile, getAnimatedModel());
     }
 
     @Override
