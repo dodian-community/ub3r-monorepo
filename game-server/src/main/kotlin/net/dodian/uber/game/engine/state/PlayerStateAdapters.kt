@@ -53,18 +53,18 @@ object InteractionSessionStateAdapter {
 object GroundItemIntentStateAdapter {
     @JvmStatic
     fun beginPickup(player: Client, target: GroundItem) {
-        player.pickupWanted = true
+        player.contentRuntimeState.setPickupWanted(true)
         player.attemptGround = target
     }
 
     @JvmStatic
     fun clearPickup(player: Client) {
-        player.pickupWanted = false
+        player.contentRuntimeState.setPickupWanted(false)
         player.attemptGround = null
     }
 
     @JvmStatic
-    fun wantsPickup(player: Client): Boolean = player.pickupWanted
+    fun wantsPickup(player: Client): Boolean = player.contentRuntimeState.isPickupWanted()
 
     @JvmStatic
     fun target(player: Client): GroundItem? = player.attemptGround

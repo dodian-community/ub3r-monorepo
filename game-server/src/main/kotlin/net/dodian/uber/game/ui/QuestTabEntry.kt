@@ -142,11 +142,11 @@ enum class QuestTabEntry(
                         client.sendString("@dre@Uber Server 3.0 - Boss Log", 8144)
                         client.clearQuestInterface()
                         var line = 8145
-                        for (i in client.boss_name.indices) {
-                            if (client.boss_amount[i] < 100000) {
-                                client.sendString(client.boss_name[i].replace("_", " ") + ": " + client.boss_amount[i], line)
+                        for (i in 0 until client.bossKillLogState.size()) {
+                            if (client.bossKillLogState.countAt(i) < 100000) {
+                                client.sendString(client.bossKillLogState.nameAt(i).replace("_", " ") + ": " + client.bossKillLogState.countAt(i), line)
                             } else {
-                                client.sendString(client.boss_name[i].replace("_", " ") + ": LOTS", line)
+                                client.sendString(client.bossKillLogState.nameAt(i).replace("_", " ") + ": LOTS", line)
                             }
                             line++
                             if (line == 8196) {
@@ -257,7 +257,7 @@ enum class QuestTabEntry(
                             client.sendMessage("You do not have permission to open the Game Control Panel.")
                             return true
                         }
-                        client.openModcpList()
+                        net.dodian.uber.game.social.moderation.ModerationService.openList(client)
                         return true
                     }
 

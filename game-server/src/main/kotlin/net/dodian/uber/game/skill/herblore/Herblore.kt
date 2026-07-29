@@ -22,7 +22,7 @@ object Herblore {
         }
         client.send(RemoveInterfaces())
         val slot = client.XremoveSlot - 1
-        if (slot !in client.herbOptions.indices) {
+        if (slot !in client.herbloreDialogueState.options.indices) {
             client.XinterfaceID = -1
             return true
         }
@@ -40,7 +40,7 @@ object Herblore {
     @JvmStatic
     fun processBatch(client: Client, request: HerbloreBatchRequest) {
         var amount = request.amount
-        val id = client.herbOptions[request.slot].getId()
+        val id = client.herbloreDialogueState.options[request.slot].id
         val grimy = client.getItemName(id).lowercase().contains("grimy")
         val coins = client.getInvAmt(995)
 
@@ -48,7 +48,7 @@ object Herblore {
             amount = minOf(amount, coins / HerbloreData.GRIND_COST_PER_HERB, client.getInvAmt(id))
             if (amount > 0) {
                 if (client.getInvAmt(id) <= amount) {
-                    client.herbOptions.removeAt(request.slot)
+                    client.herbloreDialogueState.options.removeAt(request.slot)
                 }
                 val otherHerb =
                     HerbloreData.herbDefinitions
@@ -81,7 +81,7 @@ object Herblore {
         amount = minOf(amount, coins / HerbloreData.UNFINISHED_POTION_COST, vials, herbs)
         if (amount > 0) {
             if (herbs <= amount) {
-                client.herbOptions.removeAt(request.slot)
+                client.herbloreDialogueState.options.removeAt(request.slot)
             }
             client.deleteItem(995, amount * HerbloreData.UNFINISHED_POTION_COST)
             client.deleteItem(HerbloreData.VIAL_OF_WATER_ID, amount)

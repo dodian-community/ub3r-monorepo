@@ -139,7 +139,7 @@ object PacketMagicService {
             client.send(SendSideTab(6))
             return
         }
-        if (client.randomed || client.randomed2) return
+        if (client.randomed || client.skillingEventState.isSecondaryRandomEventPending) return
 
         // Superheat
         if (castSpell == 1173) {

@@ -12,6 +12,7 @@ import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.netty.listener.out.SetTabInterface
 import net.dodian.uber.game.netty.listener.out.ShowInterface
 import net.dodian.uber.game.economy.PriceCheckerService
+import net.dodian.uber.game.skill.herblore.HerbloreDialogueService
 
 object UiInterface : InterfaceButtonContent {
     private val runOffButtons = intArrayOf(152)
@@ -81,9 +82,7 @@ object UiInterface : InterfaceButtonContent {
                 if (client.refundSlot != -1) {
                     client.refundSlot = -1
                 }
-                if (client.herbMaking != -1) {
-                    client.herbMaking = -1
-                }
+                HerbloreDialogueService.clear(client)
                 var refreshItems = false
                 if (wasBanking) {
                     client.IsBanking = false

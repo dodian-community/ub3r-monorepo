@@ -695,20 +695,11 @@ public class Npc extends Entity {
     }
 
     public void addBossCount(Player p) {
-        for (int i = 0; i < p.boss_name.length; i++) {
-            if (npcName().equalsIgnoreCase(p.boss_name[i].replace("_", " "))) {
-                if (p.boss_amount[i] >= 100000)
-                    return;
-                p.boss_amount[i] += 1;
-            }
-        }
+        p.getBossKillLogState().incrementForNpcName(npcName());
     }
 
     public int killCount(Player p) {
-        for (int i = 0; i < p.boss_name.length; i++)
-            if (npcName().equalsIgnoreCase(p.boss_name[i].replace("_", " ")))
-                return p.boss_amount[i];
-        return 0;
+        return p.getBossKillLogState().countForNpcName(npcName());
     }
 
     public void die() {

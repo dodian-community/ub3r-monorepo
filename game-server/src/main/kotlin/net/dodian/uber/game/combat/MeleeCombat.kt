@@ -28,7 +28,7 @@ fun Client.handleMeleeAttack(): CombatAttackResult? {
         return null
     else if (!hasStaff() && magicId >= 0)
         return null
-    else if (usingBow)
+    else if (contentRuntimeState.isCombatUsingBow())
         return null
     if (stunTimer > 0 || target == null)
         return null

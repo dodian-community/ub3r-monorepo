@@ -28,10 +28,12 @@ import net.dodian.uber.game.skill.slayer.Slayer;
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService;
 import net.dodian.uber.game.activity.partyroom.PartyRoomBalloons;
 import net.dodian.uber.game.activity.partyroom.PartyRoomRewardItem;
+import net.dodian.uber.game.activity.partyroom.PartyRoomOfferState;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
 import net.dodian.uber.game.skill.fletching.FletchingState;
 import net.dodian.uber.game.skill.crafting.CraftingState;
 import net.dodian.uber.game.skill.prayer.PrayerOfferingState;
+import net.dodian.uber.game.skill.herblore.HerbloreDialogueState;
 import net.dodian.uber.game.engine.systems.interaction.ActiveInteraction;
 import net.dodian.uber.game.engine.systems.interaction.StaticObjectOverrides;
 import net.dodian.uber.game.engine.systems.interaction.InteractionAnchorState;
@@ -61,9 +63,14 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
-public abstract class Player extends Entity {
+/**
+ * Java implementation detail retained while the Player entity is migrated to Kotlin.
+ * New gameplay state and behavior must live in named Kotlin services/state components,
+ * not in this compatibility core.
+ */
+abstract class PlayerCore extends Entity {
     private static final AtomicLong NEXT_SESSION_GENERATION = new AtomicLong(1L);
-    private static final Logger logger = LoggerFactory.getLogger(Player.class);
+    private static final Logger logger = LoggerFactory.getLogger(PlayerCore.class);
     public boolean yellOn = true, genie = false, antique = false, instaLoot = false, autoRetaliate = false, debugPackets = false;
     public long toleranceTimer = 0L;
     public Position toleranceCenter = null;
@@ -79,13 +86,32 @@ public abstract class Player extends Entity {
     private final PlayerAccountState accountState = new PlayerAccountState(this);
     private final PlayerContentRuntimeState interactionState = new PlayerContentRuntimeState();
     private final PlayerQuestProgressState questProgressState = new PlayerQuestProgressState();
+    private final HerbloreDialogueState herbloreDialogueState = new HerbloreDialogueState();
+    private final PartyRoomOfferState partyRoomOfferState = new PartyRoomOfferState();
+    private final BossKillLogState bossKillLogState = new BossKillLogState();
 
     public PlayerContentRuntimeState getContentRuntimeState() {
         return interactionState;
     }
 
+    public RunePouchState getRunePouchState() {
+        return runePouchState;
+    }
+
     public PlayerQuestProgressState getQuestProgressState() {
         return questProgressState;
+    }
+
+    public HerbloreDialogueState getHerbloreDialogueState() {
+        return herbloreDialogueState;
+    }
+
+    public PartyRoomOfferState getPartyRoomOfferState() {
+        return partyRoomOfferState;
+    }
+
+    public BossKillLogState getBossKillLogState() {
+        return bossKillLogState;
     }
     private final PlayerMovementState movementState = new PlayerMovementState(this);
     private final PlayerUpdateState updateState = new PlayerUpdateState(this);
@@ -95,9 +121,6 @@ public abstract class Player extends Entity {
     public long start = 0, lastPlayerCombat = 0;
     public static int id = -1, localId = -1;
     public boolean busy = false, invis = false;
-    public String[] boss_name = {"Dad", "Abyssal_Guardian", "San_Tojalon", "Black_Knight_Titan", "Jungle_Demon", "Ungadulu", "Nechryael", "Ice_Queen",
-            "King_Black_Dragon", "Head_Mourners", "Black_Demon", "Dagannoth_Prime", "Dwayne", "TzTok-Jad", "Kalphite_queen", "Kalphite_king", "Venenatis"};
-    public int[] boss_amount = new int[boss_name.length];
     public int iconTimer = 6;
     public String forcedChat = "";
     public int headIcon = -1, skullIcon = -1, customCombat = -1;
@@ -165,21 +188,15 @@ public abstract class Player extends Entity {
     public int m4005 = 0;
     public int m4006 = 0;
     public int m4007 = 0;
-    //Runecrafting
-    public int[] runePouchesAmount = {0, 0, 0, 0};
-    public int[] runePouchesLevel = {1, 20, 40, 60};
-    public int[] runePouchesMaxAmount = {4, 7, 10, 13};
+    // Runecrafting owns pouch definitions and persisted contents.
+    private final RunePouchState runePouchState = new RunePouchState();
     //Agility
     public boolean UsingAgility = false;
     public int agilityCourseStage = 0;
     private long walkBlockUntilCycle = -1L;
     public boolean xLog = false;
-    public ArrayList<PartyRoomRewardItem> offeredPartyItems = new ArrayList<>();
     
     public ArrayList<Integer> playerPotato = new ArrayList<>();
-    //Herblore service
-    public int herbMaking = -1;
-    public ArrayList<PartyRoomRewardItem> herbOptions = new ArrayList<>();
     //Slayer
     public int unlockLength = 2;
     public int lastRecoverEffect = 0, lastRecover = 4;
@@ -195,7 +212,7 @@ public abstract class Player extends Entity {
     private final PlayerProgressState progressState = new PlayerProgressState(this);
     private final PlayerCombatState combatState = new PlayerCombatState(this);
 
-    public Player(int slot) {
+    protected PlayerCore(int slot) {
         super(new Position(-1, -1, 0), slot, Entity.Type.PLAYER);
         // Delegated state components are not safe to call from field initializers.
         currentHealth = maxHealth;
@@ -350,6 +367,8 @@ public abstract class Player extends Entity {
         clearDamageAttribution();
         interactionState.terminatePlayerTasks();
         interactionState.clearPluginAttributes();
+        herbloreDialogueState.clear();
+        partyRoomOfferState.clear();
         removeFromChunk();
         getPosition().moveTo(-1, -1);
         movementState.resetTransientState();
@@ -2237,25 +2256,6 @@ public abstract class Player extends Entity {
         isNpc = false;
         setPlayerNpc(-1);
         getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-    }
-
-    public void setHerbOptions() {
-        Client c = ((Client) this);
-        if(herbOptions.isEmpty()) {
-            herbMaking = -1;
-            DialogueService.setNextDialogueId(c, -1);
-            return;
-        }
-        int slot = herbMaking;
-        String[] text = new String[herbOptions.size() < 4 ? herbOptions.size() + 2 : herbOptions.size() - slot <= 3 ? herbOptions.size() - slot + 2 : 6];
-        text[0] = "What do you wish me to do?";
-        int position = Math.min(3, herbOptions.size() - slot);
-        for(int i = 0; i < position; i++)
-            text[i + 1] = c.getItemName(herbOptions.get(slot + i).getId());
-        text[position + 1] = text.length < 6 && slot == 0 ? "Close" : text.length == 6 ? "Next" : "Previous";
-        if(text.length == 6)
-            text[position + 2] = slot == 0 ? "Close" : "Previous";
-        c.showPlayerOption(text);
     }
 
     @Override

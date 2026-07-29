@@ -229,7 +229,7 @@ object DuelingService {
     fun start(client: Client) {
         val other = client.getClient(client.duel_with) ?: return decline(client)
         client.send(RemoveInterfaces())
-        client.canAttack = false
+        client.contentRuntimeState.setCombatAttackEnabled(false)
         client.canOffer = false
         client.duelFight = true
         client.prayerManager.reset()
@@ -247,7 +247,7 @@ object DuelingService {
             state = step.nextState
             step.forceChat?.let(client::requestForceChat)
             if (step.enableCombat) {
-                client.canAttack = true
+                client.contentRuntimeState.setCombatAttackEnabled(true)
                 false
             } else true
         }
@@ -263,7 +263,7 @@ object DuelingService {
         client.duelConfirmed = false
         client.duelConfirmed2 = false
         client.duelFight = false
-        client.canAttack = true
+        client.contentRuntimeState.setCombatAttackEnabled(true)
         client.inDuel = false
         client.duelRule = BooleanArray(11)
         Arrays.fill(client.duelBodyRules, false)

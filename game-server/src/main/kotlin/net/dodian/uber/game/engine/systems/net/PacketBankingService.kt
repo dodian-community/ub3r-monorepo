@@ -526,7 +526,7 @@ object PacketBankingService {
                     }
                     PartyRoomBalloons.removeOfferedPartyItems(
                         client,
-                        client.offeredPartyItems[client.XremoveSlot].getId(),
+                        client.partyRoomOfferState.items[client.XremoveSlot].getId(),
                         enteredAmount,
                         client.XremoveSlot,
                     )
@@ -782,7 +782,7 @@ object PacketBankingService {
 
     private fun isValidTradeOfferSlot(client: Client, slot: Int): Boolean = slot in ExchangeRuntime.offers(client).indices
 
-    private fun isValidPartyOfferSlot(client: Client, slot: Int): Boolean = slot in 0 until client.offeredPartyItems.size
+    private fun isValidPartyOfferSlot(client: Client, slot: Int): Boolean = slot in 0 until client.partyRoomOfferState.items.size
 
     private fun isValidEquipmentSlot(client: Client, slot: Int): Boolean = slot in client.equipment.indices
 

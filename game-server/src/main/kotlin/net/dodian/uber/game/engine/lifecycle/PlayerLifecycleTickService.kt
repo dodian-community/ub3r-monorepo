@@ -163,11 +163,11 @@ object PlayerLifecycleTickService {
 
     @JvmStatic
     fun processEffectsPeriodicPersistence(player: Client, wallClockNow: Long) {
-        if (!shouldPersistActiveEffects(player.effects, player.lastEffectsPeriodicDirtyAtMs, wallClockNow)) {
+        if (!shouldPersistActiveEffects(player.effects, player.contentRuntimeState.effectsPeriodicDirtyAtMillis, wallClockNow)) {
             return
         }
         player.markSaveDirty(PlayerSaveSegment.EFFECTS.mask)
-        player.lastEffectsPeriodicDirtyAtMs = wallClockNow
+        player.contentRuntimeState.effectsPeriodicDirtyAtMillis = wallClockNow
     }
 
     private fun handlePrayerDrain(player: Client) {

@@ -10,7 +10,7 @@ public class RemoveInterfaces implements OutgoingPacket {
     public void send(Client client) {
         client.checkBankInterface = false;
         client.clearBankStyleView();
-        client.currentSkill = -1;
+        client.getContentRuntimeState().clearSelectedSkillGuideSkillId();
         client.send(new net.dodian.uber.game.netty.game.encode.TarnishOutboundPackets.RemoveInterfaces().encode());
     }
 

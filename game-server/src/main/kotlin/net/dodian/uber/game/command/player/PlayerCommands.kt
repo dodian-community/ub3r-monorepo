@@ -101,9 +101,9 @@ private fun handlePlayerUtility(context: CommandContext): Boolean {
         )
         val magicIncrease = String.format("%3.1f", (client.magicBonusDamage() - 1.0) * 100.0)
         if (client.autocast_spellIndex == -1) {
-            client.sendMessage("<col=292BA3>Magic max hit (smoke rush): ${(client.baseDamage[0] * client.magicBonusDamage()).toInt()} (Magic damage increase: $magicIncrease%)")
+            client.sendMessage("<col=292BA3>Magic max hit (smoke rush): ${(net.dodian.uber.game.combat.AncientSpellRegistry.baseDamage()[0] * client.magicBonusDamage()).toInt()} (Magic damage increase: $magicIncrease%)")
         } else {
-            client.sendMessage("<col=292BA3>Magic max hit (${client.spellName[client.autocast_spellIndex]}): ${(client.baseDamage[client.autocast_spellIndex] * client.magicBonusDamage()).toInt()} (Magic damage increase: $magicIncrease%)")
+            client.sendMessage("<col=292BA3>Magic max hit (${net.dodian.uber.game.combat.AncientSpellRegistry.spellName()[client.autocast_spellIndex]}): ${(net.dodian.uber.game.combat.AncientSpellRegistry.baseDamage()[client.autocast_spellIndex] * client.magicBonusDamage()).toInt()} (Magic damage increase: $magicIncrease%)")
         }
         return true
     }

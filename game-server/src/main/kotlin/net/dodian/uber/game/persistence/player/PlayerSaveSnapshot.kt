@@ -81,9 +81,9 @@ data class PlayerSaveSnapshot(
                     equipment.append(i).append('-').append(client.equipment[i]).append('-').append(client.equipmentN[i]).append(' ')
                 }
             }
-            for (i in client.boss_name.indices) {
-                if (client.boss_amount[i] >= 0) {
-                    bossLog.append(client.boss_name[i]).append(':').append(client.boss_amount[i]).append(' ')
+            for (i in 0 until client.bossKillLogState.size()) {
+                if (client.bossKillLogState.countAt(i) >= 0) {
+                    bossLog.append(client.bossKillLogState.nameAt(i)).append(':').append(client.bossKillLogState.countAt(i)).append(' ')
                 }
             }
             for (i in 0 until client.effects.size) {

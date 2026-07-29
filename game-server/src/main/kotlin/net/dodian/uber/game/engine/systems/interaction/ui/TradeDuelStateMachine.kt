@@ -137,7 +137,7 @@ object TradeDuelStateMachine {
         val noMagic = player.duelRule[2]
 
         if (!noMelee) return true
-        if (!noRanged && player.usingBow) return true
+        if (!noRanged && player.contentRuntimeState.isCombatUsingBow()) return true
         if (!noMagic && (player.magicId >= 0 || (player.hasStaff() && player.autocast_spellIndex >= 0))) return true
         return false
     }

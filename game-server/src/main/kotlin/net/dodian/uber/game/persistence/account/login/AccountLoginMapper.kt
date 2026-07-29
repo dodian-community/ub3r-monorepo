@@ -265,7 +265,7 @@ internal object AccountLoginMapper {
         }
         val pouches = pouchData.split(":")
         for (index in pouches.indices) {
-            if (index >= player.runePouchesAmount.size) {
+            if (index >= player.runePouchState.size()) {
                 break
             }
             val amount = pouches[index].toIntOrNull()
@@ -273,7 +273,7 @@ internal object AccountLoginMapper {
                 reject(player, "rune-pouches", "invalid amount index=$index")
                 continue
             }
-            player.runePouchesAmount[index] = amount
+            player.runePouchState.setAmount(index, amount)
         }
     }
 
@@ -312,9 +312,7 @@ internal object AccountLoginMapper {
 
     private fun applyBossLog(player: Client, bossLog: String?) {
         if (bossLog == null) {
-            for (index in player.boss_name.indices) {
-                player.boss_amount[index] = 0
-            }
+            player.bossKillLogState.reset()
             return
         }
         for (line in bossLog.split(" ")) {

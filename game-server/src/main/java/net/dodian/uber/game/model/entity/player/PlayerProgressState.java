@@ -139,11 +139,7 @@ final class PlayerProgressState {
     }
 
     void bossCount(String name, int amount) {
-        for (int i = 0; i < owner.boss_name.length; i++) {
-            if (owner.boss_name[i].equalsIgnoreCase(name)) {
-                owner.boss_amount[i] = amount;
-            }
-        }
+        owner.getBossKillLogState().set(name, amount);
     }
 
     void addMonsterName(String name) {

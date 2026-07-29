@@ -215,7 +215,7 @@ object PartyRoomBalloons {
 
     @JvmStatic
     fun displayOfferedItems(client: Client) {
-        client.send(PartyItemsDisplay(2274, client.offeredPartyItems))
+        client.send(PartyItemsDisplay(2274, client.partyRoomOfferState.items))
     }
 
     @JvmStatic
@@ -229,29 +229,29 @@ object PartyRoomBalloons {
 
         var adjustedAmount = amount
         val stackable = Server.itemManager.isStackable(id)
-        if (!stackable && adjustedAmount >= 8 - client.offeredPartyItems.size) {
-            adjustedAmount = 8 - client.offeredPartyItems.size
+        if (!stackable && adjustedAmount >= 8 - client.partyRoomOfferState.items.size) {
+            adjustedAmount = 8 - client.partyRoomOfferState.items.size
         }
 
         if (!stackable) {
             adjustedAmount = adjustedAmount.coerceAtMost(client.getInvAmt(id))
             repeat(adjustedAmount) {
                 client.deleteItem(id, 1)
-                client.offeredPartyItems.add(PartyRoomRewardItem(id, 1))
+                client.partyRoomOfferState.items.add(PartyRoomRewardItem(id, 1))
             }
         } else {
             adjustedAmount = adjustedAmount.coerceAtMost(client.getInvAmt(id))
             client.deleteItem(id, adjustedAmount)
             var found = false
-            client.offeredPartyItems.forEach { item ->
+            client.partyRoomOfferState.items.forEach { item ->
                 if (item.getId() == id) {
                     found = true
                     item.setAmount(adjustedAmount)
                 }
             }
             if (!found) {
-                if (client.offeredPartyItems.size < 8) {
-                    client.offeredPartyItems.add(PartyRoomRewardItem(id, adjustedAmount))
+                if (client.partyRoomOfferState.items.size < 8) {
+                    client.partyRoomOfferState.items.add(PartyRoomRewardItem(id, adjustedAmount))
                 } else {
                     adjustedAmount = 0
                 }
@@ -273,20 +273,20 @@ object PartyRoomBalloons {
         val stackable = Server.itemManager.isStackable(id)
 
         if (!stackable) {
-            val checkAmount = client.offeredPartyItems.count { item -> item.getId() == id }
+            val checkAmount = client.partyRoomOfferState.items.count { item -> item.getId() == id }
             adjustedAmount = adjustedAmount.coerceAtMost(checkAmount)
             repeat(adjustedAmount) {
                 client.addItem(id, 1)
-                val removeIndex = client.offeredPartyItems.indexOfFirst { item -> item.getId() == id }
+                val removeIndex = client.partyRoomOfferState.items.indexOfFirst { item -> item.getId() == id }
                 if (removeIndex != -1) {
-                    client.offeredPartyItems.removeAt(removeIndex)
+                    client.partyRoomOfferState.items.removeAt(removeIndex)
                 }
             }
         } else {
-            val offeredItem = client.offeredPartyItems.getOrNull(slot) ?: return
+            val offeredItem = client.partyRoomOfferState.items.getOrNull(slot) ?: return
             if (adjustedAmount >= offeredItem.getAmount()) {
                 adjustedAmount = offeredItem.getAmount()
-                client.offeredPartyItems.removeAt(slot)
+                client.partyRoomOfferState.items.removeAt(slot)
             } else {
                 offeredItem.setAmount(-adjustedAmount)
             }
@@ -306,10 +306,10 @@ object PartyRoomBalloons {
             return
         }
 
-        var index = client.offeredPartyItems.size - 1
-        while (client.offeredPartyItems.isNotEmpty() && depositedItems.size < MAX_DEPOSITED_ITEMS && index >= 0) {
-            depositedItems.add(client.offeredPartyItems[index])
-            client.offeredPartyItems.removeAt(index)
+        var index = client.partyRoomOfferState.items.size - 1
+        while (client.partyRoomOfferState.items.isNotEmpty() && depositedItems.size < MAX_DEPOSITED_ITEMS && index >= 0) {
+            depositedItems.add(client.partyRoomOfferState.items[index])
+            client.partyRoomOfferState.items.removeAt(index)
             index--
         }
 

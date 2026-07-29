@@ -12,7 +12,7 @@ object SkillingRandomEventService {
     fun show(client: Client) {
         client.resetAction(true)
         val state = client.skillingEventState
-        if (state.isRandomEventOpen && client.randomed2) {
+        if (state.isRandomEventOpen && state.isSecondaryRandomEventPending) {
             return
         }
         val randomSkill = Utils.random(20)

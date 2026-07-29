@@ -77,8 +77,9 @@ object MagicCombatFormula : CombatFormula {
 
     override fun maximumHit(attacker: Client, target: Entity): Int {
         val slot = attacker.autocast_spellIndex
-        return if (slot in attacker.baseDamage.indices) {
-            (attacker.baseDamage[slot] * attacker.magicBonusDamage()).toInt()
+        val damage = AncientSpellRegistry.baseDamage()
+        return if (slot in damage.indices) {
+            (damage[slot] * attacker.magicBonusDamage()).toInt()
         } else {
             0
         }

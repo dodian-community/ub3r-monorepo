@@ -160,8 +160,9 @@ data class PlayerSaveEnvelope(
                     )
             }
             if (has(PlayerSaveSegment.META)) {
-                val bossLog =
-                    client.boss_name.indices.map { index -> NamedCountEntry(client.boss_name[index], client.boss_amount[index]) }
+                val bossLog = (0 until client.bossKillLogState.size()).map { index ->
+                    NamedCountEntry(client.bossKillLogState.nameAt(index), client.bossKillLogState.countAt(index))
+                }
                 val monsterLog =
                     client.monsterName.indices.map { index ->
                         NamedCountEntry(client.monsterName[index], client.monsterCount[index])

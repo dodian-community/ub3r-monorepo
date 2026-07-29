@@ -19,6 +19,7 @@ import net.dodian.uber.game.engine.systems.skills.RuneCostService
 import net.dodian.uber.game.engine.util.Misc
 import net.dodian.uber.game.engine.systems.cache.CacheSpotAnimDefinitions
 import net.dodian.utilities.Utils
+import net.dodian.uber.game.combat.AncientSpellRegistry
 import kotlin.math.min
 
 
@@ -34,8 +35,8 @@ fun Client.handleMagicAttack(): CombatAttackResult? {
         type = autocast_spellIndex%4
     else {
         if(ancients == 1) {
-            for (checkSlot in ancientId.indices)
-                if (magicId == ancientId[checkSlot]) {
+            for (checkSlot in AncientSpellRegistry.ancientId().indices)
+                if (magicId == AncientSpellRegistry.ancientId()[checkSlot]) {
                     slot = checkSlot
                     type = checkSlot % 4
                     break
@@ -43,8 +44,8 @@ fun Client.handleMagicAttack(): CombatAttackResult? {
         } else return null //Unhandled regular magic!
     }
     /* Checks after known magic cast! */
-    if (getLevel(Skill.MAGIC) < requiredLevel[slot]) {
-        send(SendMessage("You need a magic level of ${requiredLevel[slot]} to cast this spell!"))
+    if (getLevel(Skill.MAGIC) < AncientSpellRegistry.requiredLevel()[slot]) {
+        send(SendMessage("You need a magic level of ${AncientSpellRegistry.requiredLevel()[slot]} to cast this spell!"))
         resetAttack()
         return null
     }
@@ -63,7 +64,7 @@ fun Client.handleMagicAttack(): CombatAttackResult? {
     val hitDelay = getDistanceDelay(distance, true).toLong()
     deleteItem(565, 1)
     checkItemUpdate()
-    var maxHit = baseDamage[slot] * magicBonusDamage()
+    var maxHit = AncientSpellRegistry.baseDamage()[slot] * magicBonusDamage()
     if (target is Npc) { // Slayer damage!
         val checkNpc = Server.npcManager.getNpc(target.slot)
         if(getSlayerDamage(checkNpc.id, true) == 2)
@@ -131,7 +132,7 @@ fun Client.handleMagicAttack(): CombatAttackResult? {
         ProgressionService.addXp(this, 13 * hit, Skill.HITPOINTS)
     }
     if (target is Player) {
-        val player = resolveCombatTargetPlayer(target.slot) ?: return CombatAttackResult(coolDown[type])
+        val player = resolveCombatTargetPlayer(target.slot) ?: return CombatAttackResult(AncientSpellRegistry.coolDown()[type])
         if (landCrit) hit += Utils.dRandom2(extra).toInt()
         CombatHitQueueService.enqueue(
             currentGameCycle + hitDelay,
@@ -161,7 +162,7 @@ fun Client.handleMagicAttack(): CombatAttackResult? {
         if(autocast_spellIndex < 0) target = null //Set this as no target if we got no autocast set!
     }
 
-    val nextDelay = coolDown[type]
+    val nextDelay = AncientSpellRegistry.coolDown()[type]
     if (debug) send(SendMessage("hit = $hit, nextDelay = $nextDelay, hitDelay = $hitDelay"))
 
     return CombatAttackResult(nextDelay)

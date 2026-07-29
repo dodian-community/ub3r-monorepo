@@ -56,7 +56,7 @@ object RewardInterface : InterfaceButtonContent {
                     return@buttonBinding true
                 }
 
-                if (client.randomed && request.rawButtonId == client.statId[client.random_skill]) {
+                if (client.randomed && request.rawButtonId == InterfaceConstants.SKILL_REWARD_BUTTONS[client.random_skill]) {
                     client.randomed = false
                     client.resetTabs()
                     client.send(RemoveInterfaces())

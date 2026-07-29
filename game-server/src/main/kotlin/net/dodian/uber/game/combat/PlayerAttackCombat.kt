@@ -41,7 +41,7 @@ fun Client.getAttackStyle() : Int {
         return 2
     else if (!hasStaff() && magicId >= 0)
         return 2
-    else if (usingBow)
+    else if (contentRuntimeState.isCombatUsingBow())
         return 1
     return 0
 }
@@ -81,7 +81,7 @@ fun Client.attackTarget(): CombatAttackResult? {
             resetAttack()
             return null
         }
-        if (!canAttack) {
+        if (!contentRuntimeState.isCombatAttackEnabled()) {
             send(SendMessage("You cannot attack your oppenent yet!"))
             resetAttack()
             return null

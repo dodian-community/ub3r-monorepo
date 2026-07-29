@@ -32,6 +32,7 @@ object PacketInterfaceCloseService {
         )
         DialogueService.closeBlockingDialogue(client, closeInterfaces = false)
         client.contentRuntimeState.clearPendingInputState()
+        net.dodian.uber.game.social.moderation.ModerationService.close(client)
 
         if (client.viewingAccountServices) {
             net.dodian.uber.game.ui.AccountServices.close(client)
@@ -65,9 +66,7 @@ object PacketInterfaceCloseService {
         if (client.inTrade) {
             TradeDuelSessionService.closeOpenTrade(client)
         }
-        if (client.currentSkill >= 0) {
-            client.currentSkill = -1
-        }
+        client.contentRuntimeState.clearSelectedSkillGuideSkillId()
         client.send(RemoveInterfaces())
     }
 }

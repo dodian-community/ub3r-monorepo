@@ -1,6 +1,7 @@
 package net.dodian.uber.game.npc
 
 import net.dodian.uber.game.activity.partyroom.PartyRoomRewardItem
+import net.dodian.uber.game.skill.herblore.HerbloreDialogueService
 import net.dodian.uber.game.skill.herblore.HerbloreData
 import net.dodian.uber.game.api.content.dialogue.DialogueEmote
 import net.dodian.uber.game.api.content.dialogue.DialogueOption
@@ -57,47 +58,47 @@ internal object HerbloreNpcDialogue {
 
     @JvmStatic
     fun openHerbCleaner(client: Client, npcId: Int) {
-        client.herbMaking = 0
-        client.herbOptions.clear()
+        client.herbloreDialogueState.page = 0
+        client.herbloreDialogueState.options.clear()
         for (index in grimyHerbs.indices) {
             val notedGrimy = client.getNotedItem(grimyHerbs[index])
             if (client.playerHasItem(notedGrimy)) {
-                client.herbOptions.add(PartyRoomRewardItem(notedGrimy, 0))
+                client.herbloreDialogueState.options.add(PartyRoomRewardItem(notedGrimy, 0))
             }
         }
-        if (client.herbOptions.isEmpty()) {
+        if (client.herbloreDialogueState.options.isEmpty()) {
             DialogueService.start(client) {
                 npcChat(npcId, DialogueEmote.LAUGH1, "You got no herbs for me to clean!")
                 finish()
             }
             return
         }
-        client.setHerbOptions()
+        HerbloreDialogueService.showOptions(client)
     }
 
     @JvmStatic
     fun openUnfinishedPotionMaker(client: Client, npcId: Int) {
-        client.herbMaking = 0
-        client.herbOptions.clear()
+        client.herbloreDialogueState.page = 0
+        client.herbloreDialogueState.options.clear()
         for (index in cleanHerbs.indices) {
             val notedHerb = client.getNotedItem(cleanHerbs[index])
             if (client.playerHasItem(notedHerb)) {
-                client.herbOptions.add(PartyRoomRewardItem(client.getNotedItem(unfinishedPotions[index]), 0))
+                client.herbloreDialogueState.options.add(PartyRoomRewardItem(client.getNotedItem(unfinishedPotions[index]), 0))
             }
         }
-        if (client.herbOptions.isEmpty()) {
+        if (client.herbloreDialogueState.options.isEmpty()) {
             DialogueService.start(client) {
                 npcChat(npcId, DialogueEmote.LAUGH1, "You got no herbs for me to make into unfinish potions!")
                 finish()
             }
             return
         }
-        client.setHerbOptions()
+        HerbloreDialogueService.showOptions(client)
     }
 
     @JvmStatic
     fun showBatchResultAndContinue(client: Client, npcId: Int, firstLine: String, secondLine: String) {
-        if (client.herbOptions.isEmpty()) {
+        if (client.herbloreDialogueState.options.isEmpty()) {
             DialogueService.start(client) {
                 npcChat(npcId, DialogueEmote.ALMOST_CRYING, firstLine, secondLine)
                 finish()
@@ -107,7 +108,7 @@ internal object HerbloreNpcDialogue {
         DialogueService.start(client) {
             npcChat(npcId, DialogueEmote.ALMOST_CRYING, firstLine, secondLine)
             finishThen(closeInterfaces = false) { c ->
-                c.setHerbOptions()
+                HerbloreDialogueService.showOptions(c)
             }
         }
     }

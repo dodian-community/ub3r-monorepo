@@ -49,6 +49,8 @@ class PlayerContentRuntimeState {
     @Volatile private var attackStartDedupeState: AttackStartDedupeState? = null
     @Volatile private var combatCancellationReason: CombatCancellationReason? = null
     @Volatile private var combatLogoutLockUntilCycle = 0L
+    @Volatile private var combatAttackEnabled = true
+    @Volatile private var combatUsingBow = false
     @Volatile private var lastBlockAnimationCycle = -1L
     // Dev/staging-only diagnostic scratch: previous tick's local-list snapshot for
     // PlayerSyncInvariantValidator (see WorldSynchronizationService, gated on serverDebugMode).
@@ -74,6 +76,11 @@ class PlayerContentRuntimeState {
     @Volatile private var activeSkillSessionKey: String? = null
     @Volatile private var activeSkillSessionStartedCycle = 0L
     @Volatile private var pendingSkillMulti: PendingSkillMulti? = null
+    @Volatile private var selectedSkillGuideSkillId = -1
+    @Volatile private var effectsPeriodicDirtyAtMillis = 0L
+    @Volatile private var lastDoorToggleCycle = 0L
+    @Volatile private var resourcesGathered = 0
+    @Volatile private var pickupWanted = false
     private val economyRuntimeState = EconomyRuntimeState()
     private val throttleUntilCycles = ConcurrentHashMap<String, Long>()
 
@@ -134,6 +141,17 @@ class PlayerContentRuntimeState {
     fun getPendingSkillMulti() = pendingSkillMulti
     fun setPendingSkillMulti(value: PendingSkillMulti?) { pendingSkillMulti = value }
     fun clearPendingSkillMulti() { pendingSkillMulti = null }
+    fun getSelectedSkillGuideSkillId() = selectedSkillGuideSkillId
+    fun setSelectedSkillGuideSkillId(value: Int) { selectedSkillGuideSkillId = value }
+    fun clearSelectedSkillGuideSkillId() { selectedSkillGuideSkillId = -1 }
+    fun getEffectsPeriodicDirtyAtMillis() = effectsPeriodicDirtyAtMillis
+    fun setEffectsPeriodicDirtyAtMillis(value: Long) { effectsPeriodicDirtyAtMillis = value }
+    fun getLastDoorToggleCycle() = lastDoorToggleCycle
+    fun setLastDoorToggleCycle(value: Long) { lastDoorToggleCycle = value }
+    fun getResourcesGathered() = resourcesGathered
+    fun setResourcesGathered(value: Int) { resourcesGathered = value }
+    fun isPickupWanted() = pickupWanted
+    fun setPickupWanted(value: Boolean) { pickupWanted = value }
     fun getActiveActionHandle() = activeActionHandle
     fun setActiveActionHandle(value: QueueTaskHandle?) { activeActionHandle = value }
     fun getActiveActionType() = activeActionType
@@ -166,6 +184,10 @@ class PlayerContentRuntimeState {
     fun clearCombatCancellationReason() { combatCancellationReason = null }
     fun getCombatLogoutLockUntilCycle() = combatLogoutLockUntilCycle
     fun setCombatLogoutLockUntilCycle(value: Long) { combatLogoutLockUntilCycle = value }
+    fun isCombatAttackEnabled() = combatAttackEnabled
+    fun setCombatAttackEnabled(value: Boolean) { combatAttackEnabled = value }
+    fun isCombatUsingBow() = combatUsingBow
+    fun setCombatUsingBow(value: Boolean) { combatUsingBow = value }
     fun getLastBlockAnimationCycle() = lastBlockAnimationCycle
     fun setLastBlockAnimationCycle(value: Long) { lastBlockAnimationCycle = value }
     fun getPreviousSyncSnapshot() = previousSyncSnapshot

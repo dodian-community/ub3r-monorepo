@@ -189,7 +189,7 @@ public class ClickingButtonsListener implements PacketListener {
         client.loadAndShowModcpDetails(targetName, other != null, other != null ? other.connectedFrom : "Offline");
 
         // Show player options dialogue
-        client.modcpDialogState = 1;
+        net.dodian.uber.game.social.moderation.ModerationService.beginDialogue(client, targetName);
         client.showPlayerOption(new String[]{
             "Manage " + targetName,
             "Teleport Actions",

@@ -10,6 +10,8 @@ import net.dodian.uber.game.ui.buttons.buttonBinding
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.engine.systems.dialogue.DialogueIds
 import net.dodian.uber.game.shop.ShopId
+import net.dodian.uber.game.skill.herblore.HerbloreDialogueService
+import net.dodian.uber.game.social.moderation.ModerationService
 
 object DialogueInterface : InterfaceButtonContent {
     private const val INTERFACE_ID = 0
@@ -52,8 +54,8 @@ object DialogueInterface : InterfaceButtonContent {
         )
 
     private fun handleOption(client: net.dodian.uber.game.model.entity.player.Client, rawButtonId: Int, optionIndex: Int): Boolean {
-        if (client.modcpDialogState != 0) {
-            client.handleModcpDialogue(optionIndex)
+        if (ModerationService.hasActiveDialogue(client)) {
+            ModerationService.handleDialogue(client, optionIndex)
             return true
         }
         if (client.accountServicesDialogState != 0) {
@@ -64,7 +66,7 @@ object DialogueInterface : InterfaceButtonContent {
             handleRefundMenu(client, optionIndex)
             return true
         }
-        if (client.herbMaking != -1) {
+        if (client.herbloreDialogueState.page != -1) {
             handleHerbMenu(client, optionIndex)
             return true
         }
@@ -163,22 +165,23 @@ object DialogueInterface : InterfaceButtonContent {
     }
 
     private fun handleHerbMenu(client: net.dodian.uber.game.model.entity.player.Client, optionIndex: Int) {
-        val size = client.herbOptions.size
-        val position = size - client.herbMaking
-        if (client.herbMaking == 0 && ((size > 3 && optionIndex == 5) || (size == 3 && optionIndex == 4) || (size == 1 && optionIndex == 2) || (size == 2 && optionIndex == 3))) {
-            client.herbMaking = -1
+        val state = client.herbloreDialogueState
+        val size = state.options.size
+        val position = size - state.page
+        if (state.page == 0 && ((size > 3 && optionIndex == 5) || (size == 3 && optionIndex == 4) || (size == 1 && optionIndex == 2) || (size == 2 && optionIndex == 3))) {
+            state.page = -1
             client.send(RemoveInterfaces())
         } else if ((position > 3) && optionIndex == 4) {
-            client.herbMaking += 3
-        } else if (client.refundSlot != 0 && ((position <= 3 && optionIndex == position + 1) || (position > 3 && optionIndex == 5))) {
-            client.herbMaking -= 3
-        } else if (client.herbMaking + optionIndex <= size) {
+            state.page += 3
+        } else if (state.page != 0 && ((position <= 3 && optionIndex == position + 1) || (position > 3 && optionIndex == 5))) {
+            state.page -= 3
+        } else if (state.page + optionIndex <= size) {
             client.send(RemoveInterfaces())
             client.XinterfaceID = 4753
-            client.XremoveSlot = client.herbMaking + optionIndex
-            client.herbMaking = -1
+            client.XremoveSlot = state.page + optionIndex
+            state.page = -1
             client.send(SendFrame27())
         }
-        client.setHerbOptions()
+        HerbloreDialogueService.showOptions(client)
     }
 }

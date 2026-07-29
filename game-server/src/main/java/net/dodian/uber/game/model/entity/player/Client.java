@@ -124,7 +124,6 @@ public class Client extends Player implements Runnable {
     private final boolean[] lastMenuEnabled = new boolean[6];
     private final String[] lastMenuText = new String[6];
     private boolean menuCacheInitialized = false;
-    private long lastEffectsPeriodicDirtyAtMs = 0L;
     private int lastPlayerUpdateCapacity = 8192;
     private int lastNpcUpdateCapacity = 16384;
     /**
@@ -132,14 +131,8 @@ public class Client extends Player implements Runnable {
      */
     private boolean windowFocused = true;
     public String failer = "";
-    public Date now = new Date();
-    public Date today = checkCalendarDate(now, 0);
     public long mutedTill;
-    public long rightNow = now.getTime();
-    public int resourcesGathered = 0;
-    public long lastDoorCycle = 0L;
     public long session_start = 0;
-    public boolean pickupWanted = false;
     public GroundItem attemptGround = null;
     // Game-thread-only: mutated by friend/ignore-list packet handlers, read during login
     // (AccountLoginMapper) and periodic save-snapshot building (WorldMaintenanceService), all of
@@ -214,12 +207,6 @@ public class Client extends Player implements Runnable {
     public java.util.List<Integer> getDropDisplayKey() { return dropDisplayKey; }
     public void setDropDisplayKey(java.util.List<Integer> key) { this.dropDisplayKey = key; }
 
-    public int[] requiredLevel = AncientSpellRegistry.requiredLevel();
-    public int[] baseDamage = AncientSpellRegistry.baseDamage();
-    public String[] spellName = AncientSpellRegistry.spellName();
-    public int[] ancientId = AncientSpellRegistry.ancientId();
-    public int[] coolDown = AncientSpellRegistry.coolDown();
-    public int[] ancientButton = AncientSpellRegistry.ancientButton();
     public String properName = "";
     public int actionButtonId = 0;
     public int skillX = 0, skillY = 0;
@@ -336,7 +323,7 @@ public class Client extends Player implements Runnable {
 
     public int getbattleTimer(int weapon) {
         int wepPlainTick = Server.itemManager.getAttackSpeed(weapon);
-        if (usingBow && fightType == 2) //Rapid style
+        if (getContentRuntimeState().isCombatUsingBow() && fightType == 2) //Rapid style
             wepPlainTick -= 1;
         return wepPlainTick;
     }
@@ -534,7 +521,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void clearQuestInterface() {
-        for (int j : QuestInterface)
+        for (int j : net.dodian.uber.game.ui.InterfaceConstants.QUEST_TEXT_COMPONENTS)
             send(new SendString("", j));
     }
 
@@ -547,18 +534,6 @@ public class Client extends Player implements Runnable {
     }
 
     public int ancients = 1;
-    public int[] QuestInterface = {8145, 8147, 8148, 8149, 8150, 8151, 8152, 8153, 8154, 8155, 8156, 8157, 8158, 8159,
-            8160, 8161, 8162, 8163, 8164, 8165, 8166, 8167, 8168, 8169, 8170, 8171, 8172, 8173, 8174, 8175, 8176, 8177, 8178,
-            8179, 8180, 8181, 8182, 8183, 8184, 8185, 8186, 8187, 8188, 8189, 8190, 8191, 8192, 8193, 8194, 8195, 12174,
-            12175, 12176, 12177, 12178, 12179, 12180, 12181, 12182, 12183, 12184, 12185, 12186, 12187, 12188, 12189, 12190,
-            12191, 12192, 12193, 12194, 12195, 12196, 12197, 12198, 12199, 12200, 12201, 12202, 12203, 12204, 12205, 12206,
-            12207, 12208, 12209, 12210, 12211, 12212, 12213, 12214, 12215, 12216, 12217, 12218, 12219, 12220, 12221, 12222,
-            12223};
-
-    public int[] statId = {2812, 2816, 2813, 2817, 2814, 2818, 2815, 2827, 2829, 2830, 2826, 2828, 2822,
-            2825, 2824, 2820, 2819, 2821, 47002, 54090, 2823};
-    public String[] BonusName = {"Stab", "Slash", "Crush", "Magic", "Range", "Stab", "Slash", "Crush", "Magic", "Range",
-            "Melee Str", "Ranged Str", "Magic Dmg", "Prayer"};
 
     public int i;
     public int XremoveSlot = 0;
@@ -1438,7 +1413,7 @@ public class Client extends Player implements Runnable {
         if (specialItems && playerRights < 2) {
             dropAllItems();
             attemptGround = null;
-            pickupWanted = false;
+            getContentRuntimeState().setPickupWanted(false);
             PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(this);
             return;
         }
@@ -1450,7 +1425,7 @@ public class Client extends Player implements Runnable {
 
         if (target.x != x || target.y != y || target.z != getPosition().getZ()) {
             attemptGround = null;
-            pickupWanted = false;
+            getContentRuntimeState().setPickupWanted(false);
             PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(this);
             return;
         }
@@ -1458,7 +1433,7 @@ public class Client extends Player implements Runnable {
         if (!hasSpace() && Server.itemManager.isStackable(target.id) && !playerHasItem(target.id)) {
             send(new SendMessage("Your inventory is full!"));
             attemptGround = null;
-            pickupWanted = false;
+            getContentRuntimeState().setPickupWanted(false);
             PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(this);
             return;
         }
@@ -1466,14 +1441,14 @@ public class Client extends Player implements Runnable {
         if (premiumItem(target.id) && !premium) {
             send(new SendMessage("You must be a premium member to use this item"));
             attemptGround = null;
-            pickupWanted = false;
+            getContentRuntimeState().setPickupWanted(false);
             PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(this);
             return;
         }
 
         if (!Ground.tryClaimPickup(this, target)) {
             attemptGround = null;
-            pickupWanted = false;
+            getContentRuntimeState().setPickupWanted(false);
             PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(this);
             return;
         }
@@ -1488,7 +1463,7 @@ public class Client extends Player implements Runnable {
             Ground.releaseClaim(target);
         }
         attemptGround = null;
-        pickupWanted = false;
+        getContentRuntimeState().setPickupWanted(false);
         PlayerDeferredLifecycleService.cancelGroundPickupArrivalWatch(this);
     }
 
@@ -2004,16 +1979,6 @@ public class Client extends Player implements Runnable {
         new PlayerInitializer().initializePlayer(this);
     }
 
-    public boolean canAttack = true;
-
-    public long getLastEffectsPeriodicDirtyAtMs() {
-        return lastEffectsPeriodicDirtyAtMs;
-    }
-
-    public void setLastEffectsPeriodicDirtyAtMs(long atMillis) {
-        lastEffectsPeriodicDirtyAtMs = atMillis;
-    }
-
 
     /**
      * Shows or hides an interface
@@ -2032,8 +1997,6 @@ public class Client extends Player implements Runnable {
         send(new ShowMenuItems2(items, amount));
     }
 
-    public int currentSkill = -1;
-
     public static void publicyell(String message) {
         net.dodian.uber.game.social.WorldAnnouncementService.broadcast(message);
     }
@@ -2049,8 +2012,6 @@ public class Client extends Player implements Runnable {
     public void yellAreaKilled(String message, String area) {
         net.dodian.uber.game.social.WorldAnnouncementService.broadcastArea(message, area);
     }
-
-    public boolean usingBow = false;
 
     public boolean hasItemInInventory(int ItemID) {
         for (int playerItem : playerItems) {
@@ -2097,7 +2058,6 @@ public class Client extends Player implements Runnable {
         return GetBankItemSlot(itemId);
     }
 
-    public boolean randomed2;
     // private int setLastVote = 0;
 
     public void pmstatus(int status) { // status: loading = 0 connecting = 1
@@ -2597,7 +2557,7 @@ public class Client extends Player implements Runnable {
     public void updateBonus(int id) {
         String send;
         if (id >= 0 && id < 14) {
-            send = BonusName[id] + ": " + (playerBonus[id] >= 0 ? "+" + playerBonus[id] : playerBonus[id]);
+            send = net.dodian.uber.game.ui.InterfaceConstants.BONUS_NAMES[id] + ": " + (playerBonus[id] >= 0 ? "+" + playerBonus[id] : playerBonus[id]);
         } else {
             send = "Bonus: " + playerBonus[id];
         }
@@ -2894,11 +2854,7 @@ public class Client extends Player implements Runnable {
     }
 
     public String getPouches() {
-        StringBuilder out = new StringBuilder();
-        for (int i = 0; i < runePouchesAmount.length; i++) {
-            out.append(runePouchesAmount[i]).append(i == runePouchesAmount.length - 1 ? "" : ":");
-        }
-        return out.toString();
+        return getRunePouchState().saveValue();
     }
 
     public void setLook(int[] parts) {
@@ -3016,7 +2972,7 @@ public class Client extends Player implements Runnable {
             send(new SendMessage("A magical force stop you from teleporting."));
             return;
         }
-        if (isInCombat() || randomed2) {
+        if (isInCombat() || getSkillingEventState().isSecondaryRandomEventPending()) {
             send(new SendMessage(isInCombat() ? "You cant teleport during combat!" : "You can't teleport out of here!"));
             return;
         }
@@ -3331,7 +3287,7 @@ public class Client extends Player implements Runnable {
 
     public void checkBow() {
         int weaponId = getEquipment()[Equipment.Slot.WEAPON.getId()];
-        usingBow = bowWeapon(weaponId);
+        getContentRuntimeState().setCombatUsingBow(bowWeapon(weaponId));
     }
 
     public boolean bowWeapon(int weaponId) {

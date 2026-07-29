@@ -7,6 +7,7 @@ import net.dodian.uber.game.ui.buttons.buttonBinding
 
 import net.dodian.uber.game.ui.combat.CombatStyleService
 import net.dodian.uber.game.engine.util.Misc
+import net.dodian.uber.game.combat.AncientSpellRegistry
 
 object MagicInterface : InterfaceButtonContent {
     private const val NORMAL_INTERFACE_ID = 40000
@@ -85,8 +86,8 @@ object MagicInterface : InterfaceButtonContent {
                     componentKey = "magic.autocast.select",
                     rawButtonIds = autocastSelectButtons,
                 ) { client, request ->
-                    for (index in client.ancientButton.indices) {
-                        if (client.autocast_spellIndex == -1 && request.rawButtonId == client.ancientButton[index]) {
+                    for (index in AncientSpellRegistry.ancientButton().indices) {
+                        if (client.autocast_spellIndex == -1 && request.rawButtonId == AncientSpellRegistry.ancientButton()[index]) {
                             client.autocast_spellIndex = index
                         }
                     }
