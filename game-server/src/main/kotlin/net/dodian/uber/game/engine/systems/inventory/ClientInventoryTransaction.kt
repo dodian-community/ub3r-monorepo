@@ -5,6 +5,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
 import java.util.Collections
 import java.util.IdentityHashMap
+import net.dodian.uber.game.social.exchange.ExchangeRuntime
 
 /**
  * Staged, all-or-nothing mutation of one player's live inventory arrays.
@@ -30,7 +31,11 @@ class ClientInventoryTransaction internal constructor(
         var remaining = amount
         for (slot in itemIds.indices) {
             if (itemIds[slot] != itemId + 1 || remaining == 0) continue
-            val removed = minOf(amounts[slot], remaining)
+            val removed = minOf(
+                (amounts[slot] - ExchangeRuntime.reservedAt(client, slot, itemId)).coerceAtLeast(0),
+                remaining,
+            )
+            if (removed == 0) continue
             amounts[slot] -= removed
             remaining -= removed
             if (amounts[slot] == 0) itemIds[slot] = 0
@@ -40,7 +45,9 @@ class ClientInventoryTransaction internal constructor(
     }
 
     fun removeAt(slot: Int, itemId: Int, amount: Int = 1): Boolean {
-        if (!valid(itemId, amount) || slot !in itemIds.indices || itemIds[slot] != itemId + 1 || amounts[slot] < amount) {
+        if (!valid(itemId, amount) || slot !in itemIds.indices || itemIds[slot] != itemId + 1 ||
+            amounts[slot] < amount || !ExchangeRuntime.mayRemove(client, slot, itemId, amount)
+        ) {
             failed = true
             return false
         }
@@ -88,12 +95,16 @@ class ClientInventoryTransaction internal constructor(
     }
 
     fun amountOf(itemId: Int): Int =
-        itemIds.indices.sumOf { slot -> if (itemIds[slot] == itemId + 1) amounts[slot].toLong() else 0L }
+        itemIds.indices.sumOf { slot ->
+            if (itemIds[slot] == itemId + 1) {
+                (amounts[slot] - ExchangeRuntime.reservedAt(client, slot, itemId)).coerceAtLeast(0).toLong()
+            } else 0L
+        }
             .coerceAtMost(Int.MAX_VALUE.toLong())
             .toInt()
 
     fun commit(): Boolean {
-        if (failed) return false
+        if (failed || !ExchangeRuntime.mayMutateInventory(client)) return false
         if (!changed) return true
         System.arraycopy(itemIds, 0, client.playerItems, 0, itemIds.size)
         System.arraycopy(amounts, 0, client.playerItemsN, 0, amounts.size)

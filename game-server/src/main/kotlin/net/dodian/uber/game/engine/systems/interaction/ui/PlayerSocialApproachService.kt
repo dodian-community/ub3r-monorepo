@@ -5,6 +5,8 @@ import net.dodian.uber.game.engine.systems.follow.FollowRouting
 import net.dodian.uber.game.engine.systems.interaction.EntityInteractionReach
 import net.dodian.uber.game.engine.systems.interaction.EntityReachResult
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.social.exchange.TradingService
+import net.dodian.uber.game.social.exchange.DuelingService
 import net.dodian.uber.game.netty.listener.out.SendMessage
 
 /** Owns the movement phase of trade and duel requests. */
@@ -111,8 +113,8 @@ object PlayerSocialApproachService {
 
     private fun execute(client: Client, state: PendingApproach) {
         when (state.interaction) {
-            SocialInteraction.TRADE -> client.tradeReq(state.targetSlot)
-            SocialInteraction.DUEL -> client.duelReq(state.targetSlot)
+            SocialInteraction.TRADE -> TradingService.request(client, state.targetSlot)
+            SocialInteraction.DUEL -> DuelingService.request(client, state.targetSlot)
         }
     }
 

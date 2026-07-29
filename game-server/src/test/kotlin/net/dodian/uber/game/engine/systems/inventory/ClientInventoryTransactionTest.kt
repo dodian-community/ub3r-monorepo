@@ -4,13 +4,13 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.engine.loop.GameThreadContext
 import net.dodian.uber.game.item.ItemManager
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.item.GameItem
 import net.dodian.uber.game.model.item.Item
 import net.dodian.uber.game.model.item.transaction.BankTransactions
 import net.dodian.uber.game.model.item.transaction.OfferTransactions
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.AfterEach
@@ -268,24 +268,29 @@ class ClientInventoryTransactionTest {
     }
 
     @Test
-    fun `failed paired trade settlement leaves both inventories and offers intact`() {
+    fun `failed paired trade projection leaves both inventories and reservations intact`() {
         val first = Client(null, 1).apply {
-            offeredItems.add(GameItem(100, 1))
+            dbId = 10
+            playerItems[0] = 101
+            playerItemsN[0] = 1
         }
         val second = Client(null, 2).apply {
+            dbId = 20
             playerItems.indices.forEach { slot ->
                 playerItems[slot] = 200 + slot
                 playerItemsN[slot] = 1
             }
-            offeredItems.add(GameItem(200, 1))
         }
+        net.dodian.uber.game.social.exchange.ExchangeRuntime.create(
+            net.dodian.uber.game.api.plugin.social.ExchangeKind.TRADE, first, second,
+        )
+        assertTrue(net.dodian.uber.game.social.exchange.ExchangeRuntime.reserve(first, 0, 100, 1))
 
-        assertFalse(OfferTransactions.settleTrade(first, second))
+        assertNull(OfferTransactions.projectReservedTrade(first, second))
 
-        assertEquals(1, first.offeredItems.size)
-        assertEquals(100, first.offeredItems.single().id)
-        assertEquals(1, second.offeredItems.size)
-        assertEquals(200, second.offeredItems.single().id)
+        assertEquals(1, net.dodian.uber.game.social.exchange.ExchangeRuntime.offers(first).size)
+        assertEquals(100, net.dodian.uber.game.social.exchange.ExchangeRuntime.offers(first).single().id)
+        assertTrue(net.dodian.uber.game.social.exchange.ExchangeRuntime.offers(second).isEmpty())
         assertEquals(200, second.playerItems[0])
         assertEquals(0, first.saveDirtyMask)
         assertEquals(0, second.saveDirtyMask)

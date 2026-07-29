@@ -63,6 +63,9 @@ dependencies {
     implementation(project(":skills:thieving")); implementation(project(":skills:woodcutting")); implementation(project(":skills:skillguide"))
     implementation(project(":quests:runtime"))
     implementation(project(":quests:tutorial-island"))
+    implementation(project(":social:runtime"))
+    implementation(project(":social:trading"))
+    implementation(project(":social:dueling"))
     implementation(kotlin("stdlib"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 
@@ -136,7 +139,6 @@ tasks.withType<Test> {
 
 configurations[syncTestSourceSet.implementationConfigurationName].extendsFrom(configurations.testImplementation.get())
 configurations[syncTestSourceSet.runtimeOnlyConfigurationName].extendsFrom(configurations.testRuntimeOnly.get())
-
 tasks.register<Test>("syncTest") {
     description = "Runs focused synchronization and transport verification tests"
     group = "verification"
@@ -151,6 +153,7 @@ tasks.register("betaCheck") {
 
     dependsOn(":skillsCheck")
     dependsOn(":questsCheck")
+    dependsOn(":socialCheck")
     dependsOn(":content-platform:api:check")
     dependsOn(":content-platform:runtime:check")
     dependsOn(":content-platform:testkit:check")
@@ -159,7 +162,7 @@ tasks.register("betaCheck") {
     dependsOn(":game-server:syncTest")
 
     doLast {
-        println("Beta readiness gate passed: client, server, sync, content-platform, skill-module, and quest-module tests completed.")
+        println("Beta readiness gate passed: client, server, sync, content-platform, skill, quest, and social-module tests completed.")
     }
 }
 

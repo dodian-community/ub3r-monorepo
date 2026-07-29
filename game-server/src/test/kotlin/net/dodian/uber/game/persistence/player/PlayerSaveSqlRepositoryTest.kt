@@ -4,8 +4,68 @@ import net.dodian.uber.game.model.player.skills.Skill
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import java.sql.DriverManager
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 
 class PlayerSaveSqlRepositoryTest {
+    @Test
+    fun `paired prepared statements commit or roll back as one unit`() {
+        val url = "jdbc:h2:mem:paired-save-${System.nanoTime()};DB_CLOSE_DELAY=-1"
+        DriverManager.getConnection(url).use { connection ->
+            connection.createStatement().use {
+                it.execute("CREATE TABLE inventory_state (id INT PRIMARY KEY, payload VARCHAR(32) NOT NULL)")
+                it.execute("INSERT INTO inventory_state VALUES (1, 'before-a'), (2, 'before-b')")
+            }
+        }
+        val repository = PlayerSaveRepository(PlayerSaveRepository.ConnectionProvider {
+            DriverManager.getConnection(url)
+        })
+        assertThrows(java.sql.SQLException::class.java) {
+            repository.savePrepared(
+                listOf(
+                    PlayerSaveRepository.Statement("UPDATE inventory_state SET payload=? WHERE id=?", listOf("after-a", 1)),
+                    PlayerSaveRepository.Statement("UPDATE missing_table SET payload=? WHERE id=?", listOf("after-b", 2)),
+                ),
+            )
+        }
+        DriverManager.getConnection(url).use { connection ->
+            connection.createStatement().use { statement ->
+                statement.executeQuery("SELECT payload FROM inventory_state ORDER BY id").use {
+                    it.next(); assertEquals("before-a", it.getString(1))
+                    it.next(); assertEquals("before-b", it.getString(1))
+                }
+            }
+        }
+
+        repository.savePrepared(
+            listOf(
+                PlayerSaveRepository.Statement("UPDATE inventory_state SET payload=? WHERE id=?", listOf("after-a", 1)),
+                PlayerSaveRepository.Statement("UPDATE inventory_state SET payload=? WHERE id=?", listOf("after-b", 2)),
+            ),
+        )
+        DriverManager.getConnection(url).use { connection ->
+            connection.createStatement().use { statement ->
+                statement.executeQuery("SELECT payload FROM inventory_state ORDER BY id").use {
+                    it.next(); assertEquals("after-a", it.getString(1))
+                    it.next(); assertEquals("after-b", it.getString(1))
+                }
+            }
+        }
+
+        assertThrows(java.sql.SQLException::class.java) {
+            repository.savePrepared(
+                listOf(
+                    PlayerSaveRepository.Statement(
+                        "UPDATE inventory_state SET payload=? WHERE id=?",
+                        listOf("wrong-owner", 99),
+                        expectedUpdateCount = 1,
+                    ),
+                ),
+            )
+        }
+    }
+
     @Test
     fun `player supplied serialized values are bound rather than interpolated`() {
         val enabled = Skill.values().count { it.isEnabled() }

@@ -21,5 +21,9 @@ gradlePlugin {
             id = "ub3r.quest-plugin"
             implementationClass = "net.dodian.uber.buildlogic.Ub3rQuestPlugin"
         }
+        create("ub3rContentPlugin") {
+            id = "ub3r.content-plugin"
+            implementationClass = "net.dodian.uber.buildlogic.Ub3rContentPlugin"
+        }
     }
 }

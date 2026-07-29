@@ -4,6 +4,14 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 class ContentPluginLifecycleTest {
+    @org.junit.jupiter.api.Test
+    fun `generic social descriptors are discovered and route ownership is unique`() {
+        val ids = ContentModuleIndex.socialPlugins.map { it.contentManifest.id }.toSet()
+        org.junit.jupiter.api.Assertions.assertEquals(setOf("social.trading", "social.dueling"), ids)
+        val routes = ContentModuleIndex.socialPlugins.flatMap { it.contentManifest.declaredRouteKeys }
+        org.junit.jupiter.api.Assertions.assertEquals(routes.size, routes.toSet().size)
+    }
+
     @Test
     fun `plugins start once in manifest order and stop in reverse order`() {
         val events = mutableListOf<String>()

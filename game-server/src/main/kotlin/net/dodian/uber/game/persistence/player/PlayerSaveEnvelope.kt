@@ -30,6 +30,20 @@ data class PlayerSaveEnvelope(
     val saveRevisionAtCapture: Long,
     val segments: List<PlayerSaveSegmentSnapshot>,
 ) {
+    fun withInventory(itemIds: IntArray, amounts: IntArray): PlayerSaveEnvelope {
+        require(itemIds.size == amounts.size)
+        val entries = itemIds.indices.mapNotNull { slot ->
+            val rawId = itemIds[slot]
+            val amount = amounts[slot]
+            if (rawId <= 0 || amount <= 0) null
+            else ItemSlotEntry(slot = slot, itemId = rawId - 1, amount = amount)
+        }
+        return copy(
+            dirtyMask = dirtyMask or PlayerSaveSegment.INVENTORY.mask,
+            segments = segments.filterNot { it is InventorySegmentSnapshot } + InventorySegmentSnapshot(entries),
+        )
+    }
+
     companion object {
         private val ENABLED_SKILLS: List<Skill> = Skill.values().filter { it.isEnabled() }
 

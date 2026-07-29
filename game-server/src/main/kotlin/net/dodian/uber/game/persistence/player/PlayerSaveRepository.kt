@@ -8,7 +8,11 @@ import net.dodian.uber.game.persistence.db.dbConnection
 class PlayerSaveRepository(
     private val connectionProvider: ConnectionProvider = ConnectionProvider { defaultConnection() },
 ) {
-    data class Statement(val sql: String, val values: List<Any?>)
+    data class Statement(
+        val sql: String,
+        val values: List<Any?>,
+        val expectedUpdateCount: Int? = null,
+    )
     fun interface ConnectionProvider {
         @Throws(SQLException::class)
         fun getConnection(): Connection
@@ -29,7 +33,14 @@ class PlayerSaveRepository(
                 statements.forEach { command ->
                     connection.prepareStatement(command.sql).use { statement ->
                         command.values.forEachIndexed { index, value -> statement.setObject(index + 1, value) }
-                        statement.executeUpdate()
+                        val updated = statement.executeUpdate()
+                        command.expectedUpdateCount?.let { expected ->
+                            if (updated != expected) {
+                                throw SQLException(
+                                    "Player save integrity check failed: expected $expected updated row(s), got $updated",
+                                )
+                            }
+                        }
                     }
                 }
                 connection.commit()

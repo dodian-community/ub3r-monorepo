@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import net.dodian.uber.game.engine.event.GameEventBus;
 import net.dodian.uber.game.events.widget.PrivateMessageEvent;
 import net.dodian.uber.game.model.entity.player.Client;
+import net.dodian.uber.game.social.PlayerSocialService;
 import net.dodian.uber.game.netty.codec.ByteBufReader;
 import net.dodian.uber.game.netty.game.GamePacket;
 import net.dodian.uber.game.netty.listener.PacketListener;
@@ -34,7 +35,7 @@ public class SendPrivateMessageListener implements PacketListener {
                 Utils.longToPlayerName(friend),
                 Utils.textUnpack(text, remaining)
         ));
-        client.sendPmMessage(friend, text, remaining);
+        PlayerSocialService.sendPrivateMessage(client, friend, text, remaining);
         // no further action; Client handles chat state internally
     }
 }

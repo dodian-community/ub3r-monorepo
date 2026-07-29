@@ -51,7 +51,7 @@ class PlayerCombatState {
         double damageNeglect = player.neglectDmg() / 10D;
         double reduceDamage = 1.0 - (damageNeglect / 100);
         int oldDamage = amt;
-        if (!(player.inDuel && player.duelRule[5]) && rolledChance <= chance && player.playerBonus[13] > 0 && oldDamage > 0) {
+        if (!(player.getInDuel() && player.getDuelRule()[5]) && rolledChance <= chance && player.playerBonus[13] > 0 && oldDamage > 0) {
             amt = reduceDamage <= 0 ? 0 : (int) (amt * reduceDamage);
             mitigationBranch = "neglect";
             if (amt != oldDamage) {
@@ -66,8 +66,8 @@ class PlayerCombatState {
                     mitigationBranch,
                     originalAmt,
                     amt,
-                    player.inDuel,
-                    player.inDuel && player.duelRule[5]
+                    player.getInDuel(),
+                    player.getInDuel() && player.getDuelRule()[5]
             );
         }
         CombatLogoutLockService.refreshInteraction(attacker, owner);

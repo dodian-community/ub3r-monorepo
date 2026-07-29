@@ -138,12 +138,12 @@ public class InterfaceManager {
             refreshItems = true;
         }
 
-        if (player.inTrade) {
-            player.declineTrade();
+        if (player.getInTrade()) {
+            net.dodian.uber.game.social.exchange.TradingService.decline(player);
         }
 
-        if (player.inDuel) {
-            player.declineDuel();
+        if (player.getInDuel()) {
+            net.dodian.uber.game.social.exchange.DuelingService.decline(player);
         }
 
         if (walkable) {

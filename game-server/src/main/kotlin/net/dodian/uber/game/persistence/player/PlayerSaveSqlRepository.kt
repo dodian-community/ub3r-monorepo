@@ -16,6 +16,13 @@ class PlayerSaveSqlRepository(
         delegate.savePrepared(buildPreparedStatements(envelope))
     }
 
+    fun saveEnvelopesAtomically(envelopes: List<PlayerSaveEnvelope>) {
+        require(envelopes.isNotEmpty())
+        delegate.savePrepared(
+            envelopes.flatMap(::buildPreparedStatements).map { it.copy(expectedUpdateCount = 1) },
+        )
+    }
+
     internal fun buildPreparedStatements(envelope: PlayerSaveEnvelope): List<PlayerSaveRepository.Statement> {
         val stats = requireNotNull(envelope.segment<StatsSegmentSnapshot>()) { "Missing STATS segment for save envelope dbId=${envelope.dbId}" }
         val statColumns = listOf("total", "combat") + ENABLED_SKILLS.map { it.name.lowercase() } + "totalxp"

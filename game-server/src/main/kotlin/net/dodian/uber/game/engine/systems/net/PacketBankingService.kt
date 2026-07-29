@@ -8,6 +8,8 @@ import net.dodian.uber.game.skill.slayer.Slayer
 import net.dodian.uber.game.skill.smithing.SmithingInterface
 import net.dodian.uber.game.shop.ShopRulesService
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.social.exchange.ExchangeOfferService
+import net.dodian.uber.game.social.exchange.ExchangeRuntime
 import net.dodian.uber.game.netty.listener.out.InventoryInterface
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendFrame27
@@ -230,20 +232,20 @@ object PacketBankingService {
 
             interfaceId == 3322 && client.inTrade && client.canOffer -> {
                 val amount = if (stack) client.playerItemsN[removeSlot] else client.getInvAmt(removeId)
-                client.tradeItem(removeId, removeSlot, amount)
+                ExchangeOfferService.offerTrade(client, removeId, removeSlot, amount)
             }
 
             interfaceId == 3322 && client.inDuel && client.canOffer -> {
                 val amount = if (stack) client.playerItemsN[removeSlot] else client.getInvAmt(removeId)
-                client.stakeItem(removeId, removeSlot, amount)
+                ExchangeOfferService.offerDuel(client, removeId, removeSlot, amount)
             }
 
             interfaceId == 6669 && client.inDuel && client.canOffer -> {
-                client.fromDuel(removeId, removeSlot, if (stack) client.offeredItems[removeSlot].amount else 28)
+                ExchangeOfferService.withdrawDuel(client, removeId, removeSlot, if (stack) ExchangeRuntime.offers(client)[removeSlot].amount else 28)
             }
 
             interfaceId == 3415 && client.inTrade && client.canOffer -> {
-                client.fromTrade(removeId, removeSlot, if (stack) client.offeredItems[removeSlot].amount else 28)
+                ExchangeOfferService.withdrawTrade(client, removeId, removeSlot, if (stack) ExchangeRuntime.offers(client)[removeSlot].amount else 28)
             }
 
             SkillingInterfaceItemService.handleContainerAmount(
@@ -297,15 +299,15 @@ object PacketBankingService {
         when (interfaceId) {
             3322 -> {
                 if (client.inDuel && client.canOffer) {
-                    client.stakeItem(removeId, removeSlot, amount)
+                    ExchangeOfferService.offerDuel(client, removeId, removeSlot, amount)
                 } else if (client.inTrade && client.canOffer) {
-                    client.tradeItem(removeId, removeSlot, amount)
+                    ExchangeOfferService.offerTrade(client, removeId, removeSlot, amount)
                 }
             }
 
             6669 -> {
                 if (client.inDuel && client.canOffer) {
-                    client.fromDuel(removeId, removeSlot, amount)
+                    ExchangeOfferService.withdrawDuel(client, removeId, removeSlot, amount)
                 }
             }
 
@@ -340,7 +342,7 @@ object PacketBankingService {
 
             3415 -> {
                 if (client.inTrade && client.canOffer) {
-                    client.fromTrade(removeId, removeSlot, amount)
+                    ExchangeOfferService.withdrawTrade(client, removeId, removeSlot, amount)
                 }
             }
 
@@ -527,11 +529,11 @@ object PacketBankingService {
                 }
 
                 client.XinterfaceID == 3322 && client.inDuel && client.canOffer -> {
-                    client.stakeItem(client.XremoveID, client.XremoveSlot, enteredAmount)
+                    ExchangeOfferService.offerDuel(client, client.XremoveID, client.XremoveSlot, enteredAmount)
                 }
 
                 client.XinterfaceID == 6669 && client.inDuel && client.canOffer -> {
-                    client.fromDuel(client.XremoveID, client.XremoveSlot, enteredAmount)
+                    ExchangeOfferService.withdrawDuel(client, client.XremoveID, client.XremoveSlot, enteredAmount)
                 }
 
                 client.XinterfaceID == 3900 && client.XremoveID != -1 -> {
@@ -568,11 +570,11 @@ object PacketBankingService {
                 }
 
                 client.XinterfaceID == 3322 && client.inTrade && client.canOffer -> {
-                    client.tradeItem(client.XremoveID, client.XremoveSlot, enteredAmount)
+                    ExchangeOfferService.offerTrade(client, client.XremoveID, client.XremoveSlot, enteredAmount)
                 }
 
                 client.XinterfaceID == 3415 && client.inTrade && client.canOffer -> {
-                    client.fromTrade(client.XremoveID, client.XremoveSlot, enteredAmount)
+                    ExchangeOfferService.withdrawTrade(client, client.XremoveID, client.XremoveSlot, enteredAmount)
                 }
             }
         } finally {
@@ -595,11 +597,11 @@ object PacketBankingService {
 
         when {
             interfaceId == 3322 && client.inDuel && client.canOffer -> {
-                client.stakeItem(removeId, removeSlot, 1)
+                ExchangeOfferService.offerDuel(client, removeId, removeSlot, 1)
             }
 
             interfaceId == 6669 && client.inDuel && client.canOffer -> {
-                client.fromDuel(removeId, removeSlot, 1)
+                ExchangeOfferService.withdrawDuel(client, removeId, removeSlot, 1)
             }
 
             interfaceId == 1688 -> {
@@ -645,11 +647,11 @@ object PacketBankingService {
             }
 
             interfaceId == 3322 && client.inTrade && client.canOffer -> {
-                client.tradeItem(removeId, removeSlot, 1)
+                ExchangeOfferService.offerTrade(client, removeId, removeSlot, 1)
             }
 
             interfaceId == 3415 && client.inTrade && client.canOffer -> {
-                client.fromTrade(removeId, removeSlot, 1)
+                ExchangeOfferService.withdrawTrade(client, removeId, removeSlot, 1)
             }
 
             SkillingInterfaceItemService.handleContainerAmount(client, interfaceId, removeId, removeSlot, 1) -> {
@@ -782,7 +784,7 @@ object PacketBankingService {
 
     private fun isValidBankSlot(client: Client, slot: Int): Boolean = slot >= 0 && slot < client.bankSize()
 
-    private fun isValidTradeOfferSlot(client: Client, slot: Int): Boolean = slot in 0 until client.offeredItems.size
+    private fun isValidTradeOfferSlot(client: Client, slot: Int): Boolean = slot in ExchangeRuntime.offers(client).indices
 
     private fun isValidPartyOfferSlot(client: Client, slot: Int): Boolean = slot in 0 until client.offeredPartyItems.size
 

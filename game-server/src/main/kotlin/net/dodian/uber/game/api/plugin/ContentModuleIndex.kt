@@ -9,6 +9,8 @@ import net.dodian.uber.game.api.plugin.skills.routeKeys as supportRouteKeys
 import net.dodian.uber.game.api.plugin.skills.routeKeys
 import net.dodian.uber.game.api.plugin.quests.QuestPlugin
 import net.dodian.uber.game.api.plugin.quests.routeKeys as questRouteKeys
+import net.dodian.uber.game.api.plugin.social.SocialPlugin
+import net.dodian.uber.game.api.plugin.social.routeKeys as socialRouteKeys
 import net.dodian.uber.game.item.ItemContent
 import net.dodian.uber.game.npc.NpcContentDefinition
 import net.dodian.uber.game.npc.NpcModule
@@ -64,6 +66,7 @@ object ContentModuleIndex {
         "net.dodian.uber.game.shop",
         "net.dodian.uber.game.world",
         "net.dodian.uber.game.player",
+        "net.dodian.uber.social",
         "net.dodian.uber.game.engine.event.bootstrap",
         "net.dodian.uber.game.engine.systems.interaction.commands",
         "net.dodian.uber.game.engine.systems.interaction.items",
@@ -92,6 +95,7 @@ object ContentModuleIndex {
     @JvmField val skillPlugins: List<SkillPlugin>
     @JvmField val skillSupportModules: List<SkillSupportModule>
     @JvmField val questPlugins: List<QuestPlugin>
+    @JvmField val socialPlugins: List<SocialPlugin>
     @JvmField val shopPlugins: List<ShopPlugin>
     @JvmField val eventBootstraps: List<() -> Unit>
     @JvmField val contentBootstraps: List<ContentBootstrap>
@@ -100,7 +104,8 @@ object ContentModuleIndex {
 
     init {
         val classPath = ClassPath.from(Thread.currentThread().contextClassLoader)
-        val descriptorClasses = discoverSkillModuleClasses(classPath) + discoverQuestModuleClasses(classPath)
+        val descriptorClasses = discoverSkillModuleClasses(classPath) + discoverQuestModuleClasses(classPath) +
+            discoverContentModuleClasses(classPath)
         val scannedClasses = (discoverClasses(classPath) + descriptorClasses)
             .distinctBy { it.name }
             .sortedBy { it.name }
@@ -115,6 +120,7 @@ object ContentModuleIndex {
         val discoveredSkills = mutableListOf<Pair<String, SkillPlugin>>()
         val discoveredSkillSupport = mutableListOf<Pair<String, SkillSupportModule>>()
         val discoveredQuests = mutableListOf<Pair<String, QuestPlugin>>()
+        val discoveredSocial = mutableListOf<Pair<String, SocialPlugin>>()
         val discoveredShops = mutableListOf<Pair<String, ShopPlugin>>()
         val discoveredEvents = mutableListOf<Pair<String, () -> Unit>>()
         val discoveredBootstraps = mutableListOf<Pair<String, ContentBootstrap>>()
@@ -159,6 +165,12 @@ object ContentModuleIndex {
                     "Content module ${manifest.id} declared routes ${manifest.declaredRouteKeys.sorted()} but registry routes are ${actualRoutes.sorted()}"
                 }
             }
+            if (instance is SocialPlugin) {
+                val actualRoutes = instance.definition.socialRouteKeys()
+                require(manifest.declaredRouteKeys == actualRoutes) {
+                    "Content module ${manifest.id} declared routes ${manifest.declaredRouteKeys.sorted()} but registry routes are ${actualRoutes.sorted()}"
+                }
+            }
             val enabled = ContentModuleFeatureState.isEnabled(manifest)
             discoveredManifests += manifest
 
@@ -191,6 +203,10 @@ object ContentModuleIndex {
                 is QuestPlugin -> {
                     if (enabled) discoveredQuests += className to instance
                     pluginKind = "quest-plugin"
+                }
+                is SocialPlugin -> {
+                    if (enabled) discoveredSocial += className to instance
+                    pluginKind = "social-plugin"
                 }
                 is ShopPlugin -> {
                     if (enabled) discoveredShops += className to instance
@@ -244,6 +260,7 @@ object ContentModuleIndex {
         validateItemOwnership(discoveredItems)
         validateShopOwnership(discoveredShops)
         validateInterfaceButtonOwnership(discoveredButtons)
+        validateSocialOwnership(discoveredSocial)
 
         interfaceButtons = discoveredButtons.sortedBy { it.first }.map { it.second }
         objectContents = discoveredObjects.sortedBy { it.first }
@@ -254,6 +271,7 @@ object ContentModuleIndex {
         skillPlugins = discoveredSkills.sortedBy { it.first }.map { it.second }
         skillSupportModules = discoveredSkillSupport.sortedBy { it.first }.map { it.second }
         questPlugins = discoveredQuests.sortedBy { it.first }.map { it.second }
+        socialPlugins = discoveredSocial.sortedBy { it.first }.map { it.second }
         shopPlugins = discoveredShops.sortedBy { it.first }.map { it.second }
         eventBootstraps = discoveredEvents.sortedBy { it.first }.map { it.second }
         contentBootstraps = discoveredBootstraps.sortedBy { it.first }.map { it.second }
@@ -389,6 +407,40 @@ object ContentModuleIndex {
         return classes
     }
 
+    private fun discoverContentModuleClasses(classPath: ClassPath): List<Class<*>> {
+        val prefix = "META-INF/ub3r/content-modules/"
+        val descriptors = classPath.resources
+            .filter { it.resourceName.startsWith(prefix) && it.resourceName.endsWith(".toml") }
+            .sortedBy { it.resourceName }
+        val ids = mutableSetOf<String>()
+        return descriptors.map { resource ->
+            val values = resource.asByteSource().openStream().bufferedReader().useLines { lines ->
+                lines.map(String::trim)
+                    .filter { it.isNotEmpty() && !it.startsWith("#") && it.contains('=') }
+                    .associate { line ->
+                        val (key, rawValue) = line.split('=', limit = 2)
+                        key.trim() to rawValue.trim().trim('"')
+                    }
+            }
+            require(values["schema_version"] == "1") { "Unsupported content module descriptor ${resource.resourceName}" }
+            val moduleId = requireNotNull(values["module_id"]) { "Missing module_id in ${resource.resourceName}" }
+            val implementationClass = requireNotNull(values["implementation_class"]) {
+                "Missing implementation_class in ${resource.resourceName}"
+            }
+            require(values["family"]?.matches(Regex("[a-z][a-z0-9-]{1,31}")) == true) {
+                "Invalid family in ${resource.resourceName}"
+            }
+            require(ids.add(moduleId)) { "Duplicate generic content module descriptor id $moduleId" }
+            runCatching { Class.forName(implementationClass) }.getOrElse { cause ->
+                throw IllegalStateException("Unable to load $implementationClass from ${resource.resourceName}", cause)
+            }.also { loaded ->
+                require(ContentModuleManifestProvider::class.java.isAssignableFrom(loaded)) {
+                    "$implementationClass does not implement ContentModuleManifestProvider"
+                }
+            }
+        }
+    }
+
     private fun resolveMetadata(instance: Any, clazz: Class<*>): PluginModuleMetadata {
         if (instance is PluginModuleMetadataProvider) {
             return validateMetadata(instance.pluginMetadata, clazz.name)
@@ -473,6 +525,18 @@ object ContentModuleIndex {
         for ((module, content) in buttons) {
             for (binding in content.bindings) {
                 validateButtonBinding(module, binding, routeOwners, semanticOwners)
+            }
+        }
+    }
+
+    private fun validateSocialOwnership(plugins: List<Pair<String, SocialPlugin>>) {
+        val owners = HashMap<String, String>()
+        for ((module, plugin) in plugins) {
+            for (route in plugin.definition.socialRouteKeys()) {
+                val existing = owners.putIfAbsent(route, module)
+                require(existing == null) {
+                    "Duplicate social route ownership route=$route existing=$existing new=$module"
+                }
             }
         }
     }

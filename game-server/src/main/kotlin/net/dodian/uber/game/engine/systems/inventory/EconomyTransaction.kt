@@ -4,6 +4,7 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.engine.loop.GameThreadContext
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
+import net.dodian.uber.game.social.exchange.ExchangeRuntime
 
 /**
  * Stages changes to one or more player-owned item containers.  A container is
@@ -23,7 +24,7 @@ class EconomyTransaction private constructor() {
 
     fun commit(): Boolean {
         GameThreadContext.validateGameThread("economy.transaction.commit")
-        if (failed || arrays.values.any { it.failed }) return false
+        if (failed || arrays.values.any { it.failed || !it.mayCommit() }) return false
         arrays.values.forEach { it.commit() }
         return true
     }
@@ -72,7 +73,10 @@ class EconomyTransaction private constructor() {
         }
 
         override fun amountOf(itemId: Int): Int = ids.indices.sumOf { slot ->
-            if (decode(ids[slot]) == itemId) amounts[slot].toLong() else 0L
+            if (decode(ids[slot]) == itemId) {
+                val reserved = if (kind == Container.INVENTORY) ExchangeRuntime.reservedAt(client, slot, itemId) else 0
+                (amounts[slot] - reserved).coerceAtLeast(0).toLong()
+            } else 0L
         }.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
 
         override fun require(itemId: Int, amount: Int): Boolean =
@@ -83,7 +87,11 @@ class EconomyTransaction private constructor() {
             var remaining = amount
             for (slot in ids.indices) {
                 if (decode(ids[slot]) != itemId || remaining == 0) continue
-                val removed = minOf(amounts[slot], remaining)
+                val available = if (kind == Container.INVENTORY) {
+                    (amounts[slot] - ExchangeRuntime.reservedAt(client, slot, itemId)).coerceAtLeast(0)
+                } else amounts[slot]
+                val removed = minOf(available, remaining)
+                if (removed == 0) continue
                 amounts[slot] -= removed
                 remaining -= removed
                 if (amounts[slot] == 0) ids[slot] = 0
@@ -98,6 +106,7 @@ class EconomyTransaction private constructor() {
 
         fun removeAt(slot: Int, itemId: Int, amount: Int, retainIdOnZero: Boolean): Boolean {
             if (!valid(itemId, amount) || slot !in ids.indices || decode(ids[slot]) != itemId || amounts[slot] < amount) return fail()
+            if (kind == Container.INVENTORY && !ExchangeRuntime.mayRemove(client, slot, itemId, amount)) return fail()
             amounts[slot] -= amount
             if (amounts[slot] == 0 && !(retainIdOnZero && kind == Container.BANK)) ids[slot] = 0
             changed = true
@@ -159,6 +168,8 @@ class EconomyTransaction private constructor() {
                 Container.EQUIPMENT -> error("Equipment is committed through Client.replaceEquipmentState")
             }
         }
+
+        fun mayCommit(): Boolean = kind != Container.INVENTORY || ExchangeRuntime.mayMutateInventory(client)
 
         private fun valid(itemId: Int, amount: Int) = itemId >= 0 && amount > 0
         private fun fail(): Boolean = false.also { failed = true }

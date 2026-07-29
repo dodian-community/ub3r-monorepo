@@ -8,6 +8,7 @@ import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.uber.game.engine.state.GroundItemIntentStateAdapter
 import net.dodian.uber.game.engine.systems.follow.FollowRouting
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.social.exchange.TradingService
 import net.dodian.uber.game.model.item.GroundItem
 import net.dodian.uber.game.persistence.player.PlayerSaveReason
 import net.dodian.uber.game.engine.tasking.TaskHandle
@@ -129,12 +130,12 @@ object PlayerDeferredLifecycleService {
         }
         val other = player.getClient(player.trade_reqId) ?: return
         if (!player.validClient(player.trade_reqId)) {
-            player.resetTrade()
+            TradingService.reset(player)
             return
         }
         if (other.tradeResetNeeded) {
-            player.resetTrade()
-            other.resetTrade()
+            TradingService.reset(player)
+            TradingService.reset(other)
         }
     }
 

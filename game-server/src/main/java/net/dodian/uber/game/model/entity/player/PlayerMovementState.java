@@ -214,7 +214,7 @@ final class PlayerMovementState {
             return;
         }
 
-        if (temp.inDuel && temp.duelFight && temp.duelRule[9]) {
+        if (temp.getInDuel() && temp.getDuelFight() && temp.getDuelRule()[9]) {
             resetWalkingQueue();
         }
 

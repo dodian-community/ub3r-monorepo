@@ -4,6 +4,7 @@ import net.dodian.uber.game.api.content.ContentInteraction
 import net.dodian.uber.game.engine.loop.GameCycleClock
 import net.dodian.uber.game.engine.systems.interaction.ui.TradeDuelSessionService
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
+import net.dodian.uber.game.social.exchange.DuelingService
 import net.dodian.uber.game.ui.buttons.InterfaceButtonContent
 import net.dodian.uber.game.ui.buttons.buttonBinding
 
@@ -23,21 +24,21 @@ object DuelInterface : InterfaceButtonContent {
             buttonBinding(-1, 0, "duel.offer_rule", offerRuleButtons) { client, request ->
                 val ruleIndex = offerRuleIndexByButton[request.rawButtonId] ?: return@buttonBinding false
                 if (ruleIndex in noopRuleIndices) return@buttonBinding true
-                client.toggleDuelRule(ruleIndex)
+                DuelingService.toggleRule(client, ruleIndex)
             },
             buttonBinding(-1, 0, "duel.decline_stage_one", intArrayOf(31018, 31002)) { client, _ ->
                 if (!client.inDuel || client.duelFight) return@buttonBinding true
-                client.declineDuel()
+                DuelingService.decline(client)
                 true
             },
             buttonBinding(-1, 0, "duel.decline_stage_two", intArrayOf(31523, 31502)) { client, _ ->
                 if (!client.inDuel || client.duelFight) return@buttonBinding true
-                client.declineDuel()
+                DuelingService.decline(client)
                 true
             },
             buttonBinding(-1, 2, "duel.body_rule", bodyRuleButtons) { client, request ->
                 val ruleIndex = bodyRuleButtons.indexOf(request.rawButtonId)
-                client.toggleDuelBodyRule(ruleIndex)
+                DuelingService.toggleBodyRule(client, ruleIndex)
             },
             buttonBinding(-1, 3, "duel.confirm.stage_two", intArrayOf(CONFIRM_STAGE_TWO_BUTTON)) { client, _ ->
                 if (!ContentInteraction.tryAcquireMs(client, ContentInteraction.DUEL_CONFIRM_STAGE_TWO, 1000L)) {

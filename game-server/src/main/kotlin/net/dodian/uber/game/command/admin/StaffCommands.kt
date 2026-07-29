@@ -4,6 +4,8 @@ import net.dodian.uber.game.engine.systems.interaction.commands.*
 
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.engine.config.FeatureStateService
+import net.dodian.uber.game.engine.config.serverDebugMode
+import net.dodian.uber.game.engine.config.serverEnv
 import net.dodian.uber.game.persistence.account.Login
 import net.dodian.uber.game.model.entity.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
@@ -89,6 +91,18 @@ object StaffCommands : CommandContent {
                 )
                 client.sendMessage("Sync locals: ${locals.ifBlank { "none" }}; ${target.connectionHealthSummary()}")
                 true
+            }
+            command("crashserver") {
+                if (!specialRights) return@command false
+                if (serverEnv != "dev" || !serverDebugMode) {
+                    client.sendMessage("Crash testing is available only on a dev server with server.debug=true.")
+                    return@command true
+                }
+
+                recordStaffCommand(client, rawCommand)
+                Server.logError("DEV CRASH TEST requested by ${client.playerName} dbId=${client.dbId}; halting without shutdown hooks.")
+                Runtime.getRuntime().halt(137)
+                false // Unreachable, but required by the command handler's return type.
             }
             command(
                 "pnpc", "invis", "teleto", "kick", "teletome", "staffzone", "test_area", "busy",

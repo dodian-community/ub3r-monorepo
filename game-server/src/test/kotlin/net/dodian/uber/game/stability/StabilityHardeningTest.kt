@@ -6,12 +6,13 @@ import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.engine.systems.interaction.ui.TradeDuelSessionService
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.model.item.GameItem
 import net.dodian.uber.game.model.item.Item
 import net.dodian.uber.game.item.ItemManager
 import net.dodian.uber.game.ui.PartyRoomInterface
 import net.dodian.uber.game.ui.buttons.InterfaceButtonRegistry
 import net.dodian.uber.game.netty.listener.out.Projectile
+import net.dodian.uber.game.social.exchange.TradingService
+import net.dodian.uber.game.social.exchange.ExchangeRuntime
 import java.nio.file.Files
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -125,37 +126,41 @@ class StabilityHardeningTest {
         TradeDuelSessionService.beginTradeSession(first, second)
         first.playerItems[0] = 996
         first.playerItemsN[0] = 10
-        first.offeredItems.add(GameItem(995, 5))
-        second.offeredItems.add(GameItem(100, 2))
+        second.playerItems[0] = 101
+        second.playerItemsN[0] = 1
+        second.playerItems[1] = 101
+        second.playerItemsN[1] = 1
+        assertTrue(ExchangeRuntime.reserve(first, 0, 995, 5))
+        assertTrue(ExchangeRuntime.reserve(second, 0, 100, 2))
 
-        first.declineTrade()
+        TradingService.decline(first)
 
         assertFalse(first.inTrade)
         assertFalse(second.inTrade)
-        assertTrue(first.offeredItems.isEmpty())
-        assertTrue(second.offeredItems.isEmpty())
-        assertEquals(15, first.playerItemsN[0])
+        assertTrue(ExchangeRuntime.offers(first).isEmpty())
+        assertTrue(ExchangeRuntime.offers(second).isEmpty())
+        assertEquals(10, first.playerItemsN[0])
         assertEquals(listOf(101, 101), second.playerItems.take(2))
 
-        first.declineTrade()
-        assertEquals(15, first.playerItemsN[0])
+        TradingService.decline(first)
+        assertEquals(10, first.playerItemsN[0])
         assertEquals(listOf(101, 101), second.playerItems.take(2))
     }
 
     @Test
-    fun `failed trade refund leaves state and items untouched`() {
-        val client = Client(null, 1)
-        client.inTrade = true
+    fun `full inventory does not prevent reservation cancellation`() {
+        val client = Client(null, 1).apply { dbId = 10; inTrade = true }
+        val partner = Client(null, 2).apply { dbId = 20; inTrade = true }
         client.playerItems.indices.forEach { slot ->
             client.playerItems[slot] = 101
             client.playerItemsN[slot] = 1
         }
-        client.offeredItems.add(GameItem(100, 1))
+        ExchangeRuntime.create(net.dodian.uber.game.api.plugin.social.ExchangeKind.TRADE, client, partner)
+        assertTrue(ExchangeRuntime.reserve(client, 0, 100, 1))
 
-        client.declineTrade(false)
+        ExchangeRuntime.remove(client)
 
-        assertTrue(client.inTrade)
-        assertEquals(1, client.offeredItems.size)
+        assertTrue(ExchangeRuntime.offers(client).isEmpty())
         assertTrue(client.playerItems.all { it == 101 })
     }
 

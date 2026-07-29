@@ -47,3 +47,10 @@ file("game-server/plugins/quests").listFiles()
         include(":quests:${candidate.name}")
         project(":quests:${candidate.name}").projectDir = candidate
     }
+
+include(":social")
+project(":social").projectDir = file("game-server/plugins/social")
+listOf("api", "runtime", "testkit", "trading", "dueling").forEach { module ->
+    include(":social:$module")
+    project(":social:$module").projectDir = file("game-server/plugins/social/$module")
+}

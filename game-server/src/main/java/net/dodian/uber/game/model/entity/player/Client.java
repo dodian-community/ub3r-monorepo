@@ -114,7 +114,7 @@ public class Client extends Player implements Runnable {
     long lastBar = 0;
     public long lastSave, lastProgressSave;
     public Entity target = null;
-    int otherdbId = -1;
+    public int otherdbId = -1;
     public int convoId = -1, nextDiag = -1, npcFace = 591;
     public boolean pLoaded = false;
     public int maxQuests = QuestTabEntry.VALUES.length;
@@ -144,7 +144,7 @@ public class Client extends Player implements Runnable {
     public int resourcesGathered = 0;
     public long lastDoorCycle = 0L;
     public long session_start = 0;
-    public boolean pickupWanted = false, duelWin = false;
+    public boolean pickupWanted = false;
     public GroundItem attemptGround = null;
     // Game-thread-only: mutated by friend/ignore-list packet handlers, read during login
     // (AccountLoginMapper) and periodic save-snapshot building (WorldMaintenanceService), all of
@@ -156,36 +156,45 @@ public class Client extends Player implements Runnable {
     public boolean tradeLocked = false;
     public boolean officialClient = true;
     public String[] UUID = null;
-    public String[] duelNames = {"No Ranged", "No Melee", "No Magic", "No Sp. Atk", "Fun Weapons", "No Forfeit",
-            "No Drinks", "No Food", "No Prayer", "No Movement", "Obstacles"};
-    public boolean[] duelRule = {false, false, false, false, false, false, false, false, false, false, false};
-
-    /*
-     * Danno: Testing for armor restriction rules.
-     */
-    private final boolean[] duelBodyRules = new boolean[11];
-
-    private final int[] trueSlots = {0, 1, 2, 13, 3, 4, 5, 7, 12, 10, 9};
-    private final int[] falseSlots = {0, 1, 2, 4, 5, 6, -1, 7, -1, 10, 9, -1, 9, 3};
-    private final int[] stakeConfigId = new int[11];
-    private final int[] duelRuleConfigIds = {631, 632, 633, 634, 635, 636, 638, 639, 637, 640, 641};
-    public int[] duelLine = {31045, 31046, 31047, 31048, 31049, 31050, 31052, 31053, 31051, 31054, 31055};
-    public boolean duelRequested = false, inDuel = false, duelConfirmed = false, duelConfirmed2 = false,
-            duelFight = false;
-    public long lastDuelItemChangeCycle = 0L;
-    public int duel_with = 0;
-    public boolean tradeRequested = false, inTrade = false, canOffer = true, tradeConfirmed = false,
-            tradeConfirmed2 = false, tradeResetNeeded = false;
-    public int trade_reqId = 0;
-    /** Game-thread-owned identity and revisions for the active trade session. */
-    public long tradeSessionId = 0L;
-    public long tradeOfferRevision = 0L;
-    public long tradeConfirmedOwnRevision = -1L;
-    public long tradeConfirmedPartnerRevision = -1L;
-    public long tradeSettledSessionId = -1L;
-    public CopyOnWriteArrayList<GameItem> offeredItems = new CopyOnWriteArrayList<>();
-    public CopyOnWriteArrayList<GameItem> otherOfferedItems = new CopyOnWriteArrayList<>();
     public CopyOnWriteArrayList<GameItem> priceCheckerItems = new CopyOnWriteArrayList<>();
+
+    private net.dodian.uber.game.social.exchange.ExchangePlayerState exchangeState() {
+        return net.dodian.uber.game.social.exchange.ExchangePlayerStateRegistry.state(this);
+    }
+
+    public boolean getDuelRequested() { return exchangeState().getDuelRequested(); }
+    public void setDuelRequested(boolean value) { exchangeState().setDuelRequested(value); }
+    public boolean getInDuel() { return exchangeState().getInDuel(); }
+    public void setInDuel(boolean value) { exchangeState().setInDuel(value); }
+    public boolean getDuelConfirmed() { return exchangeState().getDuelConfirmed(); }
+    public void setDuelConfirmed(boolean value) { exchangeState().setDuelConfirmed(value); }
+    public boolean getDuelConfirmed2() { return exchangeState().getDuelConfirmed2(); }
+    public void setDuelConfirmed2(boolean value) { exchangeState().setDuelConfirmed2(value); }
+    public boolean getDuelFight() { return exchangeState().getDuelFight(); }
+    public void setDuelFight(boolean value) { exchangeState().setDuelFight(value); }
+    public boolean getDuelWin() { return exchangeState().getDuelWin(); }
+    public void setDuelWin(boolean value) { exchangeState().setDuelWin(value); }
+    public long getLastDuelItemChangeCycle() { return exchangeState().getLastDuelItemChangeCycle(); }
+    public void setLastDuelItemChangeCycle(long value) { exchangeState().setLastDuelItemChangeCycle(value); }
+    public int getDuel_with() { return exchangeState().getDuelPartnerSlot(); }
+    public void setDuel_with(int value) { exchangeState().setDuelPartnerSlot(value); }
+    public boolean getTradeRequested() { return exchangeState().getTradeRequested(); }
+    public void setTradeRequested(boolean value) { exchangeState().setTradeRequested(value); }
+    public boolean getInTrade() { return exchangeState().getInTrade(); }
+    public void setInTrade(boolean value) { exchangeState().setInTrade(value); }
+    public boolean getCanOffer() { return exchangeState().getCanOffer(); }
+    public void setCanOffer(boolean value) { exchangeState().setCanOffer(value); }
+    public boolean getTradeConfirmed() { return exchangeState().getTradeConfirmed(); }
+    public void setTradeConfirmed(boolean value) { exchangeState().setTradeConfirmed(value); }
+    public boolean getTradeConfirmed2() { return exchangeState().getTradeConfirmed2(); }
+    public void setTradeConfirmed2(boolean value) { exchangeState().setTradeConfirmed2(value); }
+    public boolean getTradeResetNeeded() { return exchangeState().getTradeResetNeeded(); }
+    public void setTradeResetNeeded(boolean value) { exchangeState().setTradeResetNeeded(value); }
+    public int getTrade_reqId() { return exchangeState().getTradePartnerSlot(); }
+    public void setTrade_reqId(int value) { exchangeState().setTradePartnerSlot(value); }
+    public boolean[] getDuelRule() { return exchangeState().getDuelRule(); }
+    public void setDuelRule(boolean[] value) { exchangeState().setDuelRule(value); }
+    public boolean[] getDuelBodyRules() { return exchangeState().getDuelBodyRules(); }
     public boolean priceCheckerOpen = false;
     public int priceCheckerMode = 0; // 0 = Value, 1 = High Alch
     public boolean priceCheckerSearchPendingInput = false;
@@ -717,7 +726,7 @@ public class Client extends Player implements Runnable {
         logger.debug("Thread removed from Server for player={}", getPlayerName());
         isLoggingOut = false;
 
-        if (saveNeeded && !tradeSuccessful) {
+        if (saveNeeded && !TradeDuelSessionService.isTradeSettled(this)) {
             GameEventBus.post(new PlayerLogoutEvent(this, PlayerSaveReason.DISCONNECT));
             saveStats(PlayerSaveReason.DISCONNECT, true, true);
         }
@@ -1233,10 +1242,10 @@ public class Client extends Player implements Runnable {
                 }
             }
             TradeDuelSessionService.closeOnLogout(this);
-            if (duel_with > 0 && validClient(duel_with) && inDuel && duelFight) {
-                Client p = getClient(duel_with);
-                p.duelWin = true;
-                p.DuelVictory();
+            if (getDuel_with() > 0 && validClient(getDuel_with()) && getInDuel() && getDuelFight()) {
+                Client p = getClient(getDuel_with());
+                p.setDuelWin(true);
+                net.dodian.uber.game.social.exchange.DuelingService.victory(p);
             }
         }
         if ((getServerEnv().equals("prod") && getGameWorldId() < 2) || getServerEnv().equals("dev") || getPlayerName().toLowerCase().startsWith("pro noob")) {
@@ -1360,6 +1369,10 @@ public class Client extends Player implements Runnable {
 
     public void resetItems(int WriteFrame) {
         if (WriteFrame == 3214) {
+            if (net.dodian.uber.game.social.exchange.ExchangeRuntime.session(this) != null) {
+                send(new ResetItems(3214));
+                return;
+            }
             sendInventoryDelta();
             return;
         }
@@ -1417,15 +1430,15 @@ public class Client extends Player implements Runnable {
 
 
     public void resetOTItems(int WriteFrame) {
-        Client other = getClient(trade_reqId);
-        if (!validClient(trade_reqId)) {
+        Client other = getClient(getTrade_reqId());
+        if (!validClient(getTrade_reqId())) {
             return;
         }
-        send(new TradeItemsUpdate(WriteFrame, other.offeredItems));
+        send(new TradeItemsUpdate(WriteFrame, net.dodian.uber.game.social.exchange.ExchangeRuntime.offers(other)));
     }
 
     public void resetTItems(int WriteFrame) {
-        send(new TradeItemsUpdate(WriteFrame, offeredItems));
+        send(new TradeItemsUpdate(WriteFrame, net.dodian.uber.game.social.exchange.ExchangeRuntime.offers(this)));
     }
 
     public void resetShop(int shopId) {
@@ -1454,6 +1467,11 @@ public class Client extends Player implements Runnable {
 
     public void moveItems(int from, int to, int moveWindow) {
         if (moveWindow == 3214 || moveWindow == 5064) {
+            if (net.dodian.uber.game.social.exchange.ExchangeRuntime.hasReservationAt(this, from)
+                    || net.dodian.uber.game.social.exchange.ExchangeRuntime.hasReservationAt(this, to)) {
+                send(new SendMessage("You cannot move an item while it is offered."));
+                return;
+            }
             int tempI = playerItems[to];
             int tempN = playerItemsN[to];
             playerItems[to] = playerItems[from];
@@ -1853,7 +1871,7 @@ public class Client extends Player implements Runnable {
             ItemDispatcher.tryHandle(this, 1, wearID, slot, interFace);
             return;
         }
-        if (duelConfirmed && !duelFight) {
+        if (getDuelConfirmed() && !getDuelFight()) {
                             wearLog("[WEAR:WEAR] rejected pending duel confirmation");
             return;
         }
@@ -1868,7 +1886,7 @@ public class Client extends Player implements Runnable {
             send(new SendMessage("You must be a premium member to use this item"));
             return;
         }
-        if (targetSlot != 8 && duelBodyRules[falseSlots[targetSlot]]) {
+        if (net.dodian.uber.game.social.exchange.DuelingService.isEquipmentRestricted(this, targetSlot)) {
                             wearLog("[WEAR:WEAR] rejected by duel equipment rule slot={}", targetSlot);
             send(new SendMessage("Current duel rules restrict this from being worn!"));
             return;
@@ -1881,6 +1899,10 @@ public class Client extends Player implements Runnable {
             }
             int wearAmount = playerItemsN[slot];
             if (wearAmount < 1) {
+                return;
+            }
+            if (net.dodian.uber.game.social.exchange.ExchangeRuntime.hasReservationAt(this, slot)) {
+                send(new SendMessage("You cannot equip an item while it is offered."));
                 return;
             }
             if (wearID >= 0) {
@@ -2029,7 +2051,7 @@ public class Client extends Player implements Runnable {
     }
 
     public boolean remove(int slot, boolean force) {
-        if (duelConfirmed && !force) {
+        if (getDuelConfirmed() && !force) {
             return false;
         }
         getEquipment()[slot] = -1;
@@ -2088,44 +2110,19 @@ public class Client extends Player implements Runnable {
     public int currentSkill = -1;
 
     public static void publicyell(String message) {
-        for (Player p : PlayerRegistry.players) {
-            if (p == null || !p.isActive) {
-                continue;
-            }
-            Client temp = (Client) p;
-            if (temp.getPosition().getX() > 0 && temp.getPosition().getY() > 0) {
-                if (!temp.disconnected && p.isActive) {
-                    temp.send(new SendMessage(message));
-                }
-            }
-        }
+        net.dodian.uber.game.social.WorldAnnouncementService.broadcast(message);
     }
 
     public void yell(String message) {
-        for (Player p : PlayerRegistry.players) {
-            if (p == null || !p.isActive)
-                continue;
-            Client temp = (Client) p;
-            temp.send(new SendMessage(message));
-        }
+        net.dodian.uber.game.social.WorldAnnouncementService.broadcastAll(message);
     }
 
     public void yellKilled(String message) {
-        for (Player p : PlayerRegistry.players) {
-            if (p == null || !p.isActive || !(p.inWildy() || p.inEdgeville()))
-                continue;
-            Client temp = (Client) p;
-            temp.send(new SendMessage(message));
-        }
+        net.dodian.uber.game.social.WorldAnnouncementService.broadcastWilderness(message);
     }
 
     public void yellAreaKilled(String message, String area) {
-        for (Player p : PlayerRegistry.players) {
-            if (p == null || !p.isActive || !p.getPositionName().contains(area))
-                continue;
-            Client temp = (Client) p;
-            temp.send(new SendMessage("<col=FFFF00>[Area]<col=000000> " + message));
-        }
+        net.dodian.uber.game.social.WorldAnnouncementService.broadcastArea(message, area);
     }
 
     public long beginVerticalTransition(long delayMs) {
@@ -2386,7 +2383,7 @@ public class Client extends Player implements Runnable {
         for (int i = 0; i < 14; i++) {
             if (getEquipment()[i] > 0) {
                 int timed = checkObsidianBonus(getEquipment()[i]) ? 2 : 1;
-                if (!(duelFight && i == 8)) {
+                if (!(getDuelFight() && i == 8)) {
                     for (int k = 0; k < playerBonus.length; k++) {
                         int bonus = Server.itemManager.getBonus(getEquipment()[i], k);
                         playerBonus[k] += bonus * timed;
@@ -2755,76 +2752,6 @@ public class Client extends Player implements Runnable {
             }
         }
         return false;
-    }
-
-    public void fromTrade(int itemID, int fromSlot, int amount) {
-        if (!ContentInteraction.tryAcquireMs(this, ContentInteraction.TRADE_CONFIRM_STAGE_ONE, 200L) || !canOffer) {
-            if(!canOffer)  declineTrade(); //Not sure if we need this here but..Maybe?!
-            return;
-        }
-        try {
-            Client other = getClient(trade_reqId);
-            if (!inTrade || !validClient(trade_reqId)) {
-                declineTrade();
-                return;
-            }
-            if (checkGameitemAmount(fromSlot, amount, offeredItems) || offeredItems.get(fromSlot).getId() != itemID) {
-                return;
-            }
-            int count = 0;
-            if (!Server.itemManager.isStackable(itemID)) {
-                for (GameItem item : offeredItems) {
-                    if (item.getId() == itemID) {
-                        count++;
-                    }
-                }
-            } else
-                count = offeredItems.get(fromSlot).getAmount();
-            amount = Math.min(amount, count);
-            if (!OfferTransactions.offerToInventory(this, itemID, fromSlot, amount)) {
-                return;
-            }
-            TradeDuelSessionService.offerChanged(this, other);
-            resetItems(3322);
-            resetTItems(3415);
-            other.resetOTItems(3416);
-            send(new SendString("", 3431));
-            other.send(new SendString("", 3431));
-        } catch (Exception e) {
-            logger.warn("Error with trade for {}", getPlayerName(), e);
-        }
-    }
-
-    public void tradeItem(int itemID, int fromSlot, int amount) {
-        if (!ContentInteraction.tryAcquireMs(this, ContentInteraction.TRADE_CONFIRM_STAGE_TWO, 200L)) {
-            return;
-        }
-        if (!Server.itemManager.isStackable(itemID))
-            amount = Math.min(amount, getInvAmt(itemID));
-        else
-            amount = Math.min(amount, playerItemsN[fromSlot]);
-        Client other = getClient(trade_reqId);
-        if (!inTrade || !validClient(trade_reqId) || !canOffer) {
-            
-            declineTrade();
-            return;
-        }
-        if (!playerHasItem(itemID, amount) || playerItems[fromSlot] != (itemID + 1)) {
-            return;
-        }
-        if (!Server.itemManager.isTradable(itemID) && playerRights < 2 && other.playerRights < 2) {
-            send(new SendMessage("You can't trade this item"));
-            return;
-        }
-        if (!OfferTransactions.stakeToOffer(this, itemID, fromSlot, amount)) {
-            return;
-        }
-        TradeDuelSessionService.offerChanged(this, other);
-        resetItems(3322);
-        resetTItems(3415);
-        other.resetOTItems(3416);
-        send(new SendString("", 3431));
-        other.send(new SendString("", 3431));
     }
 
     public void openPriceChecker() {
@@ -3489,185 +3416,6 @@ public class Client extends Player implements Runnable {
 
 
 
-    public void RefreshDuelRules() {
-        for (int i = 0; i < duelRule.length; i++) {
-            int configId = duelRuleConfigIds[i];
-            boolean on = duelRule[i];
-            if (i == 9) on = true;
-            if (i == 3 || i == 4 || i == 5 || i == 10) on = false;
-            String color = on ? "@red@" : ((i == 3 || i == 4 || i == 5 || i == 10) ? "@or2@" : "@gre@");
-            send(new SendString(color + duelNames[i], duelLine[i]));
-            setVarp(configId, on ? 1 : 0);
-        }
-        int bodyConfigValue = 0;
-        for (int i = 0; i < duelBodyRules.length; i++) {
-            if (duelBodyRules[i])
-                bodyConfigValue += stakeConfigId[i];
-        }
-        varbit(286, bodyConfigValue);
-    }
-
-    public void DuelVictory() {
-        Client other = getClient(duel_with);
-        if (validClient(duel_with)) {
-            send(new SendMessage("You have defeated " + other.getPlayerName() + "!"));
-            send(new SendString(other.getPlayerName(), 31706));
-            send(new SendString("" + other.determineCombatLevel(), 31707));
-        }
-        boolean stake = false;
-        StringBuilder playerStake = new StringBuilder();
-        for (GameItem item : offeredItems) {
-            if (item.getId() > 0 && item.getAmount() > 0) {
-                playerStake.append("(").append(item.getId()).append(", ").append(item.getAmount()).append(")");
-                stake = true;
-            }
-        }
-        StringBuilder opponentStake = new StringBuilder();
-        for (GameItem item : otherOfferedItems) {
-            if (item.getId() > 0 && item.getAmount() > 0) {
-                opponentStake.append("(").append(item.getId()).append(", ").append(item.getAmount()).append(")");
-                stake = true;
-            }
-        }
-        resetAttack();
-
-        if (stake) {
-            DuelLog.recordDuel(this.getPlayerName(), other.getPlayerName(), playerStake.toString(), opponentStake.toString(), this.getPlayerName());
-            itemsToVScreen_old();
-            acceptDuelWon();
-            other.resetDuel();
-        } else {
-            if (validClient(duel_with))
-                other.resetDuel();
-            resetDuel();
-        }
-        long totalValue = 0;
-        for (GameItem item : otherOfferedItems) {
-            if (item.getId() > 0 && item.getAmount() > 0) {
-                totalValue += (long) Server.itemManager.getShopSellValue(item.getId()) * item.getAmount();
-            }
-        }
-        send(new SendString("<col=E1981F>Total Value: " + String.format("%,d", totalValue), 31709));
-        openInterface(31700);
-        heal(getMaxHealth());
-        getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
-
-    }
-
-    public void itemsToVScreen_old() {
-        send(new DuelItemsUpdate(31708, otherOfferedItems, false));
-    }
-
-    public void refreshDuelScreen() {
-        Client other = getClient(duel_with);
-        if (!validClient(duel_with)) {
-            return;
-        }
-        send(new DuelItemsUpdate(31012, offeredItems, true));
-        send(new DuelItemsUpdate(31014, other.offeredItems, true));
-    }
-
-    public void stakeItem(int itemID, int fromSlot, int amount) {
-        if (!ContentInteraction.tryAcquireMs(this, ContentInteraction.DUEL_CONFIRM_STAGE_ONE, 200L) || !canOffer) {
-            if(!canOffer) declineDuel(); //Not sure if we need this here but..Maybe?!
-            return;
-        }
-        if (!Server.itemManager.isStackable(itemID))
-            amount = Math.min(amount, getInvAmt(itemID));
-        else
-            amount = Math.min(amount, playerItemsN[fromSlot]);
-        if (!Server.itemManager.isTradable(itemID)) {
-            send(new SendMessage("You can't trade that item"));
-            return;
-        }
-        Client other = getClient(duel_with);
-        if (!inDuel || !validClient(duel_with)) {
-            declineDuel();
-            return;
-        }
-        if (!playerHasItem(itemID, amount) || playerItems[fromSlot] != (itemID + 1)) {
-            return;
-        }
-        if (!Server.itemManager.isTradable(itemID)) {
-            send(new SendMessage("You can't trade this item"));
-            return;
-        }
-        if (!OfferTransactions.stakeToOffer(this, itemID, fromSlot, amount)) {
-            return;
-        }
-        duelConfirmed = false;
-        other.duelConfirmed = false;
-        long nowCycle = GameCycleClock.currentCycle();
-        lastDuelItemChangeCycle = nowCycle;
-        other.lastDuelItemChangeCycle = nowCycle;
-        resetItems(3214);
-        resetItems(3322);
-        other.resetItems(3214);
-        other.resetItems(3322);
-        refreshDuelScreen();
-        other.refreshDuelScreen();
-        send(new SendString("", 6684));
-        other.send(new SendString("", 6684));
-    }
-
-    public boolean checkGameitemAmount(int slot, int amount, CopyOnWriteArrayList<GameItem> item) {
-        int count = 0;
-        if (item.isEmpty()) return true;
-        int targetId = item.get(slot).getId();
-        if (!item.get(slot).isStackable()) {
-            for (GameItem checkItem : item) {
-                if (checkItem.getId() == targetId)
-                    count++;
-            }
-        } else
-            count = item.get(slot).getAmount();
-        return amount < count;
-    }
-
-    public void fromDuel(int itemID, int fromSlot, int amount) {
-        if (!canOffer) {
-            declineDuel();
-            return;
-        }
-        if (!ContentInteraction.tryAcquireMs(this, ContentInteraction.DUEL_CONFIRM_STAGE_TWO, 200L)) {
-            return;
-        }
-        Client other = getClient(duel_with);
-        if (!inDuel || !validClient(duel_with)) {
-            declineDuel();
-            return;
-        }
-        if (checkGameitemAmount(fromSlot, amount, offeredItems) || offeredItems.get(fromSlot).getId() != itemID) {
-            return;
-        }
-        int count = 0;
-        if (!Server.itemManager.isStackable(itemID)) {
-            for (GameItem item : offeredItems) {
-                if (item.getId() == itemID) {
-                    count++;
-                }
-            }
-        } else
-            count = offeredItems.get(fromSlot).getAmount();
-        amount = Math.min(amount, count);
-        if (!OfferTransactions.offerToInventory(this, itemID, fromSlot, amount)) {
-            return;
-        }
-        duelConfirmed = false;
-        long nowCycle = GameCycleClock.currentCycle();
-        lastDuelItemChangeCycle = nowCycle;
-        other.lastDuelItemChangeCycle = nowCycle;
-        resetItems(3214);
-        resetItems(3322);
-        refreshDuelScreen();
-        send(new SendString("", 6684));
-        other.duelConfirmed = false;
-        other.resetItems(3214);
-        other.resetItems(3322);
-        other.refreshDuelScreen();
-        other.send(new SendString("", 6684));
-    }
-
     public static String passHash(String in, String salt) {
         String passM = new MD5(in).compute();
         return new MD5(passM + salt).compute();
@@ -3736,7 +3484,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void openGenie() {
-        if (inDuel || duelFight || IsBanking) {
+        if (getInDuel() || getDuelFight() || IsBanking) {
             send(new SendMessage("Finish what you are doing first!"));
             return;
         }
@@ -3748,7 +3496,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void openAntique() {
-        if (inDuel || duelFight || IsBanking) {
+        if (getInDuel() || getDuelFight() || IsBanking) {
             send(new SendMessage("Finish what you are doing first!"));
             return;
         }
@@ -3821,7 +3569,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void triggerTele(int x, int y, int height, boolean prem, int emote) {
-        if (inDuel || duelStatus == 3 || UsingAgility || doingTeleport() || getStunTimer() > 0) {
+        if (getInDuel() || UsingAgility || doingTeleport() || getStunTimer() > 0) {
             return;
         }
         if (rejectTeleport()) {
@@ -3853,407 +3601,12 @@ public class Client extends Player implements Runnable {
         return getPosition().getX() >= 3264 && getPosition().getX() <= 3327 && getPosition().getY() >= 9344 && getPosition().getY() <= 9407;
     }
 
-    public void openTrade() {
-        Client other = getClient(trade_reqId);
-        if (other == null) {
-            declineTrade(false);
-            return;
-        }
-        inTrade = true;
-        tradeRequested = false;
-        resetItems(3322);
-        resetTItems(3415);
-        resetOTItems(3416);
-        send(new InventoryInterface(3323, 3321)); // trading window + bag
-        String out = other.getPlayerName();
-        if (other.playerRights == 1) {
-            out = "@cr1@" + out;
-        } else if (other.playerRights == 2) {
-            out = "@cr2@" + out;
-        }
-        send(new SendString("Trading With: " + out, 3417));
-        send(new SendString("", 3431));
-        send(new SendString("Are you sure you want to make this trade?", 3535));
-    }
-
-    public void declineTrade() {
-        declineTrade(true);
-    }
-
-    public void declineTrade(boolean tellOther) {
-        if (!inTrade || tradeSessionId <= 0L || tradeSettledSessionId == tradeSessionId)
-            return;
-        Client other = getClient(trade_reqId);
-        boolean cancelOther = tellOther && other != null && other.inTrade && other.trade_reqId == getSlot()
-                && tradeSessionId > 0L && tradeSessionId == other.tradeSessionId;
-        boolean refunded = TradeDuelSessionService.cancelTrade(this, cancelOther ? other : null);
-        if (!refunded) {
-            logger.error("Unable to safely refund cancelled trade for player={} partner={}", getPlayerName(), other == null ? "none" : other.getPlayerName());
-            send(new SendMessage("Your trade could not be cancelled safely. Please contact staff."));
-            return;
-        }
-        finishDeclineTrade();
-        if (cancelOther) {
-            other.finishDeclineTrade();
-            GameEventBus.post(new TradeCancelEvent(this, other));
-        }
-    }
-
-    private void finishDeclineTrade() {
-        send(new RemoveInterfaces());
-        inTrade = false;
-        canOffer = true;
-        tradeConfirmed = false;
-        tradeConfirmed2 = false;
-        offeredItems.clear();
-        trade_reqId = -1;
-        net.dodian.uber.game.engine.systems.interaction.ui.PlayerSocialApproachService.cancel(this);
-        TradeDuelSessionService.resetTradeSession(this);
-        faceTarget(trade_reqId);
-        checkItemUpdate();
-    }
-
     public boolean validClient(int index) {
         return PlayerRegistry.validClient(index);
     }
 
     public Client getClient(int index) {
         return PlayerRegistry.getClient(index);
-    }
-
-    public void tradeReq(int id) {
-        Client other = getClient(id);
-        if (other == null) return;
-        setFocus(other.getPosition().getX(), other.getPosition().getY());
-        if (!net.dodian.uber.game.engine.config.FeatureStateService.trading.get()) {
-            send(new SendMessage("Trading has been temporarily disabled"));
-            return;
-        }
-        for (int a = 0; a < PlayerRegistry.players.length; a++) {
-            Client o = getClient(a);
-            if (a != getSlot() && validClient(a) && o.dbId > 0 && o.dbId == dbId) {
-                logout();
-            }
-        }
-        String tradeBlockMessage = net.dodian.uber.game.engine.systems.interaction.PlayerInteractionGuardService.tradeBlockMessage(this, other);
-        if (tradeBlockMessage != null) {
-            send(new SendMessage(tradeBlockMessage));
-            return;
-        }
-        if (validClient(trade_reqId)) {
-            if (isBusy() || other.isBusy()) {
-                send(new SendMessage("That player is busy at the moment"));
-                trade_reqId = 0;
-                return;
-            }
-            if (tradeLocked && other.playerRights < 1) {
-                return;
-            }
-        }
-        if (dbId == other.dbId) {
-            return;
-        }
-        /*
-         * if(other.connectedFrom.equals(connectedFrom) &&
-         * !connectedFrom.equals("127.0.0.1")){ tradeRequested = false; return; }
-         */
-        if (validClient(trade_reqId) && !inTrade && other.tradeRequested && other.trade_reqId == getSlot()) {
-            TradeDuelSessionService.beginTradeSession(this, other);
-            openTrade();
-            other.openTrade();
-        } else if (validClient(trade_reqId) && !inTrade && ContentInteraction.tryAcquireMs(this, ContentInteraction.TRADE_REQUEST, 1000L)) {
-            tradeRequested = true;
-            trade_reqId = id;
-            GameEventBus.post(new TradeRequestEvent(this, other));
-            send(new SendMessage("Sending trade request..."));
-            other.send(new SendMessage(getPlayerName() + ":tradereq:"));
-        }
-    }
-
-    public void confirmScreen() {
-        canOffer = false;
-        inTrade = true;
-        resetItems(3322);
-        send(new InventoryInterface(3443, 3321)); // trade confirm
-        Client other = getClient(trade_reqId);
-        /* Reset item containers! */
-        send(new ClearItemContainer(3538, 28));
-        send(new ClearItemContainer(3539, 28));
-        /* Set text if 16 or below items! */
-        StringBuilder offerItems = new StringBuilder();
-        if (offeredItems.size() <= 16) {
-            if (offeredItems.isEmpty()) offerItems.append("Absolutely nothing!");
-            else {
-                int id = 0;
-                for (GameItem item : offeredItems) {
-                    if (id > 0) offerItems.append("\\n");
-                    offerItems.append(getItemName(item.getId()));
-                    String amt = Misc.format(item.getAmount());
-                    if (item.getAmount() >= 1000000000) {
-                        amt = "@gre@" + (item.getAmount() / 1000000000) + " billion @whi@(" + Misc.format(item.getAmount()) + ")";
-                    } else if (item.getAmount() >= 1000000) {
-                        amt = "@gre@" + (item.getAmount() / 1000000) + " million @whi@(" + Misc.format(item.getAmount()) + ")";
-                    } else if (item.getAmount() >= 1000) {
-                        amt = "@cya@" + (item.getAmount() / 1000) + "K @whi@(" + Misc.format(item.getAmount()) + ")";
-                    }
-                    if (item.getAmount() > 1) offerItems.append(" x ").append(amt);
-                    id++;
-                }
-            }
-        }
-        StringBuilder otherOfferItems = new StringBuilder();
-        if (other.offeredItems.size() <= 16) {
-            if (other.offeredItems.isEmpty()) otherOfferItems.append("Absolutely nothing!");
-            else {
-                int id = 0;
-                for (GameItem item : other.offeredItems) {
-                    if (id > 0) otherOfferItems.append("\\n");
-                    otherOfferItems.append(getItemName(item.getId()));
-                    String amt = Misc.format(item.getAmount());
-                    if (item.getAmount() >= 1000000000) {
-                        amt = "@gre@" + (item.getAmount() / 1000000000) + " billion @whi@(" + Misc.format(item.getAmount()) + ")";
-                    } else if (item.getAmount() >= 1000000) {
-                        amt = "@gre@" + (item.getAmount() / 1000000) + " million @whi@(" + Misc.format(item.getAmount()) + ")";
-                    } else if (item.getAmount() >= 1000) {
-                        amt = "@cya@" + (item.getAmount() / 1000) + "K @whi@(" + Misc.format(item.getAmount()) + ")";
-                    }
-                    if (item.getAmount() > 1) otherOfferItems.append(" x ").append(amt);
-                    id++;
-                }
-            }
-        }
-        /* Sending trading items! */
-        if (offeredItems.size() > 16) {
-            send(new TradeItemsUpdate(3538, offeredItems));
-        }
-        if (other.offeredItems.size() > 16) {
-            send(new TradeItemsUpdate(3539, other.offeredItems));
-        }
-
-        send(new SendString(offeredItems.isEmpty() ? "Absolutely nothing!" : offerItems.toString(), 3557));
-        send(new SendString(other.offeredItems.isEmpty() ? "Absolutely nothing!" : otherOfferItems.toString(), 3558));
-    }
-
-    private boolean tradeSuccessful = false;
-
-    public void giveItems() {
-        Client other = getClient(trade_reqId);
-        if (!validClient(trade_reqId) || tradeSuccessful || other.tradeSuccessful) {
-            return;
-        }
-        try {
-            TradeDuelSessionService.settleTrade(this, other);
-        } catch (Exception e) {
-            logger.warn("Giving items failed for {}", getPlayerName(), e);
-        }
-    }
-
-    public void completeTradeSettlementState() {
-        send(new RemoveInterfaces());
-        tradeResetNeeded = true;
-        tradeSuccessful = true;
-        PlayerDeferredLifecycleService.signalTradeFinalizeReady(this);
-        saveStats(PlayerSaveReason.TRADE, false, false);
-        faceTarget(-1);
-    }
-
-    public void resetTrade() {
-        offeredItems.clear();
-        inTrade = false;
-        trade_reqId = 0;
-        canOffer = true;
-        tradeConfirmed = false;
-        tradeConfirmed2 = false;
-        tradeSuccessful = false;
-        TradeDuelSessionService.resetTradeSession(this);
-        send(new RemoveInterfaces());
-        tradeResetNeeded = false;
-        send(new SendString("Are you sure you want to make this trade?", 3535));
-    }
-
-    public void duelReq(int pid) {
-        Client other = getClient(pid);
-        if (other == null) return;
-        setFocus(other.getPosition().getX(), other.getPosition().getY());
-        String duelBlockMessage = net.dodian.uber.game.engine.systems.interaction.PlayerInteractionGuardService.duelBlockMessage(this, other);
-        if (duelBlockMessage != null) {
-            send(new SendMessage(duelBlockMessage));
-            return;
-        }
-        if (isBusy() || other.isBusy()) {
-            send(new SendMessage(isBusy() ? "You are currently busy" : other.getPlayerName() + " is currently busy!"));
-            return;
-        }
-        if (net.dodian.uber.game.engine.systems.combat.CombatLogoutLockService.isLocked(this)
-                || net.dodian.uber.game.engine.systems.combat.CombatLogoutLockService.isLocked(other)) {
-            send(new SendMessage(net.dodian.uber.game.engine.systems.combat.CombatLogoutLockService.isLocked(this)
-                    ? "You can't duel while in combat."
-                    : other.getPlayerName() + " can't duel while in combat."));
-            return;
-        }
-        if (inWildy() || other.inWildy()) {
-            send(new SendMessage("You cant duel in the wilderness!"));
-            return;
-        }
-        if (!net.dodian.uber.game.engine.config.FeatureStateService.dueling.get()) {
-            send(new SendMessage("Dueling has been temporarily disabled"));
-            return;
-        }
-        for (int a = 0; a < PlayerRegistry.players.length; a++) {
-            Client o = getClient(a);
-            if (a != getSlot() && validClient(a) && o.dbId > 0 && o.dbId == dbId) {
-                logout();
-            }
-        }
-        duel_with = pid;
-        duelRequested = true;
-        if (!validClient(duel_with)) {
-            return;
-        }
-        setFocus(other.getPosition().getX(), other.getPosition().getY());
-        if (isBusy() || other.isBusy() || other.duelConfirmed || other.duelConfirmed2) {
-            send(new SendMessage("Other player is busy at the moment"));
-            duelRequested = false;
-            return;
-        }
-        if (tradeLocked && other.playerRights < 1) {
-            return;
-        } //I decided to enable duel from same ip, go wild! If we catch you dupe..Oh gosh!
-        if (duelRequested && other.duelRequested && duel_with == other.getSlot() && other.duel_with == getSlot()) {
-            openDuel();
-            other.openDuel();
-        } else {
-            send(new SendMessage("Sending duel request..."));
-            other.send(new SendMessage(getPlayerName() + ":duelreq:"));
-        }
-    }
-
-    public void openDuel() {
-        duelRule[9] = true;
-        RefreshDuelRules();
-        refreshDuelScreen();
-        inDuel = true;
-        Client other = getClient(duel_with);
-        send(new SendString("Dueling with: " + other.getPlayerName() + " (level-" + other.determineCombatLevel() + ")", 31005));
-        send(new SendString("Opponent's combat level: @or2@" + other.determineCombatLevel(), 31006));
-        send(new SendString("", 31009));
-        resetItems(3322);
-        send(new InventoryInterface(31000, 3321));
-        sendDuelArmour(other);
-    }
-
-    public void declineDuel() {
-        Client other = getClient(duel_with);
-        inDuel = false;
-        if (validClient(duel_with) && other.inDuel) {
-            other.declineDuel();
-        }
-        send(new RemoveInterfaces());
-        canOffer = true;
-        duel_with = 0;
-        net.dodian.uber.game.engine.systems.interaction.ui.PlayerSocialApproachService.cancel(this);
-        duelRequested = false;
-        duelConfirmed = false;
-        duelConfirmed2 = false;
-        duelFight = false;
-        if (!OfferTransactions.refundOffers(this)) {
-            send(new SendMessage("Your staked items could not be returned safely. Please contact staff."));
-            return;
-        }
-        /*
-         * Danno: Reset's duel options when duel declined to stop scammers.
-         */
-        resetDuel();
-        RefreshDuelRules();
-        failer = "";
-        faceTarget(-1);
-        checkItemUpdate();
-    }
-
-    public void confirmDuel() {
-        canOffer = false;
-        resetItems(3322);
-        send(new InventoryInterface(31500, 3321));
-        Client other = getClient(duel_with);
-        if (!validClient(duel_with)) {
-            declineDuel();
-        }
-        int lineIndex = 0;
-        for (int i = 0; i < duelRule.length; i++) {
-            if (lineIndex >= 15) break;
-            boolean on = duelRule[i];
-            if (i == 9) on = true;
-            if (i == 3 || i == 4 || i == 5 || i == 10) on = false;
-            String color = on ? "@red@" : ((i == 3 || i == 4 || i == 5 || i == 10) ? "@or2@" : "@gre@");
-            send(new SendString(color + duelNames[i], 31505 + lineIndex));
-            lineIndex++;
-        }
-        while (lineIndex < 15) {
-            send(new SendString("", 31505 + lineIndex));
-            lineIndex++;
-        }
-        int slot = 0;
-        for (GameItem item : offeredItems) {
-            if (slot >= 28) break;
-            if (item.getId() > 0 && item.getAmount() > 0) {
-                send(new SendString("</col>" + getItemName(item.getId()) + " @whi@x " + String.format("%,d", item.getAmount()), 31531 + slot));
-                slot++;
-            }
-        }
-        while (slot < 28) {
-            send(new SendString("", 31531 + slot));
-            slot++;
-        }
-        slot = 0;
-        if (validClient(duel_with)) {
-            for (GameItem item : other.offeredItems) {
-                if (slot >= 28) break;
-                if (item.getId() > 0 && item.getAmount() > 0) {
-                    send(new SendString("</col>" + other.getItemName(item.getId()) + " @whi@x " + String.format("%,d", item.getAmount()), 31561 + slot));
-                    slot++;
-                }
-            }
-        }
-        while (slot < 28) {
-            send(new SendString("", 31561 + slot));
-            slot++;
-        }
-        send(new SendString("", 31526));
-    }
-
-    public void startDuel() {
-        send(new RemoveInterfaces());
-        canAttack = false;
-        canOffer = false;
-        duelFight = true;
-        prayerManager.reset();
-        addEffectTime(2, 0); //Need to reset this for dueling!
-        GetBonus(true); //Set bonus due to blessing!
-        for (int i = 0; i < boostedLevel.length; i++) {
-            boostedLevel[i] = 0;
-            ProgressionService.refresh(this, Skill.getSkill(i));
-        }
-        Client other = getClient(duel_with);
-        for (GameItem item : other.offeredItems) {
-            otherOfferedItems.add(new GameItem(item.getId(), item.getAmount()));
-        }
-        otherdbId = other.dbId;
-        final Client player = this;
-        final DuelCountdownState[] countdownState = {DuelCountdownState.initial()};
-        player.requestForceChat("It is time to D-D-D-DUEL!");
-        GameEventScheduler.runRepeatingMs(600, () -> {
-            var step = DuelCountdownService.advance(countdownState[0]);
-            countdownState[0] = step.getNextState();
-
-            if (step.getForceChat() != null) {
-                player.requestForceChat(step.getForceChat());
-            }
-            if (step.getEnableCombat()) {
-                player.canAttack = true;
-                return false;
-            }
-            return true;
-        });
     }
 
     public void processPendingApproaches() {
@@ -4263,24 +3616,6 @@ public class Client extends Player implements Runnable {
     /*
      * Danno: Edited for new duel rules, for future use.
      */
-    public void resetDuel() {
-        send(new RemoveInterfaces());
-        duelWin = false;
-        canOffer = true;
-        duel_with = 0;
-        duelRequested = false;
-        duelConfirmed = false;
-        duelConfirmed2 = false;
-        offeredItems.clear();
-        otherOfferedItems.clear();
-        duelFight = false;
-        canAttack = true;
-        inDuel = false;
-        duelRule = new boolean[]{false, false, false, false, false, false, false, false, false, false, false};
-        Arrays.fill(duelBodyRules, false);
-        otherdbId = -1;
-    }
-
     public void setVarp(int id, int value) {
         send(new SetVarbit(id, value));
     }
@@ -4288,47 +3623,6 @@ public class Client extends Player implements Runnable {
     public void varbit(int id, int value) {
         // Compatibility alias. This writes a raw client settings/varp slot.
         setVarp(id, value);
-    }
-
-    public boolean toggleDuelRule(int ruleIndex) {
-        Client other = getClient(duel_with);
-        if (other == null || ruleIndex < 0 || ruleIndex >= duelRule.length
-                || ruleIndex == 3 || ruleIndex == 4 || ruleIndex == 5 || ruleIndex == 9 || ruleIndex == 10
-                || !ContentInteraction.tryAcquireMs(this, ContentInteraction.DUEL_RULES, 800L)) {
-            return false;
-        }
-        if (inDuel && !duelFight && !duelConfirmed2 && !other.duelConfirmed2 && !(duelConfirmed && other.duelConfirmed)) {
-            duelRule[ruleIndex] = !duelRule[ruleIndex];
-            other.duelRule[ruleIndex] = duelRule[ruleIndex];
-            duelConfirmed = false;
-            other.duelConfirmed = false;
-            send(new SendString("", 31009));
-            other.send(new SendString("", 31009));
-            RefreshDuelRules();
-            other.RefreshDuelRules();
-            return true;
-        }
-        return false;
-    }
-
-    public boolean toggleDuelBodyRule(int ruleIndex) {
-        Client other = getClient(duel_with);
-        if (other == null || ruleIndex < 0 || ruleIndex >= duelBodyRules.length
-                || !ContentInteraction.tryAcquireMs(this, ContentInteraction.DUEL_BODY_RULES, 400L)) {
-            return false;
-        }
-        if (inDuel && !duelFight && !duelConfirmed2 && !other.duelConfirmed2 && !(duelConfirmed && other.duelConfirmed)) {
-            duelBodyRules[ruleIndex] = !duelBodyRules[ruleIndex];
-            other.duelBodyRules[ruleIndex] = duelBodyRules[ruleIndex];
-            duelConfirmed = false;
-            other.duelConfirmed = false;
-            send(new SendString("", 31009));
-            other.send(new SendString("", 31009));
-            RefreshDuelRules();
-            other.RefreshDuelRules();
-            return true;
-        }
-        return false;
     }
 
     public void addFriend(long name) {
@@ -4653,63 +3947,12 @@ public class Client extends Player implements Runnable {
       }*/
     }
 
-    public void acceptDuelWon() {
-        if (duelFight && duelWin) {
-            duelWin = false;
-            if (!ContentInteraction.tryAcquireMs(this, ContentInteraction.DUEL_ACCEPT_WIN, 1000L)) {
-                return;
-            }
-            Client other = getClient(duel_with);
-            CopyOnWriteArrayList<GameItem> offerCopy = new CopyOnWriteArrayList<>();
-            CopyOnWriteArrayList<GameItem> otherOfferCopy = new CopyOnWriteArrayList<>();
-            for (GameItem item : otherOfferedItems) {
-                otherOfferCopy.add(new GameItem(item.getId(), item.getAmount()));
-            }
-            for (GameItem item : offeredItems) {
-                offerCopy.add(new GameItem(item.getId(), item.getAmount()));
-            }
-            if (!OfferTransactions.settleDuelPayout(this, other)) {
-                duelWin = true;
-                send(new SendMessage("Not enough inventory space to collect your winnings. Free up space and try again."));
-                return;
-            }
-            if (this.dbId > other.dbId)
-                TradeLog.recordTrade(dbId, otherdbId, offerCopy, otherOfferCopy, false);
-            resetDuel();
-            GetBonus(true);
-            saveStats(PlayerSaveReason.DUEL, false, false);
-            faceTarget(-1);
-            checkItemUpdate();
-            if (validClient(duel_with)) {
-                other.resetDuel();
-                GetBonus(true);
-                other.saveStats(PlayerSaveReason.DUEL, false, false);
-                other.faceTarget(-1);
-                other.checkItemUpdate();
-            }
-        }
-    }
-
     public boolean contains(int item) {
         for (int playerItem : playerItems) {
             if (playerItem == item + 1)
                 return true;
         }
         return false;
-    }
-
-    public void setConfigIds() {
-        stakeConfigId[0] = 16384; // No head armour
-        stakeConfigId[1] = 32768; // No capes
-        stakeConfigId[2] = 65536; // No amulets
-        stakeConfigId[3] = 134217728; // No arrows
-        stakeConfigId[4] = 131072; // No weapon
-        stakeConfigId[5] = 262144; // No body armour
-        stakeConfigId[6] = 524288; // No shield
-        stakeConfigId[7] = 2097152; // No leg armour
-        stakeConfigId[8] = 67108864; // No hand armour
-        stakeConfigId[9] = 16777216; // No feet armour
-        stakeConfigId[10] = 8388608; // No rings
     }
 
     /**
@@ -4720,109 +3963,6 @@ public class Client extends Player implements Runnable {
      * 
      * @param c The client to send the equipment to
      */
-    public void sendDuelArmour(Client c) {
-        c.send(new DuelArmourUpdate(getEquipment(), getEquipmentN()));
-    }
-
-    public boolean hasTradeSpace() {
-        if (!validClient(trade_reqId)) {
-            return true;
-        }
-        Client o = getClient(trade_reqId);
-        int spaces = 0;
-        ArrayList<GameItem> items = new ArrayList<>();
-        for (GameItem item : o.offeredItems) {
-            if (item == null)
-                continue;
-            if (item.getAmount() > 0) {
-                if (!items.contains(item)) {
-                    items.add(item);
-                    spaces += 1;
-                } else {
-                    if (!item.isStackable()) {
-                        spaces += 1;
-                    }
-                }
-            }
-        }
-        if (spaces > getFreeSpace()) {
-            failer = getPlayerName() + " does not have enough space to hold items being traded.";
-            o.failer = getPlayerName() + " does not have enough space to hold items being traded.";
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * @return if player has enough space to remove items.
-     */
-    public boolean hasEnoughSpace() {
-        if (!inDuel || !validClient(duel_with)) {
-            return true;
-        }
-        Client o = getClient(duel_with);
-        int spaces = 0;
-        for (int i = 0; i < duelBodyRules.length; i++) {
-            if (!duelBodyRules[i])
-                continue;
-            if (getEquipmentN()[trueSlots[i]] > 0) {
-                spaces += 1;
-            }
-        }
-        ArrayList<GameItem> items = new ArrayList<>();
-        for (GameItem item : offeredItems) {
-            if (item == null)
-                continue;
-            if (item.getAmount() > 0) {
-                if (!items.contains(item)) {
-                    items.add(item);
-                    spaces += 1;
-                } else {
-                    if (!item.isStackable()) {
-                        spaces += 1;
-                    }
-                }
-            }
-        }
-        for (GameItem item : o.offeredItems) {
-            if (item == null)
-                continue;
-            if (item.getAmount() > 0) {
-                if (!items.contains(item)) {
-                    items.add(item);
-                    spaces += 1;
-                } else {
-                    if (!Server.itemManager.isStackable(item.getId())) {
-                        spaces += 1;
-                    }
-                }
-            }
-        }
-        if (spaces > getFreeSpace()) {
-            failer = getPlayerName() + " does not have enough space to hold items being removed and/or staked.";
-            o.failer = getPlayerName() + " does not have enough space to hold items being removed and/or staked.";
-            return true;
-        }
-        return false;
-
-    }
-
-    public void removeEquipment() {
-        for (int i = 0; i < duelBodyRules.length; i++) {
-            if (!duelBodyRules[i])
-                continue;
-            if (getEquipmentN()[trueSlots[i]] > 0) {
-                int id = getEquipment()[trueSlots[i]];
-                int amount = getEquipmentN()[trueSlots[i]];
-                if (remove(trueSlots[i], true)) {
-                    markSaveDirty(PlayerSaveSegment.EQUIPMENT.getMask());
-                    addItem(id, amount);
-                }
-                checkItemUpdate();
-            }
-        }
-    }
-
     public void requestForceChat(String s) {
         forcedChat = s;
         getUpdateFlags().setRequired(UpdateFlag.FORCED_CHAT, true);
@@ -4878,7 +4018,7 @@ public class Client extends Player implements Runnable {
     public boolean checkInv = false;
 
     public void openUpOtherInventory(String player) {
-        if (IsBanking || isShopping() || duelFight) {
+        if (IsBanking || isShopping() || getDuelFight()) {
             send(new SendMessage("Please finish with what you are doing!"));
             return;
         }
@@ -4908,7 +4048,7 @@ public class Client extends Player implements Runnable {
     }
 
     public void openUpOtherBank(String player) {
-        if (IsBanking || isShopping() || duelFight) {
+        if (IsBanking || isShopping() || getDuelFight()) {
             send(new SendMessage("Please finish with what you are doing!"));
             return;
         }
@@ -5051,7 +4191,7 @@ public class Client extends Player implements Runnable {
         if (disconnected) {
             return;
         }
-        if (IsBanking || isShopping() || duelFight) {
+        if (IsBanking || isShopping() || getDuelFight()) {
             send(new SendMessage("Inventory view cancelled because you started another action."));
             return;
         }
@@ -5072,7 +4212,7 @@ public class Client extends Player implements Runnable {
         if (disconnected) {
             return;
         }
-        if (IsBanking || isShopping() || duelFight) {
+        if (IsBanking || isShopping() || getDuelFight()) {
             send(new SendMessage("Bank view cancelled because you started another action."));
             return;
         }
@@ -5290,6 +4430,6 @@ public class Client extends Player implements Runnable {
     }
 
     public boolean isBusy() {
-        return inTrade || inDuel || duelFight || IsBanking;
+        return getInTrade() || getInDuel() || getDuelFight() || IsBanking;
     }
 }

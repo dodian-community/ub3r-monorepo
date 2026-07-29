@@ -5,13 +5,14 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.GameItem
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
 import net.dodian.uber.game.ui.bank.PlayerBankService
+import net.dodian.uber.game.social.exchange.ExchangeRuntime
 
 // ---------------------------------------------------------------------------
 // Container types
 // ---------------------------------------------------------------------------
 
 /** Identifies which container a SelectInv wraps. Used during commit to call the right refresh. */
-enum class InvContainerKind { INVENTORY, BANK, OFFER }
+enum class InvContainerKind { INVENTORY, BANK }
 
 /**
  * A thin wrapper returned by [Client.selectInv] / [Client.selectBank] / [Client.selectOffer].
@@ -24,6 +25,7 @@ class SelectInv(
     val kind: InvContainerKind,
     val transactionInv: TransactionInventory<GameItem?>,
     private val applyCommit: (Array<TransactionObj?>) -> Unit,
+    private val validateCommit: (Array<TransactionObj?>) -> Boolean = { true },
 ) {
     /**
      * Applies the transaction image back to the live container and notifies the client.
@@ -40,12 +42,10 @@ class SelectInv(
                 client.markSaveDirty(PlayerSaveSegment.BANK.mask)
                 PlayerBankService.checkItemUpdate(client)
             }
-            InvContainerKind.OFFER -> {
-                // Offer containers (trade/duel stakes) have no dedicated refresh packet here;
-                // callers refresh the offer UI themselves after the transaction commits.
-            }
         }
     }
+
+    fun canCommit(): Boolean = validateCommit(transactionInv.image)
 }
 
 // ---------------------------------------------------------------------------
@@ -79,7 +79,19 @@ fun Client.selectInv(): SelectInv {
             }
         }
     }
-    return SelectInv(this, InvContainerKind.INVENTORY, txInv, applyCommit)
+    val validateCommit: (Array<TransactionObj?>) -> Boolean = { finalImage ->
+        ExchangeRuntime.mayMutateInventory(this) && finalImage.indices.all { slot ->
+            val beforeId = playerItems[slot] - 1
+            val beforeAmount = if (beforeId >= 0) playerItemsN[slot] else 0
+            val after = finalImage[slot]
+            val removed =
+                if (beforeId >= 0 && (after == null || after.id != beforeId)) beforeAmount
+                else if (beforeId >= 0) (beforeAmount - after!!.count).coerceAtLeast(0)
+                else 0
+            removed == 0 || ExchangeRuntime.mayRemove(this, slot, beforeId, removed)
+        }
+    }
+    return SelectInv(this, InvContainerKind.INVENTORY, txInv, applyCommit, validateCommit)
 }
 
 /**
@@ -110,44 +122,6 @@ fun Client.selectBank(): SelectInv {
         }
     }
     return SelectInv(this, InvContainerKind.BANK, txInv, applyCommit)
-}
-
-/**
- * Wraps the player's live trade/duel stake offer ([Client.offeredItems]) as a [SelectInv].
- * Unlike inventory/bank, the offer is backed by a [java.util.concurrent.CopyOnWriteArrayList]
- * with no fixed slots, so it's modeled here as an image sized to the inventory capacity (an
- * offer can never hold more than fits in the inventory it was staked from) and rebuilt from
- * scratch on commit.
- */
-fun Client.selectOffer(): SelectInv {
-    val snapshot = offeredItems.toList()
-    // The engine represents a non-stackable item as one slot per unit (count always 1), so a
-    // stray entry with amount > 1 for a non-stackable id (legacy data, or a caller that didn't
-    // normalize it) is expanded here rather than read in as a single malformed multi-count slot.
-    val expanded = mutableListOf<TransactionObj>()
-    for (item in snapshot) {
-        val stackable = Server.itemManager?.isStackable(item.id) ?: false
-        if (stackable || item.amount <= 1) {
-            expanded += TransactionObj(item.id, item.amount)
-        } else {
-            repeat(item.amount) { expanded += TransactionObj(item.id, 1) }
-        }
-    }
-    val size = maxOf(playerItems.size, expanded.size)
-    val image = Array<TransactionObj?>(size) { slot -> expanded.getOrNull(slot) }
-    // Offers stack stackable items but keep individual entries for non-stackables,
-    // matching the previous EconomyTransaction.OfferContainer behavior.
-    val stackType = TransactionInventory.NormalStack
-    @Suppress("UNCHECKED_CAST")
-    val outputArr: Array<GameItem?> = arrayOfNulls<GameItem>(size) as Array<GameItem?>
-    val txInv = TransactionInventory<GameItem?>(stackType, outputArr, image)
-    val applyCommit: (Array<TransactionObj?>) -> Unit = { finalImage ->
-        offeredItems.clear()
-        for (obj in finalImage) {
-            if (obj != null) offeredItems.add(GameItem(obj.id, obj.count))
-        }
-    }
-    return SelectInv(this, InvContainerKind.OFFER, txInv, applyCommit)
 }
 
 // ---------------------------------------------------------------------------
@@ -216,6 +190,7 @@ fun transaction(
     containers.forEach { tx.register(it.transactionInv) }
     return try {
         tx.block()
+        if (containers.any { !it.canCommit() }) return false
         containers.forEach { it.commit() }
         true
     } catch (_: TransactionCancellation) {

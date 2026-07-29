@@ -98,7 +98,7 @@ public abstract class Player extends Entity {
     public String[] boss_name = {"Dad", "Abyssal_Guardian", "San_Tojalon", "Black_Knight_Titan", "Jungle_Demon", "Ungadulu", "Nechryael", "Ice_Queen",
             "King_Black_Dragon", "Head_Mourners", "Black_Demon", "Dagannoth_Prime", "Dwayne", "TzTok-Jad", "Kalphite_queen", "Kalphite_king", "Venenatis"};
     public int[] boss_amount = new int[boss_name.length];
-    public int duelStatus = -1, iconTimer = 6; // duelStatus 0 = Requesting duel, 1 = in duel screen, 2 = waiting for other player to accept, 3 = in duel, 4 = won
+    public int iconTimer = 6;
     public String forcedChat = "";
     public int headIcon = -1, skullIcon = -1, customCombat = -1;
     public boolean IsPMLoaded = false;

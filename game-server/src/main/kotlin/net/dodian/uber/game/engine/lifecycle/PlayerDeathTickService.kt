@@ -6,6 +6,7 @@ import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.UpdateFlag
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
+import net.dodian.uber.game.social.exchange.DuelingService
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.engine.loop.GameCycleClock
@@ -53,7 +54,7 @@ object PlayerDeathTickService {
         val other = player.getClient(player.duel_with)
         if (player.duel_with > 0 && player.validClient(player.duel_with) && player.inDuel && player.duelFight) {
             other.duelWin = true
-            other.DuelVictory()
+            DuelingService.victory(other)
         }
         player.performAnimation(836, 5)
         player.currentHealth = 0

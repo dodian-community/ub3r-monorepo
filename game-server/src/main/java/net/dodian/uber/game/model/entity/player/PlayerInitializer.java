@@ -44,7 +44,6 @@ public class PlayerInitializer {
         QuestTabEntry.clearQuestName(client);
         client.questPage = 1;
         client.pmstatus(2);
-        client.setConfigIds();
         client.resetTabs(); // Set tabs!
 
         // Now that interface structure is set up, refresh all skills including HP

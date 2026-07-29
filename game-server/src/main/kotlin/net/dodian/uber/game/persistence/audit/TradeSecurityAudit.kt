@@ -2,6 +2,7 @@ package net.dodian.uber.game.persistence.audit
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.item.GameItem
+import net.dodian.uber.game.social.exchange.ExchangeRuntime
 import org.slf4j.LoggerFactory
 
 /** Structured security trail for every terminal trade decision. */
@@ -16,8 +17,8 @@ object TradeSecurityAudit {
         second: Client?,
         result: String,
         reason: String,
-        firstItems: Iterable<GameItem> = first.offeredItems,
-        secondItems: Iterable<GameItem> = second?.offeredItems ?: emptyList(),
+        firstItems: Iterable<GameItem> = ExchangeRuntime.offers(first),
+        secondItems: Iterable<GameItem> = second?.let(ExchangeRuntime::offers) ?: emptyList(),
     ) {
         if (logger.isInfoEnabled) {
             logger.info(

@@ -5,7 +5,7 @@ plugins {
 }
 
 subprojects {
-    if (!path.startsWith(":skills:") && !path.startsWith(":quests:") && !path.startsWith(":content-platform:")) {
+    if (!path.startsWith(":skills:") && !path.startsWith(":quests:") && !path.startsWith(":content-platform:") && !path.startsWith(":social:")) {
         apply(plugin = "application")
     }
     apply(plugin = "java")
@@ -104,3 +104,28 @@ tasks.register("verifyQuestModuleDependencies") {
 }
 
 tasks.named("questsCheck") { dependsOn("verifyQuestModuleDependencies") }
+
+val socialModuleProjects = listOf(project(":social:trading"), project(":social:dueling"))
+
+tasks.register("socialCheck") {
+    group = "verification"
+    description = "Verifies the shared social exchange platform and independently compiled social plugins."
+    dependsOn(":social:api:check", ":social:runtime:check", ":social:testkit:check")
+    dependsOn(socialModuleProjects.map { "${it.path}:check" })
+}
+
+tasks.register("verifySocialModuleDependencies") {
+    group = "verification"
+    description = "Rejects engine dependencies from independently compiled social plugins."
+    doLast {
+        val offenders = file("game-server/plugins/social").walkTopDown()
+            .filter { it.name == "build.gradle.kts" }
+            .filter { it.readText().contains("project(\":game-server\")") }
+            .toList()
+        check(offenders.isEmpty()) {
+            "Social modules must not depend on :game-server: ${offenders.joinToString { it.relativeTo(projectDir).path }}"
+        }
+    }
+}
+
+tasks.named("socialCheck") { dependsOn("verifySocialModuleDependencies") }

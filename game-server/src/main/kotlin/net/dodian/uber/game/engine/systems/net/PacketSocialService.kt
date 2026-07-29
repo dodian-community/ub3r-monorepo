@@ -5,6 +5,7 @@ import net.dodian.uber.game.events.widget.CommandEvent
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.persistence.audit.ConsoleAuditLog
 import net.dodian.uber.game.engine.systems.interaction.commands.CommandDispatcher
+import net.dodian.uber.game.social.PlayerSocialService
 
 /**
  * out of Netty inbound listeners.
@@ -31,7 +32,7 @@ object PacketSocialService {
 
     @JvmStatic
     fun handleAddFriend(client: Client, encodedName: Long) {
-        client.addFriend(encodedName)
+        PlayerSocialService.addFriend(client, encodedName)
     }
 
     @JvmStatic
@@ -89,17 +90,17 @@ object PacketSocialService {
 
     @JvmStatic
     fun handleRemoveFriend(client: Client, encodedName: Long) {
-        client.removeFriend(encodedName)
+        PlayerSocialService.removeFriend(client, encodedName)
     }
 
     @JvmStatic
     fun handleAddIgnore(client: Client, encodedName: Long) {
-        client.addIgnore(encodedName)
+        PlayerSocialService.addIgnore(client, encodedName)
     }
 
     @JvmStatic
     fun handleRemoveIgnore(client: Client, encodedName: Long) {
-        client.removeIgnore(encodedName)
+        PlayerSocialService.removeIgnore(client, encodedName)
     }
 
     private fun clearPendingNameInputs(client: Client) {
