@@ -1,0 +1,66 @@
+skill = "fletching"
+
+[[tab]]
+component = 8846
+label = "Fletching"
+
+[layout]
+hide = [8825, 8813]
+
+[[page]]
+tab = 0
+
+[[page.entry]]
+name = "Arrow Shafts"
+level = "1"
+item = 52
+
+[[page.entry]]
+name = "Oak Shortbow"
+level = "20"
+item = 54
+
+[[page.entry]]
+name = "Oak Longbow"
+level = "25"
+item = 56
+
+[[page.entry]]
+name = "Willow Shortbow"
+level = "35"
+item = 60
+
+[[page.entry]]
+name = "Willow Longbow"
+level = "40"
+item = 58
+
+[[page.entry]]
+name = "Maple Shortbow"
+level = "50"
+item = 64
+
+[[page.entry]]
+name = "Maple Longbow"
+level = "55"
+item = 62
+
+[[page.entry]]
+name = "Yew Shortbow"
+level = "65"
+item = 68
+
+[[page.entry]]
+name = "Yew Longbow"
+level = "70"
+item = 66
+
+[[page.entry]]
+name = "Magic Shortbow"
+level = "80"
+item = 72
+
+[[page.entry]]
+name = "Magic Longbow"
+level = "85"
+item = 70

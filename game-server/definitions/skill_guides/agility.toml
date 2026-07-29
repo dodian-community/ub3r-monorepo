@@ -1,0 +1,61 @@
+skill = "agility"
+
+[[tab]]
+component = 8846
+label = "Agility"
+
+[layout]
+hide = [8825, 8813]
+
+[[page]]
+tab = 0
+
+[[page.entry]]
+name = "Gnome Course"
+level = "1"
+item = 751
+
+[[page.entry]]
+name = "Barbarian Course"
+level = "40"
+item = 1365
+
+[[page.entry]]
+name = "Yanille castle wall"
+level = "50"
+item = -1
+
+[[page.entry]]
+name = "Crystal Shield"
+level = "60"
+item = 4224
+
+[[page.entry]]
+name = "Werewolf Course"
+level = "60"
+item = 4179
+
+[[page.entry]]
+name = "Taverly dungeon shortcut"
+level = "70"
+item = 4155
+
+[[page.entry]]
+name = "Wilderness course"
+level = "70"
+item = 964
+
+[[page.entry]]
+name = "Shilo stepping stones "
+level = "75"
+item = -1
+
+[[page.entry]]
+name = "Prime boss shortcut"
+level = "85"
+item = 4155
+
+[[page.entry]]
+name = "Skillcape @red@(Premium only)"
+level = "99"
+item = 9771

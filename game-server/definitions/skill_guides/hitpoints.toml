@@ -1,0 +1,63 @@
+skill = "hitpoints"
+
+[[tab]]
+component = 8846
+label = "Hitpoints"
+
+[layout]
+hide = [8825, 8813]
+
+[[page]]
+tab = 0
+
+[[page.entry]]
+name = "Shrimps (3 health)"
+item = 315
+
+[[page.entry]]
+name = "Chicken (3 health)"
+item = 2140
+
+[[page.entry]]
+name = "Meat (3 health)"
+item = 2142
+
+[[page.entry]]
+name = "Bread (5 health)"
+item = 2309
+
+[[page.entry]]
+name = "Thin snail (7 health)"
+item = 3369
+
+[[page.entry]]
+name = "Trout (8 health)"
+item = 333
+
+[[page.entry]]
+name = "Salmon (10 health)"
+item = 329
+
+[[page.entry]]
+name = "Lobster (12 health)"
+item = 379
+
+[[page.entry]]
+name = "Swordfish (14 health)"
+item = 373
+
+[[page.entry]]
+name = "Monkfish (16 health) @red@(Premium only)"
+item = 7946
+
+[[page.entry]]
+name = "Shark (20 health)"
+item = 385
+
+[[page.entry]]
+name = "Sea Turtle (22 health) @red@(Premium only)"
+item = 397
+
+[[page.entry]]
+name = "Manta Ray (24 health) @red@(Premium only)"
+item = 391

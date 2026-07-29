@@ -1,0 +1,392 @@
+skill = "crafting"
+
+[[tab]]
+component = 8846
+label = "Spinning"
+
+[[tab]]
+component = 8823
+label = "Armor"
+
+[[tab]]
+component = 8824
+label = "Jewelry"
+
+[[tab]]
+component = 8827
+label = "Glass"
+
+[[tab]]
+component = 8837
+label = "Weaponry"
+
+[[tab]]
+component = 8840
+label = "Other"
+
+[layout]
+show = [8827, 8828, 8838]
+hide = [8841, 8850]
+
+[[page]]
+tab = 0
+
+[[page.entry]]
+name = "Ball of wool"
+level = "1"
+item = 1759
+
+[[page.entry]]
+name = "Bow string"
+level = "10"
+item = 1777
+
+[[page.entry]]
+name = "2 tick stringing"
+level = "40"
+item = -1
+
+[[page.entry]]
+name = "1 tick stringing"
+level = "70"
+item = -1
+
+
+[[page]]
+tab = 1
+
+[[page.entry]]
+name = "Leather gloves"
+level = "1"
+item = 1059
+
+[[page.entry]]
+name = "Leather boots"
+level = "7"
+item = 1061
+
+[[page.entry]]
+name = "Leather cowl"
+level = "9"
+item = 1167
+
+[[page.entry]]
+name = "Leather vambraces"
+level = "11"
+item = 1063
+
+[[page.entry]]
+name = "Leather body"
+level = "14"
+item = 1129
+
+[[page.entry]]
+name = "Leather chaps"
+level = "18"
+item = 1095
+
+[[page.entry]]
+name = "Coif"
+level = "39"
+item = 1169
+
+[[page.entry]]
+name = "Green d'hide vamb"
+level = "50"
+item = 1065
+
+[[page.entry]]
+name = "Green d'hide chaps"
+level = "54"
+item = 1099
+
+[[page.entry]]
+name = "Green d'hide body"
+level = "58"
+item = 1135
+
+[[page.entry]]
+name = "Blue d'hide vamb"
+level = "62"
+item = 2487
+
+[[page.entry]]
+name = "Blue d'hide chaps"
+level = "66"
+item = 2493
+
+[[page.entry]]
+name = "Blue d'hide body"
+level = "70"
+item = 2499
+
+[[page.entry]]
+name = "Slayer helmet"
+level = "70"
+item = 11864
+
+[[page.entry]]
+name = "Red d'hide vamb"
+level = "73"
+item = 2489
+
+[[page.entry]]
+name = "Red d'hide chaps"
+level = "76"
+item = 2495
+
+[[page.entry]]
+name = "Red d'hide body"
+level = "79"
+item = 2501
+
+[[page.entry]]
+name = "Black d'hide vamb"
+level = "82"
+item = 2491
+
+[[page.entry]]
+name = "Black d'hide chaps"
+level = "85"
+item = 2497
+
+[[page.entry]]
+name = "Black d'hide body"
+level = "88"
+item = 2503
+
+
+[[page]]
+tab = 2
+
+[[page.entry]]
+name = "Gold ring"
+level = "5"
+item = 1635
+
+[[page.entry]]
+name = "Gold necklace"
+level = "6"
+item = 1654
+
+[[page.entry]]
+name = "Gold bracelet"
+level = "7"
+item = 11069
+
+[[page.entry]]
+name = "Gold amulet"
+level = "8"
+item = 1692
+
+[[page.entry]]
+name = "Cut sapphire"
+level = "20"
+item = 1607
+
+[[page.entry]]
+name = "Sapphire ring"
+level = "20"
+item = 1637
+
+[[page.entry]]
+name = "Sapphire necklace"
+level = "22"
+item = 1656
+
+[[page.entry]]
+name = "Sapphire bracelet"
+level = "23"
+item = 11072
+
+[[page.entry]]
+name = "Sapphire amulet"
+level = "24"
+item = 1694
+
+[[page.entry]]
+name = "Cut emerald"
+level = "27"
+item = 1605
+
+[[page.entry]]
+name = "Emerald ring"
+level = "27"
+item = 1639
+
+[[page.entry]]
+name = "Emerald necklace"
+level = "29"
+item = 1658
+
+[[page.entry]]
+name = "Emerald bracelet"
+level = "30"
+item = 11076
+
+[[page.entry]]
+name = "Emerald amulet"
+level = "31"
+item = 1696
+
+[[page.entry]]
+name = "Cut ruby"
+level = "34"
+item = 1603
+
+[[page.entry]]
+name = "Ruby ring"
+level = "34"
+item = 1641
+
+[[page.entry]]
+name = "Ruby necklace"
+level = "40"
+item = 1660
+
+[[page.entry]]
+name = "Ruby bracelet"
+level = "42"
+item = 11085
+
+[[page.entry]]
+name = "Cut diamond"
+level = "43"
+item = 1601
+
+[[page.entry]]
+name = "Diamond ring"
+level = "43"
+item = 1643
+
+[[page.entry]]
+name = "Ruby amulet"
+level = "50"
+item = 1698
+
+[[page.entry]]
+name = "Cut dragonstone"
+level = "55"
+item = 1615
+
+[[page.entry]]
+name = "Dragonstone ring"
+level = "55"
+item = 1645
+
+[[page.entry]]
+name = "Diamond necklace"
+level = "56"
+item = 1662
+
+[[page.entry]]
+name = "Diamond bracelet"
+level = "58"
+item = 11092
+
+[[page.entry]]
+name = "Cut onyx"
+level = "67"
+item = 6573
+
+[[page.entry]]
+name = "Onyx ring"
+level = "67"
+item = 6575
+
+[[page.entry]]
+name = "Diamond amulet"
+level = "70"
+item = 1700
+
+[[page.entry]]
+name = "Dragonstone necklace"
+level = "72"
+item = 1664
+
+[[page.entry]]
+name = "Dragonstone bracelet"
+level = "74"
+item = 11115
+
+[[page.entry]]
+name = "Dragonstone amulet"
+level = "80"
+item = 1702
+
+[[page.entry]]
+name = "Onyx necklace"
+level = "82"
+item = 6577
+
+[[page.entry]]
+name = "Onyx bracelet"
+level = "84"
+item = 11130
+
+[[page.entry]]
+name = "Onyx amulet"
+level = "90"
+item = 6581
+
+
+[[page]]
+tab = 3
+
+[[page.entry]]
+name = "Vial"
+level = "1"
+item = 229
+
+[[page.entry]]
+name = "Empty cup"
+level = "18"
+item = 1980
+
+[[page.entry]]
+name = "Fishbowl"
+level = "32"
+item = 6667
+
+[[page.entry]]
+name = "Unpowered orb"
+level = "48"
+item = 567
+
+
+[[page]]
+tab = 4
+
+[[page.entry]]
+name = "Water battlestaff"
+level = "51"
+item = 1395
+
+[[page.entry]]
+name = "Earth battlestaff"
+level = "56"
+item = 1399
+
+[[page.entry]]
+name = "Fire battlestaff"
+level = "61"
+item = 1393
+
+[[page.entry]]
+name = "Air battlestaff"
+level = "66"
+item = 1397
+
+
+[[page]]
+tab = 5
+
+[[page.entry]]
+name = "Crystal key"
+level = "60"
+item = 989
+
+[[page.entry]]
+name = "Skillcape @red@(Premium only)"
+level = "99"
+item = 9780

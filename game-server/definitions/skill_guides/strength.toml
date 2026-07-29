@@ -1,0 +1,51 @@
+skill = "strength"
+
+[[tab]]
+component = 8846
+label = "Strength"
+
+[layout]
+hide = [8825, 8813]
+
+[[page]]
+tab = 0
+
+[[page.entry]]
+name = "Unholy book"
+level = "45"
+item = 3842
+
+[[page.entry]]
+name = "Unholy blessing"
+level = "45"
+item = 20223
+
+[[page.entry]]
+name = "War blessing"
+level = "45"
+item = 20232
+
+[[page.entry]]
+name = "Granite maul"
+level = "50"
+item = 4153
+
+[[page.entry]]
+name = "Obsidian maul"
+level = "55"
+item = 6528
+
+[[page.entry]]
+name = "Dharok's greataxe"
+level = "70"
+item = 4718
+
+[[page.entry]]
+name = "Guthan's warspear"
+level = "70"
+item = 4726
+
+[[page.entry]]
+name = "Skillcape @red@(Premium only)"
+level = "99"
+item = 9750

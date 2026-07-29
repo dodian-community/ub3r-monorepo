@@ -1,0 +1,61 @@
+skill = "thieving"
+
+[[tab]]
+component = 8846
+label = "Thieving"
+
+[layout]
+hide = [8825, 8813]
+
+[[page]]
+tab = 0
+
+[[page.entry]]
+name = "Cage"
+level = "1"
+item = 4443
+
+[[page.entry]]
+name = "Farmer"
+level = "10"
+item = 3243
+
+[[page.entry]]
+name = "Baker stall"
+level = "10"
+item = 2309
+
+[[page.entry]]
+name = "fur stall"
+level = "40"
+item = 1739
+
+[[page.entry]]
+name = "silver stall"
+level = "65"
+item = 2349
+
+[[page.entry]]
+name = "Master Farmer"
+level = "70"
+item = 5068
+
+[[page.entry]]
+name = "Yanille chest"
+level = "70"
+item = 6759
+
+[[page.entry]]
+name = "Spice Stall"
+level = "80"
+item = 199
+
+[[page.entry]]
+name = "Legends chest @red@(Premium only)"
+level = "85"
+item = 6759
+
+[[page.entry]]
+name = "Gem Stall @red@(Premium only)"
+level = "90"
+item = 1623

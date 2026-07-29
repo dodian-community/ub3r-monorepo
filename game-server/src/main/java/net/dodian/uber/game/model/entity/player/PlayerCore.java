@@ -41,7 +41,7 @@ import net.dodian.uber.game.engine.systems.combat.CombatCooldownState;
 import net.dodian.uber.game.engine.systems.combat.CombatEngagementState;
 import net.dodian.uber.game.engine.systems.combat.CombatTargetState;
 import net.dodian.uber.game.engine.lifecycle.DeathTaskState;
-import net.dodian.uber.game.skill.smithing.ActiveSmithingSelection;
+import net.dodian.uber.skills.smithing.ActiveSmithingSelection;
 import net.dodian.uber.game.skill.smithing.SmeltingSelection;
 import net.dodian.uber.game.skill.thieving.PyramidPlunderPlayerState;
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason;

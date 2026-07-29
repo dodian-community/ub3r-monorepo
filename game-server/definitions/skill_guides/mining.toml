@@ -1,0 +1,117 @@
+skill = "mining"
+
+[[tab]]
+component = 8846
+label = "Pickaxes"
+
+[[tab]]
+component = 8823
+label = "Ores"
+
+[[tab]]
+component = 8824
+label = "Misc"
+
+[layout]
+hide = [8825]
+
+[[page]]
+tab = 0
+
+[[page.entry]]
+name = "Bronze Pickaxe"
+level = "1"
+item = 1265
+
+[[page.entry]]
+name = "Iron Pickaxe"
+level = "1"
+item = 1267
+
+[[page.entry]]
+name = "Steel Pickaxe"
+level = "6"
+item = 1269
+
+[[page.entry]]
+name = "Black Pickaxe"
+level = "11"
+item = 12297
+
+[[page.entry]]
+name = "Mithril Pickaxe"
+level = "21"
+item = 1273
+
+[[page.entry]]
+name = "Adamant Pickaxe"
+level = "31"
+item = 1271
+
+[[page.entry]]
+name = "Rune Pickaxe"
+level = "41"
+item = 1275
+
+[[page.entry]]
+name = "Dragon Pickaxe"
+level = "61"
+item = 11920
+
+
+[[page]]
+tab = 1
+
+[[page.entry]]
+name = "Rune essence"
+level = "1"
+item = 1436
+
+[[page.entry]]
+name = "Copper ore"
+level = "1"
+item = 436
+
+[[page.entry]]
+name = "Tin ore"
+level = "1"
+item = 438
+
+[[page.entry]]
+name = "Iron ore"
+level = "15"
+item = 440
+
+[[page.entry]]
+name = "Coal"
+level = "30"
+item = 453
+
+[[page.entry]]
+name = "Gold ore"
+level = "40"
+item = 444
+
+[[page.entry]]
+name = "Mithril ore"
+level = "55"
+item = 447
+
+[[page.entry]]
+name = "Adamant ore"
+level = "70"
+item = 449
+
+[[page.entry]]
+name = "Runite ore"
+level = "85"
+item = 451
+
+
+[[page]]
+tab = 2
+
+[[page.entry]]
+name = "Skillcape @red@(Premium only)"
+level = "99"
+item = 9792

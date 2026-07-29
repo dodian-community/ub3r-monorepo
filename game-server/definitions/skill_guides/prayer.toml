@@ -1,0 +1,121 @@
+skill = "prayer"
+
+[[tab]]
+component = 8846
+label = "Prayer"
+
+[layout]
+hide = [8825, 8813]
+
+[[page]]
+tab = 0
+
+[[page.entry]]
+name = "Thick Skin"
+level = "5"
+item = -1
+
+[[page.entry]]
+name = "Burst of Strength"
+level = "5"
+item = -1
+
+[[page.entry]]
+name = "Clarity of Thought"
+level = "5"
+item = -1
+
+[[page.entry]]
+name = "Sharp Eye"
+level = "10"
+item = -1
+
+[[page.entry]]
+name = "Mystic Will"
+level = "10"
+item = -1
+
+[[page.entry]]
+name = "Rock Skin"
+level = "20"
+item = -1
+
+[[page.entry]]
+name = "Superhuman Strength"
+level = "20"
+item = -1
+
+[[page.entry]]
+name = "Improved Reflexes"
+level = "20"
+item = -1
+
+[[page.entry]]
+name = "Hawk Eye"
+level = "25"
+item = -1
+
+[[page.entry]]
+name = "Mystic Lore"
+level = "25"
+item = -1
+
+[[page.entry]]
+name = "Wolfbane"
+level = "25"
+item = 2952
+
+[[page.entry]]
+name = "Steel Skin"
+level = "40"
+item = -1
+
+[[page.entry]]
+name = "Ultimate Strength"
+level = "40"
+item = -1
+
+[[page.entry]]
+name = "Incredible Reflexes"
+level = "40"
+item = -1
+
+[[page.entry]]
+name = "Eagle Eye"
+level = "45"
+item = -1
+
+[[page.entry]]
+name = "Mystic Might"
+level = "45"
+item = -1
+
+[[page.entry]]
+name = "Protect from Magic"
+level = "55"
+item = -1
+
+[[page.entry]]
+name = "Protect from Missiles"
+level = "55"
+item = -1
+
+[[page.entry]]
+name = "Protect from Melee"
+level = "55"
+item = -1
+
+[[page.entry]]
+name = "Chivalry"
+level = "70"
+item = -1
+
+[[page.entry]]
+name = "Piety"
+level = "80"
+item = -1
+
+[[page.entry]]
+name = "Skillcape @red@(Premium only)"
+level = "99"
+item = 9759

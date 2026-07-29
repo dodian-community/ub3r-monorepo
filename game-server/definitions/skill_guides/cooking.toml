@@ -1,0 +1,76 @@
+skill = "cooking"
+
+[[tab]]
+component = 8846
+label = "Cooking"
+
+[layout]
+hide = [8825, 8813]
+
+[[page]]
+tab = 0
+
+[[page.entry]]
+name = "Shrimps"
+level = "1"
+item = 315
+
+[[page.entry]]
+name = "Chicken"
+level = "1"
+item = 2140
+
+[[page.entry]]
+name = "Meat"
+level = "1"
+item = 2142
+
+[[page.entry]]
+name = "Bread"
+level = "10"
+item = 2309
+
+[[page.entry]]
+name = "Thin snail"
+level = "15"
+item = 3369
+
+[[page.entry]]
+name = "Trout"
+level = "20"
+item = 333
+
+[[page.entry]]
+name = "Salmon"
+level = "30"
+item = 329
+
+[[page.entry]]
+name = "Lobster"
+level = "40"
+item = 379
+
+[[page.entry]]
+name = "Swordfish"
+level = "50"
+item = 373
+
+[[page.entry]]
+name = "Monkfish @red@(Premium only)"
+level = "60"
+item = 7946
+
+[[page.entry]]
+name = "Shark"
+level = "70"
+item = 385
+
+[[page.entry]]
+name = "Sea Turtle @red@(Premium only)"
+level = "85"
+item = 397
+
+[[page.entry]]
+name = "Manta Ray @red@(Premium only)"
+level = "95"
+item = 391

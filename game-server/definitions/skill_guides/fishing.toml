@@ -1,0 +1,65 @@
+skill = "fishing"
+
+[[tab]]
+component = 8846
+label = "Fishing"
+
+[layout]
+hide = [8825, 8813]
+
+[[page]]
+tab = 0
+
+[[page.entry]]
+name = "Shrimps"
+level = "1"
+item = 317
+
+[[page.entry]]
+name = "Trout"
+level = "20"
+item = 335
+
+[[page.entry]]
+name = "Salmon"
+level = "30"
+item = 331
+
+[[page.entry]]
+name = "Lobster"
+level = "40"
+item = 377
+
+[[page.entry]]
+name = "Swordfish"
+level = "50"
+item = 371
+
+[[page.entry]]
+name = "Monkfish @red@(Premium only)"
+level = "60"
+item = 7944
+
+[[page.entry]]
+name = "Dragon harpoon"
+level = "61"
+item = 21028
+
+[[page.entry]]
+name = "Shark"
+level = "70"
+item = 383
+
+[[page.entry]]
+name = "Sea Turtle @red@(Premium only)"
+level = "85"
+item = 395
+
+[[page.entry]]
+name = "Manta Ray @red@(Premium only)"
+level = "95"
+item = 389
+
+[[page.entry]]
+name = ""
+item = -1

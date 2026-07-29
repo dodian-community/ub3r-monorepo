@@ -1,0 +1,51 @@
+skill = "runecrafting"
+
+[[tab]]
+component = 8846
+label = "Runecrafting"
+
+[layout]
+hide = [8825, 8813]
+
+[[page]]
+tab = 0
+
+[[page.entry]]
+name = "Small pouch"
+level = "1"
+item = 5509
+
+[[page.entry]]
+name = "Nature rune"
+level = "1"
+item = 561
+
+[[page.entry]]
+name = "Medium pouch"
+level = "20"
+item = 5510
+
+[[page.entry]]
+name = "Large pouch"
+level = "40"
+item = 5512
+
+[[page.entry]]
+name = "Blood rune"
+level = "50"
+item = 565
+
+[[page.entry]]
+name = "Giant pouch"
+level = "60"
+item = 5514
+
+[[page.entry]]
+name = "Cosmic rune"
+level = "75"
+item = 564
+
+[[page.entry]]
+name = "Skillcape @red@(Premium only)"
+level = "99"
+item = 9765

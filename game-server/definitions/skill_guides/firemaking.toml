@@ -1,0 +1,46 @@
+skill = "firemaking"
+
+[[tab]]
+component = 8846
+label = "Firemaking"
+
+[layout]
+hide = [8825, 8813]
+
+[[page]]
+tab = 0
+
+[[page.entry]]
+name = "Logs"
+level = "1"
+item = 1511
+
+[[page.entry]]
+name = "Oak logs"
+level = "15"
+item = 1521
+
+[[page.entry]]
+name = "Willow logs"
+level = "30"
+item = 1519
+
+[[page.entry]]
+name = "Maple logs"
+level = "45"
+item = 1517
+
+[[page.entry]]
+name = "Yew logs"
+level = "60"
+item = 1515
+
+[[page.entry]]
+name = "Magic logs"
+level = "75"
+item = 1513
+
+[[page.entry]]
+name = "Skillcape @red@(Premium only)"
+level = "99"
+item = 9804

@@ -9,6 +9,7 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.engine.systems.skills.ProgressionService
 import net.dodian.uber.game.skill.runtime.action.SkillingRandomEventService
 import net.dodian.uber.game.engine.systems.action.playerAction
+import net.dodian.uber.skills.smithing.ActiveSmithingSelection
 
 object SmithingActionService {
     private val possibleBars = intArrayOf(2349, 2351, 2353, 2359, 2361, 2363)
@@ -17,7 +18,7 @@ object SmithingActionService {
 
     @JvmStatic
     fun startSmithing(client: Client, request: SmithingRequest) {
-        client.activeSmithingSelection = net.dodian.uber.game.skill.smithing.ActiveSmithingSelection(
+        client.activeSmithingSelection = ActiveSmithingSelection(
             request.tierId,
             request.barId,
             request.anvilX,

@@ -1,0 +1,110 @@
+skill = "attack"
+
+[[tab]]
+component = 8846
+label = "Attack"
+
+[[tab]]
+component = 8823
+label = "Defence"
+
+[[tab]]
+component = 8824
+label = "Range"
+
+[[tab]]
+component = 8827
+label = "Magic"
+
+[[page]]
+tab = 0
+
+[[page.entry]]
+name = "Abyssal Whip"
+level = "1"
+item = 4151
+
+[[page.entry]]
+name = "Bronze"
+level = "1"
+item = 1291
+
+[[page.entry]]
+name = "Iron"
+level = "1"
+item = 1293
+
+[[page.entry]]
+name = "Steel"
+level = "10"
+item = 1295
+
+[[page.entry]]
+name = "Elemental battlestaff"
+level = "20"
+item = 1395
+
+[[page.entry]]
+name = "Mithril"
+level = "20"
+item = 1299
+
+[[page.entry]]
+name = "Adamant"
+level = "30"
+item = 1301
+
+[[page.entry]]
+name = "Rune"
+level = "40"
+item = 1303
+
+[[page.entry]]
+name = "Wolfbane"
+level = "40"
+item = 2952
+
+[[page.entry]]
+name = "Keris"
+level = "40"
+item = 10581
+
+[[page.entry]]
+name = "Unholy book"
+level = "45"
+item = 3842
+
+[[page.entry]]
+name = "Unholy blessing"
+level = "45"
+item = 20223
+
+[[page.entry]]
+name = "Granite longsword"
+level = "50"
+item = 21646
+
+[[page.entry]]
+name = "Obsidian weapon"
+level = "55"
+item = 6523
+
+[[page.entry]]
+name = "Dragon"
+level = "60"
+item = 1305
+
+[[page.entry]]
+name = "Verac's flail"
+level = "70"
+item = 4755
+
+[[page.entry]]
+name = "Torag's hammers"
+level = "70"
+item = 4747
+
+[[page.entry]]
+name = "Skillcape @red@(Premium only)"
+level = "99"
+item = 9747

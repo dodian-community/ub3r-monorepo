@@ -1,0 +1,100 @@
+skill = "defence"
+
+[[tab]]
+component = 8846
+label = "Attack"
+
+[[tab]]
+component = 8823
+label = "Defence"
+
+[[tab]]
+component = 8824
+label = "Range"
+
+[[tab]]
+component = 8827
+label = "Magic"
+
+[[page]]
+tab = 0
+
+[[page.entry]]
+name = "Skeletal"
+level = "1"
+item = 6139
+
+[[page.entry]]
+name = "Bronze"
+level = "1"
+item = 1117
+
+[[page.entry]]
+name = "Iron"
+level = "1"
+item = 1115
+
+[[page.entry]]
+name = "Steel"
+level = "10"
+item = 1119
+
+[[page.entry]]
+name = "Mithril"
+level = "20"
+item = 1121
+
+[[page.entry]]
+name = "Splitbark"
+level = "20"
+item = 3387
+
+[[page.entry]]
+name = "Adamant"
+level = "30"
+item = 1123
+
+[[page.entry]]
+name = "Rune"
+level = "40"
+item = 1127
+
+[[page.entry]]
+name = "Ancient blessing"
+level = "45"
+item = 20235
+
+[[page.entry]]
+name = "Granite"
+level = "50"
+item = 10564
+
+[[page.entry]]
+name = "Obsidian"
+level = "55"
+item = 21301
+
+[[page.entry]]
+name = "Dragon"
+level = "60"
+item = 3140
+
+[[page.entry]]
+name = "Barrows"
+level = "70"
+item = 4749
+
+[[page.entry]]
+name = "Crystal shield (with 60 agility)"
+level = "70"
+item = 4224
+
+[[page.entry]]
+name = "Dragonfire shield"
+level = "75"
+item = 11284
+
+[[page.entry]]
+name = "Skillcape @red@(Premium only)"
+level = "99"
+item = 9753

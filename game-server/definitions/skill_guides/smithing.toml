@@ -1,0 +1,82 @@
+skill = "smithing"
+
+[[tab]]
+component = 8846
+label = "Smelting"
+
+[[tab]]
+component = 8823
+label = "Bronze"
+
+[[tab]]
+component = 8824
+label = "Iron"
+
+[[tab]]
+component = 8827
+label = "Steel"
+
+[[tab]]
+component = 8837
+label = "Mithril"
+
+[[tab]]
+component = 8840
+label = "Adamant"
+
+[[tab]]
+component = 8843
+label = "Runite"
+
+[[tab]]
+component = 8859
+label = "Special"
+
+[layout]
+show = [8827, 8828, 8838, 8841, 8850]
+
+[[page]]
+tab = 0
+dynamic_source = "smithing_smelting"
+
+[[page]]
+tab = 1
+dynamic_source = "smithing_frame_0"
+
+[[page]]
+tab = 2
+dynamic_source = "smithing_frame_1"
+
+[[page]]
+tab = 3
+dynamic_source = "smithing_frame_2"
+
+[[page]]
+tab = 4
+dynamic_source = "smithing_frame_3"
+
+[[page]]
+tab = 5
+dynamic_source = "smithing_frame_4"
+
+[[page]]
+tab = 6
+dynamic_source = "smithing_frame_5"
+
+[[page]]
+tab = 7
+
+[[page.entry]]
+name = "Rockshell armour"
+level = "60"
+item = 6129
+
+[[page.entry]]
+name = "Dragonfire shield"
+level = "90"
+item = 11284
+
+[[page.entry]]
+name = "Skillcape @red@(Premium only)"
+level = "99"
+item = 9795

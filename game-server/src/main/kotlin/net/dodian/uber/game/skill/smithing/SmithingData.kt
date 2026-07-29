@@ -456,13 +456,6 @@ data class SmithingRequest(
     val anvilY: Int,
 )
 
-data class ActiveSmithingSelection(
-    val tierId: Int,
-    val barId: Int,
-    val anvilX: Int,
-    val anvilY: Int,
-)
-
 data class SmithingProduct(
     val itemId: Int,
     val outputAmount: Int,

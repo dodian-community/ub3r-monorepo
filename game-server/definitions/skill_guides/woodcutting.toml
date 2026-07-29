@@ -1,0 +1,102 @@
+skill = "woodcutting"
+
+[[tab]]
+component = 8846
+label = "Axes"
+
+[[tab]]
+component = 8823
+label = "Logs"
+
+[[tab]]
+component = 8824
+label = "Misc"
+
+[layout]
+hide = [8825]
+
+[[page]]
+tab = 0
+
+[[page.entry]]
+name = "Bronze Axe"
+level = "1"
+item = 1351
+
+[[page.entry]]
+name = "Iron Axe"
+level = "1"
+item = 1349
+
+[[page.entry]]
+name = "Steel Axe"
+level = "6"
+item = 1353
+
+[[page.entry]]
+name = "Black Axe"
+level = "11"
+item = 1361
+
+[[page.entry]]
+name = "Mithril Axe"
+level = "21"
+item = 1355
+
+[[page.entry]]
+name = "Adamant Axe"
+level = "31"
+item = 1357
+
+[[page.entry]]
+name = "Rune Axe"
+level = "41"
+item = 1359
+
+[[page.entry]]
+name = "Dragon Axe"
+level = "61"
+item = 6739
+
+
+[[page]]
+tab = 1
+
+[[page.entry]]
+name = "Logs"
+level = "1"
+item = 1511
+
+[[page.entry]]
+name = "Oak logs"
+level = "15"
+item = 1521
+
+[[page.entry]]
+name = "Willow logs"
+level = "30"
+item = 1519
+
+[[page.entry]]
+name = "Maple logs"
+level = "45"
+item = 1517
+
+[[page.entry]]
+name = "Yew logs"
+level = "60"
+item = 1515
+
+[[page.entry]]
+name = "Magic logs"
+level = "75"
+item = 1513
+
+
+[[page]]
+tab = 2
+
+[[page.entry]]
+name = "Skillcape @red@(Premium only)"
+level = "99"
+item = 9807

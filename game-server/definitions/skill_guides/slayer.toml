@@ -1,0 +1,147 @@
+skill = "slayer"
+
+[[tab]]
+component = 8846
+label = "Master"
+
+[[tab]]
+component = 8823
+label = "Monsters"
+
+[[tab]]
+component = 8824
+label = "Misc"
+
+[layout]
+hide = [8825]
+
+[[page]]
+tab = 0
+
+[[page.entry]]
+name = "Mazchna (level 3 combat)"
+level = "1"
+item = 4155
+
+[[page.entry]]
+name = "Vannaka (level 3 combat)"
+level = "50"
+item = -1
+
+[[page.entry]]
+name = "Duradel (level 50 combat)"
+level = "50"
+item = -1
+
+
+[[page]]
+tab = 1
+
+[[page.entry]]
+name = "Crawling hands"
+level = "1"
+item = 4133
+
+[[page.entry]]
+name = "Pyrefiend"
+level = "20"
+item = 4138
+
+[[page.entry]]
+name = "Albino bat"
+level = "25"
+item = -1
+
+[[page.entry]]
+name = "Death spawn"
+level = "30"
+item = -1
+
+[[page.entry]]
+name = "Jelly"
+level = "30"
+item = 4142
+
+[[page.entry]]
+name = "Head mourner"
+level = "45"
+item = -1
+
+[[page.entry]]
+name = "Jungle horrors"
+level = "45"
+item = -1
+
+[[page.entry]]
+name = "Skeletal hellhound"
+level = "50"
+item = -1
+
+[[page.entry]]
+name = "Lesser demon"
+level = "50"
+item = -1
+
+[[page.entry]]
+name = "Bloodvelds"
+level = "53"
+item = 4141
+
+[[page.entry]]
+name = "Greater demon"
+level = "55"
+item = -1
+
+[[page.entry]]
+name = "Black demon"
+level = "60"
+item = -1
+
+[[page.entry]]
+name = "Gargoyles"
+level = "63"
+item = 4147
+
+[[page.entry]]
+name = "Cave horrors"
+level = "65"
+item = 8900
+
+[[page.entry]]
+name = "Berserker Spirit"
+level = "70"
+item = -1
+
+[[page.entry]]
+name = "Aberrant Spectres"
+level = "73"
+item = 4144
+
+[[page.entry]]
+name = "Tzhaar"
+level = "80"
+item = -1
+
+[[page.entry]]
+name = "Mithril Dragon"
+level = "83"
+item = -1
+
+[[page.entry]]
+name = "Abyssal demon"
+level = "85"
+item = 4149
+
+[[page.entry]]
+name = "Dagannoth Prime"
+level = "86"
+item = -1
+
+
+[[page]]
+tab = 2
+
+[[page.entry]]
+name = "Skillcape @red@(Premium only)"
+level = "99"
+item = 9786

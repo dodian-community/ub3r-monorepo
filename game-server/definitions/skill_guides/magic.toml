@@ -1,0 +1,261 @@
+skill = "magic"
+
+[[tab]]
+component = 8846
+label = "Spells"
+
+[[tab]]
+component = 8823
+label = "Armor"
+
+[[tab]]
+component = 8824
+label = "Misc"
+
+[layout]
+hide = [8825]
+
+[[page]]
+tab = 0
+
+[[page.entry]]
+name = "High Alch"
+level = "1"
+item = 561
+amount = 1
+
+[[page.entry]]
+name = "Smoke Rush"
+level = "1"
+item = 565
+amount = 1
+
+[[page.entry]]
+name = "Enchant Sapphire"
+level = "7"
+item = 564
+amount = 10
+
+[[page.entry]]
+name = "Shadow Rush"
+level = "10"
+item = 565
+amount = 1
+
+[[page.entry]]
+name = "Blood Rush"
+level = "20"
+item = 565
+amount = 1
+
+[[page.entry]]
+name = "Enchant Emerald"
+level = "27"
+item = 564
+amount = 10
+
+[[page.entry]]
+name = "Ice Rush"
+level = "30"
+item = 565
+amount = 1
+
+[[page.entry]]
+name = "Smoke Burst"
+level = "40"
+item = 565
+amount = 1
+
+[[page.entry]]
+name = "Superheat"
+level = "43"
+item = 561
+amount = 1
+
+[[page.entry]]
+name = "Enchant Ruby"
+level = "49"
+item = 564
+amount = 10
+
+[[page.entry]]
+name = "Shadow Burst"
+level = "50"
+item = 565
+amount = 1
+
+[[page.entry]]
+name = "Enchant Diamond"
+level = "57"
+item = 564
+amount = 10
+
+[[page.entry]]
+name = "Blood Burst"
+level = "60"
+item = 565
+amount = 1
+
+[[page.entry]]
+name = "Enchant Dragonstone"
+level = "68"
+item = 564
+amount = 10
+
+[[page.entry]]
+name = "Ice Burst"
+level = "70"
+item = 565
+amount = 1
+
+[[page.entry]]
+name = "Smoke Blitz"
+level = "74"
+item = 565
+amount = 1
+
+[[page.entry]]
+name = "Shadow Blitz"
+level = "76"
+item = 565
+amount = 1
+
+[[page.entry]]
+name = "Blood Blitz"
+level = "80"
+item = 565
+amount = 1
+
+[[page.entry]]
+name = "Ice Blitz"
+level = "82"
+item = 565
+amount = 1
+
+[[page.entry]]
+name = "Smoke Barrage"
+level = "86"
+item = 565
+amount = 1
+
+[[page.entry]]
+name = "Enchant Onyx"
+level = "87"
+item = 564
+amount = 10
+
+[[page.entry]]
+name = "Shadow Barrage"
+level = "88"
+item = 565
+amount = 1
+
+[[page.entry]]
+name = "Blood Barrage"
+level = "92"
+item = 565
+amount = 1
+
+[[page.entry]]
+name = "Ice Barrage"
+level = "94"
+item = 565
+amount = 1
+
+
+[[page]]
+tab = 1
+
+[[page.entry]]
+name = "Blue Mystic"
+level = "1"
+item = 4089
+
+[[page.entry]]
+name = "White Mystic"
+level = "20"
+item = 4109
+
+[[page.entry]]
+name = "Splitbark (with 20 defence)"
+level = "20"
+item = 3385
+
+[[page.entry]]
+name = "Black Mystic"
+level = "35"
+item = 4099
+
+[[page.entry]]
+name = "Holy book"
+level = "45"
+item = 3840
+
+[[page.entry]]
+name = "Holy blessing"
+level = "45"
+item = 20220
+
+[[page.entry]]
+name = "Infinity"
+level = "50"
+item = 6918
+
+[[page.entry]]
+name = "Ahrim (with 70 defence)"
+level = "70"
+item = 4708
+
+
+[[page]]
+tab = 2
+
+[[page.entry]]
+name = "Battlestaff"
+level = "1"
+item = 1391
+
+[[page.entry]]
+name = "Elemental battlestaff"
+level = "1"
+item = 1395
+
+[[page.entry]]
+name = "Zamorak staff"
+level = "10"
+item = 2417
+
+[[page.entry]]
+name = "Saradomin staff"
+level = "10"
+item = 2415
+
+[[page.entry]]
+name = "Guthix staff"
+level = "10"
+item = 2416
+
+[[page.entry]]
+name = "Ancient staff"
+level = "25"
+item = 4675
+
+[[page.entry]]
+name = "Obsidian staff"
+level = "40"
+item = 6526
+
+[[page.entry]]
+name = "Master wand"
+level = "50"
+item = 6914
+
+[[page.entry]]
+name = "Ahrim's staff"
+level = "70"
+item = 4710
+
+[[page.entry]]
+name = "Skillcape @red@(Premium only)"
+level = "99"
+item = 9762

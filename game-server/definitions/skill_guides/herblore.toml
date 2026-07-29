@@ -1,0 +1,93 @@
+skill = "herblore"
+
+[[tab]]
+component = 8846
+label = "Potions"
+
+[[tab]]
+component = 8823
+label = "Herbs"
+
+[[tab]]
+component = 8824
+label = "Misc"
+
+[layout]
+hide = [8825]
+
+[[page]]
+tab = 0
+
+[[page.entry]]
+name = "Attack Potion \nGuam leaf & eye of newt"
+level = "3"
+item = 121
+
+[[page.entry]]
+name = "Strength Potion\nTarromin & limpwurt root"
+level = "14"
+item = 115
+
+[[page.entry]]
+name = "Defence Potion\nRanarr weed & white berries"
+level = "25"
+item = 133
+
+[[page.entry]]
+name = "Prayer potion\nRanarr weed & snape grass"
+level = "38"
+item = 139
+
+[[page.entry]]
+name = "Super Attack Potion @red@(Premium only)\nIrit leaf & eye of newt"
+level = "46"
+item = 145
+
+[[page.entry]]
+name = "Super Strength Potion @red@(Premium only)\nKwuarm & limpwurt root"
+level = "55"
+item = 157
+
+[[page.entry]]
+name = "Super Restore Potion @red@(Premium only)\nSnapdragon & red spiders' eggs"
+level = "60"
+item = 3026
+
+[[page.entry]]
+name = "Super Defence Potion @red@(Premium only)\nCadantine & white berries"
+level = "65"
+item = 163
+
+[[page.entry]]
+name = "Ranging Potion @red@(Premium only)\nDwarf weed & wine of Zamorak"
+level = "75"
+item = 169
+
+[[page.entry]]
+name = "Antifire potion @red@(Premium only)\nTorstol & willow root"
+level = "79"
+item = 2454
+
+[[page.entry]]
+name = "Super Combat Potion @red@(Premium only)\nTorstol, Super attack, strength & defence potion"
+level = "88"
+item = 12695
+
+[[page.entry]]
+name = "Overload Potion @red@(Premium only)\nCoconut, Ranging & Super combat potion"
+level = "93"
+item = 11730
+
+
+[[page]]
+tab = 1
+dynamic_source = "herblore_herbs"
+
+
+[[page]]
+tab = 2
+
+[[page.entry]]
+name = "Skillcape @red@(Premium only)"
+level = "99"
+item = 9774

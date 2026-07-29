@@ -1,0 +1,265 @@
+skill = "farming"
+
+[[tab]]
+component = 8846
+label = "Allotment"
+
+[[tab]]
+component = 8823
+label = "Flower"
+
+[[tab]]
+component = 8824
+label = "Bush"
+
+[[tab]]
+component = 8827
+label = "Herb"
+
+[[tab]]
+component = 8837
+label = "Tree"
+
+[[tab]]
+component = 8840
+label = "Fruit tree"
+
+[[tab]]
+component = 8843
+label = "Misc"
+
+[layout]
+show = [8827, 8828, 8838, 8841]
+hide = [8850]
+
+[[page]]
+tab = 0
+
+[[page.entry]]
+name = "Potatoes \nPayment: 3 compost"
+level = "1"
+item = 1942
+
+[[page.entry]]
+name = "Onions \nPayment: 1 sack of potato"
+level = "5"
+item = 1957
+
+[[page.entry]]
+name = "Cabbage \nPayment: 1 sack of onion"
+level = "9"
+item = 1965
+
+[[page.entry]]
+name = "Tomatoes \nPayment: 1 sack of cabbage"
+level = "16"
+item = 1982
+
+[[page.entry]]
+name = "Sweetcorn \nPayment: 2 basket of tomato"
+level = "25"
+item = 5986
+
+[[page.entry]]
+name = "Strawberries @red@(Premium only)\nPayment: 12 sweetcorn"
+level = "31"
+item = 5504
+
+[[page.entry]]
+name = "Watermelons @red@(Premium only)\nPayment: 3 basket of strawberries"
+level = "47"
+item = 5982
+
+[[page.entry]]
+name = "Snape grass @red@(Premium only)\nPayment: 15 watermelon"
+level = "59"
+item = 231
+
+
+[[page]]
+tab = 1
+
+[[page.entry]]
+name = "Marigold \nPayment: 2 compost"
+level = "3"
+item = 6010
+
+[[page.entry]]
+name = "Rosemary \nPayment: 2 Marigold"
+level = "13"
+item = 6014
+
+[[page.entry]]
+name = "Nasturtium \nPayment: 2 Rosemary"
+level = "22"
+item = 6012
+
+[[page.entry]]
+name = "Woad \nPayment: 2 Nasturtium"
+level = "26"
+item = 1793
+
+[[page.entry]]
+name = "Limpwurt plants \nPayment: 2 Woad leaf"
+level = "34"
+item = 225
+
+
+[[page]]
+tab = 2
+
+[[page.entry]]
+name = "Redberry bushes @red@(Premium only)\nPayment: 5 super compost"
+level = "22"
+item = 1951
+
+[[page.entry]]
+name = "Dwellberry bushes @red@(Premium only)\nPayment: 8 redberries"
+level = "36"
+item = 2126
+
+[[page.entry]]
+name = "Jangerberry bushes @red@(Premium only)\nPayment: 8 dwellberries"
+level = "48"
+item = 247
+
+[[page.entry]]
+name = "White berry bushes @red@(Premium only)\nPayment: 8 jangerberries"
+level = "59"
+item = 239
+
+[[page.entry]]
+name = "Grape bushes @red@(Premium only)\nPayment: 8 jangerberries & 8 redberries"
+level = "68"
+item = 1987
+
+
+[[page]]
+tab = 3
+
+[[page.entry]]
+name = "Guam"
+level = "8"
+item = 199
+
+[[page.entry]]
+name = "Marrentill"
+level = "12"
+item = 201
+
+[[page.entry]]
+name = "Tarromin"
+level = "19"
+item = 203
+
+[[page.entry]]
+name = "Ranarr"
+level = "34"
+item = 207
+
+[[page.entry]]
+name = "Irit @red@(Premium only)"
+level = "44"
+item = 209
+
+[[page.entry]]
+name = "Kwuarm @red@(Premium only)"
+level = "56"
+item = 213
+
+[[page.entry]]
+name = "Snapdragon @red@(Premium only)"
+level = "63"
+item = 3051
+
+[[page.entry]]
+name = "Cadantine @red@(Premium only)"
+level = "70"
+item = 215
+
+[[page.entry]]
+name = "Dwarf weed @red@(Premium only)"
+level = "79"
+item = 217
+
+[[page.entry]]
+name = "Torstol @red@(Premium only)"
+level = "85"
+item = 219
+
+
+[[page]]
+tab = 4
+
+[[page.entry]]
+name = "Acorn trees \nPayment: 1 basket of Tomatoes & 1 basket of Strawberries"
+level = "15"
+item = 1521
+
+[[page.entry]]
+name = "Willow trees @red@(Premium only)\nPayment: 3 oak roots"
+level = "30"
+item = 1519
+
+[[page.entry]]
+name = "Maple trees @red@(Premium only)\nPayment: 3 willow roots"
+level = "45"
+item = 1517
+
+[[page.entry]]
+name = "Yew trees @red@(Premium only)\nPayment: 3 maple roots"
+level = "60"
+item = 1515
+
+[[page.entry]]
+name = "Magic trees @red@(Premium only)\nPayment: 3 yew roots"
+level = "75"
+item = 1513
+
+
+[[page]]
+tab = 5
+
+[[page.entry]]
+name = "Apple trees \nPayment: 9 sweetcorn"
+level = "27"
+item = 1955
+
+[[page.entry]]
+name = "Banana trees \nPayment: 2 basket of apples"
+level = "33"
+item = 1963
+
+[[page.entry]]
+name = "Orange trees \nPayment: 2 basket of bananas"
+level = "39"
+item = 2108
+
+[[page.entry]]
+name = "Curry trees \nPayment: 2 basket of oranges"
+level = "45"
+item = 5970
+
+[[page.entry]]
+name = "Pineapple plants @red@(Premium only)\nPayment: 10 curry"
+level = "51"
+item = 2114
+
+[[page.entry]]
+name = "Papaya trees @red@(Premium only)\nPayment: 10 pineapple"
+level = "57"
+item = 5972
+
+[[page.entry]]
+name = "Palm trees @red@(Premium only)\nPayment: 10 papaya"
+level = "63"
+item = 5974
+
+
+[[page]]
+tab = 6
+
+[[page.entry]]
+name = "Skillcape @red@(Premium only)"
+level = "99"
+item = 9810

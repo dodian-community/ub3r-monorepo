@@ -1,0 +1,197 @@
+skill = "ranged"
+
+[[tab]]
+component = 8846
+label = "Bows"
+
+[[tab]]
+component = 8823
+label = "Armour"
+
+[[tab]]
+component = 8824
+label = "Misc"
+
+[layout]
+hide = [8825]
+
+[[page]]
+tab = 0
+
+[[page.entry]]
+name = "Oak bow"
+level = "1"
+item = 843
+
+[[page.entry]]
+name = "Willow bow"
+level = "20"
+item = 849
+
+[[page.entry]]
+name = "Maple bow"
+level = "30"
+item = 853
+
+[[page.entry]]
+name = "Yew bow"
+level = "40"
+item = 857
+
+[[page.entry]]
+name = "Magic bow"
+level = "50"
+item = 861
+
+[[page.entry]]
+name = "Crystal bow"
+level = "65"
+item = 4212
+
+[[page.entry]]
+name = "Karil's crossbow"
+level = "70"
+item = 4734
+
+[[page.entry]]
+name = "Seercull"
+level = "75"
+item = 6724
+
+
+[[page]]
+tab = 1
+
+[[page.entry]]
+name = "Leather"
+level = "1"
+item = 1129
+
+[[page.entry]]
+name = "Green dragonhide body (with 40 defence)"
+level = "40"
+item = 1135
+
+[[page.entry]]
+name = "Green dragonhide chaps"
+level = "40"
+item = 1099
+
+[[page.entry]]
+name = "Green dragonhide vambraces"
+level = "40"
+item = 1065
+
+[[page.entry]]
+name = "Book of balance"
+level = "45"
+item = 3844
+
+[[page.entry]]
+name = "Peaceful blessing"
+level = "45"
+item = 20226
+
+[[page.entry]]
+name = "Honourable blessing"
+level = "45"
+item = 20229
+
+[[page.entry]]
+name = "Blue dragonhide body (with 40 defence)"
+level = "50"
+item = 2499
+
+[[page.entry]]
+name = "Blue dragonhide chaps"
+level = "50"
+item = 2493
+
+[[page.entry]]
+name = "Blue dragonhide vambraces"
+level = "50"
+item = 2487
+
+[[page.entry]]
+name = "Red dragonhide body (with 40 defence)"
+level = "60"
+item = 2501
+
+[[page.entry]]
+name = "Red dragonhide chaps"
+level = "60"
+item = 2495
+
+[[page.entry]]
+name = "Red dragonhide vambraces"
+level = "60"
+item = 2489
+
+[[page.entry]]
+name = "Black dragonhide body (with 40 defence)"
+level = "70"
+item = 2503
+
+[[page.entry]]
+name = "Black dragonhide chaps"
+level = "70"
+item = 2497
+
+[[page.entry]]
+name = "Black dragonhide vambraces"
+level = "70"
+item = 2491
+
+[[page.entry]]
+name = "Karil (with 70 defence)"
+level = "70"
+item = 4736
+
+[[page.entry]]
+name = "Spined"
+level = "75"
+item = 6133
+
+
+[[page]]
+tab = 2
+
+[[page.entry]]
+name = "Bronze arrow"
+level = "1"
+item = 882
+
+[[page.entry]]
+name = "Iron arrow"
+level = "1"
+item = 884
+
+[[page.entry]]
+name = "Steel arrow"
+level = "10"
+item = 886
+
+[[page.entry]]
+name = "Mithril arrow"
+level = "20"
+item = 888
+
+[[page.entry]]
+name = "Adamant arrow"
+level = "30"
+item = 890
+
+[[page.entry]]
+name = "Rune arrow"
+level = "40"
+item = 892
+
+[[page.entry]]
+name = "Dragon arrow"
+level = "60"
+item = 11212
+
+[[page.entry]]
+name = "Skillcape @red@(Premium only)"
+level = "99"
+item = 9756
