@@ -33,10 +33,7 @@ import net.dodian.uber.game.skill.farming.Farming;
 import net.dodian.uber.game.skill.farming.FarmingState;
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry;
 import net.dodian.uber.game.persistence.admin.CommandDbService;
-import net.dodian.uber.game.persistence.audit.ShopLog;
 import net.dodian.uber.game.persistence.account.AccountPersistenceService;
-import net.dodian.uber.game.persistence.player.RefundRecord;
-import net.dodian.uber.game.persistence.player.RefundRepository;
 import net.dodian.uber.game.persistence.player.PlayerSaveReason;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
 import net.dodian.uber.game.engine.net.InboundPacketMailbox;
@@ -74,11 +71,9 @@ import net.dodian.utilities.Utils;
 import net.dodian.uber.game.engine.systems.skills.ProgressionService;
 import net.dodian.uber.game.engine.systems.inventory.EconomyTransaction;
 import net.dodian.uber.game.model.item.transaction.OfferTransactions;
-import net.dodian.uber.game.model.item.transaction.BankTransactions;
 import net.dodian.uber.game.skill.agility.AgilityTicketExchangeService;
 
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
 import io.netty.channel.Channel;
 
 /* Kotlin imports */
@@ -156,7 +151,6 @@ public class Client extends Player implements Runnable {
     public boolean tradeLocked = false;
     public boolean officialClient = true;
     public String[] UUID = null;
-    public CopyOnWriteArrayList<GameItem> priceCheckerItems = new CopyOnWriteArrayList<>();
 
     private net.dodian.uber.game.social.exchange.ExchangePlayerState exchangeState() {
         return net.dodian.uber.game.social.exchange.ExchangePlayerStateRegistry.state(this);
@@ -195,10 +189,6 @@ public class Client extends Player implements Runnable {
     public boolean[] getDuelRule() { return exchangeState().getDuelRule(); }
     public void setDuelRule(boolean[] value) { exchangeState().setDuelRule(value); }
     public boolean[] getDuelBodyRules() { return exchangeState().getDuelBodyRules(); }
-    public boolean priceCheckerOpen = false;
-    public int priceCheckerMode = 0; // 0 = Value, 1 = High Alch
-    public boolean priceCheckerSearchPendingInput = false;
-    public GameItem priceCheckerSearchedItem = null;
     public int acceptAid = 0; // 0 = off, 1 = on
     public int rightClickToggle = 0; // 0 = off, 1 = on
     public int scrollCameraToggle = 0; // 0 = off, 1 = on
@@ -707,9 +697,7 @@ public class Client extends Player implements Runnable {
     public void destruct() {
         setSynchronizationReady(false);
         net.dodian.uber.game.ui.AccountServices.close(this);
-        if (priceCheckerOpen) {
-            closePriceChecker();
-        }
+        net.dodian.uber.game.economy.PriceCheckerService.close(this);
         PlayerDeferredLifecycleService.cancelAll(this);
         net.dodian.uber.game.engine.systems.interaction.ui.PlayerSocialApproachService.cancel(this);
         PlayerScopedCoroutineService.cancelForPlayer(this, "Player destruct");
@@ -1183,6 +1171,7 @@ public class Client extends Player implements Runnable {
             return;
         }
         isLoggingOut = true;
+        net.dodian.uber.game.persistence.account.LogoutReLoginGuard.recordLogout(dbId);
         ContentActions.cancel(this, PlayerActionCancelReason.LOGOUT, false, false, false, true);
         if (!saveNeeded || !validClient || UsingAgility) {
             if (UsingAgility) {
@@ -1272,38 +1261,6 @@ public class Client extends Player implements Runnable {
         saveStats(logout, false);
     }
 
-    public void fromBank(int itemID, int fromSlot, int amount) {
-        if (!IsBanking) {
-            send(new RemoveInterfaces());
-            return;
-        }
-        if (fromSlot < 0 || fromSlot >= bankItems.length || bankItems[fromSlot] - 1 != itemID) {
-            return;
-        }
-        if (bankItemsN[fromSlot] == 0) {
-            PlayerBankService.releasePlaceholder(this, fromSlot);
-            return;
-        }
-        int id = getNotedItem(itemID);
-        if (amount == -2) { //draw all from bank!
-            if (!takeAsNote && !Server.itemManager.isStackable(itemID))
-                amount = freeSlots() == 0 ? 1 : Math.min(bankItemsN[fromSlot], freeSlots());
-            else
-                amount = freeSlots() == 0 && !playerHasItem(id == 0 ? itemID : id) ? 1 : bankItemsN[fromSlot];
-        }
-        if (amount <= 0) {
-            return;
-        }
-        int receivedItemId = takeAsNote && id > 0 ? id : itemID;
-        if (takeAsNote && id <= 0) {
-            send(new SendMessage(Server.itemManager.getName(itemID) + " can't be drawn as note."));
-        }
-        amount = Math.min(amount, bankItemsN[fromSlot]);
-        if (!BankTransactions.withdraw(this, itemID, fromSlot, amount, receivedItemId, bankPlaceholdersEnabled)) {
-            send(new SendMessage("Not enough space in your inventory."));
-        }
-    }
-
     public int getInvAmt(int itemID) {
         int amt = 0;
         for (int slot = 0; slot < playerItems.length; slot++) {
@@ -1331,36 +1288,6 @@ public class Client extends Player implements Runnable {
             }
         }
         return -1;
-    }
-
-    /**
-     * Deposits an item into the bank via {@link BankTransactions#deposit}, the atomic
-     * deposit/withdraw engine shared with {@link #fromBank}.
-     */
-    public void bankItem(int itemID, int fromSlot, int amount) {
-        if (!IsBanking || fromSlot < 0 || fromSlot >= playerItems.length
-                || playerItems[fromSlot] != itemID + 1 || playerItemsN[fromSlot] <= 0) {
-            return;
-        }
-        ensureBankTabState();
-        int unnoted = getUnnotedItem(itemID);
-        int bankItemId = unnoted > 0 ? unnoted : itemID;
-        int available = Server.itemManager.isStackable(itemID) ? playerItemsN[fromSlot] : getInvAmt(itemID);
-        int requested = Math.min(Math.max(amount, 0), available);
-        if (requested == 0) {
-            return;
-        }
-        boolean newBankEntry = getBankSlot(bankItemId) < 0;
-        if (!BankTransactions.deposit(this, itemID, fromSlot, requested, bankItemId)) {
-            send(new SendMessage("Bank full!"));
-            return;
-        }
-        if (newBankEntry) {
-            int bankSlot = getBankSlot(bankItemId);
-            if (bankSlot >= 0) {
-                bankSlotTabs[bankSlot] = currentBankTab > 0 && currentBankTab < 10 && !bankSearchActive ? currentBankTab : 0;
-            }
-        }
     }
 
     private static final int INVENTORY_DIRTY_SLOT_THRESHOLD = 10;
@@ -1842,6 +1769,11 @@ public class Client extends Player implements Runnable {
     }
 
     public void wear(int wearID, int slot, int interFace) {
+        net.dodian.uber.game.engine.systems.inventory.EquipmentService.wear(this, wearID, slot, interFace);
+    }
+
+    /** Legacy-only path for special item actions and two-handed/bow conflict handling. */
+    public void performLegacyWear(int wearID, int slot, int interFace) {
                     wearLog("[WEAR:WEAR] wearID={} slot={} interface={}", wearID, slot, interFace);
         if (isBusy() || interFace != 3214) {
                             wearLog("[WEAR:WEAR] rejected busy={} interface={}", isBusy(), interFace);
@@ -2693,9 +2625,9 @@ public class Client extends Player implements Runnable {
                 return;
             }
             if (option == 1) { // Check Bank
-                performOpenOtherBank(other.playerName);
+                net.dodian.uber.game.economy.AdminContainerInspectionService.openBank(this, other.playerName);
             } else if (option == 2) { // Check Inventory
-                performOpenOtherInventory(other.playerName);
+                net.dodian.uber.game.economy.AdminContainerInspectionService.openInventory(this, other.playerName);
             }
             modcpDialogState = 0;
             send(new net.dodian.uber.game.netty.listener.out.RemoveInterfaces());
@@ -2754,413 +2686,8 @@ public class Client extends Player implements Runnable {
         return false;
     }
 
-    public void openPriceChecker() {
-        net.dodian.uber.game.economy.PriceCheckerService.open(this);
-        return;
-        /*priceCheckerOpen = true;
-        priceCheckerItems.clear();
-        priceCheckerSearchedItem = null;
-        priceCheckerSearchPendingInput = false;
-        priceCheckerMode = 0; // default to value
-        send(new InventoryInterface(48500, 5063));
-        priceCheckerRefresh();*/
-    }
-
-    public void closePriceChecker() {
-        net.dodian.uber.game.economy.PriceCheckerService.close(this);
-        return;
-        /*if (!priceCheckerOpen) return;
-        priceCheckerOpen = false;
-        priceCheckerWithdrawAll();
-        priceCheckerSearchedItem = null;
-        priceCheckerSearchPendingInput = false;
-        send(new RemoveInterfaces());*/
-    }
-
-    public void priceCheckerDeposit(int itemID, int fromSlot, int amount) {
-        if (!priceCheckerOpen) return;
-        if (fromSlot < 0 || fromSlot >= 28) return;
-        if (itemID != (playerItems[fromSlot] - 1)) return;
-        if (!playerHasItem(itemID, amount) || playerItems[fromSlot] != (itemID + 1)) return;
-        if (!Server.itemManager.isTradable(itemID)) {
-            send(new SendMessage("This item is untradeable!"));
-            return;
-        }
-        if (!Server.itemManager.isStackable(itemID)) {
-            amount = Math.min(amount, getInvAmt(itemID));
-        } else {
-            amount = Math.min(amount, playerItemsN[fromSlot]);
-        }
-        if (amount <= 0) return;
-
-        // Check slots: max 28 slots
-        if (priceCheckerItems.size() >= 28) {
-            boolean found = false;
-            for (GameItem item : priceCheckerItems) {
-                if (item.getId() == itemID && item.isStackable()) {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                send(new SendMessage("Your price checker is full!"));
-                return;
-            }
-        }
-
-        if (Server.itemManager.isStackable(itemID)) {
-            boolean found = false;
-            for (GameItem item : priceCheckerItems) {
-                if (item.getId() == itemID) {
-                    found = true;
-                    item.addAmount(amount);
-                    deleteItem(itemID, fromSlot, amount);
-                    break;
-                }
-            }
-            if (!found) {
-                priceCheckerItems.add(new GameItem(itemID, amount));
-                deleteItem(itemID, fromSlot, amount);
-            }
-        } else {
-            for (int a = 1; a <= amount; a++) {
-                if (priceCheckerItems.size() >= 28) {
-                    send(new SendMessage("Your price checker is full!"));
-                    break;
-                }
-                if (a == 1) {
-                    priceCheckerItems.add(new GameItem(itemID, 1));
-                    deleteItem(itemID, fromSlot, 1);
-                } else {
-                    int slot = findItem(itemID, playerItems, playerItemsN);
-                    if (slot >= 0 && slot < 28) {
-                        priceCheckerItems.add(new GameItem(itemID, 1));
-                        deleteItem(itemID, slot, 1);
-                    } else {
-                        break;
-                    }
-                }
-            }
-        }
-        priceCheckerRefresh();
-    }
-
-    public void priceCheckerWithdraw(int itemID, int fromSlot, int amount) {
-        if (!priceCheckerOpen) return;
-        if (fromSlot < 0 || fromSlot >= priceCheckerItems.size()) return;
-        GameItem item = priceCheckerItems.get(fromSlot);
-        if (item == null || item.getId() != itemID) return;
-
-        int count = item.getAmount();
-        amount = Math.min(amount, count);
-        if (amount <= 0) return;
-
-        // Check inventory space
-        if (!item.isStackable() && getFreeSpace() < amount) {
-            amount = getFreeSpace();
-            if (amount <= 0) {
-                send(new SendMessage("Not enough space in your inventory!"));
-                return;
-            }
-        }
-
-        if (item.isStackable()) {
-            if (amount < item.getAmount()) {
-                priceCheckerItems.set(fromSlot, new GameItem(item.getId(), item.getAmount() - amount));
-            } else {
-                priceCheckerItems.remove(fromSlot);
-            }
-            addItem(itemID, amount);
-        } else {
-            for (int a = 1; a <= amount; a++) {
-                if (getFreeSpace() <= 0) {
-                    send(new SendMessage("Not enough space in your inventory!"));
-                    break;
-                }
-                for (int i = 0; i < priceCheckerItems.size(); i++) {
-                    if (priceCheckerItems.get(i).getId() == itemID) {
-                        priceCheckerItems.remove(i);
-                        addItem(itemID, 1);
-                        break;
-                    }
-                }
-            }
-        }
-        priceCheckerRefresh();
-    }
-
-    public void priceCheckerWithdrawAll() {
-        if (!priceCheckerOpen) return;
-        ArrayList<GameItem> temp = new ArrayList<>(priceCheckerItems);
-        priceCheckerItems.clear();
-        for (GameItem item : temp) {
-            addItem(item.getId(), item.getAmount());
-        }
-        priceCheckerRefresh();
-    }
-
-    public void priceCheckerDepositAll() {
-        if (!priceCheckerOpen) return;
-        for (int slot = 0; slot < 28; slot++) {
-            int itemId = playerItems[slot] - 1;
-            int amount = playerItemsN[slot];
-            if (itemId >= 0 && amount > 0) {
-                priceCheckerDeposit(itemId, slot, amount);
-            }
-        }
-    }
-
-    public void priceCheckerSetMode(int mode) {
-        priceCheckerMode = mode;
-        priceCheckerRefresh();
-    }
-
-    public void priceCheckerSearch(String name) {
-        if (!priceCheckerOpen) return;
-        int foundId = -1;
-        String searchName = name.trim().toLowerCase().replace("'", "");
-        for (int i = 0; i < 20000; i++) {
-            String itemName = Server.itemManager.getName(i);
-            if (itemName != null && !itemName.isEmpty() && !Server.itemManager.isNote(i)) {
-                if (itemName.toLowerCase().replace("'", "").contains(searchName)) {
-                    foundId = i;
-                    break;
-                }
-            }
-        }
-        if (foundId == -1) {
-            send(new SendMessage("No items found matching: " + name));
-            priceCheckerSearchedItem = null;
-        } else {
-            priceCheckerSearchedItem = new GameItem(foundId, 1);
-        }
-        priceCheckerRefresh();
-    }
-
-    public int getPriceCheckerItemPrice(int itemId, int mode) {
-        if (mode == 1) {
-            return Server.itemManager.getAlchemy(itemId);
-        } else {
-            return Server.itemManager.getShopSellValue(itemId);
-        }
-    }
-
-    public void priceCheckerRefresh() {
-        if (!priceCheckerOpen) return;
-        for (int i = 0; i < 28; i++) {
-            String value = "";
-            if (i < priceCheckerItems.size()) {
-                GameItem item = priceCheckerItems.get(i);
-                if (item != null && item.getId() >= 0) {
-                    long price = getPriceCheckerItemPrice(item.getId(), priceCheckerMode);
-                    int amount = item.getAmount();
-                    if (item.isStackable()) {
-                        value = String.format("%,d", amount) + " x " + String.format("%,d", price) + "\\n= " + String.format("%,d", price * amount);
-                    } else {
-                        value = String.format("%,d", price);
-                    }
-                }
-            }
-            send(new SendString(value, 48550 + i));
-        }
-
-        if (priceCheckerSearchedItem != null) {
-            String itemName = Server.itemManager.getName(priceCheckerSearchedItem.getId());
-            long price = getPriceCheckerItemPrice(priceCheckerSearchedItem.getId(), priceCheckerMode);
-            send(new SendString("<col=ffb000>" + itemName + ":", 48582));
-            send(new SendString(String.format("%,d", price), 48583));
-            send(new SendItemOnInterfaceSlot(48581, priceCheckerSearchedItem.getId(), priceCheckerSearchedItem.getAmount(), 0));
-        } else {
-            send(new SendString("\\nSelect item to search", 48582));
-            send(new SendString("", 48583));
-            send(new ClearItemContainer(48581, 1));
-        }
-
-        long total = 0;
-        for (GameItem item : priceCheckerItems) {
-            if (item != null && item.getId() >= 0) {
-                total += (long) getPriceCheckerItemPrice(item.getId(), priceCheckerMode) * item.getAmount();
-            }
-        }
-        send(new SendString(String.format("%,d", total), 48513));
-
-        send(new TradeItemsUpdate(48542, priceCheckerItems));
-        send(new ResetItems(5064));
-        send(new SetVarbit(237, priceCheckerMode));
-    }
-
     public void setEntityAttackOption(int value) {
         this.entityAttackOption = value;
-    }
-
-    /* Shops */
-    public void performShopSell(int itemID, int fromSlot, int amount) {
-        if (itemID != playerItems[fromSlot] && playerItemsN[fromSlot] < 1) {
-            return;
-        }
-        /* Item Values */
-        int original = itemID;
-        itemID = getUnnotedItem(original) > 0 ? getUnnotedItem(original) : itemID;
-        int price = ShopRulesService.sellPrice(itemID);
-        /* Functions */
-        if (!net.dodian.uber.game.engine.config.FeatureStateService.shopping.get() || tradeLocked) {
-            send(new SendMessage(tradeLocked ? "You are trade locked!" : "Currently selling stuff to the store has been disabled!"));
-            return;
-        }
-        if (price < 0 || !Server.itemManager.isTradable(itemID) || !ShopRulesService.canSellItemToShop(MyShopID, itemID)) {
-            send(new SendMessage("You cannot sell " + getItemName(itemID).toLowerCase() + " in this store."));
-            return;
-        }
-        int slot = -1;
-        for (int i = 0; i < ShopManager.MaxShopItems; i++) {
-            if (ShopManager.ShopItems[MyShopID][i] <= 0 && slot == -1)
-                slot = i;
-            else if (itemID == ShopManager.ShopItems[MyShopID][i] - 1) {
-                slot = i;
-                i = ShopManager.MaxShopItems; //Just to stop the loop!
-            }
-        }
-        if (slot == -1) { //If we do not have a slot means the store is full!
-            send(new SendMessage("Can't sell more items to the store!"));
-            return;
-        }
-        /* Amount checks */
-        int currency = ShopRulesService.currencyItemId(MyShopID);
-        boolean stack = Server.itemManager.isStackable(original);
-        amount = Math.min(amount, getInvAmt(original));
-        amount = Math.min(Integer.MAX_VALUE - ShopManager.ShopItemsN[MyShopID][slot], amount);
-        amount = capShopSellAmountForCurrency(amount, price, getInvAmt(currency));
-
-        if (amount > 0) { // Code to check if there is any amount to sell!
-            int totalPrice = (int) ((long) amount * price);
-            // Grant payment before removing the item/crediting shop stock: if addItem fails
-            // (e.g. inventory full for a non-stackable currency), nothing else happens, so the
-            // player never loses the item without being paid.
-            if (!addItem(currency, totalPrice)) {
-                send(new SendMessage("Not enough space in your inventory."));
-                return;
-            }
-            if (!stack) {
-                for (int i = 0; i < amount; i++) {
-                    deleteItem(original, 1);
-                }
-            } else {
-                deleteItem(original, amount);
-            }
-            ShopManager.ShopItems[MyShopID][slot] = itemID + 1;
-            ShopManager.ShopItemsN[MyShopID][slot] += amount;
-            ShopLog.recordSell(this, MyShopID, slot, itemID, amount, currency, totalPrice);
-        } else
-            send(new SendMessage("Could not sell anything!"));
-        /* Store update! */
-        UpdatePlayerShop();
-        checkItemUpdate();
-    }
-
-    public int eventShopValues(int slot) {
-        int itemId = ShopManager.ShopItems[MyShopID][slot] - 1;
-        return ShopRulesService.buyPrice(MyShopID, itemId, slot);
-    }
-
-    public void performShopBuy(int itemID, int fromSlot, int amount) {
-        if (amount > 0 && itemID == (ShopManager.ShopItems[MyShopID][fromSlot] - 1)) {
-            boolean stack = Server.itemManager.isStackable(itemID);
-            amount = Math.min(ShopManager.ShopItemsN[MyShopID][fromSlot], amount);
-            if (canUse(itemID)) {
-                send(new SendMessage("You must be a premium member to buy this item"));
-                send(new SendMessage("Visit Dodian.net to subscribe"));
-                return;
-            }
-            if (!stack && freeSlots() < 1) {
-                send(new SendMessage("Not enough space in your inventory."));
-                return;
-            }
-
-            int currency = ShopRulesService.currencyItemId(MyShopID);
-            int TotPrice2 = ShopRulesService.buyPrice(MyShopID, itemID, fromSlot);
-            int coins = getInvAmt(currency);
-            amount = capShopBuyAmountForCurrency(amount, TotPrice2, coins);
-            if (amount == 0) {
-                send(new SendMessage("You don't have enough " + getItemName(currency).toLowerCase()));
-                return;
-            }
-            int purchasedAmount = 0;
-            if (!stack) {
-                for (int i = amount; i > 0; i--) {
-                    if (freeSlots() == 0) {
-                        send(new SendMessage("Not enough space in your inventory."));
-                        return;
-                    }
-                    if (addItem(itemID, 1)) {
-                        deleteItem(currency, TotPrice2);
-                        ShopManager.ShopItemsN[MyShopID][fromSlot] -= 1;
-                        purchasedAmount += 1;
-                        if ((fromSlot + 1) > ShopManager.ShopItemsStandard[MyShopID] && ShopManager.ShopItemsN[MyShopID][fromSlot] <= 0) {
-                            ShopManager.resetAnItem(MyShopID, fromSlot);
-                            break;
-                        }
-                    } else {
-                        send(new SendMessage("Not enough space in your inventory."));
-                        return;
-                    }
-                }
-            } else {
-                if (addItem(itemID, amount)) {
-                    deleteItem(currency, TotPrice2 * amount);
-                    ShopManager.ShopItemsN[MyShopID][fromSlot] -= amount;
-                    purchasedAmount = amount;
-                    if ((fromSlot + 1) > ShopManager.ShopItemsStandard[MyShopID] && ShopManager.ShopItemsN[MyShopID][fromSlot] <= 0) {
-                        ShopManager.resetAnItem(MyShopID, fromSlot);
-                    }
-                } else
-                    return;
-            }
-            if (purchasedAmount > 0) {
-                ShopLog.recordBuy(this, MyShopID, fromSlot, itemID, purchasedAmount, currency, (long) TotPrice2 * purchasedAmount);
-            }
-            /* Store update! */
-            UpdatePlayerShop();
-            checkItemUpdate();
-        }
-    }
-
-    public void UpdatePlayerShop() {
-        for (int i = 1; i < DotEnvKt.getGameMaxPlayers(); i++) {
-            Player candidate = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[i];
-            Client viewer = eligibleShopViewer(candidate, MyShopID, getSlot());
-            if (viewer != null) {
-                viewer.checkItemUpdate();
-            }
-        }
-    }
-
-    static int capShopSellAmountForCurrency(int requestedAmount, int unitPrice, int currentCurrencyAmount) {
-        if (requestedAmount <= 0 || unitPrice <= 0) {
-            return requestedAmount;
-        }
-        long normalizedCurrentAmount = Math.max(0L, currentCurrencyAmount);
-        long currencySpace = Math.max(0L, (long) Integer.MAX_VALUE - normalizedCurrentAmount);
-        long affordableAmount = currencySpace / unitPrice;
-        return (int) Math.min(requestedAmount, affordableAmount);
-    }
-
-    static int capShopBuyAmountForCurrency(int requestedAmount, int unitPrice, int availableCurrency) {
-        if (requestedAmount <= 0 || unitPrice <= 0) {
-            return requestedAmount;
-        }
-        long normalizedAvailable = Math.max(0L, availableCurrency);
-        long affordableAmount = normalizedAvailable / unitPrice;
-        return (int) Math.min(requestedAmount, affordableAmount);
-    }
-
-    static Client eligibleShopViewer(Player candidate, int shopId, int ownerSlot) {
-        if (!(candidate instanceof Client)) {
-            return null;
-        }
-        Client viewer = (Client) candidate;
-        return viewer.getSlot() != ownerSlot && viewer.isShopping() && viewer.MyShopID == shopId
-                ? viewer
-                : null;
     }
 
     /* NPC Talking */
@@ -3959,14 +3486,6 @@ public class Client extends Player implements Runnable {
         return false;
     }
 
-    /**
-     * Shows armour in the duel screen slots! (hopefully lol)
-     */
-    /**
-     * Sends the player's equipment to the duel interface.
-     * 
-     * @param c The client to send the equipment to
-     */
     public void requestForceChat(String s) {
         forcedChat = s;
         getUpdateFlags().setRequired(UpdateFlag.FORCED_CHAT, true);
@@ -4020,72 +3539,6 @@ public class Client extends Player implements Runnable {
     }
 
     public boolean checkInv = false;
-
-    public void performOpenOtherInventory(String player) {
-        if (IsBanking || isShopping() || getDuelFight()) {
-            send(new SendMessage("Please finish with what you are doing!"));
-            return;
-        }
-        ArrayList<GameItem> otherInv = new ArrayList<>();
-        if (PlayerRegistry.getPlayer(player) != null) { //Online check
-            Client other = (Client) PlayerRegistry.getPlayer(player);
-            for (int i = 0; i < Objects.requireNonNull(other).playerItems.length; i++) {
-                otherInv.add(i, new GameItem(other.playerItems[i] - 1, other.playerItemsN[i]));
-            }
-            sendInventory(3214, otherInv);
-            send(new SendMessage("User " + player + "'s inventory is now being shown."));
-            checkInv = true;
-        } else {
-            send(new SendMessage("Loading " + player + "'s inventory..."));
-            CommandDbService.submit(
-                    "check-inventory",
-                    () -> CommandDbService.loadOfflineContainerView(player, "inventory"),
-                    result -> applyOfflineInventoryView(player, result),
-                    exception -> {
-                        if (!disconnected) {
-                            logger.debug("issue: {}", exception.getMessage(), exception);
-                            send(new SendMessage("Could not load that inventory right now."));
-                        }
-                    }
-            );
-        }
-    }
-
-    public void performOpenOtherBank(String player) {
-        if (IsBanking || isShopping() || getDuelFight()) {
-            send(new SendMessage("Please finish with what you are doing!"));
-            return;
-        }
-        ArrayList<GameItem> otherBank = new ArrayList<>();
-        IsBanking = false;
-        clearBankStyleView();
-        if (PlayerRegistry.getPlayer(player) != null) { //Online check
-            Client other = (Client) PlayerRegistry.getPlayer(player);
-            ArrayList<Integer> ids = new ArrayList<>();
-            ArrayList<Integer> amounts = new ArrayList<>();
-            for (int i = 0; i < Objects.requireNonNull(other).bankItems.length; i++) {
-                if (other.bankItems[i] > 0 && other.bankItemsN[i] > 0) {
-                    ids.add(other.bankItems[i] - 1);
-                    amounts.add(other.bankItemsN[i]);
-                }
-            }
-            openBankStyleView(ids, amounts, "Examine the bank of " + player);
-            IsBanking = false;
-        } else {
-            send(new SendMessage("Loading " + player + "'s bank..."));
-            CommandDbService.submit(
-                    "check-bank",
-                    () -> CommandDbService.loadOfflineContainerView(player, "bank"),
-                    result -> applyOfflineBankView(player, result),
-                    exception -> {
-                        if (!disconnected) {
-                            logger.debug("issue: {}", exception.getMessage(), exception);
-                            send(new SendMessage("Could not load that bank right now."));
-                        }
-                    }
-            );
-        }
-    }
 
     public void updateGroundItems() {
         /* Untradeable items prio 1! */
@@ -4191,54 +3644,6 @@ public class Client extends Player implements Runnable {
         }
     }
 
-    private void applyOfflineInventoryView(String player, CommandDbService.OfflineContainerViewResult result) {
-        if (disconnected) {
-            return;
-        }
-        if (IsBanking || isShopping() || getDuelFight()) {
-            send(new SendMessage("Inventory view cancelled because you started another action."));
-            return;
-        }
-        if (result.getStatus() == CommandDbService.OfflineContainerViewResult.Status.USERNAME_NOT_FOUND) {
-            send(new SendMessage("username '" + player + "' do not exist in the database!"));
-            return;
-        }
-        if (result.getStatus() == CommandDbService.OfflineContainerViewResult.Status.CHARACTER_NOT_FOUND) {
-            send(new SendMessage("username '" + player + "' have yet to login!"));
-            return;
-        }
-        sendInventory(3214, result.getItems());
-        send(new SendMessage("User " + player + "'s inventory is now being shown."));
-        checkInv = true;
-    }
-
-    private void applyOfflineBankView(String player, CommandDbService.OfflineContainerViewResult result) {
-        if (disconnected) {
-            return;
-        }
-        if (IsBanking || isShopping() || getDuelFight()) {
-            send(new SendMessage("Bank view cancelled because you started another action."));
-            return;
-        }
-        if (result.getStatus() == CommandDbService.OfflineContainerViewResult.Status.USERNAME_NOT_FOUND) {
-            send(new SendMessage("username '" + player + "' do not exist in the database!"));
-            return;
-        }
-        if (result.getStatus() == CommandDbService.OfflineContainerViewResult.Status.CHARACTER_NOT_FOUND) {
-            send(new SendMessage("username '" + player + "' have yet to login!"));
-            return;
-        }
-        ArrayList<Integer> ids = new ArrayList<>();
-        ArrayList<Integer> amounts = new ArrayList<>();
-        for (GameItem item : result.getItems()) {
-            if (item.getId() >= 0 && item.getAmount() > 0) {
-                ids.add(item.getId());
-                amounts.add(item.getAmount());
-            }
-        }
-        openBankStyleView(ids, amounts, "Examine the bank of " + player);
-    }
-
     public void dropAllItems() {
         //BAHAHAHAAHAH
         resetPos();
@@ -4321,83 +3726,9 @@ public class Client extends Player implements Runnable {
     public ArrayList<PartyRoomRewardItem> rewardList = new ArrayList<>();
     private final ArrayList<String> refundDates = new ArrayList<>();
 
-    public void performSetRefundList() {
-        rewardList.clear();
-        refundDates.clear();
-        try {
-            for (RefundRecord refund : RefundRepository.loadUnclaimed(dbId)) {
-                rewardList.add(new PartyRoomRewardItem(refund.getItemId(), refund.getAmount()));
-                refundDates.add(refund.getDate());
-            }
-        } catch (Exception e) {
-            logger.warn("Error in checking sql!! {}", e.getMessage(), e);
-        }
-    }
-
-    public void performSetRefundOptions() {
-        if (rewardList.isEmpty()) {
-            refundSlot = -1;
-            send(new SendMessage("You got no items to collect!"));
-            return;
-        }
-        int slot = refundSlot;
-        String[] text = new String[rewardList.size() < 4 ? rewardList.size() + 2 : rewardList.size() - slot <= 3 ? rewardList.size() - slot + 2 : 6];
-        text[0] = "Refund Item List";
-        int position = Math.min(3, rewardList.size() - slot);
-        for (int i = 0; i < position; i++)
-            text[i + 1] = "Claim " + rewardList.get(slot + i).getAmount() + " of " + getItemName(rewardList.get(slot + i).getId());
-        text[position + 1] = text.length < 6 && slot == 0 ? "Close" : text.length == 6 ? "Next" : "Previous";
-        if (text.length == 6)
-            text[position + 2] = slot == 0 ? "Close" : "Previous";
-        showPlayerOption(text);
-    }
-
-    public void performReclaim(int position) {
-        int slot = refundSlot + position;
-        try {
-            int rowIndex = slot - 1;
-            if (rowIndex < 0 || rowIndex >= rewardList.size() || rowIndex >= refundDates.size()) {
-                sendMessage("That refund entry is no longer available.");
-                performSetRefundList();
-                return;
-            }
-            PartyRoomRewardItem item = rewardList.get(rowIndex);
-            // Grant the item before marking the DB row claimed: if this were reversed and an
-            // exception hit between the two steps, the refund would be permanently consumed
-            // with nothing delivered. Granting first means the worst case on failure is a
-            // harmless re-claim attempt, not a silent item loss.
-            int amount = item.getAmount() - getFreeSpace();
-            if (Server.itemManager.isStackable(item.getId())) {
-                if (getFreeSpace() == 0) {
-                    Ground.addFloorItem(this, item.getId(), item.getAmount());
-                    send(new SendMessage("Some items have been dropped to the ground!"));
-                    ItemLog.playerDrop(this, item.getId(), item.getAmount(), getPosition().copy(), "Claim Items Dropped");
-                } else addItem(item.getId(), item.getAmount());
-            } else if (amount > 0) {
-                addItem(item.getId(), getFreeSpace());
-                for (int i = 0; i < getFreeSpace(); i++)
-                    addItem(item.getId(), 1);
-                for (int i = 0; i < amount; i++) {
-                    Ground.addFloorItem(this, item.getId(), 1);
-                }
-                send(new SendMessage("Some items have been dropped to the ground!"));
-                ItemLog.playerDrop(this, item.getId(), amount, getPosition().copy(), "Claim Items Dropped");
-            } else
-                for (int i = 0; i < item.getAmount(); i++)
-                    addItem(item.getId(), 1);
-            checkItemUpdate();
-            if (!RefundRepository.markClaimed(dbId, refundDates.get(rowIndex))) {
-                logger.warn("Refund item granted to dbId={} but markClaimed failed (already claimed?) for date={}", dbId, refundDates.get(rowIndex));
-            }
-            /* Set back options! */
-            performSetRefundList();
-            if (!rewardList.isEmpty()) {
-                refundSlot = 0;
-                performSetRefundOptions();
-            } else send(new RemoveInterfaces());
-        } catch (Exception e) {
-            logger.warn("Error in checking sql!! {}", e.getMessage(), e);
-        }
+    /** Runtime-only refund row keys used by ItemReclaimService. */
+    public ArrayList<String> getRefundDates() {
+        return refundDates;
     }
 
     public int totalLevel() {

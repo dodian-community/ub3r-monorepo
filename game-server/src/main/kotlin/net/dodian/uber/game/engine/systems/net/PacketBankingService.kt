@@ -9,6 +9,7 @@ import net.dodian.uber.game.skill.smithing.SmithingInterface
 import net.dodian.uber.game.shop.ShopRulesService
 import net.dodian.uber.game.economy.PriceCheckerService
 import net.dodian.uber.game.economy.ShopTransactionService
+import net.dodian.uber.game.ui.bank.PlayerBankService
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.social.exchange.ExchangeOfferService
 import net.dodian.uber.game.social.exchange.ExchangeRuntime
@@ -205,7 +206,7 @@ object PacketBankingService {
                 val amount = if (stack) client.playerItemsN[removeSlot] else client.getInvAmt(resolvedItemId)
                 if (client.IsBanking) {
                     ConsoleAuditLog.bankDeposit(client, resolvedItemId, "ALL", removeSlot)
-                    client.bankItem(resolvedItemId, removeSlot, amount)
+                    PlayerBankService.deposit(client, resolvedItemId, removeSlot, amount)
                 } else if (client.isPartyInterface) {
                     PartyRoomBalloons.offerPartyItems(client, resolvedItemId, amount, removeSlot)
                 } else if (PriceCheckerService.isOpen(client)) {
@@ -224,7 +225,7 @@ object PacketBankingService {
             interfaceId == 5382 || interfaceId in 50300..50310 -> {
                 if (bankSlot >= 0) {
                     ConsoleAuditLog.bankWithdraw(client, resolvedItemId, "ALL", bankSlot)
-                    client.fromBank(resolvedItemId, bankSlot, -2)
+                    PlayerBankService.withdraw(client, resolvedItemId, bankSlot, -2)
                 }
             }
 
@@ -316,7 +317,7 @@ object PacketBankingService {
             5064 -> {
                 if (client.IsBanking) {
                     ConsoleAuditLog.bankDeposit(client, removeId, amount.toString(), removeSlot)
-                    client.bankItem(removeId, removeSlot, amount)
+                    PlayerBankService.deposit(client, removeId, removeSlot, amount)
                 } else if (client.isPartyInterface) {
                     PartyRoomBalloons.offerPartyItems(client, removeId, amount, removeSlot)
                 } else if (PriceCheckerService.isOpen(client)) {
@@ -334,7 +335,7 @@ object PacketBankingService {
             5382 -> {
                 if (bankSlot >= 0) {
                     ConsoleAuditLog.bankWithdraw(client, removeId, amount.toString(), bankSlot)
-                    client.fromBank(removeId, bankSlot, amount)
+                    PlayerBankService.withdraw(client, removeId, bankSlot, amount)
                 }
             }
 
@@ -352,7 +353,7 @@ object PacketBankingService {
                 if (interfaceId in 50300..50310) {
                     if (bankSlot >= 0) {
                         ConsoleAuditLog.bankWithdraw(client, removeId, amount.toString(), bankSlot)
-                        client.fromBank(removeId, bankSlot, amount)
+                        PlayerBankService.withdraw(client, removeId, bankSlot, amount)
                     }
                 } else {
                     handleFixedAmountSpecialInterfaces(client, interfaceId, removeId, removeSlot, amount)
@@ -479,7 +480,7 @@ object PacketBankingService {
                     }
                     if (client.IsBanking) {
                         ConsoleAuditLog.bankDeposit(client, client.playerItems[client.XremoveSlot] - 1, enteredAmount.toString(), client.XremoveSlot)
-                        client.bankItem(client.playerItems[client.XremoveSlot] - 1, client.XremoveSlot, enteredAmount)
+                        PlayerBankService.deposit(client, client.playerItems[client.XremoveSlot] - 1, client.XremoveSlot, enteredAmount)
                     } else if (client.isPartyInterface) {
                         PartyRoomBalloons.offerPartyItems(
                             client,
@@ -513,7 +514,7 @@ object PacketBankingService {
                     }
                     if (client.bankItems[client.XremoveSlot] > 0) {
                         ConsoleAuditLog.bankWithdraw(client, client.bankItems[client.XremoveSlot] - 1, enteredAmount.toString(), client.XremoveSlot)
-                        client.fromBank(client.bankItems[client.XremoveSlot] - 1, client.XremoveSlot, enteredAmount)
+                        PlayerBankService.withdraw(client, client.bankItems[client.XremoveSlot] - 1, client.XremoveSlot, enteredAmount)
                         client.checkItemUpdate()
                     }
                 }
@@ -608,22 +609,13 @@ object PacketBankingService {
             }
 
             interfaceId == 1688 -> {
-                if (client.hasSpace()) {
-                    val id = client.equipment[removeSlot]
-                    val amount = client.equipmentN[removeSlot]
-                    if (client.remove(removeSlot, false)) {
-                        client.addItem(id, amount)
-                    }
-                    client.checkItemUpdate()
-                } else {
-                    client.send(SendMessage("Not enough space to unequip this item!"))
-                }
+                net.dodian.uber.game.engine.systems.inventory.EquipmentService.unequipToInventory(client, removeSlot)
             }
 
             interfaceId == 5064 -> {
                 if (client.IsBanking) {
                     ConsoleAuditLog.bankDeposit(client, removeId, "1", removeSlot)
-                    client.bankItem(removeId, removeSlot, 1)
+                    PlayerBankService.deposit(client, removeId, removeSlot, 1)
                 } else if (client.isPartyInterface) {
                     PartyRoomBalloons.offerPartyItems(client, removeId, 1, removeSlot)
                 } else if (PriceCheckerService.isOpen(client)) {
@@ -641,7 +633,7 @@ object PacketBankingService {
             interfaceId == 5382 || interfaceId in 50300..50310 -> {
                 if (bankSlot >= 0) {
                     ConsoleAuditLog.bankWithdraw(client, removeId, "1", bankSlot)
-                    client.fromBank(removeId, bankSlot, 1)
+                    PlayerBankService.withdraw(client, removeId, bankSlot, 1)
                 }
             }
 

@@ -11,6 +11,9 @@ import net.dodian.uber.game.activity.partyroom.PartyRoomBalloons
 import net.dodian.uber.game.persistence.audit.ConsoleAuditLog
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
 import net.dodian.uber.game.engine.systems.interaction.PlayerInteractionGuardService
+import net.dodian.uber.game.model.item.transaction.BankTransactions
+import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
+import net.dodian.uber.game.netty.listener.out.SendMessage
 import java.util.ArrayList
 import java.util.Arrays
 
@@ -21,6 +24,33 @@ object PlayerBankService {
     private const val INSERT_MODE_BUTTON = 60006
     private const val NOTE_MODE_BUTTON = 60007
     private const val PLACEHOLDER_MODE_BUTTON = 60073
+
+    @JvmStatic fun withdraw(client: Client, itemId: Int, slot: Int, requested: Int) {
+        if (!client.IsBanking) { client.send(RemoveInterfaces()); return }
+        if (slot !in client.bankItems.indices || client.bankItems[slot] - 1 != itemId) return
+        if (client.bankItemsN[slot] == 0) { releasePlaceholder(client, slot); return }
+        val noted = client.getNotedItem(itemId)
+        if (client.takeAsNote && noted <= 0) client.send(SendMessage("${Server.itemManager.getName(itemId)} can't be drawn as note."))
+        var amount = requested
+        if (amount == -2) amount = if (!client.takeAsNote && !Server.itemManager.isStackable(itemId)) minOf(client.bankItemsN[slot], client.freeSlots()) else client.bankItemsN[slot]
+        amount = minOf(amount, client.bankItemsN[slot]); if (amount <= 0) return
+        val received = if (client.takeAsNote && noted > 0) noted else itemId
+        if (!BankTransactions.withdraw(client, itemId, slot, amount, received, client.bankPlaceholdersEnabled)) client.send(SendMessage("Not enough space in your inventory."))
+    }
+
+    @JvmStatic fun deposit(client: Client, itemId: Int, slot: Int, requested: Int) {
+        if (!client.IsBanking || slot !in client.playerItems.indices || client.playerItems[slot] != itemId + 1) return
+        ensureBankTabState(client)
+        val bankItemId = client.getUnnotedItem(itemId).takeIf { it > 0 } ?: itemId
+        val available = if (Server.itemManager.isStackable(itemId)) client.playerItemsN[slot] else client.getInvAmt(itemId)
+        val amount = requested.coerceAtLeast(0).coerceAtMost(available)
+        if (amount == 0) return
+        val newEntry = client.getBankSlot(bankItemId) < 0
+        if (!BankTransactions.deposit(client, itemId, slot, amount, bankItemId)) { client.send(SendMessage("Bank full!")); return }
+        if (newEntry) client.getBankSlot(bankItemId).takeIf { it >= 0 }?.let { bankSlot ->
+            client.bankSlotTabs[bankSlot] = if (client.currentBankTab in 1..9 && !client.bankSearchActive) client.currentBankTab else 0
+        }
+    }
 
     @JvmStatic
     fun replaceBankContentsWithItemIds(client: Client, itemIds: List<Int>, amount: Int): Int? {
@@ -707,7 +737,7 @@ object PlayerBankService {
         val previous = client.bankPlaceholdersEnabled
         client.bankPlaceholdersEnabled = true
         try {
-            client.fromBank(itemId, slot, -2)
+            withdraw(client, itemId, slot, -2)
         } finally {
             client.bankPlaceholdersEnabled = previous
         }

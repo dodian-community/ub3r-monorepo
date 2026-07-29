@@ -26,7 +26,7 @@ object PacketItemActionService {
     @JvmStatic
     fun handleWear(client: Client, wearId: Int, wearSlot: Int, interfaceId: Int) {
         if (client.randomed || client.UsingAgility) return
-        client.wear(wearId, wearSlot, interfaceId)
+            net.dodian.uber.game.engine.systems.inventory.EquipmentService.wear(client, wearId, wearSlot, interfaceId)
     }
 
     private val logger = org.slf4j.LoggerFactory.getLogger(PacketItemActionService::class.java)
@@ -93,7 +93,7 @@ object PacketItemActionService {
         }
         val equipSlot = net.dodian.uber.game.Server.itemManager.getSlot(id)
         if (equipSlot in 0..13) {
-            client.wear(id, slot, interfaceId)
+            net.dodian.uber.game.engine.systems.inventory.EquipmentService.wear(client, id, slot, interfaceId)
         }
     }
 

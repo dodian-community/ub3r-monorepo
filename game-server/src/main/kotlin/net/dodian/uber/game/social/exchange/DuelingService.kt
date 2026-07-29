@@ -300,12 +300,7 @@ object DuelingService {
         client.duelBodyRules.indices.forEach { index ->
             val slot = equipmentSlots[index]
             if (client.duelBodyRules[index] && client.equipmentN[slot] > 0) {
-                val id = client.equipment[slot]
-                val amount = client.equipmentN[slot]
-                if (client.remove(slot, true)) {
-                    client.markSaveDirty(net.dodian.uber.game.persistence.player.PlayerSaveSegment.EQUIPMENT.mask)
-                    client.addItem(id, amount)
-                }
+                net.dodian.uber.game.engine.systems.inventory.EquipmentService.forceUnequipToInventory(client, slot)
                 client.checkItemUpdate()
             }
         }

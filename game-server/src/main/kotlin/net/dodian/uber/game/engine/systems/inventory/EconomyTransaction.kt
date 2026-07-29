@@ -44,6 +44,7 @@ class EconomyTransaction private constructor() {
         fun remove(itemId: Int, amount: Int = 1): Boolean
         fun removeAt(slot: Int, itemId: Int, amount: Int = 1): Boolean
         fun add(itemId: Int, amount: Int = 1): Boolean
+        fun setAt(slot: Int, itemId: Int, amount: Int = 1): Boolean
         fun replaceAt(slot: Int, removeItemId: Int, addItemId: Int, amount: Int = 1): Boolean
     }
 
@@ -132,6 +133,14 @@ class EconomyTransaction private constructor() {
                     amounts[slot] = 1
                 }
             }
+            changed = true
+            return true
+        }
+
+        override fun setAt(slot: Int, itemId: Int, amount: Int): Boolean {
+            if (kind != Container.EQUIPMENT || !valid(itemId, amount) || slot !in ids.indices) return fail()
+            ids[slot] = itemId
+            amounts[slot] = amount
             changed = true
             return true
         }

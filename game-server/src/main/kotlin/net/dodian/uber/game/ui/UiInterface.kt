@@ -156,7 +156,7 @@ object UiInterface : InterfaceButtonContent {
                 if (client.IsBanking) {
                     for (i in client.playerItems.indices) {
                         if (client.playerItems[i] > 0) {
-                            client.bankItem(client.playerItems[i] - 1, i, client.playerItemsN[i])
+                            net.dodian.uber.game.ui.bank.PlayerBankService.deposit(client, client.playerItems[i] - 1, i, client.playerItemsN[i])
                         }
                     }
                     client.sendMessage("You deposit all your items.")
@@ -174,10 +174,9 @@ object UiInterface : InterfaceButtonContent {
                     for (i in equipment.indices) {
                         val equipId = equipment[i]
                         val equipAmount = equipmentN[i]
-                        if (equipId > 0 && equipAmount > 0 && client.hasSpace()) {
-                            if (client.remove(i, false)) {
-                                client.addItem(equipId, equipAmount)
-                                  client.bankItem(equipId, client.getItemSlot(equipId), equipAmount)
+                        if (equipId > 0 && equipAmount > 0) {
+                            if (net.dodian.uber.game.engine.systems.inventory.EquipmentService.unequipToInventory(client, i)) {
+                                  net.dodian.uber.game.ui.bank.PlayerBankService.deposit(client, equipId, client.getItemSlot(equipId), equipAmount)
                             }
                         }
                     }

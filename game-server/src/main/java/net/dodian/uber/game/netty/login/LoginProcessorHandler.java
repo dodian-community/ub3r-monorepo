@@ -233,6 +233,15 @@ public class LoginProcessorHandler extends SimpleChannelInboundHandler<LoginPayl
             sendAndClose(ctx, 13);
             return;
         }
+        long logoutCooldownMs = net.dodian.uber.game.persistence.account.LogoutReLoginGuard.remainingMillis(hydration.getDbId());
+        if (logoutCooldownMs > 0L) {
+            OperationalTelemetry.incrementCounter("login.logout_cooldown", 1L);
+            logger.info("Login delayed by logout cooldown player={} dbId={} remainingMs={}", client.getPlayerName(), hydration.getDbId(), logoutCooldownMs);
+            releaseSlot(current);
+            releaseToken(current);
+            sendAndClose(ctx, 5);
+            return;
+        }
 
         LOGIN_ATTEMPTS.recordSuccess(parsed.getUsername());
         int loginRights = rightsForGroup(hydration.getPlayerGroup());

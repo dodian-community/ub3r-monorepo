@@ -47,7 +47,7 @@ object BankInterface : InterfaceButtonContent {
                     if (!client.IsBanking) return@buttonBinding true
                     for (i in client.playerItems.indices) {
                         if (client.playerItems[i] > 0) {
-                            client.bankItem(client.playerItems[i] - 1, i, client.playerItemsN[i])
+                            PlayerBankService.deposit(client, client.playerItems[i] - 1, i, client.playerItemsN[i])
                         }
                     }
                     client.sendMessage("You deposit all your items.")
