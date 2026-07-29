@@ -26,7 +26,7 @@ private fun handleBoss(context: CommandContext): Boolean {
     if (context.alias == "forcetask" && (specialRights || gameWorldId > 1)) {
         return try {
             val taskId = cmd[1].toInt()
-            val length = net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.VALUES.size - 1
+            val length = net.dodian.uber.skills.slayer.SlayerTaskRegistry.tasks.size - 1
             if (taskId < 0 || taskId > length) {
                 context.reply("Task id out of bound! Can only be 0 - $length")
                 return true
@@ -35,8 +35,8 @@ private fun handleBoss(context: CommandContext): Boolean {
             client.slayerData[1] = taskId
             client.slayerData[2] = 1337
             client.slayerData[3] = 1337
-            val task = net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forOrdinal(taskId) ?: return false
-            context.reply("[DEBUG]: You force the task to be 1337 of  ${task.textRepresentation} (${task})")
+            val task = net.dodian.uber.skills.slayer.SlayerTaskRegistry.forOrdinal(taskId) ?: return false
+            context.reply("[DEBUG]: You force the task to be 1337 of  ${task.name} (${task})")
             true
         } catch (_: Exception) {
             context.usage("Wrong usage.. ::${cmd[0]} taskId")

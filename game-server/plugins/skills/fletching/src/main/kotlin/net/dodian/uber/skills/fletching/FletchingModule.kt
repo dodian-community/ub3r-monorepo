@@ -39,8 +39,8 @@ object FletchingModule : SkillPlugin {
     val descriptor = SkillModuleDescriptor("skill.fletching", "Fletching")
     val knifeIds: IntArray = intArrayOf(946, 5605)
     val bowLogs: List<FletchingLogDefinition> by lazy { loadBows() }
-    private val arrowHeads: List<FletchingAmmoDefinition> by lazy { loadAmmunition("arrow") }
-    private val dartTips: List<FletchingAmmoDefinition> by lazy { loadAmmunition("dart") }
+    val arrowRecipes: List<FletchingAmmoDefinition> by lazy { loadAmmunition("arrow") }
+    val dartRecipes: List<FletchingAmmoDefinition> by lazy { loadAmmunition("dart") }
 
     override val definition: SkillPluginDefinition = skillPlugin("Fletching", Skill.FLETCHING) {
         knifeIds.forEach { knifeId ->
@@ -58,12 +58,12 @@ object FletchingModule : SkillPlugin {
         itemOnItem(PolicyPreset.PRODUCTION, 52, 314) { interaction ->
             openSingle(interaction.player, headlessArrowRecipe(), "fletch")
         }
-        arrowHeads.forEach { arrow ->
+        arrowRecipes.forEach { arrow ->
             itemOnItem(PolicyPreset.PRODUCTION, 53, arrow.materialId) { interaction ->
                 openSingle(interaction.player, arrowRecipe(arrow), "fletch")
             }
         }
-        dartTips.forEach { dart ->
+        dartRecipes.forEach { dart ->
             itemOnItem(PolicyPreset.PRODUCTION, 314, dart.materialId) { interaction ->
                 openSingle(interaction.player, dartRecipe(dart), "fletch")
             }

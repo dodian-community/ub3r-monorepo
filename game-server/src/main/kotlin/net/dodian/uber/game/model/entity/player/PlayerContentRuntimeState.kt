@@ -17,7 +17,6 @@ import net.dodian.uber.game.engine.systems.interaction.InteractionIntent
 import net.dodian.uber.game.engine.sync.player.PlayerSyncInvariantValidator
 import net.dodian.uber.game.engine.tasking.GameTaskSet
 import net.dodian.uber.game.skill.crafting.CraftingState
-import net.dodian.uber.game.skill.fletching.FletchingState
 import net.dodian.uber.game.skill.prayer.PrayerOfferingState
 import net.dodian.uber.game.skill.smithing.ActiveSmithingSelection
 import net.dodian.uber.game.skill.smithing.SmeltingSelection
@@ -64,7 +63,6 @@ class PlayerContentRuntimeState {
     @Volatile private var pendingProductionSelection: PendingProductionSelection? = null
     @Volatile private var activeProductionSelection: ActiveProductionSelection? = null
     @Volatile private var playerTaskSet: GameTaskSet<*>? = null
-    @Volatile private var fletchingState: FletchingState? = null
     @Volatile private var craftingState: CraftingState? = null
     @Volatile private var prayerOfferingState: PrayerOfferingState? = null
     @Volatile private var interactionAnchorState: InteractionAnchorState? = null
@@ -107,9 +105,6 @@ class PlayerContentRuntimeState {
     fun getFarmDebugTaskHandle() = farmDebugTaskHandle
     fun setFarmDebugTaskHandle(value: QueueTaskHandle?) { farmDebugTaskHandle = value }
     fun cancelFarmDebugTask() { farmDebugTaskHandle.cancelAndClear { farmDebugTaskHandle = null } }
-    fun getFletchingState() = fletchingState
-    fun setFletchingState(value: FletchingState?) { fletchingState = value }
-    fun clearFletchingState() { fletchingState = null }
     fun getCraftingState() = craftingState
     fun setCraftingState(value: CraftingState?) { craftingState = value }
     fun clearCraftingState() { craftingState = null }

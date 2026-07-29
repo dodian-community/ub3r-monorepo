@@ -53,7 +53,7 @@ object Crafting {
             client.sendMessage("You are currently busy to be fletching!")
             return
         }
-        if (client.IsCutting || client.isFiremaking) {
+        if (client.IsCutting) {
             client.resetAction()
         }
         client.send(RemoveInterfaces())
@@ -459,4 +459,3 @@ object ResourceFilling {
         return true
     }
 }
-

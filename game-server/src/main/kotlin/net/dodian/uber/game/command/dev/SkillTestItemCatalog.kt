@@ -8,7 +8,7 @@ import net.dodian.uber.game.skill.crafting.CraftingData
 import net.dodian.uber.skills.firemaking.FiremakingModule
 import net.dodian.uber.game.skill.farming.FarmingData
 import net.dodian.uber.skills.fishing.FishingModule
-import net.dodian.uber.game.skill.fletching.FletchingData
+import net.dodian.uber.skills.fletching.FletchingModule
 import net.dodian.uber.game.skill.herblore.HerbloreData
 import net.dodian.uber.skills.mining.MiningModule
 import net.dodian.uber.game.skill.smithing.SmithingFrameDefinitions
@@ -101,20 +101,20 @@ object SkillTestItemCatalog {
     private fun fletchingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
         addAll(items, 946, 314, 52, 1777, 1779)
-        FletchingData.bowLogs.forEach {
+        FletchingModule.bowLogs.forEach {
             addIfValid(items, it.logItemId)
             addIfValid(items, it.unstrungShortbowId)
             addIfValid(items, it.shortbowId)
             addIfValid(items, it.unstrungLongbowId)
             addIfValid(items, it.longbowId)
         }
-        FletchingData.arrowRecipes.forEach {
-            addIfValid(items, it.headId)
-            addIfValid(items, it.arrowId)
+        FletchingModule.arrowRecipes.forEach {
+            addIfValid(items, it.materialId)
+            addIfValid(items, it.productId)
         }
-        FletchingData.dartRecipes.forEach {
-            addIfValid(items, it.tipId)
-            addIfValid(items, it.dartId)
+        FletchingModule.dartRecipes.forEach {
+            addIfValid(items, it.materialId)
+            addIfValid(items, it.productId)
         }
         return items.toList()
     }

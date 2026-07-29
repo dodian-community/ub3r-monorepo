@@ -143,16 +143,16 @@ object DialogueOptionService {
         if (dialogueId == 16) {
             if (button == 1) {
                 val slayerState = c.slayerTaskState
-                val checkTask = net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forOrdinal(slayerState.taskOrdinal)
+                val checkTask = net.dodian.uber.skills.slayer.SlayerTaskRegistry.forOrdinal(slayerState.taskOrdinal)
                 if (checkTask != null) {
-                    for (i in checkTask.npcId.indices) {
+                    for (i in checkTask.npcIds.indices) {
                         for (slot in 0 until c.monsterName.size) {
-                            if (c.monsterName[slot].equals(Server.npcManager.getName(checkTask.npcId[i]), ignoreCase = true)) {
+                            if (c.monsterName[slot].equals(Server.npcManager.getName(checkTask.npcIds[i]), ignoreCase = true)) {
                                 c.monsterCount[slot] = 0
                             }
                         }
                     }
-                    c.sendMessage(checkTask.textRepresentation + " have now been reseted!")
+                    c.sendMessage(checkTask.name + " have now been reseted!")
                 }
             }
             c.send(RemoveInterfaces())

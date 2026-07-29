@@ -256,7 +256,7 @@ interface SkillAmountPrompt {
     fun cancel()
 }
 
-interface SkillProfile { val name: String; val premium: Boolean }
+interface SkillProfile { val name: String; val premium: Boolean; val combatLevel: Int }
 interface SkillRandom { fun between(minInclusive: Int, maxInclusive: Int): Int; fun chance(numerator: Int, denominator: Int): Boolean }
 /** Deterministic module clock; adapters map this to the game/server clock. */
 fun interface SkillClock { fun nowMillis(): Long }

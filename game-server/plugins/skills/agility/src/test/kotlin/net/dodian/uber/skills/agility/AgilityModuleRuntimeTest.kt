@@ -9,6 +9,14 @@ import org.junit.jupiter.api.Test
 
 class AgilityModuleRuntimeTest {
     @Test
+    fun `agility constants retain world-entry identifiers`() {
+        assertEquals(60, AgilityConstants.WEREWOLF_COURSE_LEVEL)
+        assertEquals(536, AgilityConstants.KBD_ENTRANCE_BONE_ID)
+        assertEquals(537, AgilityConstants.KBD_ENTRANCE_NOTED_BONE_ID)
+        assertEquals(5, AgilityConstants.KBD_ENTRANCE_BONE_AMOUNT)
+    }
+
+    @Test
     fun `descriptor and manifest are wired consistently`() {
         LiveSkillModuleFixture.requirePlugin(AgilityModule.descriptor.id, Skill.AGILITY)
         assertEquals(AgilityModule.descriptor.id, AgilityModule.contentManifest.id)

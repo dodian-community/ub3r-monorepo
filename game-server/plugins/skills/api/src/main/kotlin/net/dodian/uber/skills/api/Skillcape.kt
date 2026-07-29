@@ -1,9 +1,10 @@
-package net.dodian.uber.game.skill
+package net.dodian.uber.skills.api
 
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.engine.util.Misc
+import kotlin.random.Random
 import kotlin.jvm.JvmName
 
+/** Immutable skillcape metadata shared by equipment, drops, and emotes. */
 enum class Skillcape(
     private val untrimmedIdRaw: Int,
     private val trimmedIdRaw: Int,
@@ -34,56 +35,23 @@ enum class Skillcape(
     ;
 
     fun getUntrimmedId(): Int = untrimmedIdRaw
-
-    @get:JvmName("getUntrimmedIdValue")
-    val untrimmedId: Int
-        get() = getUntrimmedId()
-
     fun getTrimmedId(): Int = trimmedIdRaw
-
-    @get:JvmName("getTrimmedIdValue")
-    val trimmedId: Int
-        get() = getTrimmedId()
-
     fun getEmote(): Int = emoteRaw
-
-    @get:JvmName("getEmoteKotlin")
-    val emote: Int
-        get() = getEmote()
-
     fun getGfx(): Int = gfxRaw
-
-    @get:JvmName("getGfxKotlin")
-    val gfx: Int
-        get() = getGfx()
-
     fun getSkill(): Skill = skillRaw
 
+    @get:JvmName("getUntrimmedIdValue")
+    val untrimmedId: Int get() = untrimmedIdRaw
+    @get:JvmName("getTrimmedIdValue")
+    val trimmedId: Int get() = trimmedIdRaw
+    @get:JvmName("getEmoteValue")
+    val emote: Int get() = emoteRaw
+    @get:JvmName("getGfxValue")
+    val gfx: Int get() = gfxRaw
+
     companion object {
-        @JvmStatic
-        fun getSkillCape(itemId: Int): Skillcape? {
-            for (skillcape in values()) {
-                if (skillcape.getTrimmedId() == itemId || skillcape.getUntrimmedId() == itemId) {
-                    return skillcape
-                }
-            }
-            return null
-        }
-
-        @JvmStatic
-        fun getRandomCape(): Skillcape {
-            val random = Misc.random(values().size - 1)
-            return values()[random]
-        }
-
-        @JvmStatic
-        fun isTrimmed(itemId: Int): Boolean {
-            for (skillcape in values()) {
-                if (skillcape.getTrimmedId() == itemId) {
-                    return true
-                }
-            }
-            return false
-        }
+        @JvmStatic fun getSkillCape(itemId: Int): Skillcape? = entries.firstOrNull { it.trimmedIdRaw == itemId || it.untrimmedIdRaw == itemId }
+        @JvmStatic fun getRandomCape(): Skillcape = entries[Random.nextInt(entries.size)]
+        @JvmStatic fun isTrimmed(itemId: Int): Boolean = entries.any { it.trimmedIdRaw == itemId }
     }
 }

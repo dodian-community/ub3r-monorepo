@@ -1,8 +1,9 @@
 package net.dodian.uber.game.ui
 
-import net.dodian.uber.game.skill.fletching.Fletching
+import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
 import net.dodian.uber.game.ui.buttons.InterfaceButtonContent
 import net.dodian.uber.game.ui.buttons.buttonBinding
+import net.dodian.uber.skills.api.SkillMultiSelection
 
 object FletchingInterface : InterfaceButtonContent {
     private val longbowButtons = intArrayOf(34170, 34169, 34168, 34167)
@@ -13,13 +14,18 @@ object FletchingInterface : InterfaceButtonContent {
         listOf(
             buttonBinding(-1, 0, "fletching.bows.longbow", longbowButtons) { client, request ->
                 val amount = amountByButton[request.rawButtonId] ?: return@buttonBinding false
-                Fletching.start(client, true, amount)
-                true
+                selectBow(client, 1, amount)
             },
             buttonBinding(-1, 1, "fletching.bows.shortbow", shortbowButtons) { client, request ->
                 val amount = amountByButton[request.rawButtonId] ?: return@buttonBinding false
-                Fletching.start(client, false, amount)
-                true
+                selectBow(client, 0, amount)
             },
         )
+
+    private fun selectBow(client: net.dodian.uber.game.model.entity.player.Client, entryIndex: Int, amount: Int): Boolean {
+        val player = client.asSkillPlayer()
+        val config = player.production.pending() ?: return false
+        val entry = config.entries.getOrNull(entryIndex) ?: return false
+        return player.production.select(SkillMultiSelection(config.key, entry.recipe.key, amount))
+    }
 }

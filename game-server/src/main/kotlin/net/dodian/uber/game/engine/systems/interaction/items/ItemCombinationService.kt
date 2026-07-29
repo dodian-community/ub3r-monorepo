@@ -6,7 +6,6 @@ import net.dodian.uber.game.item.equipment.RepairPlaceholderItemCombinations
 import net.dodian.uber.game.skill.farming.SaplingItemCombinations
 import net.dodian.uber.game.skill.herblore.HerbloreItemCombinations
 import net.dodian.uber.game.skill.crafting.CraftingItemCombinations
-import net.dodian.uber.game.skill.slayer.EquipmentAssemblyItemCombinations
 import net.dodian.uber.game.skill.smithing.rockshell.DialogueGateItemCombinations
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.api.content.ContentActionCancelReason
@@ -77,10 +76,6 @@ object ItemCombinationService {
         }
 
         if (NoveltyItemCombinations.handle(client, itemUsed, otherItem, itemUsedSlot, usedWithSlot, knife)) {
-            return
-        }
-
-        if (EquipmentAssemblyItemCombinations.handle(client, itemUsed, otherItem)) {
             return
         }
 

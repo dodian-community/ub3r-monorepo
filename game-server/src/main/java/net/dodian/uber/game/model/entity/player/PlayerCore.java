@@ -16,7 +16,7 @@ import net.dodian.uber.game.model.chunk.ChunkEntityIndex;
 import net.dodian.uber.game.engine.systems.zone.RegionSong;
 import net.dodian.uber.game.model.objects.GlobalObject;
 import net.dodian.uber.game.model.objects.WorldObject;
-import net.dodian.uber.game.skill.Skillcape;
+import net.dodian.uber.skills.api.Skillcape;
 import net.dodian.uber.game.netty.listener.out.InventoryInterface;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.netty.listener.out.SendSideTab;
@@ -24,13 +24,11 @@ import net.dodian.uber.game.netty.listener.out.SendString;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
 import net.dodian.uber.game.skill.prayer.PrayerManager;
-import net.dodian.uber.game.skill.slayer.Slayer;
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService;
 import net.dodian.uber.game.activity.partyroom.PartyRoomBalloons;
 import net.dodian.uber.game.activity.partyroom.PartyRoomRewardItem;
 import net.dodian.uber.game.activity.partyroom.PartyRoomOfferState;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
-import net.dodian.uber.game.skill.fletching.FletchingState;
 import net.dodian.uber.game.skill.crafting.CraftingState;
 import net.dodian.uber.game.skill.prayer.PrayerOfferingState;
 import net.dodian.uber.game.skill.herblore.HerbloreDialogueState;
@@ -139,7 +137,6 @@ public abstract class PlayerCore extends Entity {
     public boolean specialActivated = false;
     public int currentCombatInterface = 5855; // default unarmed
     public boolean IsCutting = false, IsAnvil = false;
-    public boolean isFiremaking = false;
     public int MyShopID = -1;
     public int NpcDialogue = 0, NpcTalkTo = 0, NpcWanneTalk = 0;
     public boolean IsBanking = false, isPartyInterface = false, checkBankInterface, bankStyleViewOpen = false, NpcDialogueSend = false;
@@ -1042,18 +1039,6 @@ public abstract class PlayerCore extends Entity {
 
     public void cancelFarmDebugTask() {
         interactionState.cancelFarmDebugTask();
-    }
-
-    public FletchingState getFletchingState() {
-        return interactionState.getFletchingState();
-    }
-
-    public void setFletchingState(FletchingState fletchingState) {
-        interactionState.setFletchingState(fletchingState);
-    }
-
-    public void clearFletchingState() {
-        interactionState.clearFletchingState();
     }
 
     public CraftingState getCraftingState() {

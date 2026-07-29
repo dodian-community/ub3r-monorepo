@@ -40,4 +40,14 @@ class SkillModuleTest {
             SkillMultiConfig("duplicate", entries = listOf(SkillMultiEntry(first), SkillMultiEntry(first)))
         }
     }
+
+    @Test
+    fun `skillcape registry preserves trim and skill mappings`() {
+        val attackCape = Skillcape.getSkillCape(9747)
+
+        assertEquals(Skillcape.ATTACK_CAPE, attackCape)
+        assertEquals(9748, attackCape?.trimmedId)
+        assertEquals(true, Skillcape.isTrimmed(9748))
+        assertEquals(false, Skillcape.isTrimmed(9747))
+    }
 }

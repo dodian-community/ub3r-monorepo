@@ -320,6 +320,7 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
     override val profile = object : SkillProfile {
         override val name: String get() = client.playerName
         override val premium: Boolean get() = client.isPremium
+        override val combatLevel: Int get() = client.determineCombatLevel()
     }
     override val random = object : SkillRandom {
         override fun between(minInclusive: Int, maxInclusive: Int): Int {
@@ -364,7 +365,7 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
         override val ordinal: Int get() = client.slayerTaskState.taskOrdinal
         override val assignmentAmount: Int get() = client.slayerTaskState.assignmentAmount
         override val taskName: String get() =
-            net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forOrdinal(client.slayerTaskState.taskOrdinal)?.textRepresentation ?: ""
+            net.dodian.uber.skills.slayer.SlayerTaskRegistry.forOrdinal(client.slayerTaskState.taskOrdinal)?.name ?: ""
         override val remainingAmount: Int get() = client.slayerTaskState.remainingAmount
         override val streak: Int get() = client.slayerTaskState.streak
 
@@ -372,12 +373,12 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
         // which tracks kills per monster name in client.monsterName/monsterCount rather than a
         // single counter on the task state itself.
         private fun currentTask() =
-            net.dodian.uber.game.skill.slayer.SlayerTaskDefinition.forOrdinal(client.slayerTaskState.taskOrdinal)
+            net.dodian.uber.skills.slayer.SlayerTaskRegistry.forOrdinal(client.slayerTaskState.taskOrdinal)
 
         override fun killCount(): Int {
             val task = currentTask() ?: return -1
             var total = 0
-            for (npcId in task.npcId) {
+            for (npcId in task.npcIds) {
                 val npcName = net.dodian.uber.game.Server.npcManager.getName(npcId)
                 for (slot in 0 until client.monsterName.size) {
                     if (client.monsterName[slot].equals(npcName, ignoreCase = true)) {
@@ -390,7 +391,7 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
 
         override fun resetKillCount(): Boolean {
             val task = currentTask() ?: return false
-            for (npcId in task.npcId) {
+            for (npcId in task.npcIds) {
                 val npcName = net.dodian.uber.game.Server.npcManager.getName(npcId)
                 for (slot in 0 until client.monsterName.size) {
                     if (client.monsterName[slot].equals(npcName, ignoreCase = true)) {

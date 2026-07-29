@@ -1,7 +1,6 @@
 package net.dodian.uber.game.npc
 
 import net.dodian.uber.game.Server
-import net.dodian.uber.game.skill.slayer.Slayer
 import net.dodian.uber.skills.slayer.SlayerTaskRegistry
 import net.dodian.uber.game.api.content.dialogue.DialogueEmote
 import net.dodian.uber.game.api.content.dialogue.DialogueFactory
@@ -10,6 +9,7 @@ import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.engine.util.Misc
+import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
 
 internal object SlayerMasterDialogue {
     private data class NpcReply(
@@ -218,12 +218,7 @@ internal object SlayerMasterDialogue {
     private fun assignTaskReply(client: Client, npcId: Int): NpcReply? {
         requirementsReply(client, npcId)?.let { return it }
 
-        val tasks = when (npcId) {
-            402 -> Slayer.tasksForMaster(client, 402)
-            403 -> Slayer.tasksForMaster(client, 403)
-            405 -> Slayer.tasksForMaster(client, 405)
-            else -> emptyList()
-        }
+        val tasks = SlayerTaskRegistry.tasksForMaster(client.asSkillPlayer(), npcId)
         if (tasks.isEmpty()) {
             return NpcReply(lines = arrayOf("You cant get any task!"))
         }
@@ -234,12 +229,12 @@ internal object SlayerMasterDialogue {
         }
 
         val task = tasks[Misc.random(tasks.size - 1)]
-        val amount = task.assignedAmountRange.value
-        client.slayerTaskState = current.withAssignment(npcId, task.ordinal, amount, amount)
+        val amount = client.asSkillPlayer().random.between(task.amountMin, task.amountMax)
+        client.slayerTaskState = current.withAssignment(npcId, SlayerTaskRegistry.tasks.indexOf(task), amount, amount)
         return NpcReply(
             lines =
                 arrayOf(
-                    "You must go out and kill $amount ${task.textRepresentation}",
+                    "You must go out and kill $amount ${task.name}",
                     "If you want a new task that's too bad",
                     "Visit Dodian.net for a slayer guide",
                 ),

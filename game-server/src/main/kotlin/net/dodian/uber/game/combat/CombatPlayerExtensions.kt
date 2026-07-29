@@ -9,7 +9,6 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
 import net.dodian.uber.skills.slayer.SlayerCombatService
-import net.dodian.uber.game.skill.slayer.Slayer
 import net.dodian.uber.skills.prayer.PrayerCombatService
 import net.dodian.utilities.Utils
 

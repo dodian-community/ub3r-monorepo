@@ -22,7 +22,7 @@ import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.item.*;
 import net.dodian.uber.game.model.objects.DoorRegistry;
 import net.dodian.uber.game.model.objects.WorldObject;
-import net.dodian.uber.game.skill.Skillcape;
+import net.dodian.uber.skills.api.Skillcape;
 import net.dodian.uber.game.ui.bank.PlayerBankService;
 import net.dodian.uber.game.netty.listener.OutgoingPacket;
 import net.dodian.uber.game.ui.QuestTabEntry;

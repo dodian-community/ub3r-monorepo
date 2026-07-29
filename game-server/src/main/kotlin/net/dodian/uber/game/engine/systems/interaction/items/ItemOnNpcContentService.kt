@@ -4,7 +4,7 @@ import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.PlayerPotatoState
-import net.dodian.uber.game.skill.Skillcape
+import net.dodian.uber.skills.api.Skillcape
 import net.dodian.uber.game.netty.listener.out.SendMessage
 
 object ItemOnNpcContentService {

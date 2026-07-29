@@ -2,7 +2,7 @@ package net.dodian.uber.game.skill.skillguide
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.skill.fletching.FletchingData
+import net.dodian.uber.skills.fletching.FletchingModule
 import net.dodian.uber.game.skill.herblore.HerbloreData
 import net.dodian.uber.game.skill.smithing.SmithingFrameDefinitions
 import net.dodian.utilities.Utils
@@ -477,16 +477,16 @@ object SkillGuideData {
                     levels = arrayOf("1", "20", "25", "35", "40", "50", "55", "65", "70", "80", "85"),
                     items = intArrayOf(
                         52,
-                        FletchingData.bowLogs[0].unstrungShortbowId,
-                        FletchingData.bowLogs[0].unstrungLongbowId,
-                        FletchingData.bowLogs[1].unstrungShortbowId,
-                        FletchingData.bowLogs[1].unstrungLongbowId,
-                        FletchingData.bowLogs[2].unstrungShortbowId,
-                        FletchingData.bowLogs[2].unstrungLongbowId,
-                        FletchingData.bowLogs[3].unstrungShortbowId,
-                        FletchingData.bowLogs[3].unstrungLongbowId,
-                        FletchingData.bowLogs[4].unstrungShortbowId,
-                        FletchingData.bowLogs[4].unstrungLongbowId,
+                        FletchingModule.bowLogs[0].unstrungShortbowId,
+                        FletchingModule.bowLogs[0].unstrungLongbowId,
+                        FletchingModule.bowLogs[1].unstrungShortbowId,
+                        FletchingModule.bowLogs[1].unstrungLongbowId,
+                        FletchingModule.bowLogs[2].unstrungShortbowId,
+                        FletchingModule.bowLogs[2].unstrungLongbowId,
+                        FletchingModule.bowLogs[3].unstrungShortbowId,
+                        FletchingModule.bowLogs[3].unstrungLongbowId,
+                        FletchingModule.bowLogs[4].unstrungShortbowId,
+                        FletchingModule.bowLogs[4].unstrungLongbowId,
                     ),
                 )
             }

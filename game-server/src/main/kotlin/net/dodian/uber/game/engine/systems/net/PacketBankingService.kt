@@ -4,7 +4,6 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.engine.config.FeatureStateService
 import net.dodian.uber.game.activity.partyroom.PartyRoomBalloons
 import net.dodian.uber.game.skill.herblore.Herblore
-import net.dodian.uber.game.skill.slayer.Slayer
 import net.dodian.uber.game.skill.smithing.SmithingInterface
 import net.dodian.uber.game.shop.ShopRulesService
 import net.dodian.uber.game.economy.PriceCheckerService
@@ -392,7 +391,7 @@ object PacketBankingService {
                 if (removeId == 4566) {
                     client.performAnimation(1835, 0)
                 } else if (removeSlot == 0 && client.gotSlayerHelmet(client)) {
-                    Slayer.sendCurrentTask(client)
+                    net.dodian.uber.game.engine.systems.skills.SlayerTaskMessageBridge.sendCurrentTask(client)
                 }
             }
 

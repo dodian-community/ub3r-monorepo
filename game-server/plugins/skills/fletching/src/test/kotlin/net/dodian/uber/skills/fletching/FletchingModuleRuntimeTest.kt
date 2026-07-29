@@ -10,6 +10,13 @@ import org.junit.jupiter.api.Test
 
 class FletchingModuleRuntimeTest {
     @Test
+    fun `plugin registry owns bow and ammunition metadata`() {
+        assertEquals(5, FletchingModule.bowLogs.size)
+        assertTrue(FletchingModule.arrowRecipes.any { it.materialId == 11237 && it.productId == 11212 })
+        assertTrue(FletchingModule.dartRecipes.any { it.materialId == 819 && it.productId == 806 })
+    }
+
+    @Test
     fun `knife on logs opens and executes the live transactional route`() {
         assertEquals(FletchingModule.descriptor.id, FletchingModule.contentManifest.id)
         val binding = FletchingModule.definition.itemOnItemBindings.single { it.leftItemId == 946 && it.rightItemId == 1521 }

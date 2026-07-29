@@ -13,6 +13,7 @@ import net.dodian.uber.game.skill.runtime.action.SkillingRandomEventService
 import net.dodian.uber.game.engine.systems.world.npc.NpcSpawnLocator
 import net.dodian.uber.game.engine.util.Misc
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
+import net.dodian.uber.skills.agility.AgilityConstants
 
 class AgilityWerewolf(private val c: Client) {
     fun giveEndExperience(xp: Int, ringCheck: Boolean) {
@@ -53,7 +54,7 @@ class AgilityWerewolf(private val c: Client) {
         if (c.isMovementLocked) {
             return
         }
-        if (!requireAgilityLevel(AgilityData.WEREWOLF_COURSE_LEVEL)) {
+        if (!requireAgilityLevel(AgilityConstants.WEREWOLF_COURSE_LEVEL)) {
             return
         }
         if (pos.x == 3538 && pos.y == 9875 && c.position.x == 3538 && c.position.y == 9873) {
@@ -148,7 +149,7 @@ class AgilityWerewolf(private val c: Client) {
         if (c.isMovementLocked) {
             return
         }
-        if (!requireAgilityLevel(AgilityData.WEREWOLF_COURSE_LEVEL)) {
+        if (!requireAgilityLevel(AgilityConstants.WEREWOLF_COURSE_LEVEL)) {
             return
         }
         if (pos.x in 3537..3543 && pos.y == 9893 && c.position.x in 3537..3543 && c.position.y == 9892) {
@@ -199,7 +200,7 @@ class AgilityWerewolf(private val c: Client) {
         if (c.isMovementLocked) {
             return
         }
-        if (!requireAgilityLevel(AgilityData.WEREWOLF_COURSE_LEVEL)) {
+        if (!requireAgilityLevel(AgilityConstants.WEREWOLF_COURSE_LEVEL)) {
             return
         }
         if ((pos.x == 3538 || pos.x == 3541 || pos.x == 3544) && pos.y == 9905 && c.position.x == pos.x && c.position.y == pos.y - 1) {

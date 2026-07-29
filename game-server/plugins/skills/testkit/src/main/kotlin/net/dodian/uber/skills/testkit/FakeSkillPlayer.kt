@@ -293,7 +293,8 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
         }
         override fun refresh() = Unit
     }
-    override val profile = object : SkillProfile { override val name = "fixture"; override val premium = false }
+    var combatLevelValue = 3
+    override val profile = object : SkillProfile { override val name = "fixture"; override val premium = false; override val combatLevel get() = combatLevelValue }
     override val random = object : SkillRandom {
         override fun between(minInclusive: Int, maxInclusive: Int) = minInclusive
         override fun chance(numerator: Int, denominator: Int) = numerator > 0

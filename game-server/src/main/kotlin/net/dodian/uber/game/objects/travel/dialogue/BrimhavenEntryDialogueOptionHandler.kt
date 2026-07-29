@@ -4,7 +4,7 @@ import net.dodian.uber.game.engine.systems.dialogue.DialogueIds
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.skill.agility.Agility
-import net.dodian.uber.game.skill.agility.AgilityData
+import net.dodian.uber.skills.agility.AgilityConstants
 import kotlin.math.min
 
 object BrimhavenEntryDialogueOptionHandler {
@@ -16,26 +16,26 @@ object BrimhavenEntryDialogueOptionHandler {
 
         if (button == 1) {
             val amount = client.getInvAmt(536).toLong() + client.getInvAmt(537) + client.getBankAmt(536)
-            var remainingBones = AgilityData.KBD_ENTRANCE_BONE_AMOUNT
-            if (amount >= AgilityData.KBD_ENTRANCE_BONE_AMOUNT) {
+            var remainingBones = AgilityConstants.KBD_ENTRANCE_BONE_AMOUNT
+            if (amount >= AgilityConstants.KBD_ENTRANCE_BONE_AMOUNT) {
                 while (remainingBones > 0) {
                     for (slot in 0 until 28) {
                         if (remainingBones <= 0) break
-                        if (client.playerItems[slot] - 1 == AgilityData.KBD_ENTRANCE_BONE_ID) {
-                            client.deleteItem(AgilityData.KBD_ENTRANCE_BONE_ID, slot, 1)
+                        if (client.playerItems[slot] - 1 == AgilityConstants.KBD_ENTRANCE_BONE_ID) {
+                            client.deleteItem(AgilityConstants.KBD_ENTRANCE_BONE_ID, slot, 1)
                             remainingBones--
                         }
                     }
                     for (slot in 0 until 28) {
-                        if (client.playerItems[slot] - 1 == AgilityData.KBD_ENTRANCE_NOTED_BONE_ID) {
+                        if (client.playerItems[slot] - 1 == AgilityConstants.KBD_ENTRANCE_NOTED_BONE_ID) {
                             val toDelete = min(client.playerItemsN[slot], remainingBones)
-                            client.deleteItem(AgilityData.KBD_ENTRANCE_NOTED_BONE_ID, slot, toDelete)
+                            client.deleteItem(AgilityConstants.KBD_ENTRANCE_NOTED_BONE_ID, slot, toDelete)
                             remainingBones -= toDelete
                             break
                         }
                     }
                     for (slot in client.bankItems.indices) {
-                        if (client.bankItems[slot] - 1 == AgilityData.KBD_ENTRANCE_BONE_ID) {
+                        if (client.bankItems[slot] - 1 == AgilityConstants.KBD_ENTRANCE_BONE_ID) {
                             client.bankItemsN[slot] -= remainingBones
                             break
                         }
@@ -56,4 +56,3 @@ object BrimhavenEntryDialogueOptionHandler {
         return true
     }
 }
-
