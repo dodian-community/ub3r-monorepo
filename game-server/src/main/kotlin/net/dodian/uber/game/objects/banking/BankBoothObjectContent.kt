@@ -26,9 +26,9 @@ object BankBoothObjectContent : ObjectContent {
 
     override fun onThirdClick(context: ObjectInteractionContext): Boolean {
         val client = context.player
-        client.setRefundList()
+        net.dodian.uber.game.economy.ItemReclaimService.open(client)
         client.refundSlot = 0
-        client.setRefundOptions()
+        net.dodian.uber.game.economy.ItemReclaimService.showOptions(client)
         return true
     }
 

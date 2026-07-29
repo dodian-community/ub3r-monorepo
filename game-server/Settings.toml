@@ -4,7 +4,7 @@ log_level = "info"
 
 [network]
 game_port = 43594
-web_port = 8081
+web_port = 8081 #for ktor api not web clinet
 web_enabled = true
 connections_per_ip = 5
 connection_timeout = 30000
@@ -43,7 +43,7 @@ prometheus_endpoint = false
 dashboard_enabled = false
 
 [discord]
-require_verified_email = false
+require_verified_email = false #can be changed if we have issues with abuse
 
 [web_security]
 allowed_origins = []

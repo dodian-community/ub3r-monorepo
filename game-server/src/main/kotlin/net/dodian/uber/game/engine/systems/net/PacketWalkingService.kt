@@ -19,6 +19,7 @@ import net.dodian.uber.game.engine.systems.interaction.ui.TradeDuelSessionServic
 import net.dodian.uber.game.engine.systems.interaction.InteractionProcessor
 import net.dodian.uber.game.engine.state.GroundItemIntentStateAdapter
 import net.dodian.uber.game.engine.state.TeleportIntentStateAdapter
+import net.dodian.uber.game.economy.PriceCheckerService
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicLong
 
@@ -46,8 +47,8 @@ object PacketWalkingService {
             return
         }
 
-        if (player.priceCheckerOpen) {
-            player.closePriceChecker()
+        if (PriceCheckerService.isOpen(player)) {
+            PriceCheckerService.close(player)
         }
 
         if (request.opcode == 164 || request.opcode == 248) {

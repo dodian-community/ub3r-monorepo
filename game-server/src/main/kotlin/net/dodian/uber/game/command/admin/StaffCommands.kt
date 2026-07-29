@@ -264,12 +264,12 @@ private fun handleStaffModeration(context: CommandContext): Boolean {
             return true
         }
         context.alias == "checkbank" -> {
-            client.openUpOtherBank(context.playerNameTail())
+            net.dodian.uber.game.economy.AdminContainerInspectionService.openBank(client, context.playerNameTail())
             recordStaffCommand(client, command)
             return true
         }
         context.alias == "checkinv" -> {
-            client.openUpOtherInventory(context.playerNameTail())
+            net.dodian.uber.game.economy.AdminContainerInspectionService.openInventory(client, context.playerNameTail())
             recordStaffCommand(client, command)
             return true
         }

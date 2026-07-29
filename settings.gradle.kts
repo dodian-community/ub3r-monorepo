@@ -54,3 +54,10 @@ listOf("api", "runtime", "testkit", "trading", "dueling").forEach { module ->
     include(":social:$module")
     project(":social:$module").projectDir = file("game-server/plugins/social/$module")
 }
+
+include(":economy")
+project(":economy").projectDir = file("game-server/plugins/economy")
+listOf("api", "runtime", "shops", "price-checker").forEach { module ->
+    include(":economy:$module")
+    project(":economy:$module").projectDir = file("game-server/plugins/economy/$module")
+}

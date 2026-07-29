@@ -2693,9 +2693,9 @@ public class Client extends Player implements Runnable {
                 return;
             }
             if (option == 1) { // Check Bank
-                openUpOtherBank(other.playerName);
+                performOpenOtherBank(other.playerName);
             } else if (option == 2) { // Check Inventory
-                openUpOtherInventory(other.playerName);
+                performOpenOtherInventory(other.playerName);
             }
             modcpDialogState = 0;
             send(new net.dodian.uber.game.netty.listener.out.RemoveInterfaces());
@@ -2755,22 +2755,26 @@ public class Client extends Player implements Runnable {
     }
 
     public void openPriceChecker() {
-        priceCheckerOpen = true;
+        net.dodian.uber.game.economy.PriceCheckerService.open(this);
+        return;
+        /*priceCheckerOpen = true;
         priceCheckerItems.clear();
         priceCheckerSearchedItem = null;
         priceCheckerSearchPendingInput = false;
         priceCheckerMode = 0; // default to value
         send(new InventoryInterface(48500, 5063));
-        priceCheckerRefresh();
+        priceCheckerRefresh();*/
     }
 
     public void closePriceChecker() {
-        if (!priceCheckerOpen) return;
+        net.dodian.uber.game.economy.PriceCheckerService.close(this);
+        return;
+        /*if (!priceCheckerOpen) return;
         priceCheckerOpen = false;
         priceCheckerWithdrawAll();
         priceCheckerSearchedItem = null;
         priceCheckerSearchPendingInput = false;
-        send(new RemoveInterfaces());
+        send(new RemoveInterfaces());*/
     }
 
     public void priceCheckerDeposit(int itemID, int fromSlot, int amount) {
@@ -2990,7 +2994,7 @@ public class Client extends Player implements Runnable {
     }
 
     /* Shops */
-    public void sellItem(int itemID, int fromSlot, int amount) {
+    public void performShopSell(int itemID, int fromSlot, int amount) {
         if (itemID != playerItems[fromSlot] && playerItemsN[fromSlot] < 1) {
             return;
         }
@@ -3058,7 +3062,7 @@ public class Client extends Player implements Runnable {
         return ShopRulesService.buyPrice(MyShopID, itemId, slot);
     }
 
-    public void buyItem(int itemID, int fromSlot, int amount) {
+    public void performShopBuy(int itemID, int fromSlot, int amount) {
         if (amount > 0 && itemID == (ShopManager.ShopItems[MyShopID][fromSlot] - 1)) {
             boolean stack = Server.itemManager.isStackable(itemID);
             amount = Math.min(ShopManager.ShopItemsN[MyShopID][fromSlot], amount);
@@ -4017,7 +4021,7 @@ public class Client extends Player implements Runnable {
 
     public boolean checkInv = false;
 
-    public void openUpOtherInventory(String player) {
+    public void performOpenOtherInventory(String player) {
         if (IsBanking || isShopping() || getDuelFight()) {
             send(new SendMessage("Please finish with what you are doing!"));
             return;
@@ -4047,7 +4051,7 @@ public class Client extends Player implements Runnable {
         }
     }
 
-    public void openUpOtherBank(String player) {
+    public void performOpenOtherBank(String player) {
         if (IsBanking || isShopping() || getDuelFight()) {
             send(new SendMessage("Please finish with what you are doing!"));
             return;
@@ -4317,7 +4321,7 @@ public class Client extends Player implements Runnable {
     public ArrayList<PartyRoomRewardItem> rewardList = new ArrayList<>();
     private final ArrayList<String> refundDates = new ArrayList<>();
 
-    public void setRefundList() {
+    public void performSetRefundList() {
         rewardList.clear();
         refundDates.clear();
         try {
@@ -4330,7 +4334,7 @@ public class Client extends Player implements Runnable {
         }
     }
 
-    public void setRefundOptions() {
+    public void performSetRefundOptions() {
         if (rewardList.isEmpty()) {
             refundSlot = -1;
             send(new SendMessage("You got no items to collect!"));
@@ -4348,13 +4352,13 @@ public class Client extends Player implements Runnable {
         showPlayerOption(text);
     }
 
-    public void reclaim(int position) {
+    public void performReclaim(int position) {
         int slot = refundSlot + position;
         try {
             int rowIndex = slot - 1;
             if (rowIndex < 0 || rowIndex >= rewardList.size() || rowIndex >= refundDates.size()) {
                 sendMessage("That refund entry is no longer available.");
-                setRefundList();
+                performSetRefundList();
                 return;
             }
             PartyRoomRewardItem item = rewardList.get(rowIndex);
@@ -4386,10 +4390,10 @@ public class Client extends Player implements Runnable {
                 logger.warn("Refund item granted to dbId={} but markClaimed failed (already claimed?) for date={}", dbId, refundDates.get(rowIndex));
             }
             /* Set back options! */
-            setRefundList();
+            performSetRefundList();
             if (!rewardList.isEmpty()) {
                 refundSlot = 0;
-                setRefundOptions();
+                performSetRefundOptions();
             } else send(new RemoveInterfaces());
         } catch (Exception e) {
             logger.warn("Error in checking sql!! {}", e.getMessage(), e);

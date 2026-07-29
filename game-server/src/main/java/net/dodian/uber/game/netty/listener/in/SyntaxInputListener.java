@@ -33,9 +33,9 @@ public class SyntaxInputListener implements PacketListener {
             return;
         }
 
-        if (client.priceCheckerSearchPendingInput) {
-            client.priceCheckerSearchPendingInput = false;
-            client.priceCheckerSearch(input);
+        if (net.dodian.uber.game.economy.PriceCheckerService.isSearchPending(client)) {
+            net.dodian.uber.game.economy.PriceCheckerService.setSearchPending(client, false);
+            net.dodian.uber.game.economy.PriceCheckerService.search(client, input);
             return;
         }
 

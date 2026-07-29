@@ -133,8 +133,8 @@ public class InterfaceManager {
             refreshItems = true;
         }
 
-        if (player.priceCheckerOpen) {
-            player.closePriceChecker();
+        if (net.dodian.uber.game.economy.PriceCheckerService.isOpen(player)) {
+            net.dodian.uber.game.economy.PriceCheckerService.close(player);
             refreshItems = true;
         }
 

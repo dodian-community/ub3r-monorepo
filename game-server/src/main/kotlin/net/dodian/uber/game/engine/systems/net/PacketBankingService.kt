@@ -7,6 +7,8 @@ import net.dodian.uber.game.skill.herblore.Herblore
 import net.dodian.uber.game.skill.slayer.Slayer
 import net.dodian.uber.game.skill.smithing.SmithingInterface
 import net.dodian.uber.game.shop.ShopRulesService
+import net.dodian.uber.game.economy.PriceCheckerService
+import net.dodian.uber.game.economy.ShopTransactionService
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.social.exchange.ExchangeOfferService
 import net.dodian.uber.game.social.exchange.ExchangeRuntime
@@ -206,16 +208,16 @@ object PacketBankingService {
                     client.bankItem(resolvedItemId, removeSlot, amount)
                 } else if (client.isPartyInterface) {
                     PartyRoomBalloons.offerPartyItems(client, resolvedItemId, amount, removeSlot)
-                } else if (client.priceCheckerOpen) {
-                    client.priceCheckerDeposit(resolvedItemId, removeSlot, amount)
+                } else if (PriceCheckerService.isOpen(client)) {
+                    PriceCheckerService.deposit(client, resolvedItemId, removeSlot, amount)
                 }
                 client.checkItemUpdate()
             }
 
             interfaceId == 48542 -> {
-                if (client.priceCheckerOpen) {
-                    val amount = if (stack) client.priceCheckerItems[removeSlot].amount else 28
-                    client.priceCheckerWithdraw(resolvedItemId, removeSlot, amount)
+                if (PriceCheckerService.isOpen(client)) {
+                    val amount = if (stack) PriceCheckerService.itemAt(client, removeSlot)?.amount ?: 0 else 28
+                    PriceCheckerService.withdraw(client, resolvedItemId, removeSlot, amount)
                 }
             }
 
@@ -259,7 +261,7 @@ object PacketBankingService {
 
             interfaceId == 3823 -> {
                 if (client.playerRights < 2) {
-                    client.sellItem(resolvedItemId, removeSlot, 10)
+                    ShopTransactionService.sell(client, resolvedItemId, removeSlot, 10)
                 } else {
                     client.send(SendFrame27())
                     client.XinterfaceID = interfaceId
@@ -317,15 +319,15 @@ object PacketBankingService {
                     client.bankItem(removeId, removeSlot, amount)
                 } else if (client.isPartyInterface) {
                     PartyRoomBalloons.offerPartyItems(client, removeId, amount, removeSlot)
-                } else if (client.priceCheckerOpen) {
-                    client.priceCheckerDeposit(removeId, removeSlot, amount)
+                } else if (PriceCheckerService.isOpen(client)) {
+                    PriceCheckerService.deposit(client, removeId, removeSlot, amount)
                 }
                 client.checkItemUpdate()
             }
 
             48542 -> {
-                if (client.priceCheckerOpen) {
-                    client.priceCheckerWithdraw(removeId, removeSlot, amount)
+                if (PriceCheckerService.isOpen(client)) {
+                    PriceCheckerService.withdraw(client, removeId, removeSlot, amount)
                 }
             }
 
@@ -377,11 +379,11 @@ object PacketBankingService {
             }
 
             amount == 5 && interfaceId == 3823 -> {
-                client.sellItem(removeId, removeSlot, 1)
+                ShopTransactionService.sell(client, removeId, removeSlot, 1)
             }
 
             amount == 5 && interfaceId == 3900 -> {
-                client.buyItem(removeId, removeSlot, 1)
+                ShopTransactionService.buy(client, removeId, removeSlot, 1)
             }
 
             amount == 5 && interfaceId == 1688 -> {
@@ -393,11 +395,11 @@ object PacketBankingService {
             }
 
             amount == 10 && interfaceId == 3823 -> {
-                client.sellItem(removeId, removeSlot, 5)
+                ShopTransactionService.sell(client, removeId, removeSlot, 5)
             }
 
             amount == 10 && interfaceId == 3900 -> {
-                client.buyItem(removeId, removeSlot, 5)
+                ShopTransactionService.buy(client, removeId, removeSlot, 5)
             }
         }
     }
@@ -485,8 +487,9 @@ object PacketBankingService {
                             enteredAmount,
                             client.XremoveSlot,
                         )
-                    } else if (client.priceCheckerOpen) {
-                        client.priceCheckerDeposit(
+                    } else if (PriceCheckerService.isOpen(client)) {
+                        PriceCheckerService.deposit(
+                            client,
                             client.playerItems[client.XremoveSlot] - 1,
                             client.XremoveSlot,
                             enteredAmount,
@@ -496,8 +499,8 @@ object PacketBankingService {
                 }
 
                 client.XinterfaceID == 48542 -> {
-                    if (client.priceCheckerOpen) {
-                        client.priceCheckerWithdraw(client.XremoveID, client.XremoveSlot, enteredAmount)
+                    if (PriceCheckerService.isOpen(client)) {
+                        PriceCheckerService.withdraw(client, client.XremoveID, client.XremoveSlot, enteredAmount)
                     }
                 }
 
@@ -541,7 +544,7 @@ object PacketBankingService {
                     val slot = client.XremoveSlot
                     client.XremoveID = -1
                     client.XremoveSlot = -1
-                    client.buyItem(id, slot, enteredAmount)
+                    ShopTransactionService.buy(client, id, slot, enteredAmount)
                     client.checkItemUpdate()
                     client.send(InventoryInterface(3824, 3822))
                 }
@@ -551,7 +554,7 @@ object PacketBankingService {
                     val slot = client.XremoveSlot
                     client.XremoveID = -1
                     client.XremoveSlot = -1
-                    client.sellItem(id, slot, enteredAmount)
+                    ShopTransactionService.sell(client, id, slot, enteredAmount)
                     client.checkItemUpdate()
                     client.send(InventoryInterface(3824, 3822))
                 }
@@ -623,15 +626,15 @@ object PacketBankingService {
                     client.bankItem(removeId, removeSlot, 1)
                 } else if (client.isPartyInterface) {
                     PartyRoomBalloons.offerPartyItems(client, removeId, 1, removeSlot)
-                } else if (client.priceCheckerOpen) {
-                    client.priceCheckerDeposit(removeId, removeSlot, 1)
+                } else if (PriceCheckerService.isOpen(client)) {
+                    PriceCheckerService.deposit(client, removeId, removeSlot, 1)
                 }
                 client.checkItemUpdate()
             }
 
             interfaceId == 48542 -> {
-                if (client.priceCheckerOpen) {
-                    client.priceCheckerWithdraw(removeId, removeSlot, 1)
+                if (PriceCheckerService.isOpen(client)) {
+                    PriceCheckerService.withdraw(client, removeId, removeSlot, 1)
                 }
             }
 
@@ -736,7 +739,7 @@ object PacketBankingService {
             interfaceId == 2274 -> isValidPartyOfferSlot(client, removeSlot)
             interfaceId == 6669 || interfaceId == 3415 -> !stack || isValidTradeOfferSlot(client, removeSlot)
             interfaceId == 5382 || interfaceId in 50300..50310 -> bankSlot < 0 || isValidBankSlot(client, bankSlot)
-            interfaceId == 48542 -> removeSlot >= 0 && removeSlot < client.priceCheckerItems.size
+            interfaceId == 48542 -> removeSlot >= 0 && removeSlot < PriceCheckerService.items(client).size
             else -> true
         }
 
@@ -751,7 +754,7 @@ object PacketBankingService {
             interfaceId == 2274 -> isValidPartyOfferSlot(client, removeSlot)
             interfaceId == 6669 || interfaceId == 3415 -> isValidTradeOfferSlot(client, removeSlot)
             interfaceId == 5382 || interfaceId in 50300..50310 -> bankSlot < 0 || isValidBankSlot(client, bankSlot)
-            interfaceId == 48542 -> removeSlot >= 0 && removeSlot < client.priceCheckerItems.size
+            interfaceId == 48542 -> removeSlot >= 0 && removeSlot < PriceCheckerService.items(client).size
             else -> true
         }
 
@@ -776,7 +779,7 @@ object PacketBankingService {
             interfaceId == 2274 -> isValidPartyOfferSlot(client, removeSlot)
             interfaceId == 6669 || interfaceId == 3415 -> isValidTradeOfferSlot(client, removeSlot)
             interfaceId == 5382 || interfaceId in 50300..50310 -> bankSlot < 0 || isValidBankSlot(client, bankSlot)
-            interfaceId == 48542 -> removeSlot >= 0 && removeSlot < client.priceCheckerItems.size
+            interfaceId == 48542 -> removeSlot >= 0 && removeSlot < PriceCheckerService.items(client).size
             else -> true
         }
 

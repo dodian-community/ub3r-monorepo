@@ -66,6 +66,9 @@ dependencies {
     implementation(project(":social:runtime"))
     implementation(project(":social:trading"))
     implementation(project(":social:dueling"))
+    implementation(project(":economy:runtime"))
+    implementation(project(":economy:shops"))
+    implementation(project(":economy:price-checker"))
     implementation(kotlin("stdlib"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 

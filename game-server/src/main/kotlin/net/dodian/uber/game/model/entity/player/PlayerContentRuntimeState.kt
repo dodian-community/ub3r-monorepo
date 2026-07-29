@@ -73,6 +73,7 @@ class PlayerContentRuntimeState {
     @Volatile private var activeSkillSessionKey: String? = null
     @Volatile private var activeSkillSessionStartedCycle = 0L
     @Volatile private var pendingSkillMulti: PendingSkillMulti? = null
+    private val economyRuntimeState = EconomyRuntimeState()
     private val throttleUntilCycles = ConcurrentHashMap<String, Long>()
 
     @Suppress("UNCHECKED_CAST")
@@ -80,6 +81,7 @@ class PlayerContentRuntimeState {
     fun putPluginAttribute(key: String, value: Any) { pluginAttributes[key] = value }
     fun removePluginAttribute(key: String) { pluginAttributes.remove(key) }
     fun clearPluginAttributes() { pluginAttributes.clear() }
+    fun getEconomyRuntimeState() = economyRuntimeState
 
     fun getPendingInteraction() = pendingInteraction
     fun setPendingInteraction(value: InteractionIntent?) { pendingInteraction = value }

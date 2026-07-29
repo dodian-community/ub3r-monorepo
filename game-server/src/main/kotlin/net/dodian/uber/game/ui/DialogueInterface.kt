@@ -155,10 +155,10 @@ object DialogueInterface : InterfaceButtonContent {
         } else if (client.refundSlot != 0 && ((position <= 3 && optionIndex == position + 1) || (position > 3 && optionIndex == 5))) {
             client.refundSlot -= 3
         } else {
-            client.reclaim(optionIndex)
+            net.dodian.uber.game.economy.ItemReclaimService.claim(client, optionIndex)
         }
         if (client.rewardList.isNotEmpty()) {
-            client.setRefundOptions()
+            net.dodian.uber.game.economy.ItemReclaimService.showOptions(client)
         }
     }
 

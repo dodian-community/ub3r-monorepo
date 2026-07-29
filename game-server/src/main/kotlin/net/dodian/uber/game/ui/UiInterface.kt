@@ -11,6 +11,7 @@ import net.dodian.uber.game.api.content.ContentSafety
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.netty.listener.out.SetTabInterface
 import net.dodian.uber.game.netty.listener.out.ShowInterface
+import net.dodian.uber.game.economy.PriceCheckerService
 
 object UiInterface : InterfaceButtonContent {
     private val runOffButtons = intArrayOf(152)
@@ -69,7 +70,7 @@ object UiInterface : InterfaceButtonContent {
                 val wasItemListPreview = client.bankStyleViewOpen
                 val wasPartyInterface = client.isPartyInterface
                 val wasShopping = client.isShopping
-                val wasPriceChecker = client.priceCheckerOpen
+                val wasPriceChecker = PriceCheckerService.isOpen(client)
                 ContentActions.cancel(
                     player = client,
                     reason = ContentActionCancelReason.INTERFACE_CLOSED,
@@ -109,7 +110,7 @@ object UiInterface : InterfaceButtonContent {
                     refreshItems = true
                 }
                 if (wasPriceChecker) {
-                    client.closePriceChecker()
+                    PriceCheckerService.close(client)
                     refreshItems = true
                 }
                 if (refreshItems) {
@@ -208,7 +209,7 @@ object UiInterface : InterfaceButtonContent {
                 true
             },
             buttonBinding(-1, 17, "ui.tab.price_checker", tabInterfacePriceCheckerButtons) { client, _ ->
-                client.openPriceChecker()
+                PriceCheckerService.open(client)
                 true
             },
             buttonBinding(-1, 18, "ui.tab.override", tabInterfaceOverrideButtons) { client, _ ->
