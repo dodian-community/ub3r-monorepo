@@ -1,4 +1,4 @@
-package net.dodian.uber.game.skill.herblore
+package net.dodian.uber.game.engine.systems.skills.herblore
 
 data class HerbloreBatchRequest(
     val slot: Int,

@@ -30,7 +30,7 @@ import net.dodian.uber.game.activity.partyroom.PartyRoomRewardItem;
 import net.dodian.uber.game.activity.partyroom.PartyRoomOfferState;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
 import net.dodian.uber.game.engine.systems.skills.crafting.CraftingState;
-import net.dodian.uber.game.skill.herblore.HerbloreDialogueState;
+import net.dodian.uber.game.engine.systems.skills.herblore.HerbloreDialogueState;
 import net.dodian.uber.game.engine.systems.interaction.ActiveInteraction;
 import net.dodian.uber.game.engine.systems.interaction.StaticObjectOverrides;
 import net.dodian.uber.game.engine.systems.interaction.InteractionAnchorState;

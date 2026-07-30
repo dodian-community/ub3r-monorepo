@@ -9,7 +9,7 @@ import net.dodian.uber.skills.firemaking.FiremakingModule
 import net.dodian.uber.game.engine.systems.skills.farming.FarmingData
 import net.dodian.uber.skills.fishing.FishingModule
 import net.dodian.uber.skills.fletching.FletchingModule
-import net.dodian.uber.game.skill.herblore.HerbloreData
+import net.dodian.uber.game.engine.systems.skills.herblore.HerbloreData
 import net.dodian.uber.skills.mining.MiningModule
 import net.dodian.uber.skills.smithing.SmithingFrameDefinitions
 import net.dodian.uber.skills.smithing.SmithingData

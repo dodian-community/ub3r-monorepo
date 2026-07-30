@@ -1,8 +1,8 @@
 package net.dodian.uber.game.npc
 
 import net.dodian.uber.game.activity.partyroom.PartyRoomRewardItem
-import net.dodian.uber.game.skill.herblore.HerbloreDialogueService
-import net.dodian.uber.game.skill.herblore.HerbloreData
+import net.dodian.uber.game.engine.systems.skills.herblore.HerbloreDialogueService
+import net.dodian.uber.game.engine.systems.skills.herblore.HerbloreData
 import net.dodian.uber.game.api.content.dialogue.DialogueEmote
 import net.dodian.uber.game.api.content.dialogue.DialogueOption
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService

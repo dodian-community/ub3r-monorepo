@@ -1,4 +1,4 @@
-package net.dodian.uber.game.skill.herblore
+package net.dodian.uber.game.engine.systems.skills.herblore
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
@@ -7,70 +7,14 @@ import net.dodian.uber.game.api.content.ContentProductionMode
 import net.dodian.uber.game.api.content.ContentProductionRequest
 
 object HerbloreItemCombinations {
+    // Simple herb+vial and unfinished+secondary mixing (the old two loops that used to live here)
+    // are now fully owned and shadowed by HerbloreModule's itemOnItem bindings (recipes.toml has
+    // the identical 9 herbs / 10 potions), since SkillInteractionDispatcher intercepts those exact
+    // item pairs before this fallback ever runs. Only the two multi-ingredient specials (super
+    // combat, overload) remain here - HerbloreModule's single-pair itemOnItem shape can't express
+    // 4-ingredient recipes yet.
     @JvmStatic
     fun handle(client: Client, itemUsed: Int, otherItem: Int): Boolean {
-        for (definition in HerbloreData.herbDefinitions) {
-            val herb = definition.cleanId
-            if ((itemUsed == herb && otherItem == HerbloreData.UNFINISHED_POTION_VIAL_ID) ||
-                (itemUsed == HerbloreData.UNFINISHED_POTION_VIAL_ID && otherItem == herb)
-            ) {
-                if (definition.premiumOnly && !client.premium) {
-                    client.sendMessage("Need premium to mix these pots!")
-                    return true
-                }
-                if (client.getSkillLevel(Skill.HERBLORE) < definition.requiredLevel) {
-                    client.sendMessage("Requires herblore level ${definition.requiredLevel}")
-                    return true
-                }
-                val xp = if (client.premium || !definition.premiumOnly) definition.cleaningExperience else 0
-                ContentActions.queueProductionSelection(
-                    client,
-                    ContentProductionRequest(
-                        skillId = Skill.HERBLORE.id,
-                        productId = definition.unfinishedPotionId,
-                        amountPerCycle = 1,
-                        primaryItemId = itemUsed,
-                        secondaryItemId = otherItem,
-                        experiencePerUnit = xp,
-                        animationId = 363,
-                        tickDelay = 1,
-                        completionMessage = "You mix the ${client.getItemName(if (itemUsed != 227) itemUsed else otherItem).lowercase()} herb with the vial of water.",
-                    ),
-                )
-                return true
-            }
-        }
-
-        for (recipe in HerbloreData.potionRecipes) {
-            if ((itemUsed == recipe.secondaryId && otherItem == recipe.unfinishedPotionId) ||
-                (itemUsed == recipe.unfinishedPotionId && otherItem == recipe.secondaryId)
-            ) {
-                if (recipe.premiumOnly && !client.premium) {
-                    client.sendMessage("Need premium to mix these pots!")
-                    return true
-                }
-                if (client.getLevel(Skill.HERBLORE) < recipe.requiredLevel) {
-                    client.sendMessage("Requires herblore level ${recipe.requiredLevel}")
-                    return true
-                }
-                ContentActions.queueProductionSelection(
-                    client,
-                    ContentProductionRequest(
-                        skillId = Skill.HERBLORE.id,
-                        productId = recipe.finishedPotionId,
-                        amountPerCycle = 1,
-                        primaryItemId = itemUsed,
-                        secondaryItemId = otherItem,
-                        experiencePerUnit = recipe.experience,
-                        animationId = 363,
-                        tickDelay = 3,
-                        completionMessage = "You mix the ${client.getItemName(recipe.secondaryId)} into your potion.",
-                    ),
-                )
-                return true
-            }
-        }
-
         val superCombatItems = intArrayOf(269, 2436, 2440, 2442)
         val usedMatchesSuperCombat = superCombatItems.any { potionItem ->
             (potionItem == 269 && (itemUsed == 111 || itemUsed == potionItem)) || itemUsed == potionItem

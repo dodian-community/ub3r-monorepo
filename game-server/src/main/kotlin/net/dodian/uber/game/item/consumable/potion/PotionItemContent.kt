@@ -4,7 +4,7 @@ import net.dodian.uber.game.item.ItemContent
 import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.skill.herblore.HerbloreData
+import net.dodian.uber.game.engine.systems.skills.herblore.HerbloreData
 import net.dodian.uber.game.engine.systems.skills.ProgressionService
 import net.dodian.uber.game.engine.systems.skills.SkillReadService
 

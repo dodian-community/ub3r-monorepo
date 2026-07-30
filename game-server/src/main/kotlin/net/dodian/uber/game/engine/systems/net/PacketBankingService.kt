@@ -3,7 +3,7 @@ package net.dodian.uber.game.engine.systems.net
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.engine.config.FeatureStateService
 import net.dodian.uber.game.activity.partyroom.PartyRoomBalloons
-import net.dodian.uber.game.skill.herblore.Herblore
+import net.dodian.uber.game.engine.systems.skills.herblore.Herblore
 import net.dodian.uber.game.engine.systems.skills.SmithingSmeltingBridge
 import net.dodian.uber.game.shop.ShopRulesService
 import net.dodian.uber.game.economy.PriceCheckerService

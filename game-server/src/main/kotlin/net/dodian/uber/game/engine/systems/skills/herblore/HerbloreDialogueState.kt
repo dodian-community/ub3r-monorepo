@@ -1,4 +1,4 @@
-package net.dodian.uber.game.skill.herblore
+package net.dodian.uber.game.engine.systems.skills.herblore
 
 import net.dodian.uber.game.activity.partyroom.PartyRoomRewardItem
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService

@@ -2,7 +2,7 @@ package net.dodian.uber.game.model.entity.player;
 
 import net.dodian.uber.game.netty.listener.out.*;
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService;
-import net.dodian.uber.game.skill.herblore.HerbloreDialogueService;
+import net.dodian.uber.game.engine.systems.skills.herblore.HerbloreDialogueService;
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason;
 import net.dodian.uber.game.api.content.ContentActions;
 

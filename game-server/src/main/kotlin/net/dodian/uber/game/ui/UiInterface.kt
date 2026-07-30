@@ -12,7 +12,7 @@ import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.netty.listener.out.SetTabInterface
 import net.dodian.uber.game.netty.listener.out.ShowInterface
 import net.dodian.uber.game.economy.PriceCheckerService
-import net.dodian.uber.game.skill.herblore.HerbloreDialogueService
+import net.dodian.uber.game.engine.systems.skills.herblore.HerbloreDialogueService
 
 object UiInterface : InterfaceButtonContent {
     private val runOffButtons = intArrayOf(152)

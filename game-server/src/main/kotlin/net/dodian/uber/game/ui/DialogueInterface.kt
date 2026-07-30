@@ -9,7 +9,7 @@ import net.dodian.uber.game.ui.buttons.buttonBinding
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.engine.systems.dialogue.DialogueIds
 import net.dodian.uber.game.shop.ShopId
-import net.dodian.uber.game.skill.herblore.HerbloreDialogueService
+import net.dodian.uber.game.engine.systems.skills.herblore.HerbloreDialogueService
 import net.dodian.uber.game.social.moderation.ModerationService
 
 object DialogueInterface : InterfaceButtonContent {

@@ -32,7 +32,7 @@ object SkillMigrationCatalog {
         // ownership sweep pass. The current migration still has active legacy owners.
         listOf(
             Skill.FLETCHING, Skill.COOKING, Skill.FISHING, Skill.WOODCUTTING, Skill.MINING,
-            Skill.FIREMAKING, Skill.RUNECRAFTING, Skill.HERBLORE, Skill.THIEVING,
+            Skill.FIREMAKING, Skill.RUNECRAFTING, Skill.THIEVING,
             Skill.SMITHING, Skill.AGILITY, Skill.SLAYER, Skill.FARMING,
         ).forEach { this[it] = SkillMigrationState.BETA }
         // Prayer reached full parity: bury/altar/toggle fully own the plugin, and the combat
@@ -44,7 +44,11 @@ object SkillMigrationCatalog {
         // no longer depend on the old game/skill/crafting package - only the confirmed-dead
         // ResourceFilling/shaft-crafting/old-spinning paths were dropped, all still-live routes
         // are unchanged.
-        listOf(Skill.PRAYER, Skill.CRAFTING).forEach { this[it] = SkillMigrationState.STABLE }
+        // Herblore reached full parity: simple herb-cleaning/potion-mixing (19 recipes) are
+        // plugin-native and shadow the old combo loops; dose-mixing, the two multi-ingredient
+        // specials (super combat, overload), and the NPC-dialogue batch grind/pack flow are all
+        // still-live Client-based code, relocated off the old game/skill/herblore package.
+        listOf(Skill.PRAYER, Skill.CRAFTING, Skill.HERBLORE).forEach { this[it] = SkillMigrationState.STABLE }
     }
     fun state(skill: Skill): SkillMigrationState = states.getValue(skill)
     fun requiredCoverage(): Set<Skill> = states.filterValues { it != SkillMigrationState.LEGACY }.keys
