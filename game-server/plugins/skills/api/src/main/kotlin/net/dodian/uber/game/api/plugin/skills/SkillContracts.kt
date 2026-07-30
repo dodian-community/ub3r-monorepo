@@ -35,9 +35,27 @@ interface SkillPlayer {
     val vitals: SkillVitals
     val runePouches: SkillRunePouches
     val slayerTask: SkillSlayerTask
+    val farming: SkillFarming
     /** Plugin-owned temporary state; cleared when the player logs out. */
     val attributes: ContentAttributes
     val moduleState: SkillModuleState
+}
+
+/**
+ * Persisted farming-patch/compost-bin state, exposed to the Farming plugin only (same shape as
+ * [SkillRunePouches] for Runecrafting). Each method mirrors a legacy `Farming`/`FarmingData` entry
+ * point 1:1 so the underlying save-data JSON shape stays unchanged; the engine adapter owns the
+ * actual state machine, this interface is only the plugin-module dispatch boundary.
+ */
+interface SkillFarming {
+    /** Object-click on a planted patch (rake weeds / clear dead-or-stump / harvest / cure disease). */
+    fun clickPatch(objectId: Int): Boolean
+    /** Item-on-object for both patches (seed/tool/compost/watering-can) and compost bins (bucket/compost/ash). */
+    fun useItem(objectId: Int, itemId: Int): Boolean
+    /** Object-click "Inspect" on an empty patch. */
+    fun inspectPatch(objectId: Int)
+    /** Object-click on a compost bin: option 1 = open/fill/empty cycle, option 5 = dump-all dialogue. */
+    fun interactBin(objectId: Int, option: Int)
 }
 
 interface SkillLevels {

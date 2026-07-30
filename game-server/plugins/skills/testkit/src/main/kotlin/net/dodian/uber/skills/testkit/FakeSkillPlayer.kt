@@ -22,6 +22,7 @@ import net.dodian.uber.game.api.plugin.skills.SkillVitals
 import net.dodian.uber.game.api.plugin.skills.SkillPrayer
 import net.dodian.uber.game.api.plugin.skills.SkillRunePouches
 import net.dodian.uber.game.api.plugin.skills.SkillSlayerTask
+import net.dodian.uber.game.api.plugin.skills.SkillFarming
 import net.dodian.uber.game.api.plugin.skills.SkillItemGridEntry
 import net.dodian.uber.game.api.plugin.skills.SkillValidationResult
 import net.dodian.uber.game.model.player.skills.Skill
@@ -346,6 +347,25 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
             slayerKillCountValue = 0
             return true
         }
+    }
+    /** objectId -> "handled" call log, for tests that just need to assert dispatch fired. */
+    val farmingClickPatchCalls = mutableListOf<Int>()
+    val farmingUseItemCalls = mutableListOf<Pair<Int, Int>>()
+    val farmingInspectPatchCalls = mutableListOf<Int>()
+    val farmingInteractBinCalls = mutableListOf<Pair<Int, Int>>()
+    var farmingClickPatchResult = true
+    var farmingUseItemResult = true
+    override val farming = object : SkillFarming {
+        override fun clickPatch(objectId: Int): Boolean {
+            farmingClickPatchCalls += objectId
+            return farmingClickPatchResult
+        }
+        override fun useItem(objectId: Int, itemId: Int): Boolean {
+            farmingUseItemCalls += objectId to itemId
+            return farmingUseItemResult
+        }
+        override fun inspectPatch(objectId: Int) { farmingInspectPatchCalls += objectId }
+        override fun interactBin(objectId: Int, option: Int) { farmingInteractBinCalls += objectId to option }
     }
     override val attributes = FakeContentAttributes()
 

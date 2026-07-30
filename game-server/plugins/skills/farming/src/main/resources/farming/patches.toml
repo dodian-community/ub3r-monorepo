@@ -19,6 +19,105 @@ harvest_xp = 42
 harvest_item = 1957
 
 [[crop]]
+type = "allotment"
+name = "cabbage"
+level = 9
+seed_id = 5324
+plant_xp = 40
+harvest_xp = 46
+harvest_item = 1965
+
+[[crop]]
+type = "allotment"
+name = "tomato"
+level = 16
+seed_id = 5322
+plant_xp = 50
+harvest_xp = 56
+harvest_item = 1982
+
+[[crop]]
+type = "allotment"
+name = "sweetcorn"
+level = 25
+seed_id = 5320
+plant_xp = 68
+harvest_xp = 76
+harvest_item = 5986
+
+[[crop]]
+type = "allotment"
+name = "strawberry"
+level = 31
+seed_id = 5323
+plant_xp = 100
+harvest_xp = 116
+harvest_item = 5504
+
+[[crop]]
+type = "allotment"
+name = "watermelon"
+level = 47
+seed_id = 5321
+plant_xp = 180
+harvest_xp = 208
+harvest_item = 5982
+
+[[crop]]
+type = "allotment"
+name = "snape grass"
+level = 59
+seed_id = 22879
+plant_xp = 300
+harvest_xp = 312
+harvest_item = -1
+
+[[crop]]
+type = "flower"
+name = "marigold"
+level = 3
+seed_id = 5096
+plant_xp = 36
+harvest_xp = 180
+harvest_item = 6010
+
+[[crop]]
+type = "flower"
+name = "rosemary"
+level = 13
+seed_id = 5097
+plant_xp = 48
+harvest_xp = 260
+harvest_item = 6014
+
+[[crop]]
+type = "flower"
+name = "nasturtium"
+level = 22
+seed_id = 5098
+plant_xp = 80
+harvest_xp = 440
+harvest_item = 6012
+
+[[crop]]
+type = "flower"
+name = "woad"
+level = 26
+seed_id = 5099
+plant_xp = 88
+harvest_xp = 480
+harvest_item = 1793
+
+[[crop]]
+type = "flower"
+name = "limpwurt"
+level = 34
+seed_id = 5100
+plant_xp = 96
+harvest_xp = 500
+harvest_item = 225
+
+[[crop]]
 type = "herb"
 name = "guam"
 level = 8
@@ -26,6 +125,33 @@ seed_id = 5291
 plant_xp = 44
 harvest_xp = 50
 harvest_item = 199
+
+[[crop]]
+type = "herb"
+name = "marrentill"
+level = 12
+seed_id = 5292
+plant_xp = 54
+harvest_xp = 60
+harvest_item = 201
+
+[[crop]]
+type = "herb"
+name = "tarromin"
+level = 19
+seed_id = 5293
+plant_xp = 64
+harvest_xp = 72
+harvest_item = 203
+
+[[crop]]
+type = "herb"
+name = "harralander"
+level = 999
+seed_id = 5294
+plant_xp = 86
+harvest_xp = 96
+harvest_item = -1
 
 [[crop]]
 type = "herb"
@@ -37,10 +163,243 @@ harvest_xp = 122
 harvest_item = 207
 
 [[crop]]
-type = "flower"
-name = "marigold"
-level = 3
-seed_id = 5096
-plant_xp = 36
-harvest_xp = 180
-harvest_item = 6010
+type = "herb"
+name = "toadflax"
+level = 999
+seed_id = 5296
+plant_xp = 154
+harvest_xp = 154
+harvest_item = -1
+
+[[crop]]
+type = "herb"
+name = "irit"
+level = 44
+seed_id = 5297
+plant_xp = 172
+harvest_xp = 194
+harvest_item = 209
+
+[[crop]]
+type = "herb"
+name = "avantoe"
+level = 999
+seed_id = 5298
+plant_xp = 218
+harvest_xp = 246
+harvest_item = -1
+
+[[crop]]
+type = "herb"
+name = "kwuarm"
+level = 56
+seed_id = 5299
+plant_xp = 276
+harvest_xp = 312
+harvest_item = 213
+
+[[crop]]
+type = "herb"
+name = "snapdragon"
+level = 63
+seed_id = 5300
+plant_xp = 350
+harvest_xp = 394
+harvest_item = 3051
+
+[[crop]]
+type = "herb"
+name = "cadantine"
+level = 70
+seed_id = 5301
+plant_xp = 426
+harvest_xp = 480
+harvest_item = 215
+
+[[crop]]
+type = "herb"
+name = "lantadyme"
+level = 999
+seed_id = 5302
+plant_xp = 538
+harvest_xp = 606
+harvest_item = -1
+
+[[crop]]
+type = "herb"
+name = "dwarf weed"
+level = 79
+seed_id = 5303
+plant_xp = 682
+harvest_xp = 768
+harvest_item = 217
+
+[[crop]]
+type = "herb"
+name = "torstol"
+level = 85
+seed_id = 5304
+plant_xp = 798
+harvest_xp = 898
+harvest_item = 219
+
+# The 17 crop types below (bush/fruit tree/tree families) share the same
+# clickPatch/interactItemBin state machine as allotment/flower/herb, but this
+# server has no confirmed real-world patch *locations* for them yet (the old
+# FarmingData.patches enum never had bush/fruit-tree/tree entries either -
+# this is a pre-existing gap, not a regression from this migration). Their
+# seed ids are still listed here so useItem() dispatch is ready the moment
+# real patch locations are added; planting them has no reachable object today.
+
+[[crop]]
+type = "bush"
+name = "redberry"
+level = 22
+seed_id = 5101
+plant_xp = 44
+harvest_xp = 20
+harvest_item = 1951
+
+[[crop]]
+type = "bush"
+name = "cadavaberry"
+level = 68
+seed_id = 5102
+plant_xp = 400
+harvest_xp = 136
+harvest_item = 1987
+
+[[crop]]
+type = "bush"
+name = "dwellberry"
+level = 36
+seed_id = 5103
+plant_xp = 120
+harvest_xp = 48
+harvest_item = 2126
+
+[[crop]]
+type = "bush"
+name = "jangerberry"
+level = 48
+seed_id = 5104
+plant_xp = 200
+harvest_xp = 76
+harvest_item = 247
+
+[[crop]]
+type = "bush"
+name = "whiteberry"
+level = 59
+seed_id = 5105
+plant_xp = 312
+harvest_xp = 116
+harvest_item = 239
+
+[[crop]]
+type = "fruit tree"
+name = "apple tree"
+level = 27
+seed_id = 5283
+plant_xp = 88
+harvest_xp = 36
+harvest_item = 1955
+
+[[crop]]
+type = "fruit tree"
+name = "banana tree"
+level = 33
+seed_id = 5284
+plant_xp = 112
+harvest_xp = 44
+harvest_item = 1963
+
+[[crop]]
+type = "fruit tree"
+name = "orange tree"
+level = 39
+seed_id = 5285
+plant_xp = 140
+harvest_xp = 52
+harvest_item = 2108
+
+[[crop]]
+type = "fruit tree"
+name = "curry tree"
+level = 45
+seed_id = 5286
+plant_xp = 160
+harvest_xp = 64
+harvest_item = 5970
+
+[[crop]]
+type = "fruit tree"
+name = "pineapple tree"
+level = 51
+seed_id = 5287
+plant_xp = 220
+harvest_xp = 84
+harvest_item = 2114
+
+[[crop]]
+type = "fruit tree"
+name = "papaya tree"
+level = 57
+seed_id = 5288
+plant_xp = 280
+harvest_xp = 108
+harvest_item = 5972
+
+[[crop]]
+type = "fruit tree"
+name = "palm tree"
+level = 63
+seed_id = 5289
+plant_xp = 440
+harvest_xp = 140
+harvest_item = 5974
+
+[[crop]]
+type = "tree"
+name = "oak tree"
+level = 15
+seed_id = 5312
+plant_xp = 60
+harvest_xp = 0
+harvest_item = 1521
+
+[[crop]]
+type = "tree"
+name = "willow tree"
+level = 30
+seed_id = 5313
+plant_xp = 100
+harvest_xp = 0
+harvest_item = 1519
+
+[[crop]]
+type = "tree"
+name = "maple tree"
+level = 45
+seed_id = 5314
+plant_xp = 180
+harvest_xp = 0
+harvest_item = 1517
+
+[[crop]]
+type = "tree"
+name = "yew tree"
+level = 60
+seed_id = 5315
+plant_xp = 320
+harvest_xp = 0
+harvest_item = 1515
+
+[[crop]]
+type = "tree"
+name = "magic tree"
+level = 75
+seed_id = 5316
+plant_xp = 580
+harvest_xp = 0
+harvest_item = 1513

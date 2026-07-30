@@ -1,21 +1,16 @@
-package net.dodian.uber.game.skill.farming
+package net.dodian.uber.game.engine.systems.skills.farming
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonPrimitive
 import net.dodian.cache.objects.GameObjectData
-import net.dodian.uber.game.objects.ObjectBinding
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.skill.skillguide.SkillGuide
 import net.dodian.uber.game.netty.listener.out.SendMessage
-import net.dodian.uber.game.skill.farming.FarmingData.patches
+import net.dodian.uber.game.engine.systems.skills.farming.FarmingData.patches
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
 import net.dodian.uber.game.api.content.ContentRuntimeApi
 import net.dodian.uber.game.api.content.dialogue.DialogueOption
-import net.dodian.uber.game.engine.systems.action.PolicyPreset
-import net.dodian.uber.game.api.plugin.skills.SkillPlugin
-import net.dodian.uber.game.api.plugin.skills.skillPlugin
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.engine.util.Misc
 

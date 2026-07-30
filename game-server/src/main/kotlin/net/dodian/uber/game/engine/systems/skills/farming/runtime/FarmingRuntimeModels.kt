@@ -1,6 +1,6 @@
 package net.dodian.uber.game.engine.systems.skills.farming.runtime
 
-import net.dodian.uber.game.skill.farming.FarmingData
+import net.dodian.uber.game.engine.systems.skills.farming.FarmingData
 
 data class PatchSlotSnapshot(
     val patch: FarmingData.patches,

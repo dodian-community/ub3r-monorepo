@@ -9,8 +9,8 @@ import net.dodian.uber.game.ui.bank.PlayerBankService
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
-import net.dodian.uber.game.skill.farming.FarmingData
-import net.dodian.uber.game.skill.farming.FarmingState
+import net.dodian.uber.game.engine.systems.skills.farming.FarmingData
+import net.dodian.uber.game.engine.systems.skills.farming.FarmingState
 import net.dodian.uber.game.engine.systems.skills.SkillAdminService
 
 private const val SKILL_TEST_BANK_AMOUNT = 100_000

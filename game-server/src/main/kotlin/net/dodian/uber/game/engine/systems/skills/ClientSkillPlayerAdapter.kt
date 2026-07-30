@@ -362,6 +362,13 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
         override fun levelRequirement(slot: Int): Int = client.runePouchState.levelRequirement(slot)
         override fun capacity(slot: Int): Int = client.runePouchState.capacity(slot)
     }
+    override val farming = object : net.dodian.uber.game.api.plugin.skills.SkillFarming {
+        override fun clickPatch(objectId: Int): Boolean = client.farming.run { client.clickPatch(objectId) }
+        override fun useItem(objectId: Int, itemId: Int): Boolean =
+            client.farming.run { client.interactItemBin(objectId, itemId) }
+        override fun inspectPatch(objectId: Int) = client.farming.run { client.inspectPatch(objectId) }
+        override fun interactBin(objectId: Int, option: Int) = client.farming.run { client.interactBin(objectId, option) }
+    }
     override val slayerTask = object : net.dodian.uber.game.api.plugin.skills.SkillSlayerTask {
         override val masterNpcId: Int get() = client.slayerTaskState.masterNpcId
         override val ordinal: Int get() = client.slayerTaskState.taskOrdinal

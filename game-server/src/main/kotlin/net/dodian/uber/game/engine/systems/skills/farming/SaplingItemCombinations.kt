@@ -1,4 +1,4 @@
-package net.dodian.uber.game.skill.farming
+package net.dodian.uber.game.engine.systems.skills.farming
 
 import net.dodian.uber.game.model.entity.player.Client
 
