@@ -1,4 +1,4 @@
-package net.dodian.uber.game.skill.skillguide
+package net.dodian.uber.game.engine.systems.skills.skillguide
 
 import com.fasterxml.jackson.dataformat.toml.TomlMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule

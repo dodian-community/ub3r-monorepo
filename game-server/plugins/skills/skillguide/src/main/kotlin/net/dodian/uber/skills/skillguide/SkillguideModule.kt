@@ -9,17 +9,13 @@ import net.dodian.uber.game.api.plugin.skills.skillSupportModule
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.skills.api.SkillModuleDescriptor
-import net.dodian.uber.game.api.plugin.runtime.TomlRecordReader
 
-data class SkillGuideDef(
-    val skillName: String,
-    val skillId: Int,
-    val sections: List<String>,
-)
-
+// Each skill's guide page is fully self-contained in its own
+// game-server/plugins/skills/skillguide/src/main/resources/skillguide/<skill>.toml file (read
+// by the relocated TomlSkillGuideLoader, not this module) - there is deliberately no top-level
+// index file to keep every skill's guide independently authorable.
 object SkillguideModule : SkillSupportModule {
     val descriptor = SkillModuleDescriptor("skill.skillguide", "Skillguide")
-    val guides: List<SkillGuideDef> by lazy { loadGuides() }
 
     override val definition: SkillSupportDefinition by lazy { skillSupportModule("Skillguide") {
         itemClick(PolicyPreset.DIALOGUE, option = 1, 1856) { interaction ->
@@ -30,42 +26,27 @@ object SkillguideModule : SkillSupportModule {
             // These are side-tab buttons in the legacy client, so no modal
             // interface is active when their packets arrive.
             button(PolicyPreset.DIALOGUE, requiredInterfaceId = -1, rawButtonIds = rawButtonIds) { interaction ->
-                open(interaction.player, skillId, 0)
+                interaction.player.ui.skillGuide(skillId, 0)
                 true
             }
         }
         subTabs.forEach { (targetTab, rawButtonIds) ->
             button(PolicyPreset.DIALOGUE, requiredInterfaceId = INTERFACE_ID, rawButtonIds = rawButtonIds) { interaction ->
-                val selected = interaction.player.moduleState.get(descriptor.id, SELECTED_SKILL)?.toIntOrNull() ?: Skill.ATTACK.id
+                val player = interaction.player
+                val selected = player.ui.currentSkillGuideSkillId().takeIf { it >= 0 } ?: Skill.ATTACK.id
                 when (targetTab) {
-                    0 -> open(interaction.player, if (selected < 2) Skill.ATTACK.id else selected, 0)
-                    1 -> open(interaction.player, if (selected < 2) Skill.DEFENCE.id else selected, 1)
-                    2 -> open(interaction.player, if (selected < 2) Skill.RANGED.id else selected, 2)
-                    3 -> if (selected < 2) interaction.player.ui.message("Coming soon!") else open(interaction.player, selected, 3)
-                    else -> open(interaction.player, selected, targetTab)
+                    0 -> player.ui.skillGuide(if (selected < 2) Skill.ATTACK.id else selected, 0)
+                    1 -> player.ui.skillGuide(if (selected < 2) Skill.DEFENCE.id else selected, 1)
+                    2 -> player.ui.skillGuide(if (selected < 2) Skill.RANGED.id else selected, 2)
+                    3 -> if (selected < 2) player.ui.message("Coming soon!") else player.ui.skillGuide(selected, 3)
+                    else -> player.ui.skillGuide(selected, targetTab)
                 }
                 true
             }
         }
     } }
 
-    private fun loadGuides(): List<SkillGuideDef> =
-        TomlRecordReader.readRecords("skillguide/guides.toml", "guide").map { row ->
-            val sectionsStr = row.getValue("sections").removeSurrounding("[", "]").split(",")
-            SkillGuideDef(
-                skillName = row.getValue("skill_name"),
-                skillId = row.getValue("skill_id").toInt(),
-                sections = sectionsStr.map { it.trim().trim('"') },
-            )
-        }
-
-    private fun open(player: net.dodian.uber.game.api.plugin.skills.SkillPlayer, skillId: Int, tab: Int) {
-        player.ui.skillGuide(skillId, tab)
-        player.moduleState.put(descriptor.id, SELECTED_SKILL, skillId.toString())
-    }
-
     private const val INTERFACE_ID = 8714
-    private const val SELECTED_SKILL = "selected-skill"
     private val skillButtons = listOf(
         Skill.ATTACK.id to intArrayOf(8654, 33206, 94167), Skill.HITPOINTS.id to intArrayOf(8655, 33207, 94168),
         Skill.MINING.id to intArrayOf(8656, 33208, 94169), Skill.STRENGTH.id to intArrayOf(8657, 33209, 94170),

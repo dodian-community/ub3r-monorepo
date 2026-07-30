@@ -56,7 +56,7 @@ import net.dodian.uber.skills.api.SkillMultiSelection
 import net.dodian.uber.skills.runtime.SkillRecipePlanner
 import net.dodian.uber.game.engine.util.Misc
 import net.dodian.uber.game.model.entity.Entity
-import net.dodian.uber.game.skill.skillguide.SkillGuide
+import net.dodian.uber.game.engine.systems.skills.skillguide.SkillGuide
 
 /** Engine-only protocol adapter. Public content receives [SkillPlayer], never [Client]. */
 internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlayer {
@@ -173,6 +173,7 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
         override fun varbit(id: Int, value: Int) = client.varbit(id, value)
         override fun skillGuide(skillId: Int, tab: Int) = SkillGuide.open(client, skillId, tab)
         override fun guideBook() = SkillGuide.openBook(client)
+        override fun currentSkillGuideSkillId(): Int = client.contentRuntimeState.getSelectedSkillGuideSkillId()
     }
     override val world = object : SkillWorld {
         override val position: SkillPosition get() = client.position.toSkillPosition()

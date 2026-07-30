@@ -1,4 +1,4 @@
-package net.dodian.uber.game.skill.skillguide
+package net.dodian.uber.game.engine.systems.skills.skillguide
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill

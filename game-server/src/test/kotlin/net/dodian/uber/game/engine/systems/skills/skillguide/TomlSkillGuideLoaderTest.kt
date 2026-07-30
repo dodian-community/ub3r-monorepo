@@ -1,4 +1,4 @@
-package net.dodian.uber.game.skill.skillguide
+package net.dodian.uber.game.engine.systems.skills.skillguide
 
 import net.dodian.uber.game.model.player.skills.Skill
 import org.junit.jupiter.api.Assertions.*

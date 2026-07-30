@@ -183,6 +183,8 @@ interface SkillUi {
     fun skillGuide(skillId: Int, tab: Int = 0)
     /** Opens the guide-book item page. */
     fun guideBook()
+    /** The skill id of the currently-open skill guide page, or -1 if none is open. */
+    fun currentSkillGuideSkillId(): Int
 }
 
 data class SkillItemGridEntry(val itemId: Int, val amount: Int)

@@ -206,9 +206,16 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
         override fun menuGrid(entries: List<SkillItemGridEntry>) { this@FakeSkillPlayer.menuGrid = entries }
         override fun npcDialogue(dialogueId: Int, npcId: Int) = Unit
         override fun varbit(id: Int, value: Int) { varbits[id] = value }
-        override fun skillGuide(skillId: Int, tab: Int) { openedInterfaces += 8714 }
+        override fun skillGuide(skillId: Int, tab: Int) {
+            openedInterfaces += 8714
+            skillGuideCalls += skillId to tab
+            currentSkillGuideSkillIdValue = skillId
+        }
         override fun guideBook() { openedInterfaces += 8134 }
+        override fun currentSkillGuideSkillId(): Int = currentSkillGuideSkillIdValue
     }
+    val skillGuideCalls = mutableListOf<Pair<Int, Int>>()
+    var currentSkillGuideSkillIdValue = -1
     override val world = object : SkillWorld {
         override val position: SkillPosition get() = positionValue
         override fun distanceTo(x: Int, y: Int) = maxOf(kotlin.math.abs(position.x - x), kotlin.math.abs(position.y - y))

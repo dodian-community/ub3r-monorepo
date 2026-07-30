@@ -91,6 +91,7 @@ private class MinimalQuestPlayer : QuestPlayer {
         override fun varbit(id: Int, value: Int) {}
         override fun skillGuide(skillId: Int, tab: Int) {}
         override fun guideBook() {}
+        override fun currentSkillGuideSkillId() = -1
     }
     override val world = object : SkillWorld {
         override val position = SkillPosition(3200, 3200, 0)
@@ -125,15 +126,19 @@ private class MinimalQuestPlayer : QuestPlayer {
         override fun request(title: String, maxDigits: Int, onEntered: (Int) -> Boolean) = false
         override fun cancel() {}
     }
-    override val profile = object : SkillProfile { override val name = "test"; override val premium = false }
+    override val profile = object : SkillProfile { override val name = "test"; override val premium = false; override val combatLevel = 3 }
     override val random = object : SkillRandom {
         override fun between(minInclusive: Int, maxInclusive: Int) = minInclusive
         override fun chance(numerator: Int, denominator: Int) = false
     }
     override val clock = SkillClock { 0L }
+    private val activePrayers = mutableSetOf<SkillPrayer>()
     override val vitals = object : SkillVitals {
         override val currentPrayer = 0
         override val maximumPrayer = 0
+        override fun isPrayerActive(prayer: SkillPrayer) = prayer in activePrayers
+        override fun togglePrayer(prayer: SkillPrayer) { if (!activePrayers.add(prayer)) activePrayers.remove(prayer) }
+        override fun deactivatePrayer(prayer: SkillPrayer) { activePrayers.remove(prayer) }
         override fun setPrayer(amount: Int) {}
         override fun damage(amount: Int) {}
         override fun restorePrayer(amount: Int) {}
@@ -141,11 +146,25 @@ private class MinimalQuestPlayer : QuestPlayer {
     }
     override val slayerTask = object : SkillSlayerTask {
         override val masterNpcId = -1
+        override val ordinal = -1
+        override val assignmentAmount = 0
         override val taskName = ""
         override val remainingAmount = 0
         override val streak = 0
         override fun killCount() = -1
         override fun resetKillCount() = false
+    }
+    override val runePouches = object : SkillRunePouches {
+        override fun amount(slot: Int) = 0
+        override fun addAmount(slot: Int, amount: Int) {}
+        override fun levelRequirement(slot: Int) = 1
+        override fun capacity(slot: Int) = 0
+    }
+    override val farming = object : SkillFarming {
+        override fun clickPatch(objectId: Int) = false
+        override fun useItem(objectId: Int, itemId: Int) = false
+        override fun inspectPatch(objectId: Int) {}
+        override fun interactBin(objectId: Int, option: Int) {}
     }
     override val attributes = object : ContentAttributes {
         override fun <T : Any> get(key: ContentAttributeKey<T>): T? = null
