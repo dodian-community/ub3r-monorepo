@@ -164,14 +164,14 @@ public class Profile {
         for (int appearanceId : equipment) {
             if (appearanceId >= 256 && appearanceId < 512) {
                 final IdentityKit kit = IdentityKit.kits[appearanceId - 256];
-                Model subModel = kit.method538();
+                Model subModel = kit.headModel();
                 if (subModel != null) {
                     bodyModels[bodyModelsOffset++] = subModel;
                 }
             }
             if (appearanceId >= 512) {
                 ItemDefinition itemDef = ItemDefinition.lookup(appearanceId - 512);
-                Model subModel = itemDef.method196(gender);
+                Model subModel = itemDef.getModelForGender(gender);
                 if (itemDef.recolorFrom != null && subModel != null) {
                     for (int l = 0; l < itemDef.recolorFrom.length; l++) {
                         if (itemDef.recolorTo != null) {

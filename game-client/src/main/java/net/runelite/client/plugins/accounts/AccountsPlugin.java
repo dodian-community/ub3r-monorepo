@@ -7,10 +7,10 @@ import javax.swing.SwingUtilities;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.client.callback.ClientThread;
-import net.runelite.client.events.SessionOpen;
-import net.runelite.client.events.SessionClose;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.events.SessionClose;
+import net.runelite.client.events.SessionOpen;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
@@ -59,7 +59,7 @@ public class AccountsPlugin extends Plugin
 		navButton = NavigationButton.builder()
 			.tooltip("Accounts Manager")
 			.icon(icon)
-			.priority(9) // Below Highscores (10) and above Notes (7)
+			.priority(9)
 			.panel(panel)
 			.build();
 
@@ -107,21 +107,9 @@ public class AccountsPlugin extends Plugin
 
 		clientThread.invokeLater(() ->
 		{
-			Profile currentProfile = null;
-			synchronized (ProfileManager.profiles)
+			if (com.osroyale.Client.localPlayer != null)
 			{
-				for (Profile profile : ProfileManager.profiles)
-				{
-					if (profile != null && profile.getUsername().equalsIgnoreCase(((com.osroyale.Client) client).myUsername))
-					{
-						currentProfile = profile;
-						break;
-					}
-				}
-			}
-			if (currentProfile != null)
-			{
-				com.osroyale.Client.localPlayer.refreshProfilePreview(currentProfile);
+				com.osroyale.Client.localPlayer.saveProfile((com.osroyale.Client) client);
 			}
 			SwingUtilities.invokeLater(panel::updatePanel);
 		});

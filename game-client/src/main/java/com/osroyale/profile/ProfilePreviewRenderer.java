@@ -11,14 +11,15 @@ import com.osroyale.Sprite;
  */
 final class ProfilePreviewRenderer
 {
-	static final int PREVIEW_WIDTH = 100;
-	static final int PREVIEW_HEIGHT = 150;
-	static final int PREVIEW_PADDING = 6;
+	static final int PREVIEW_WIDTH  = 300;
+	static final int PREVIEW_HEIGHT = 450;
+	static final int PREVIEW_PADDING = 20; // Room for hats, feathers, and capes
 
 	private static final int WORKING_SIZE = 512;
-	private static final int MODEL_ROTATION_Y = 40;
-	private static final int MODEL_ROTATION_X = 2020;
-	private static final int MODEL_ZOOM = 440;
+	private static final int MODEL_ROTATION_X = 40;    // pitch – slight forward tilt
+	private static final int MODEL_ROTATION_Y = 0;     // yaw   – 0 faces character toward viewer
+	private static final int MODEL_TRANSLATION_Y = 160; // shift model down in canvas so head/helm never clips top
+	private static final int MODEL_ZOOM = 380;         // camera zoom
 
 	private ProfilePreviewRenderer()
 	{
@@ -40,10 +41,11 @@ final class ProfilePreviewRenderer
 			Rasterizer2D.initDrawingArea(working.raster, WORKING_SIZE, WORKING_SIZE);
 			Rasterizer3D.useViewport();
 
-			int sine = Model.SINE[MODEL_ROTATION_X] * MODEL_ZOOM >> 16;
-			int cosine = Model.COSINE[MODEL_ROTATION_X] * MODEL_ZOOM >> 16;
+			int sine   = Model.SINE[MODEL_ROTATION_Y]   * MODEL_ZOOM >> 16;
+			int cosine = Model.COSINE[MODEL_ROTATION_Y] * MODEL_ZOOM >> 16;
 			Rasterizer3D.renderOnGpu = true;
-			model.renderModel(MODEL_ROTATION_Y, 0, MODEL_ROTATION_X, 0, sine, cosine);
+			// renderModel(pitch, roll, yaw, translationX, translationY, translationZ)
+			model.renderModel(MODEL_ROTATION_X, 0, MODEL_ROTATION_Y, 0, MODEL_TRANSLATION_Y, cosine);
 		}
 		finally
 		{
@@ -111,7 +113,7 @@ final class ProfilePreviewRenderer
 		int scaledWidth = Math.max(1, Math.min(availableWidth, (int) Math.round(contentWidth * scale)));
 		int scaledHeight = Math.max(1, Math.min(availableHeight, (int) Math.round(contentHeight * scale)));
 		int targetX = (targetWidth - scaledWidth) / 2;
-		int targetY = (targetHeight - scaledHeight) / 2;
+		int targetY = targetHeight - scaledHeight - padding;
 
 		for (int y = 0; y < scaledHeight; y++)
 		{
