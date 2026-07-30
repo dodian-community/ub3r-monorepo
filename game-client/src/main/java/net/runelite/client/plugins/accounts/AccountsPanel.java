@@ -246,22 +246,61 @@ public class AccountsPanel extends PluginPanel
 		return repaired;
 	}
 
+	private String getSkillIconName(int index)
+	{
+		switch (index)
+		{
+			case 0: return "attack";
+			case 1: return "defence";
+			case 2: return "strength";
+			case 3: return "hitpoints";
+			case 4: return "ranged";
+			case 5: return "prayer";
+			case 6: return "magic";
+			case 7: return "cooking";
+			case 8: return "woodcutting";
+			case 9: return "fletching";
+			case 10: return "fishing";
+			case 11: return "firemaking";
+			case 12: return "crafting";
+			case 13: return "smithing";
+			case 14: return "mining";
+			case 15: return "herblore";
+			case 16: return "agility";
+			case 17: return "thieving";
+			case 18: return "slayer";
+			case 19: return "farming";
+			case 20: return "runecraft";
+			case 21: return "construction";
+			case 22: return "hunter";
+			default: return "overall";
+		}
+	}
+
 	private String getStatsTooltipHtml(Profile p)
 	{
-		StringBuilder sb = new StringBuilder("<html><body style='font-family: sans-serif; background-color: #2b2b2b; color: #ffffff; padding: 5px;'>");
-		sb.append("<b style='color: #ff9800;'>Skill Stats:</b><br>");
-		sb.append("<table border='0' cellspacing='3' cellpadding='0'>");
+		StringBuilder sb = new StringBuilder("<html><body style='font-family: Arial, sans-serif; font-size: 11px; background-color: rgba(20, 24, 30, 0.90); color: #ffffff; padding: 4px; border: 1px solid #475E75; border-radius: 4px;'>");
+		sb.append("<div style='text-align: center; color: #ff9800; font-weight: bold; margin-bottom: 4px; font-size: 11px;'>Skill Stats</div>");
+		sb.append("<table border='0' cellspacing='2' cellpadding='2'>");
 		int[] levels = p.getSkillLevels();
 		for (int i = 0; i < 23; i++)
 		{
-			if (i % 2 == 0)
+			if (i % 3 == 0)
 			{
 				sb.append("<tr>");
 			}
-			String name = com.osroyale.SkillConstants.SKILL_NAMES[i];
+			String iconName = getSkillIconName(i);
+			java.net.URL iconUrl = getClass().getResource("/skill_icons_small/" + iconName + ".png");
 			int lvl = (levels != null && i < levels.length) ? levels[i] : 1;
-			sb.append("<td style='padding-right: 10px;'>").append(name).append(": <b>").append(lvl).append("</b></td>");
-			if (i % 2 == 1 || i == 22)
+
+			sb.append("<td style='background: rgba(35, 45, 55, 0.75); padding: 2px 5px; border-radius: 3px;'>");
+			if (iconUrl != null)
+			{
+				sb.append("<img src='").append(iconUrl.toString()).append("' width='16' height='16' align='middle'/> ");
+			}
+			sb.append("<b style='color: #ffffff; font-size: 11px;'>").append(lvl).append("</b></td>");
+
+			if (i % 3 == 2 || i == 22)
 			{
 				sb.append("</tr>");
 			}
