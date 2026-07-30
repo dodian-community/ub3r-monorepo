@@ -33,7 +33,7 @@ object SkillMigrationCatalog {
         listOf(
             Skill.FLETCHING, Skill.COOKING, Skill.FISHING, Skill.WOODCUTTING, Skill.MINING,
             Skill.FIREMAKING, Skill.RUNECRAFTING, Skill.THIEVING,
-            Skill.SMITHING, Skill.SLAYER, Skill.FARMING,
+            Skill.SLAYER, Skill.FARMING,
         ).forEach { this[it] = SkillMigrationState.BETA }
         // Prayer reached full parity: bury/altar/toggle fully own the plugin, and the combat
         // protect-prayer checks now route through PrayerCombatService instead of duplicating
@@ -56,7 +56,14 @@ object SkillMigrationCatalog {
         // course bindings), and ported the remaining content gaps: item-key gating on the
         // orange-bar/yellow-ledge shortcuts, the werewolf ring-of-charos xp bonus, and the
         // werewolf juicy-stick turn-in (previously unreachable from any dispatch path at all).
-        listOf(Skill.PRAYER, Skill.CRAFTING, Skill.HERBLORE, Skill.AGILITY).forEach { this[it] = SkillMigrationState.STABLE }
+        // Smithing reached full parity: bar-smelting/anvil logic was already fully plugin-native
+        // (SmithingAnvilService/SmithingSmeltingService/SmeltingRegistry, with real legacy-protocol
+        // bridges already routing everything there). The only things left in the old package were
+        // two side-features that were never core smithing logic to begin with - the Superheat magic
+        // spell (already reading its recipe data from the new SmeltingRegistry) and the standalone
+        // Rock-shell armor minigame - both just needed relocating off the old game/skill/smithing
+        // package, not porting.
+        listOf(Skill.PRAYER, Skill.CRAFTING, Skill.HERBLORE, Skill.AGILITY, Skill.SMITHING).forEach { this[it] = SkillMigrationState.STABLE }
     }
     fun state(skill: Skill): SkillMigrationState = states.getValue(skill)
     fun requiredCoverage(): Set<Skill> = states.filterValues { it != SkillMigrationState.LEGACY }.keys

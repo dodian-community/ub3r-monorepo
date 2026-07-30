@@ -6,7 +6,7 @@ import net.dodian.uber.game.item.equipment.RepairPlaceholderItemCombinations
 import net.dodian.uber.game.engine.systems.skills.farming.SaplingItemCombinations
 import net.dodian.uber.game.engine.systems.skills.herblore.HerbloreItemCombinations
 import net.dodian.uber.game.engine.systems.skills.crafting.CraftingItemCombinations
-import net.dodian.uber.game.skill.smithing.rockshell.DialogueGateItemCombinations
+import net.dodian.uber.game.engine.systems.skills.smithing.rockshell.DialogueGateItemCombinations
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.api.content.ContentActionCancelReason
 import net.dodian.uber.game.api.content.ContentActions

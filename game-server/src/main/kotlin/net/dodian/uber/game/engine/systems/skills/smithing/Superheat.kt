@@ -1,4 +1,4 @@
-package net.dodian.uber.game.skill.smithing
+package net.dodian.uber.game.engine.systems.skills.smithing
 
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.engine.loop.GameCycleClock

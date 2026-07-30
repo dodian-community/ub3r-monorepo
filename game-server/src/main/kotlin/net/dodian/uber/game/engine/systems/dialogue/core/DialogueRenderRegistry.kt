@@ -3,7 +3,7 @@ package net.dodian.uber.game.engine.systems.dialogue.core
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.objects.travel.dialogue.BrimhavenEntryDialogueModule
 import net.dodian.uber.game.engine.systems.skills.thieving.dialogue.PyramidPlunderDialogueModule
-import net.dodian.uber.game.skill.smithing.rockshell.RockshellDialogueModule
+import net.dodian.uber.game.engine.systems.skills.smithing.rockshell.RockshellDialogueModule
 import net.dodian.uber.game.ui.dialogue.modules.SettingsDialogueModule
 import net.dodian.uber.game.model.entity.player.Client
 

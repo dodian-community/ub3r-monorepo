@@ -1,4 +1,4 @@
-package net.dodian.uber.game.skill.smithing.rockshell
+package net.dodian.uber.game.engine.systems.skills.smithing.rockshell
 
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.engine.systems.dialogue.DialogueIds
