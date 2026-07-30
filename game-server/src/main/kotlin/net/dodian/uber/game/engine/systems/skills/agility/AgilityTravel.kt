@@ -1,11 +1,11 @@
-package net.dodian.uber.game.skill.agility
+package net.dodian.uber.game.engine.systems.skills.agility
 
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.api.content.ContentTiming
-import net.dodian.uber.game.skill.agility.runtime.AgilityPassageOverlayService
+import net.dodian.uber.game.engine.systems.skills.agility.runtime.AgilityPassageOverlayService
 
 class AgilityTravel(private val c: Client) {
     private fun runLater(delayMs: Int, action: () -> Unit) {

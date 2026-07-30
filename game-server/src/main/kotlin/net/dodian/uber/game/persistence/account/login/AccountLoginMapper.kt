@@ -9,6 +9,7 @@ import net.dodian.uber.game.engine.systems.world.item.Ground
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.engine.systems.skills.prayer.PrayerManager
+import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.persistence.audit.ItemLog
 import net.dodian.uber.game.persistence.account.Login
@@ -49,7 +50,7 @@ internal object AccountLoginMapper {
         applyInventory(player, row.inventory)
         applyEquipment(player, row.equipment)
         player.setTask(row.slayerData)
-        player.agilityCourseStage = row.agilityStage
+        net.dodian.uber.skills.agility.AgilityModule.restoreProgressFromSave(player.asSkillPlayer(), row.agilityStage)
         player.setTravel(row.travel)
         applyUnlocks(player, row.unlocks)
         player.questProgressState.loadFromJson(row.questData)

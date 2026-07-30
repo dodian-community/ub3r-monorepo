@@ -99,7 +99,7 @@ interface SkillEquipment {
     fun refresh()
 }
 
-object SkillEquipmentSlot { const val HEAD = 0; const val WEAPON = 3 }
+object SkillEquipmentSlot { const val HEAD = 0; const val WEAPON = 3; const val RING = 12 }
 
 fun interface SkillRequirement {
     fun validate(player: SkillPlayer): SkillValidationResult

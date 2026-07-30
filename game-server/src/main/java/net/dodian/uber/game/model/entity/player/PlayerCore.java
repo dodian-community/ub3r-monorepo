@@ -192,7 +192,6 @@ public abstract class PlayerCore extends Entity {
     private final RunePouchState runePouchState = new RunePouchState();
     //Agility
     public boolean UsingAgility = false;
-    public int agilityCourseStage = 0;
     private long walkBlockUntilCycle = -1L;
     public boolean xLog = false;
     
@@ -1059,34 +1058,6 @@ public abstract class PlayerCore extends Entity {
 
     public void clearInteractionAnchorState() {
         interactionState.clearInteractionAnchorState();
-    }
-
-    public AgilitySessionState getAgilitySessionState() {
-        AgilitySessionState state = interactionState.getAgilitySessionState();
-        if (state == null) {
-            state = new AgilitySessionState(agilityCourseStage, GameCycleClock.currentCycle());
-            interactionState.setAgilitySessionState(state);
-        }
-        return state;
-    }
-
-    public void setAgilitySessionState(AgilitySessionState state) {
-        interactionState.setAgilitySessionState(state);
-        agilityCourseStage = state != null ? state.getCourseStage() : 0;
-    }
-
-    public int getAgilitySessionStage() {
-        return getAgilitySessionState().getCourseStage();
-    }
-
-    public void setAgilitySessionStage(int stage) {
-        AgilitySessionState current = getAgilitySessionState();
-        setAgilitySessionState(current.withCourseStage(stage, GameCycleClock.currentCycle()));
-    }
-
-    public void clearAgilitySessionState() {
-        interactionState.clearAgilitySessionState();
-        agilityCourseStage = 0;
     }
 
     public MovementLockState getMovementLockState() {

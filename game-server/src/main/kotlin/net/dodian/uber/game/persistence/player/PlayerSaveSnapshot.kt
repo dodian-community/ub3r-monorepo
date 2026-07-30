@@ -6,6 +6,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Friend
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.engine.systems.skills.prayer.PrayerManager
+import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
 import net.dodian.uber.game.persistence.db.DbTables
 
 data class PlayerSaveSnapshot(
@@ -133,7 +134,7 @@ data class PlayerSaveSnapshot(
                     ", effects='$effect'" +
                     ", autocast=${client.autocast_spellIndex}" +
                     ", news=${client.latestNews}" +
-                    ", agility = '${client.agilityCourseStage}', height = ${client.position.z}" +
+                    ", agility = '${net.dodian.uber.skills.agility.AgilityModule.encodeProgressForSave(client.asSkillPlayer())}', height = ${client.position.z}" +
                     ", x = ${client.position.x}" +
                     ", y = ${client.position.y}" +
                     ", lastlogin = '${System.currentTimeMillis()}', Monster_Log='$monsterLog'" +

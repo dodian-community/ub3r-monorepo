@@ -30,6 +30,8 @@ import net.dodian.uber.game.api.plugin.skills.SkillPrayer
 import net.dodian.uber.game.api.plugin.skills.SkillRunePouches
 import net.dodian.uber.game.engine.config.FeatureStateService
 import net.dodian.uber.game.engine.event.GameEventScheduler
+import net.dodian.uber.game.engine.loop.GameCycleClock
+import net.dodian.uber.game.model.entity.player.MovementLockState
 import net.dodian.uber.game.engine.systems.inventory.inventoryTransaction
 import net.dodian.uber.game.engine.systems.world.item.Ground
 import net.dodian.uber.game.model.Position
@@ -218,8 +220,8 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
             arrivalAnimationId: Int?,
             onComplete: () -> Unit,
         ) {
-            client.UsingAgility = true
-            net.dodian.uber.game.skill.agility.runtime.AgilityPassageOverlayService.grantForDelta(
+            client.setMovementLockState(MovementLockState("agility:traverse", GameCycleClock.currentCycle()))
+            net.dodian.uber.game.engine.systems.skills.agility.runtime.AgilityPassageOverlayService.grantForDelta(
                 client, deltaX, deltaY, durationMs.toLong(),
             )
             startAnimationId?.let { client.performAnimation(it, 0) }
@@ -227,28 +229,25 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
             client.AddToWalkCords(deltaX, deltaY, durationMs.toLong())
             GameEventScheduler.runLaterMs(durationMs) {
                 if (client.disconnected) {
-                    client.UsingAgility = false
+                    client.clearMovementLockState()
                     return@runLaterMs
                 }
                 client.requestWeaponAnims()
                 arrivalAnimationId?.let { client.performAnimation(it, 0) }
-                client.UsingAgility = false
+                client.clearMovementLockState()
                 onComplete()
             }
         }
         override fun climb(destination: SkillPosition, animationId: Int, delayMs: Int, onComplete: () -> Unit) {
-            client.UsingAgility = true
+            client.setMovementLockState(MovementLockState("agility:climb", GameCycleClock.currentCycle()))
             client.performAnimation(animationId, 0)
-            client.setMovementLocked(true)
             GameEventScheduler.runLaterMs(delayMs) {
                 if (client.disconnected) {
-                    client.setMovementLocked(false)
-                    client.UsingAgility = false
+                    client.clearMovementLockState()
                     return@runLaterMs
                 }
                 client.transport(destination.toPosition())
-                client.setMovementLocked(false)
-                client.UsingAgility = false
+                client.clearMovementLockState()
                 onComplete()
             }
         }

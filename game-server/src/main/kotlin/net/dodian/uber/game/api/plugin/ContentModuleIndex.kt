@@ -33,16 +33,6 @@ data class PluginCatalogEntry(
  * Runtime-scanned plugin module index with deterministic ordering and validation.
  */
 object ContentModuleIndex {
-    /**
-     * These legacy classes are retained only as traversal implementation references. Their
-     * routes are fully owned by the corresponding skill plugin and must never be dispatched.
-     */
-    private val retiredSkillLegacyObjectHandlers = setOf(
-        "net.dodian.uber.game.skill.agility.GnomeCourseObjectBindings",
-        "net.dodian.uber.game.skill.agility.BarbarianCourseObjectBindings",
-        "net.dodian.uber.game.skill.agility.WildernessCourseObjectBindings",
-        "net.dodian.uber.game.skill.agility.WerewolfCourseObjectBindings",
-    )
     private val logger = LoggerFactory.getLogger(ContentModuleIndex::class.java)
 
     private enum class IndexLifecycle {
@@ -181,7 +171,7 @@ object ContentModuleIndex {
                     pluginKind = "interface-button"
                 }
                 is ObjectContent -> {
-                    if (enabled && className !in retiredSkillLegacyObjectHandlers) discoveredObjects += (simpleName to instance)
+                    if (enabled) discoveredObjects += (simpleName to instance)
                     pluginKind = "object-content"
                 }
                 is ItemContent -> {

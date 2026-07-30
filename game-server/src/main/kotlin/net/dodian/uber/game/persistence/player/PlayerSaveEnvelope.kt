@@ -4,6 +4,7 @@ import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Friend
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.engine.systems.skills.prayer.PrayerManager
+import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
 import net.dodian.uber.game.persistence.player.PlayerSaveReason
 
 data class ItemSlotEntry(
@@ -170,7 +171,7 @@ data class PlayerSaveEnvelope(
                 segments +=
                     MetaSegmentSnapshot(
                         latestNews = client.latestNews,
-                        agilityCourseStage = client.agilityCourseStage,
+                        agilityCourseStage = net.dodian.uber.skills.agility.AgilityModule.encodeProgressForSave(client.asSkillPlayer()),
                         bossLog = bossLog,
                         monsterLog = monsterLog,
                         loginDurationMs = System.currentTimeMillis() - client.session_start,

@@ -5,7 +5,7 @@ import net.dodian.uber.game.api.content.dialogue.DialogueOption
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
-import net.dodian.uber.game.skill.agility.AgilityTravel
+import net.dodian.uber.game.engine.systems.skills.agility.AgilityTravel
 
 internal object RugMerchant : NpcFamily by npcFamily("Rug merchant", 17, block = {
     definition {

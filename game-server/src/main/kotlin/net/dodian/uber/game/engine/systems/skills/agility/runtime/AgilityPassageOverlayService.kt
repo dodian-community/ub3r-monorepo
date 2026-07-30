@@ -1,4 +1,4 @@
-package net.dodian.uber.game.skill.agility.runtime
+package net.dodian.uber.game.engine.systems.skills.agility.runtime
 
 import kotlin.math.abs
 import net.dodian.uber.game.model.Position

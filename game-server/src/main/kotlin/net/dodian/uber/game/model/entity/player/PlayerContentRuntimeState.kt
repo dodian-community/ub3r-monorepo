@@ -59,7 +59,6 @@ class PlayerContentRuntimeState {
     @Volatile private var craftingState: CraftingState? = null
     @Volatile private var interactionAnchorState: InteractionAnchorState? = null
     @Volatile private var movementLockState: MovementLockState? = null
-    @Volatile private var agilitySessionState: AgilitySessionState? = null
     @Volatile private var skillingEventState: SkillingEventState? = null
     @Volatile private var playerPotatoState: PlayerPotatoState? = null
     @Volatile private var activeSkillSessionKey: String? = null
@@ -105,9 +104,6 @@ class PlayerContentRuntimeState {
     fun getMovementLockState() = movementLockState
     fun setMovementLockState(value: MovementLockState?) { movementLockState = value }
     fun clearMovementLockState() { movementLockState = null }
-    fun getAgilitySessionState() = agilitySessionState
-    fun setAgilitySessionState(value: AgilitySessionState?) { agilitySessionState = value }
-    fun clearAgilitySessionState() { agilitySessionState = null }
     fun getSkillingEventState() = skillingEventState
     fun setSkillingEventState(value: SkillingEventState?) { skillingEventState = value }
     fun getPlayerPotatoState() = playerPotatoState

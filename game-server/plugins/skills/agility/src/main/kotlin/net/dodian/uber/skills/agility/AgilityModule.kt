@@ -2,6 +2,8 @@ package net.dodian.uber.skills.agility
 
 import net.dodian.uber.game.api.plugin.ContentMaturity
 import net.dodian.uber.game.api.plugin.ContentModuleManifest
+import net.dodian.uber.game.api.plugin.skills.SkillEquipmentSlot
+import net.dodian.uber.game.api.plugin.skills.SkillNpcInteraction
 import net.dodian.uber.game.api.plugin.skills.SkillObjectInteraction
 import net.dodian.uber.game.api.plugin.skills.SkillPlayer
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
@@ -39,6 +41,8 @@ data class AgilityObstacleDef(
     val bonusExperience: Int,
     val lapMessage: String?,
     val npcText: String?,
+    val requiredItem: Int?,
+    val requiredItemMessage: String?,
 )
 
 object AgilityModule : SkillPlugin {
@@ -49,6 +53,9 @@ object AgilityModule : SkillPlugin {
 
     private val obstacleObjectIds: IntArray by lazy { obstacles.map { it.objectId }.distinct().toIntArray() }
     private val werewolfEntryGateId = 11636
+    private const val WEREWOLF_STICK_NPC_ID = 5927
+    private const val WEREWOLF_STICK_ITEM_ID = 4179
+    private const val WEREWOLF_STICK_XP = 4000
 
     override val definition: SkillPluginDefinition = skillPlugin("Agility", Skill.AGILITY) {
         objectClick(preset = PolicyPreset.GATHERING, option = 1, *obstacleObjectIds) { interaction ->
@@ -59,6 +66,11 @@ object AgilityModule : SkillPlugin {
         }
         itemClick(preset = PolicyPreset.DIALOGUE, option = 1, AGILITY_TICKET_ID) { interaction ->
             exchangeTickets(interaction.player)
+        }
+        // Legacy AgilityWerewolf.handStick() - previously had zero live dispatch anywhere (not even
+        // the retired werewolf course bindings called it); wired here as a straightforward talk-to.
+        npcClick(preset = PolicyPreset.DIALOGUE, option = 1, WEREWOLF_STICK_NPC_ID) { interaction ->
+            handStick(interaction)
         }
     }
 
@@ -81,6 +93,11 @@ object AgilityModule : SkillPlugin {
 
         if (player.skills.current(Skill.AGILITY) < obstacle.requiredLevel) {
             player.ui.message("You need level ${obstacle.requiredLevel} agility to use this obstacle.")
+            return true
+        }
+
+        if (obstacle.requiredItem != null && !player.inventory.contains(obstacle.requiredItem)) {
+            player.ui.message(obstacle.requiredItemMessage ?: "You need the right item to use this.")
             return true
         }
 
@@ -117,6 +134,17 @@ object AgilityModule : SkillPlugin {
         return true
     }
 
+    private fun handStick(interaction: SkillNpcInteraction): Boolean {
+        val player = interaction.player
+        if (player.inventory.transaction { remove(WEREWOLF_STICK_ITEM_ID, 1) }) {
+            player.ui.message("Thank you for that juicy stick. Have some agility knowledge!")
+            player.skills.gainXp(WEREWOLF_STICK_XP, Skill.AGILITY)
+        } else {
+            player.ui.message("You do not have a stick to give me!")
+        }
+        return true
+    }
+
     private fun enterWerewolfCourse(interaction: SkillObjectInteraction): Boolean {
         val player = interaction.player
         if (player.skills.current(Skill.AGILITY) < 60) {
@@ -129,9 +157,15 @@ object AgilityModule : SkillPlugin {
         return true
     }
 
+    // Legacy AgilityWerewolf ring-of-charos-style bonus: +10% xp on werewolf course obstacles
+    // while wearing item 4202, never applied to other courses.
+    private const val WEREWOLF_RING_ITEM_ID = 4202
+
     private fun finishObstacle(player: SkillPlayer, obstacle: AgilityObstacleDef) {
-        player.skills.gainXp(obstacle.experience, Skill.AGILITY)
-        player.actions.triggerRandomEvent(obstacle.experience)
+        val hasRingBonus = obstacle.course == "werewolf" && player.equipment.item(SkillEquipmentSlot.RING) == WEREWOLF_RING_ITEM_ID
+        val experience = if (hasRingBonus) (obstacle.experience * 1.1).toInt() else obstacle.experience
+        player.skills.gainXp(experience, Skill.AGILITY)
+        player.actions.triggerRandomEvent(experience)
         player.ui.message("You successfully cross the ${obstacle.name.replace('_', ' ')}.")
 
         val stageKey = "stage_${obstacle.course}"
@@ -161,6 +195,40 @@ object AgilityModule : SkillPlugin {
                 player.ui.message(msg)
             }
         }
+    }
+
+    /**
+     * Courses whose obstacles have a real multi-stage lap (required_stage/next_stage present in
+     * their toml); wilderness/werewolf/shortcuts obstacles are single-stage and need no persistence.
+     * Index in this list is packed into the save value below - order is a persisted wire format,
+     * do not reorder without also migrating existing saved values.
+     */
+    private val persistableCourses = listOf("gnome", "barbarian", "wilderness")
+
+    private fun courseStage(player: SkillPlayer, course: String): Int =
+        player.moduleState.get(descriptor.id, "stage_$course")?.toIntOrNull() ?: 0
+
+    /**
+     * Encodes whichever persistable course currently has non-zero lap progress as
+     * `courseIndex * 10 + stage` (fits the narrow `agility` int(2) save column - max real stage
+     * value is 6, so this never exceeds 26). If more than one course has progress simultaneously
+     * (rare: switching courses mid-lap), only the first non-zero one found is preserved - a known,
+     * accepted limitation rather than widening the save schema for an edge case.
+     */
+    fun encodeProgressForSave(player: SkillPlayer): Int {
+        persistableCourses.forEachIndexed { index, course ->
+            val stage = courseStage(player, course)
+            if (stage > 0) return index * 10 + stage
+        }
+        return 0
+    }
+
+    /** Reverse of [encodeProgressForSave] - called once at login to restore in-memory lap progress. */
+    fun restoreProgressFromSave(player: SkillPlayer, encoded: Int) {
+        if (encoded <= 0) return
+        val course = persistableCourses.getOrNull(encoded / 10) ?: return
+        val stage = encoded % 10
+        if (stage > 0) player.moduleState.put(descriptor.id, "stage_$course", stage.toString())
     }
 
     private fun exchangeTickets(player: SkillPlayer): Boolean {
@@ -217,6 +285,8 @@ object AgilityModule : SkillPlugin {
                     bonusExperience = row["bonus_experience"]?.toInt() ?: 0,
                     lapMessage = row["lap_message"],
                     npcText = row["npc_text"],
+                    requiredItem = row["required_item"]?.toInt(),
+                    requiredItemMessage = row["required_item_message"],
                 )
             }
         }

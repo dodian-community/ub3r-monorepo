@@ -33,7 +33,7 @@ object SkillMigrationCatalog {
         listOf(
             Skill.FLETCHING, Skill.COOKING, Skill.FISHING, Skill.WOODCUTTING, Skill.MINING,
             Skill.FIREMAKING, Skill.RUNECRAFTING, Skill.THIEVING,
-            Skill.SMITHING, Skill.AGILITY, Skill.SLAYER, Skill.FARMING,
+            Skill.SMITHING, Skill.SLAYER, Skill.FARMING,
         ).forEach { this[it] = SkillMigrationState.BETA }
         // Prayer reached full parity: bury/altar/toggle fully own the plugin, and the combat
         // protect-prayer checks now route through PrayerCombatService instead of duplicating
@@ -48,7 +48,15 @@ object SkillMigrationCatalog {
         // plugin-native and shadow the old combo loops; dose-mixing, the two multi-ingredient
         // specials (super combat, overload), and the NPC-dialogue batch grind/pack flow are all
         // still-live Client-based code, relocated off the old game/skill/herblore package.
-        listOf(Skill.PRAYER, Skill.CRAFTING, Skill.HERBLORE).forEach { this[it] = SkillMigrationState.STABLE }
+        // Agility reached full parity: obstacle-crossing was already plugin-native; this pass
+        // fixed the UsingAgility movement-lock bypass (ClientSkillPlayerAdapter now routes through
+        // setMovementLockState instead of writing the raw field), added DB persistence for
+        // in-progress lap stage (previously in-memory only, lost on logout), removed the fully
+        // vestigial agilitySessionStage/AgilityCourseStage plumbing (superseded by the retired
+        // course bindings), and ported the remaining content gaps: item-key gating on the
+        // orange-bar/yellow-ledge shortcuts, the werewolf ring-of-charos xp bonus, and the
+        // werewolf juicy-stick turn-in (previously unreachable from any dispatch path at all).
+        listOf(Skill.PRAYER, Skill.CRAFTING, Skill.HERBLORE, Skill.AGILITY).forEach { this[it] = SkillMigrationState.STABLE }
     }
     fun state(skill: Skill): SkillMigrationState = states.getValue(skill)
     fun requiredCoverage(): Set<Skill> = states.filterValues { it != SkillMigrationState.LEGACY }.keys

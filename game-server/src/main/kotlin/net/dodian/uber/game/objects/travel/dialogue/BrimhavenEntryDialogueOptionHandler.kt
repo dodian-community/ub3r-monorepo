@@ -3,7 +3,7 @@ package net.dodian.uber.game.objects.travel.dialogue
 import net.dodian.uber.game.engine.systems.dialogue.DialogueIds
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
-import net.dodian.uber.game.skill.agility.Agility
+import net.dodian.uber.game.engine.systems.skills.agility.Agility
 import net.dodian.uber.skills.agility.AgilityConstants
 import kotlin.math.min
 

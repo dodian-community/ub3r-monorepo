@@ -71,7 +71,7 @@ import net.dodian.utilities.Utils;
 import net.dodian.uber.game.engine.systems.skills.ProgressionService;
 import net.dodian.uber.game.engine.systems.inventory.EconomyTransaction;
 import net.dodian.uber.game.model.item.transaction.OfferTransactions;
-import net.dodian.uber.game.skill.agility.AgilityTicketExchangeService;
+import net.dodian.uber.game.engine.systems.skills.agility.AgilityTicketExchangeService;
 
 import java.util.*;
 import io.netty.channel.Channel;
