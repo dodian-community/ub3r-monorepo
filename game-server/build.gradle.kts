@@ -140,6 +140,12 @@ tasks.withType<Test> {
     useJUnitPlatform()
 }
 
+tasks.register<Test>("realWorldSkillTest") {
+    description = "Runs real-world (real cache/game-loop) skill integration tests; needs data/cache locally, no-ops in CI"
+    group = "verification"
+    useJUnitPlatform { includeTags("real-world") }
+}
+
 configurations[syncTestSourceSet.implementationConfigurationName].extendsFrom(configurations.testImplementation.get())
 configurations[syncTestSourceSet.runtimeOnlyConfigurationName].extendsFrom(configurations.testRuntimeOnly.get())
 tasks.register<Test>("syncTest") {

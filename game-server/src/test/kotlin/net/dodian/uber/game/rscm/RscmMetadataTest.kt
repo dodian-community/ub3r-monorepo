@@ -1,11 +1,16 @@
 package net.dodian.uber.game.rscm
 
+import net.dodian.uber.game.testutil.RequiresReferenceMappings
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
 import java.nio.file.Path
 
 class RscmMetadataTest {
+    @BeforeEach
+    fun requireReferenceMappings() = RequiresReferenceMappings.assume()
+
     @Test
     fun `npc metadata exposes right click options`() {
         val record = Files.readString(Path.of("reference/cache-rev218/metadata/npc.jsonl"))

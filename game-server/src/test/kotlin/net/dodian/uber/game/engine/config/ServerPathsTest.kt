@@ -2,6 +2,7 @@ package net.dodian.uber.game.engine.config
 
 import java.nio.file.Files
 import java.nio.file.Path
+import net.dodian.uber.game.testutil.RequiresReferenceMappings
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.Test
 class ServerPathsTest {
     @Test
     fun `definitions and references resolve identically from repository and server roots`() {
+        RequiresReferenceMappings.assume()
         val original = System.getProperty("user.dir")
         val initial = Path.of(original).toAbsolutePath().normalize()
         val serverRoot = if (initial.fileName.toString() == "game-server") initial else initial.resolve("game-server")

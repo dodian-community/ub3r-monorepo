@@ -1,5 +1,6 @@
 package net.dodian.uber.game.rscm
 
+import net.dodian.uber.game.testutil.RequiresReferenceMappings
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -11,6 +12,7 @@ class LocMappingTest {
 
     @Test
     fun `loc mapping is deterministically generated from the pinned dump`() {
+        RequiresReferenceMappings.assume()
         val entries = Files.readAllLines(mappingFile)
             .filter { it.isNotBlank() && !it.startsWith("#") }
             .associate { line ->

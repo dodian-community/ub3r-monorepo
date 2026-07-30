@@ -1,5 +1,6 @@
 package net.dodian.uber.game.rscm
 
+import net.dodian.uber.game.testutil.RequiresReferenceMappings
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -9,6 +10,7 @@ import java.nio.file.Path
 class ObjMappingTest {
     @Test
     fun `revision 218 item variants have readable verified names`() {
+        RequiresReferenceMappings.assume()
         val entries = Files.readAllLines(Path.of("reference/cache-rev218/index/obj.rscm"))
             .associate { line -> line.substringBefore('=') to line.substringAfter('=').toInt() }
         assertEquals(12_764, entries["white_dark_bow_paint_noted"])
