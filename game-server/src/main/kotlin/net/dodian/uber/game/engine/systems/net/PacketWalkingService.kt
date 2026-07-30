@@ -1,7 +1,8 @@
 package net.dodian.uber.game.engine.systems.net
 import net.dodian.uber.game.api.content.ContentActions
 
-import net.dodian.uber.game.skill.thieving.PyramidPlunder
+import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
+import net.dodian.uber.skills.thieving.ThievingModule
 import net.dodian.uber.game.engine.event.GameEventBus
 import net.dodian.uber.game.engine.lifecycle.PlayerDeferredLifecycleService
 import net.dodian.uber.game.events.player.WalkEvent
@@ -40,7 +41,7 @@ object PacketWalkingService {
         ) {
             return
         }
-        if (TeleportIntentStateAdapter.isTeleporting(player) || PyramidPlunder.isLooting(player)) {
+        if (TeleportIntentStateAdapter.isTeleporting(player) || ThievingModule.isLooting(player.asSkillPlayer())) {
             return
         }
         if (net.dodian.uber.game.engine.systems.action.VerticalTransitionService.isActive(player)) {

@@ -1,4 +1,4 @@
-package net.dodian.uber.game.skill.thieving.dialogue
+package net.dodian.uber.game.engine.systems.skills.thieving.dialogue
 
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.engine.systems.dialogue.DialogueIds

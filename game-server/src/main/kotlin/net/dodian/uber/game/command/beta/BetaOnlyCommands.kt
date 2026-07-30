@@ -16,7 +16,9 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.model.player.skills.Skills
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.engine.systems.skills.SkillAdminService
-import net.dodian.uber.game.skill.thieving.PyramidPlunder
+import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
+import net.dodian.uber.game.engine.systems.skills.toPosition
+import net.dodian.uber.skills.thieving.ThievingModule
 import net.dodian.uber.game.engine.config.gameWorldId
 
 object BetaOnlyCommands : CommandContent {
@@ -109,20 +111,21 @@ private fun handleBeta(context: CommandContext): Boolean {
             return true
         }
         context.alias == "plunder" -> {
-            PyramidPlunder.start(client)
+            ThievingModule.startPlunder(client.asSkillPlayer())
             return true
         }
         context.alias == "p_start" -> {
-            client.transport(PyramidPlunder.startPosition())
+            client.transport(ThievingModule.startPosition().toPosition())
             return true
         }
         context.alias == "p_tele" -> {
-            PyramidPlunder.currentDoor()?.let(client::transport)
+            ThievingModule.currentDoor()?.let { client.transport(it.toPosition()) }
             return true
         }
         context.alias == "p_next" -> {
-            PyramidPlunder.advanceRoom(client)
-            context.reply("You are now at floor ${PyramidPlunder.roomNumber(client) + 1}")
+            val player = client.asSkillPlayer()
+            ThievingModule.advanceRoom(player)
+            context.reply("You are now at floor ${ThievingModule.roomNumber(player) + 1}")
             return true
         }
         context.alias == "barrows" -> {

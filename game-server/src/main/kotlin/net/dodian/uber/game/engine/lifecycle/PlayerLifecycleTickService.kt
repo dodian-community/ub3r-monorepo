@@ -12,7 +12,8 @@ import net.dodian.uber.game.engine.systems.action.PlayerActionCancellationServic
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
 import net.dodian.uber.game.skill.runtime.action.SkillingRandomEventService
-import net.dodian.uber.game.skill.thieving.PyramidPlunder
+import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
+import net.dodian.uber.skills.thieving.ThievingModule
 
 object PlayerLifecycleTickService {
     data class TimerSnapshot(
@@ -124,7 +125,7 @@ object PlayerLifecycleTickService {
             SkillingRandomEventService.show(player)
         }
 
-        PyramidPlunder.tick(player)
+        ThievingModule.tick(player.asSkillPlayer())
 
         if (player.getPositionName(player.position) == positions.DESERT && !player.effects.isEmpty() && player.effects[0] == -1) {
             player.addEffectTime(0, 30 + Misc.random(40))

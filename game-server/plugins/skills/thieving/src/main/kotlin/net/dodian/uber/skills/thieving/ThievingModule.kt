@@ -1,5 +1,6 @@
 package net.dodian.uber.skills.thieving
 
+import net.dodian.uber.game.api.content.ContentAttributeKey
 import net.dodian.uber.game.api.plugin.ContentMaturity
 import net.dodian.uber.game.api.plugin.ContentModuleManifest
 import net.dodian.uber.game.api.plugin.skills.SkillEquipmentSlot
@@ -8,6 +9,7 @@ import net.dodian.uber.game.api.plugin.skills.SkillObjectInteraction
 import net.dodian.uber.game.api.plugin.skills.SkillPlayer
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
 import net.dodian.uber.game.api.plugin.skills.SkillPluginDefinition
+import net.dodian.uber.game.api.plugin.skills.SkillPosition
 import net.dodian.uber.game.api.plugin.skills.manifest
 import net.dodian.uber.game.api.plugin.skills.skillPlugin
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
@@ -34,15 +36,20 @@ object ThievingModule : SkillPlugin {
     val descriptor = SkillModuleDescriptor("skill.thieving", "Thieving")
     val targets: List<ThievingTargetDef> by lazy { loadTargets() }
 
-    // Pyramid Plunder's room/obstacle objects. The old minigame implementation (Thieving.kt /
-    // PyramidPlunder) was orphaned by this module's migration; re-deriving its obstacle/urn/tomb
-    // state machine against the clean SkillPlayer API is out of scope here, so these objects get
-    // an honest placeholder instead of fabricated "steal" behavior on what are really obstacles.
-    private val plunderObjectIds = intArrayOf(
-        20275, 20277, 20931, 20932, 26580,
-        26600, 26601, 26602, 26603, 26604, 26605, 26606, 26607, 26608, 26609, 26610, 26611, 26612, 26613,
-        26616, 26618, 26619, 26620, 26621, 26622, 26623, 26624, 26625, 26626,
+    // Pyramid Plunder's 6 tomb obstacles (2 special-cased: gold chest, sarcophagus) + 15 urn
+    // obstacles - the confirmed, fully-understood parts of the room state machine (legacy
+    // PyramidPlunder.toggleObstacle/openDoor). 4 of the 6 tomb ids double as the room's exit
+    // door once solved (nextRoomDoorFor = nextRoom[room] + 26618, landing on 26618-26621).
+    private val tombObjectIds = intArrayOf(26616, 26626, 26618, 26619, 26620, 26621)
+    private val urnObjectIds = intArrayOf(
+        26580, 26600, 26601, 26602, 26603, 26604, 26605, 26606, 26607, 26608, 26609, 26610, 26611, 26612, 26613,
     )
+    // Remaining plunder-room objects (20275, 20277, 20931 - the exit-confirmation dialogue id,
+    // 20932, 26622-26625) have no confirmed real-world behavior recovered from the dead legacy
+    // code (Thieving.kt never dispatched to them either) - left as an honest placeholder rather
+    // than fabricated behavior, same as the rest of this module's documented approach.
+    private val plunderPlaceholderObjectIds = intArrayOf(20275, 20277, 20931, 20932, 26622, 26623, 26624, 26625)
+    private val plunderObjectIds = tombObjectIds + urnObjectIds + plunderPlaceholderObjectIds
 
     private val npcIds by lazy { targets.filter { it.targetType == "npc" }.map { it.id }.toIntArray() }
 
@@ -83,6 +90,15 @@ object ThievingModule : SkillPlugin {
         objectClick(preset = PolicyPreset.GATHERING, option = 2, EMPTY_CHEST_OBJECT_ID) { interaction ->
             interaction.player.ui.message("This chest is empty!")
             true
+        }
+        // Assumption (flagged for live-client verification): option 1 is the primary action slot;
+        // toggleObstacle() is state-driven internally and ignores which option was clicked, same
+        // reasoning as the farming patch click-option assumption.
+        objectClick(preset = PolicyPreset.GATHERING, option = 1, *tombObjectIds) { interaction ->
+            toggleObstacle(interaction.player, interaction.objectId)
+        }
+        objectClick(preset = PolicyPreset.GATHERING, option = 1, *urnObjectIds) { interaction ->
+            toggleObstacle(interaction.player, interaction.objectId)
         }
     }
 
@@ -302,4 +318,223 @@ object ThievingModule : SkillPlugin {
                 respawnTicks = row["respawn_ticks"]?.toInt() ?: 0,
             )
         }
+
+    // --- Pyramid Plunder ---
+    // Legacy PyramidPlunder never persisted its state across logout, so it's modeled as ordinary
+    // plugin-owned session state (ContentAttributes) rather than needing a save-data bridge like
+    // Farming/Agility. The global door-shuffle state is a plain object-singleton field, exactly
+    // matching how the legacy PyramidPlunder object held it (this module is itself a singleton).
+
+    data class PyramidPlunderState(
+        var ticksRemaining: Int = -1,
+        var roomNumber: Int = 0,
+        var looting: Boolean = false,
+        val obstacles: IntArray = intArrayOf(
+            26616, 0, 26626, 0, 26618, 0, 26619, 0, 26620, 0, 26621, 0,
+            26580, 0, 26600, 0, 26601, 0, 26602, 0, 26603, 0, 26604, 0,
+            26605, 0, 26606, 0, 26607, 0, 26608, 0, 26609, 0, 26610, 0,
+            26611, 0, 26612, 0, 26613, 0,
+        ),
+    )
+
+    private val PLUNDER_STATE_KEY = ContentAttributeKey<PyramidPlunderState>("skill.thieving", "pyramidPlunder")
+    private const val TOMB_COUNT = 6
+    private const val URN_COUNT = 15
+    private val URN_CONFIG = intArrayOf(0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28)
+    private val TOMB_CONFIG = intArrayOf(2, 0, 9, 10, 11, 12)
+    private val ALL_DOORS = arrayOf(SkillPosition(3288, 2799), SkillPosition(3293, 2794), SkillPosition(3288, 2789), SkillPosition(3283, 2794))
+    private val ROOM_ENTRANCES = arrayOf(
+        SkillPosition(1954, 4477, 0), SkillPosition(1977, 4471, 0), SkillPosition(1927, 4453, 0),
+        SkillPosition(1965, 4444, 0), SkillPosition(1927, 4424, 0), SkillPosition(1943, 4421, 0),
+        SkillPosition(1974, 4420, 0),
+    )
+    private val PLUNDER_START = SkillPosition(1927, 4477, 0)
+    private val PLUNDER_END = SkillPosition(3289, 2801, 0)
+    private var currentDoorState: SkillPosition? = null
+    private val nextRoomDoorOffset = IntArray(7)
+
+    private fun plunderState(player: SkillPlayer): PyramidPlunderState? = player.attributes.get(PLUNDER_STATE_KEY)
+
+    private fun plunderStateOrNew(player: SkillPlayer): PyramidPlunderState =
+        plunderState(player) ?: PyramidPlunderState().also { player.attributes.put(PLUNDER_STATE_KEY, it) }
+
+    fun tick(player: SkillPlayer) {
+        val state = plunderState(player) ?: return
+        if (state.ticksRemaining == -1) return
+        state.ticksRemaining--
+        if (state.ticksRemaining == 0) {
+            resetPlunder(player, timedOut = true)
+        } else if (state.ticksRemaining % 100 == 0) {
+            val minutes = state.ticksRemaining / 100
+            player.ui.message("You got $minutes minute${if (minutes == 1) "" else "s"} left.")
+        }
+    }
+
+    @JvmStatic
+    fun hindersTeleport(player: SkillPlayer): Boolean = (plunderState(player)?.ticksRemaining ?: -1) != -1
+
+    fun isLooting(player: SkillPlayer): Boolean = plunderState(player)?.looting == true
+
+    fun roomNumber(player: SkillPlayer): Int = plunderState(player)?.roomNumber ?: 0
+
+    fun startPosition(): SkillPosition = PLUNDER_START
+
+    fun currentDoor(): SkillPosition? = currentDoorState
+
+    fun startPlunder(player: SkillPlayer) {
+        val state = plunderStateOrNew(player)
+        state.ticksRemaining = 500
+        state.roomNumber = 0
+        state.looting = false
+        resetObstacleVarbits(player, state)
+        player.world.teleport(PLUNDER_START)
+        player.ui.message("Starting plunder test...")
+    }
+
+    @JvmStatic
+    @JvmOverloads
+    fun resetPlunder(player: SkillPlayer, timedOut: Boolean = false) {
+        val state = plunderState(player) ?: return
+        if (timedOut) player.ui.message("You have run out time!")
+        state.ticksRemaining = -1
+        state.roomNumber = 0
+        state.looting = false
+        resetObstacleVarbits(player, state)
+        player.world.teleport(PLUNDER_END)
+    }
+
+    fun advanceRoom(player: SkillPlayer) {
+        val state = plunderState(player) ?: return
+        if (state.roomNumber + 1 == 8) return
+        val level = 31 + state.roomNumber * 10
+        if (player.skills.current(Skill.THIEVING) < level) {
+            player.ui.message("You need level $level thieving to enter next room!")
+            return
+        }
+        player.world.teleport(ROOM_ENTRANCES[state.roomNumber])
+        resetObstacleVarbits(player, state)
+        state.roomNumber++
+    }
+
+    /**
+     * Rotates the shared door cycle (legacy PlunderDoorProcessor, run every game tick). Mirrors
+     * the legacy sequencing exactly, including its apparent quirk: even when [rotateCurrentDoor]
+     * picks a deliberately-different door first, the unconditional resetGlobalCycleState() call
+     * right after immediately re-randomizes currentDoor again from the full set anyway. Preserved
+     * as-is rather than "fixed", since this is pre-existing behavior, not something introduced here.
+     */
+    fun advanceDoorCycle(rotateCurrentDoor: Boolean) {
+        if (rotateCurrentDoor) {
+            val candidates = ALL_DOORS.filter { it != currentDoorState }
+            if (candidates.isNotEmpty()) {
+                currentDoorState = candidates[kotlin.random.Random.nextInt(candidates.size)]
+            }
+        }
+        resetGlobalCycleState()
+    }
+
+    private fun resetGlobalCycleState() {
+        currentDoorState = ALL_DOORS[kotlin.random.Random.nextInt(ALL_DOORS.size)]
+        for (i in nextRoomDoorOffset.indices) {
+            nextRoomDoorOffset[i] = kotlin.random.Random.nextInt(4)
+        }
+    }
+
+    init {
+        resetGlobalCycleState()
+    }
+
+    private fun checkSlot(state: PyramidPlunderState) = state.obstacles.size / (TOMB_COUNT + URN_COUNT)
+
+    private fun openDoor(state: PyramidPlunderState, objectId: Int): Boolean {
+        val slot = checkSlot(state)
+        for (i in 2 until TOMB_COUNT) {
+            if (state.obstacles[i * slot] == objectId && state.obstacles[i * slot + 1] == 1) return true
+        }
+        return false
+    }
+
+    /** legacy nextRoomDoorFor: only one of the 4 tomb-door ids (26618-26621) is "the" exit for the current room. */
+    private fun nextRoomDoorFor(state: PyramidPlunderState): Int = nextRoomDoorOffset[state.roomNumber] + 26618
+
+    private fun canOpenNextRoomDoor(state: PyramidPlunderState, objectId: Int): Boolean =
+        nextRoomDoorFor(state) == objectId && openDoor(state, objectId)
+
+    private fun resetObstacleVarbits(player: SkillPlayer, state: PyramidPlunderState) {
+        player.ui.varbit(820, 0)
+        player.ui.varbit(821, 0)
+        val slot = checkSlot(state)
+        for (i in 0 until TOMB_COUNT + URN_COUNT) {
+            state.obstacles[i * slot + 1] = 0
+        }
+    }
+
+    private fun displayUrns(player: SkillPlayer, state: PyramidPlunderState) {
+        var config = 0
+        val slot = checkSlot(state)
+        for (i in TOMB_COUNT until TOMB_COUNT + URN_COUNT) {
+            val urnSlot = i - TOMB_COUNT
+            when (state.obstacles[i * slot + 1]) {
+                1 -> config = config or (1 shl URN_CONFIG[urnSlot])
+                2 -> config = config or (1 shl (URN_CONFIG[urnSlot] + 1))
+            }
+        }
+        player.ui.varbit(820, config)
+    }
+
+    private fun displayTombs(player: SkillPlayer, state: PyramidPlunderState) {
+        var config = 0
+        val slot = checkSlot(state)
+        for (i in 0 until TOMB_COUNT) {
+            if (state.obstacles[i * slot + 1] == 1) {
+                config = config or (1 shl TOMB_CONFIG[i])
+            }
+        }
+        player.ui.varbit(821, config)
+    }
+
+    /** Legacy PyramidPlunder.toggleObstacle - state-driven, ignores which click option fired. */
+    private fun toggleObstacle(player: SkillPlayer, objectId: Int): Boolean {
+        val state = plunderState(player) ?: return false
+        if (state.looting) return true
+        val slot = checkSlot(state)
+        var found = false
+        for (i in TOMB_COUNT until TOMB_COUNT + URN_COUNT) {
+            if (state.obstacles[i * slot] == objectId && state.obstacles[i * slot + 1] == 0) {
+                state.obstacles[i * slot + 1] = player.random.between(1, 2)
+                displayUrns(player, state)
+                found = true
+                break
+            }
+        }
+        if (!found && state.obstacles[0] == objectId && state.obstacles[1] == 0) {
+            state.obstacles[1] = 1
+            displayTombs(player, state)
+            player.ui.message("Room: ${state.roomNumber} trying to do gold chest!")
+            found = true
+        }
+        if (!found && state.obstacles[2] == objectId && state.obstacles[3] == 0) {
+            state.obstacles[3] = 1
+            displayTombs(player, state)
+            player.ui.message("Sarcophagus!")
+            found = true
+        }
+        if (!found) {
+            for (i in 2 until TOMB_COUNT) {
+                if (state.obstacles[i * slot] == objectId && state.obstacles[i * slot + 1] == 0) {
+                    state.obstacles[i * slot + 1] = 1
+                    displayTombs(player, state)
+                    found = true
+                    break
+                }
+            }
+        }
+        // Assumption (not wired anywhere in the dead legacy code either): auto-advance the room
+        // the moment the room's assigned exit tomb-door is solved, since canOpenNextRoomDoor's
+        // only purpose is exactly this check and nothing else ever consumed its result.
+        if (found && objectId in 26618..26621 && canOpenNextRoomDoor(state, objectId)) {
+            advanceRoom(player)
+        }
+        return found
+    }
 }

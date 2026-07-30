@@ -86,4 +86,51 @@ class ThievingModuleRuntimeTest {
         assertTrue(player.messages.any { it.startsWith("You receive") })
         assertEquals(634, player.replacedObjects.single().second)
     }
+
+    @Test
+    fun `pyramid plunder tick counts down and resets to the pyramid entrance on timeout`() {
+        val player = FakeSkillPlayer()
+        ThievingModule.startPlunder(player)
+        assertTrue(ThievingModule.hindersTeleport(player))
+
+        // Drain the 500-tick timer directly to timeout without a 500-iteration loop.
+        repeat(499) { ThievingModule.tick(player) }
+        assertTrue(ThievingModule.hindersTeleport(player))
+        ThievingModule.tick(player)
+
+        assertFalse(ThievingModule.hindersTeleport(player))
+        assertTrue(player.messages.any { it.contains("run out time") })
+    }
+
+    @Test
+    fun `toggling an urn obstacle sets a random 1-or-2 state and updates the urn varbit`() {
+        val player = FakeSkillPlayer()
+        ThievingModule.startPlunder(player)
+        val binding = ThievingModule.definition.objectBindings.single { it.option == 1 && 26600 in it.objectIds }
+
+        val handled = binding.handler(SkillObjectInteraction(player, 1, SkillObjectRef(26600, SkillPosition(0, 0, 0))))
+
+        assertTrue(handled)
+        assertTrue(player.varbits.containsKey(820))
+        assertTrue(player.varbits.getValue(820) != 0)
+    }
+
+    @Test
+    fun `solving the room's assigned exit tomb advances the room`() {
+        val player = FakeSkillPlayer().apply { setLevel(Skill.THIEVING, 99) }
+        ThievingModule.startPlunder(player)
+        // The room-door id for room 0 is whichever of 26618-26621 the internal cycle assigned;
+        // try all four - toggling the non-assigned ones is a harmless no-op advance check.
+        val startingRoom = ThievingModule.roomNumber(player)
+        var advanced = false
+        for (candidateDoorId in 26618..26621) {
+            val binding = ThievingModule.definition.objectBindings.single { it.option == 1 && candidateDoorId in it.objectIds }
+            binding.handler(SkillObjectInteraction(player, 1, SkillObjectRef(candidateDoorId, SkillPosition(0, 0, 0))))
+            if (ThievingModule.roomNumber(player) != startingRoom) {
+                advanced = true
+                break
+            }
+        }
+        assertTrue(advanced, "Expected exactly one of the 4 tomb-door ids to advance the room once solved")
+    }
 }

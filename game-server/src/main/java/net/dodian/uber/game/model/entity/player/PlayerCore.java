@@ -40,7 +40,6 @@ import net.dodian.uber.game.engine.systems.combat.CombatCooldownState;
 import net.dodian.uber.game.engine.systems.combat.CombatEngagementState;
 import net.dodian.uber.game.engine.systems.combat.CombatTargetState;
 import net.dodian.uber.game.engine.lifecycle.DeathTaskState;
-import net.dodian.uber.game.skill.thieving.PyramidPlunderPlayerState;
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason;
 import net.dodian.uber.game.engine.systems.action.PendingProductionSelection;
 import net.dodian.uber.game.engine.systems.action.ActiveProductionSelection;
@@ -1060,18 +1059,6 @@ public abstract class PlayerCore extends Entity {
 
     public void clearInteractionAnchorState() {
         interactionState.clearInteractionAnchorState();
-    }
-
-    public PyramidPlunderPlayerState getPyramidPlunderState() {
-        return interactionState.getPyramidPlunderState();
-    }
-
-    public void setPyramidPlunderState(PyramidPlunderPlayerState pyramidPlunderState) {
-        interactionState.setPyramidPlunderState(pyramidPlunderState);
-    }
-
-    public void clearPyramidPlunderState() {
-        interactionState.clearPyramidPlunderState();
     }
 
     public AgilitySessionState getAgilitySessionState() {
@@ -2132,12 +2119,14 @@ public abstract class PlayerCore extends Entity {
     }
 
     public boolean rejectTeleport() {
-        return net.dodian.uber.game.skill.thieving.PyramidPlunder.hindersTeleport(((Client) this));
+        return net.dodian.uber.skills.thieving.ThievingModule.hindersTeleport(
+                net.dodian.uber.game.engine.systems.skills.SkillPlayerBridge.of((Client) this));
     }
     public void loginPosition(int x, int y, int z) {
         moveTo(x, y, z);
         if(getPositionName(getPosition()) == positions.PYRAMID_PLUNDER)
-            net.dodian.uber.game.skill.thieving.PyramidPlunder.reset(((Client) this));
+            net.dodian.uber.skills.thieving.ThievingModule.resetPlunder(
+                    net.dodian.uber.game.engine.systems.skills.SkillPlayerBridge.of((Client) this));
     }
 
     public void examineItem(Client c, int id, int amount) {

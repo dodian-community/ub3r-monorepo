@@ -8,7 +8,7 @@ import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.skill.agility.AgilityTravel
 import net.dodian.uber.game.skill.herblore.HerbloreData
 import net.dodian.uber.game.skill.smithing.rockshell.RockshellDialogueOptionHandler
-import net.dodian.uber.game.skill.thieving.dialogue.PyramidPlunderDialogueOptionHandler
+import net.dodian.uber.game.engine.systems.skills.thieving.dialogue.PyramidPlunderDialogueOptionHandler
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendFrame27
 import net.dodian.uber.game.netty.listener.out.SendMessage

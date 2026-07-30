@@ -14,7 +14,6 @@ import net.dodian.uber.skills.mining.MiningModule
 import net.dodian.uber.skills.smithing.SmithingFrameDefinitions
 import net.dodian.uber.skills.smithing.SmithingData
 import net.dodian.uber.skills.smithing.SmeltingRegistry
-import net.dodian.uber.game.skill.thieving.Thieving
 import net.dodian.uber.skills.woodcutting.WoodcuttingModule
 
 object SkillTestItemCatalog {
@@ -259,8 +258,8 @@ object SkillTestItemCatalog {
 
     private fun thievingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
-        net.dodian.uber.game.skill.thieving.ThievingData.all.forEach { data ->
-            data.item.forEach { addIfValid(items, it) }
+        net.dodian.uber.skills.thieving.ThievingModule.targets.forEach { target ->
+            target.lootItems.forEach { addIfValid(items, it) }
         }
         return items.toList()
     }

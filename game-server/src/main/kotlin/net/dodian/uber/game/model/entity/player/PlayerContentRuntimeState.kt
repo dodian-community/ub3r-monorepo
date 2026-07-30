@@ -17,7 +17,6 @@ import net.dodian.uber.game.engine.systems.interaction.InteractionIntent
 import net.dodian.uber.game.engine.sync.player.PlayerSyncInvariantValidator
 import net.dodian.uber.game.engine.tasking.GameTaskSet
 import net.dodian.uber.game.engine.systems.skills.crafting.CraftingState
-import net.dodian.uber.game.skill.thieving.PyramidPlunderPlayerState
 import net.dodian.uber.game.api.plugin.skills.PendingSkillMulti
 
 /**
@@ -59,7 +58,6 @@ class PlayerContentRuntimeState {
     @Volatile private var playerTaskSet: GameTaskSet<*>? = null
     @Volatile private var craftingState: CraftingState? = null
     @Volatile private var interactionAnchorState: InteractionAnchorState? = null
-    @Volatile private var pyramidPlunderState: PyramidPlunderPlayerState? = null
     @Volatile private var movementLockState: MovementLockState? = null
     @Volatile private var agilitySessionState: AgilitySessionState? = null
     @Volatile private var skillingEventState: SkillingEventState? = null
@@ -104,9 +102,6 @@ class PlayerContentRuntimeState {
     fun getInteractionAnchorState() = interactionAnchorState
     fun setInteractionAnchorState(value: InteractionAnchorState?) { interactionAnchorState = value }
     fun clearInteractionAnchorState() { interactionAnchorState = null }
-    fun getPyramidPlunderState() = pyramidPlunderState
-    fun setPyramidPlunderState(value: PyramidPlunderPlayerState?) { pyramidPlunderState = value }
-    fun clearPyramidPlunderState() { pyramidPlunderState = null }
     fun getMovementLockState() = movementLockState
     fun setMovementLockState(value: MovementLockState?) { movementLockState = value }
     fun clearMovementLockState() { movementLockState = null }
