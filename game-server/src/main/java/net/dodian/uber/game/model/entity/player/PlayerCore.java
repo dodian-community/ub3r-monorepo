@@ -23,14 +23,13 @@ import net.dodian.uber.game.netty.listener.out.SendSideTab;
 import net.dodian.uber.game.netty.listener.out.SendString;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
-import net.dodian.uber.game.skill.prayer.PrayerManager;
+import net.dodian.uber.game.engine.systems.skills.prayer.PrayerManager;
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService;
 import net.dodian.uber.game.activity.partyroom.PartyRoomBalloons;
 import net.dodian.uber.game.activity.partyroom.PartyRoomRewardItem;
 import net.dodian.uber.game.activity.partyroom.PartyRoomOfferState;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
 import net.dodian.uber.game.skill.crafting.CraftingState;
-import net.dodian.uber.game.skill.prayer.PrayerOfferingState;
 import net.dodian.uber.game.skill.herblore.HerbloreDialogueState;
 import net.dodian.uber.game.engine.systems.interaction.ActiveInteraction;
 import net.dodian.uber.game.engine.systems.interaction.StaticObjectOverrides;
@@ -1049,18 +1048,6 @@ public abstract class PlayerCore extends Entity {
 
     public void clearCraftingState() {
         interactionState.clearCraftingState();
-    }
-
-    public PrayerOfferingState getPrayerOfferingState() {
-        return interactionState.getPrayerOfferingState();
-    }
-
-    public void setPrayerOfferingState(PrayerOfferingState prayerOfferingState) {
-        interactionState.setPrayerOfferingState(prayerOfferingState);
-    }
-
-    public void clearPrayerOfferingState() {
-        interactionState.clearPrayerOfferingState();
     }
 
     public InteractionAnchorState getInteractionAnchorState() {

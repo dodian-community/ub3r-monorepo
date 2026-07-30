@@ -3,7 +3,7 @@ package net.dodian.uber.game.persistence.player
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Friend
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.skill.prayer.PrayerManager
+import net.dodian.uber.game.engine.systems.skills.prayer.PrayerManager
 import net.dodian.uber.game.persistence.player.PlayerSaveReason
 
 data class ItemSlotEntry(

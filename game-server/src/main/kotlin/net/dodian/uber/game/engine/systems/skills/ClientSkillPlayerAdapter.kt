@@ -340,15 +340,15 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
         override val maximumPrayer: Int get() = client.maxPrayer
         override fun isPrayerActive(prayer: SkillPrayer): Boolean =
             client.prayerManager.isPrayerOn(
-                net.dodian.uber.game.skill.prayer.PrayerManager.Prayer.valueOf(prayer.name),
+                net.dodian.uber.game.engine.systems.skills.prayer.PrayerManager.Prayer.valueOf(prayer.name),
             )
         override fun togglePrayer(prayer: SkillPrayer) {
             client.prayerManager.togglePrayer(
-                net.dodian.uber.game.skill.prayer.PrayerManager.Prayer.valueOf(prayer.name),
+                net.dodian.uber.game.engine.systems.skills.prayer.PrayerManager.Prayer.valueOf(prayer.name),
             )
         }
         override fun deactivatePrayer(prayer: SkillPrayer) {
-            val legacy = net.dodian.uber.game.skill.prayer.PrayerManager.Prayer.valueOf(prayer.name)
+            val legacy = net.dodian.uber.game.engine.systems.skills.prayer.PrayerManager.Prayer.valueOf(prayer.name)
             if (client.prayerManager.isPrayerOn(legacy)) client.prayerManager.togglePrayer(legacy)
         }
         override fun setPrayer(amount: Int) { client.currentPrayer = amount.coerceIn(0, client.maxPrayer) }
@@ -444,6 +444,12 @@ internal object SkillAmountPromptService {
 }
 
 internal fun Client.asSkillPlayer(): SkillPlayer = ClientSkillPlayerAdapter(this)
+
+/** Java-callable accessor for legacy (non-Kotlin) call sites migrating onto the SkillPlayer API. */
+object SkillPlayerBridge {
+    @JvmStatic
+    fun of(client: Client): SkillPlayer = client.asSkillPlayer()
+}
 
 internal fun Position.toSkillPosition() = SkillPosition(x, y, z)
 internal fun SkillPosition.toPosition() = Position(x, y, z)

@@ -32,9 +32,13 @@ object SkillMigrationCatalog {
         // ownership sweep pass. The current migration still has active legacy owners.
         listOf(
             Skill.FLETCHING, Skill.COOKING, Skill.FISHING, Skill.WOODCUTTING, Skill.MINING,
-            Skill.FIREMAKING, Skill.RUNECRAFTING, Skill.HERBLORE, Skill.PRAYER, Skill.THIEVING,
+            Skill.FIREMAKING, Skill.RUNECRAFTING, Skill.HERBLORE, Skill.THIEVING,
             Skill.CRAFTING, Skill.SMITHING, Skill.AGILITY, Skill.SLAYER, Skill.FARMING,
         ).forEach { this[it] = SkillMigrationState.BETA }
+        // Prayer reached full parity: bury/altar/toggle fully own the plugin, and the combat
+        // protect-prayer checks now route through PrayerCombatService instead of duplicating
+        // logic against the old PrayerManager class directly.
+        listOf(Skill.PRAYER).forEach { this[it] = SkillMigrationState.STABLE }
     }
     fun state(skill: Skill): SkillMigrationState = states.getValue(skill)
     fun requiredCoverage(): Set<Skill> = states.filterValues { it != SkillMigrationState.LEGACY }.keys

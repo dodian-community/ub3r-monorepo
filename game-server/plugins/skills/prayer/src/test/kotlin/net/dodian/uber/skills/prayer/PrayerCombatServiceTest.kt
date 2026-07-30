@@ -39,4 +39,15 @@ class PrayerCombatServiceTest {
         assertEquals(1.15, PrayerCombatService.defenceMultiplier(player))
         assertFalse(PrayerCombatService.protectsFromMelee(FakeSkillPlayer()))
     }
+
+    @Test
+    fun `range and magic protection are independent of melee protection`() {
+        val rangeProtected = FakeSkillPlayer().apply { activePrayers += SkillPrayer.PROTECT_RANGE }
+        val magicProtected = FakeSkillPlayer().apply { activePrayers += SkillPrayer.PROTECT_MAGIC }
+
+        assertTrue(PrayerCombatService.protectsFromRange(rangeProtected))
+        assertFalse(PrayerCombatService.protectsFromMagic(rangeProtected))
+        assertTrue(PrayerCombatService.protectsFromMagic(magicProtected))
+        assertFalse(PrayerCombatService.protectsFromRange(magicProtected))
+    }
 }

@@ -39,8 +39,12 @@ object PrayerCombatService {
         else -> 1.0
     }
 
-    fun protectsFromMelee(player: SkillPlayer): Boolean =
+    @JvmStatic fun protectsFromMelee(player: SkillPlayer): Boolean =
         player.vitals.isPrayerActive(SkillPrayer.PROTECT_MELEE)
+    @JvmStatic fun protectsFromRange(player: SkillPlayer): Boolean =
+        player.vitals.isPrayerActive(SkillPrayer.PROTECT_RANGE)
+    @JvmStatic fun protectsFromMagic(player: SkillPlayer): Boolean =
+        player.vitals.isPrayerActive(SkillPrayer.PROTECT_MAGIC)
 
     private val PROTECTION_PRAYERS = listOf(SkillPrayer.PROTECT_MELEE, SkillPrayer.PROTECT_RANGE, SkillPrayer.PROTECT_MAGIC)
 

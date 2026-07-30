@@ -2,7 +2,7 @@ package net.dodian.uber.game.skill.runtime.parity
 
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.skill.herblore.HerbloreData
-import net.dodian.uber.game.skill.prayer.PrayerRouteIds
+import net.dodian.uber.skills.prayer.PrayerModule
 import net.dodian.uber.game.api.plugin.ContentModuleIndex
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
 import net.dodian.uber.game.api.plugin.skills.SkillPluginDefinition
@@ -214,7 +214,7 @@ object SkillDoctor {
     private fun scanMappedRouteOwnership(skillSnapshot: SkillPluginSnapshot): List<SkillDoctorFinding> {
         val findings = mutableListOf<SkillDoctorFinding>()
 
-        PrayerRouteIds.BONE_ITEM_IDS.forEach { itemId ->
+        PrayerModule.bones.map { it.itemId }.forEach { itemId ->
             if (skillSnapshot.itemBinding(option = 1, itemId = itemId) == null) {
                 findings += SkillDoctorFinding(
                     code = "missing-route-ownership",

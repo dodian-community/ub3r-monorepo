@@ -17,7 +17,6 @@ import net.dodian.uber.game.engine.systems.interaction.InteractionIntent
 import net.dodian.uber.game.engine.sync.player.PlayerSyncInvariantValidator
 import net.dodian.uber.game.engine.tasking.GameTaskSet
 import net.dodian.uber.game.skill.crafting.CraftingState
-import net.dodian.uber.game.skill.prayer.PrayerOfferingState
 import net.dodian.uber.game.skill.thieving.PyramidPlunderPlayerState
 import net.dodian.uber.game.api.plugin.skills.PendingSkillMulti
 
@@ -59,7 +58,6 @@ class PlayerContentRuntimeState {
     @Volatile private var activeProductionSelection: ActiveProductionSelection? = null
     @Volatile private var playerTaskSet: GameTaskSet<*>? = null
     @Volatile private var craftingState: CraftingState? = null
-    @Volatile private var prayerOfferingState: PrayerOfferingState? = null
     @Volatile private var interactionAnchorState: InteractionAnchorState? = null
     @Volatile private var pyramidPlunderState: PyramidPlunderPlayerState? = null
     @Volatile private var movementLockState: MovementLockState? = null
@@ -103,9 +101,6 @@ class PlayerContentRuntimeState {
     fun getCraftingState() = craftingState
     fun setCraftingState(value: CraftingState?) { craftingState = value }
     fun clearCraftingState() { craftingState = null }
-    fun getPrayerOfferingState() = prayerOfferingState
-    fun setPrayerOfferingState(value: PrayerOfferingState?) { prayerOfferingState = value }
-    fun clearPrayerOfferingState() { prayerOfferingState = null }
     fun getInteractionAnchorState() = interactionAnchorState
     fun setInteractionAnchorState(value: InteractionAnchorState?) { interactionAnchorState = value }
     fun clearInteractionAnchorState() { interactionAnchorState = null }

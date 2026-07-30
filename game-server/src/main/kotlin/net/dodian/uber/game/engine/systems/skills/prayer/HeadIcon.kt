@@ -1,4 +1,4 @@
-package net.dodian.uber.game.skill.prayer
+package net.dodian.uber.game.engine.systems.skills.prayer
 
 enum class HeadIcon(private val headIconId: Int) {
     NONE(-1),

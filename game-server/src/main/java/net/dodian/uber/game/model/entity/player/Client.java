@@ -28,7 +28,7 @@ import net.dodian.uber.game.netty.listener.OutgoingPacket;
 import net.dodian.uber.game.ui.QuestTabEntry;
 import net.dodian.uber.game.model.player.skills.Skill;
 import net.dodian.uber.game.model.player.skills.Skills;
-import net.dodian.uber.game.skill.prayer.PrayerManager;
+import net.dodian.uber.game.engine.systems.skills.prayer.PrayerManager;
 import net.dodian.uber.game.engine.systems.skills.farming.Farming;
 import net.dodian.uber.game.engine.systems.skills.farming.FarmingState;
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry;

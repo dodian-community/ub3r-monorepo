@@ -8,7 +8,6 @@ import net.dodian.uber.game.model.entity.npc.Npc;
 import net.dodian.uber.game.model.entity.PendingHitBuffer;
 import net.dodian.uber.game.model.item.Equipment;
 import net.dodian.uber.game.model.player.skills.Skill;
-import net.dodian.uber.game.skill.prayer.PrayerManager;
 import net.dodian.uber.game.netty.listener.out.SendMessage;
 import net.dodian.uber.game.engine.systems.combat.CombatDefenderReaction;
 import net.dodian.uber.game.engine.systems.combat.CombatLogoutLockService;
@@ -92,6 +91,8 @@ class PlayerCombatState {
     private void dealDamage(int amt, Entity.hitType type, Entity attacker, Entity.damageType damageType,
                             boolean projectileAlreadyValidated) {
         Client player = (Client) owner;
+        net.dodian.uber.game.api.plugin.skills.SkillPlayer skillPlayer =
+                net.dodian.uber.game.engine.systems.skills.SkillPlayerBridge.of(player);
         if (owner.isDeathSequenceActive() || owner.getCurrentHealth() < 1) {
             return;
         }
@@ -105,7 +106,7 @@ class PlayerCombatState {
         if (damageType.equals(Entity.damageType.FIRE_BREATH)) {
             boolean hasShield = player.getEquipment()[Equipment.Slot.SHIELD.getId()] == 1540
                     || player.getEquipment()[Equipment.Slot.SHIELD.getId()] == 11284;
-            boolean hasProtect = owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_MAGIC);
+            boolean hasProtect = net.dodian.uber.skills.prayer.PrayerCombatService.protectsFromMagic(skillPlayer);
             boolean hasAntifire = owner.antiFireEffect();
             boolean hasSuperAntifire = owner.superAntifireEffect();
             if (npc != null && npc.getId() == 239) {
@@ -147,19 +148,24 @@ class PlayerCombatState {
                     mitigationBranch = "fire_breath_full";
                 }
             }
-        } else if (damageType.equals(Entity.damageType.MELEE) && owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_MELEE)) {
+        } else if (damageType.equals(Entity.damageType.MELEE)
+                && net.dodian.uber.skills.prayer.PrayerCombatService.protectsFromMelee(skillPlayer)) {
             amt /= 2;
             mitigationBranch = "protect_melee";
-        } else if (damageType.equals(Entity.damageType.RANGED) && owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_RANGE)) {
+        } else if (damageType.equals(Entity.damageType.RANGED)
+                && net.dodian.uber.skills.prayer.PrayerCombatService.protectsFromRange(skillPlayer)) {
             amt /= 2;
             mitigationBranch = "protect_range";
-        } else if (damageType.equals(Entity.damageType.MAGIC) && owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_MAGIC)) {
+        } else if (damageType.equals(Entity.damageType.MAGIC)
+                && net.dodian.uber.skills.prayer.PrayerCombatService.protectsFromMagic(skillPlayer)) {
             amt /= 2;
             mitigationBranch = "protect_magic";
-        } else if (damageType.equals(Entity.damageType.JAD_RANGED) && owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_RANGE)) {
+        } else if (damageType.equals(Entity.damageType.JAD_RANGED)
+                && net.dodian.uber.skills.prayer.PrayerCombatService.protectsFromRange(skillPlayer)) {
             amt = 0;
             mitigationBranch = "protect_jad_range";
-        } else if (damageType.equals(Entity.damageType.JAD_MAGIC) && owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_MAGIC)) {
+        } else if (damageType.equals(Entity.damageType.JAD_MAGIC)
+                && net.dodian.uber.skills.prayer.PrayerCombatService.protectsFromMagic(skillPlayer)) {
             amt = 0;
             mitigationBranch = "protect_jad_magic";
         }
@@ -172,9 +178,9 @@ class PlayerCombatState {
                     mitigationBranch,
                     originalAmt,
                     amt,
-                    owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_MELEE),
-                    owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_RANGE),
-                    owner.prayerManager.isPrayerOn(PrayerManager.Prayer.PROTECT_MAGIC)
+                    net.dodian.uber.skills.prayer.PrayerCombatService.protectsFromMelee(skillPlayer),
+                    net.dodian.uber.skills.prayer.PrayerCombatService.protectsFromRange(skillPlayer),
+                    net.dodian.uber.skills.prayer.PrayerCombatService.protectsFromMagic(skillPlayer)
             );
         }
         CombatLogoutLockService.refreshInteraction(attacker, owner);

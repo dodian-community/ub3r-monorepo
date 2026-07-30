@@ -1,4 +1,4 @@
-package net.dodian.uber.game.skill.prayer
+package net.dodian.uber.game.engine.systems.skills.prayer
 
 import net.dodian.uber.game.model.entity.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
