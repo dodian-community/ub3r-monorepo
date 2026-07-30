@@ -1,7 +1,7 @@
 package net.dodian.uber.game.ui
 
-import net.dodian.uber.game.skill.crafting.Crafting
-import net.dodian.uber.game.skill.crafting.TanningRequest
+import net.dodian.uber.game.engine.systems.skills.crafting.Crafting
+import net.dodian.uber.game.engine.systems.skills.crafting.TanningRequest
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.api.content.ContentActions

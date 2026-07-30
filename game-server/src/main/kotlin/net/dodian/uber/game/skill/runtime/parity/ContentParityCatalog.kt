@@ -33,12 +33,18 @@ object SkillMigrationCatalog {
         listOf(
             Skill.FLETCHING, Skill.COOKING, Skill.FISHING, Skill.WOODCUTTING, Skill.MINING,
             Skill.FIREMAKING, Skill.RUNECRAFTING, Skill.HERBLORE, Skill.THIEVING,
-            Skill.CRAFTING, Skill.SMITHING, Skill.AGILITY, Skill.SLAYER, Skill.FARMING,
+            Skill.SMITHING, Skill.AGILITY, Skill.SLAYER, Skill.FARMING,
         ).forEach { this[it] = SkillMigrationState.BETA }
         // Prayer reached full parity: bury/altar/toggle fully own the plugin, and the combat
         // protect-prayer checks now route through PrayerCombatService instead of duplicating
         // logic against the old PrayerManager class directly.
-        listOf(Skill.PRAYER).forEach { this[it] = SkillMigrationState.STABLE }
+        // Crafting reached full parity: gems/hides/spinning are plugin-native; the regular-leather
+        // menu, tanning, and gold jewelry (still Client-based, driven by CraftingInterface.kt's
+        // button bindings) and the crystal-key/orb/fishbowl/wool combos (ItemCombinationService.kt)
+        // no longer depend on the old game/skill/crafting package - only the confirmed-dead
+        // ResourceFilling/shaft-crafting/old-spinning paths were dropped, all still-live routes
+        // are unchanged.
+        listOf(Skill.PRAYER, Skill.CRAFTING).forEach { this[it] = SkillMigrationState.STABLE }
     }
     fun state(skill: Skill): SkillMigrationState = states.getValue(skill)
     fun requiredCoverage(): Set<Skill> = states.filterValues { it != SkillMigrationState.LEGACY }.keys

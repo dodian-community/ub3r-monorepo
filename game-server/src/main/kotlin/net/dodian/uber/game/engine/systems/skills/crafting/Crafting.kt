@@ -1,10 +1,7 @@
-package net.dodian.uber.game.skill.crafting
+package net.dodian.uber.game.engine.systems.skills.crafting
 
-import net.dodian.cache.objects.GameObjectData
-import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.model.entity.UpdateFlag
 import net.dodian.uber.game.engine.systems.skills.ProgressionService
 import net.dodian.uber.game.skill.runtime.action.SkillingRandomEventService
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
@@ -12,9 +9,6 @@ import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.netty.listener.out.SetGoldItems
 import net.dodian.uber.game.engine.systems.action.ProductionRequest
 import net.dodian.uber.game.api.content.ContentActions
-import net.dodian.uber.game.engine.systems.action.PolicyPreset
-import net.dodian.uber.game.api.plugin.skills.SkillPlugin
-import net.dodian.uber.game.api.plugin.skills.skillPlugin
 
 object Crafting {
 
@@ -48,38 +42,8 @@ object Crafting {
     fun openGoldJewelry(client: Client) = GoldJewelry.openInterface(client)
 
     @JvmStatic
-    fun performShaft(client: Client) {
-        if (client.isBusy) {
-            client.sendMessage("You are currently busy to be fletching!")
-            return
-        }
-        if (client.IsCutting) {
-            client.resetAction()
-        }
-        client.send(RemoveInterfaces())
-        if (client.playerHasItem(1511)) {
-            client.deleteItem(1511, 1)
-            client.addItem(52, 15)
-            client.checkItemUpdate()
-            client.performAnimation(1248, 0)
-            ProgressionService.addXp(client, 50, Skill.FLETCHING)
-            SkillingRandomEventService.trigger(client, 50)
-        } else {
-            client.resetAction()
-        }
-    }
-
-    @JvmStatic
-    fun startShafting(client: Client) {
-        client.craftingState = CraftingState(mode = CraftingMode.SHAFTING)
-        startAction(client)
-    }
-
-    @JvmStatic
     fun startAction(client: Client) {
         when (client.craftingState?.mode) {
-            CraftingMode.SHAFTING -> startShaftingAction(client)
-            CraftingMode.SPINNING -> startSpinningAction(client)
             CraftingMode.LEATHER -> startCraftingAction(client)
             else -> stopAction(client)
         }
@@ -94,48 +58,6 @@ object Crafting {
     @JvmStatic
     fun stopFromReset(client: Client, fullReset: Boolean) {
         stopAction(client)
-    }
-
-    @JvmStatic
-    fun startShaftingAction(client: Client) = CraftingActions.startShaftingAction(client)
-
-    @JvmStatic
-    fun performSpin(client: Client) {
-        if (client.playerHasItem(1779)) {
-            client.deleteItem(1779, 1)
-            client.addItem(1777, 1)
-            ProgressionService.addXp(client, 50, Skill.CRAFTING)
-            SkillingRandomEventService.trigger(client, 50)
-        } else if (client.playerHasItem(1737)) {
-            client.deleteItem(1737, 1)
-            client.addItem(1759, 1)
-            ProgressionService.addXp(client, 100, Skill.CRAFTING)
-            SkillingRandomEventService.trigger(client, 100)
-        } else {
-            client.sendMessage("You do not have anything to spin!")
-            client.resetAction(true)
-            return
-        }
-        client.checkItemUpdate()
-    }
-
-    @JvmStatic
-    fun startSpinning(client: Client) {
-        client.craftingState = CraftingState(mode = CraftingMode.SPINNING)
-        startAction(client)
-    }
-
-    @JvmStatic
-    fun startSpinningAction(client: Client) = CraftingActions.startSpinningAction(client)
-
-    @JvmStatic
-    fun spinDelayMs(client: Client): Long {
-        val craftingLevel = client.getLevel(Skill.CRAFTING)
-        return when {
-            craftingLevel >= 70 -> 600L
-            craftingLevel >= 40 -> 1200L
-            else -> 1800L
-        }
     }
 
     @JvmStatic
@@ -417,45 +339,3 @@ object Tanning {
     }
 }
 
-object ResourceFilling {
-    private data class FillEntry(val emptyItemId: Int, val filledItemId: Int, val emote: Int)
-
-    private val waterSourceEntries =
-        arrayOf(
-            FillEntry(229, 227, 832),
-            FillEntry(1980, 4458, 832),
-            FillEntry(1935, 1937, 832),
-            FillEntry(1825, 1823, 832),
-            FillEntry(1827, 1823, 832),
-            FillEntry(1829, 1823, 832),
-            FillEntry(1831, 1823, 832),
-            FillEntry(1925, 1929, 832),
-            FillEntry(1923, 1921, 832),
-        )
-
-    private val cookingPotEntries = arrayOf(FillEntry(1925, 1783, 895))
-    private val sinkEntries = arrayOf(FillEntry(1925, 1929, 832))
-
-    @JvmStatic
-    fun handleObjectUse(client: Client, objectId: Int): Boolean {
-        val entries =
-            when (objectId) {
-                879, 873, 874, 6232, 12279, 14868, 20358, 25929 -> waterSourceEntries
-                14890 -> cookingPotEntries
-                884, 878, 6249 -> sinkEntries
-                else -> return false
-            }
-
-        for (entry in entries) {
-            if (!client.playerHasItem(entry.emptyItemId)) {
-                continue
-            }
-            client.deleteItem(entry.emptyItemId, 1)
-            client.addItem(entry.filledItemId, 1)
-            client.checkItemUpdate()
-            client.performAnimation(entry.emote, 0)
-            return true
-        }
-        return true
-    }
-}

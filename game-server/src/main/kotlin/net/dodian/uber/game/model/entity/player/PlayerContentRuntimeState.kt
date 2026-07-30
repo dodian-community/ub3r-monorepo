@@ -16,7 +16,7 @@ import net.dodian.uber.game.engine.systems.interaction.InteractionAnchorState
 import net.dodian.uber.game.engine.systems.interaction.InteractionIntent
 import net.dodian.uber.game.engine.sync.player.PlayerSyncInvariantValidator
 import net.dodian.uber.game.engine.tasking.GameTaskSet
-import net.dodian.uber.game.skill.crafting.CraftingState
+import net.dodian.uber.game.engine.systems.skills.crafting.CraftingState
 import net.dodian.uber.game.skill.thieving.PyramidPlunderPlayerState
 import net.dodian.uber.game.api.plugin.skills.PendingSkillMulti
 

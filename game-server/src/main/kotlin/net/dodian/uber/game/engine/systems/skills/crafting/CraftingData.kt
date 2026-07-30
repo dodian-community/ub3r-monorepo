@@ -1,22 +1,10 @@
-package net.dodian.uber.game.skill.crafting
+package net.dodian.uber.game.engine.systems.skills.crafting
 
-import net.dodian.uber.game.skill.runtime.action.SkillActionRequest
 import net.dodian.uber.game.skill.runtime.action.SkillActionState
 import net.dodian.uber.game.skill.runtime.action.ActionStopReason
 
-data class CraftingRequest(
-    val mode: CraftingMode,
-    val selectedItemId: Int = -1,
-    val productId: Int = -1,
-    val amount: Int = 0,
-    val requiredLevel: Int = 0,
-    val experience: Int = 0,
-) : SkillActionRequest
-
 enum class CraftingMode {
     LEATHER,
-    SPINNING,
-    SHAFTING,
 }
 
 data class CraftingState(
@@ -36,12 +24,6 @@ data class GoldJewelryRequest(
     val interfaceId: Int,
     val slot: Int,
     val amount: Int,
-)
-
-data class GoldJewelryState(
-    val selectedIndex: Int,
-    val selectedSlot: Int,
-    val remaining: Int,
 )
 
 data class GoldJewelryProduct(

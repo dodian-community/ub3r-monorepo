@@ -4,7 +4,7 @@ import net.dodian.uber.game.engine.systems.interaction.commands.*
 
 import java.util.LinkedHashSet
 import net.dodian.uber.skills.cooking.CookingModule
-import net.dodian.uber.game.skill.crafting.CraftingData
+import net.dodian.uber.game.engine.systems.skills.crafting.CraftingData
 import net.dodian.uber.skills.firemaking.FiremakingModule
 import net.dodian.uber.game.engine.systems.skills.farming.FarmingData
 import net.dodian.uber.skills.fishing.FishingModule

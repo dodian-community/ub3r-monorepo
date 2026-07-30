@@ -41,7 +41,7 @@ import net.dodian.uber.game.engine.net.OutboundSessionQueue;
 import net.dodian.uber.game.engine.processing.EntityProcessor;
 import net.dodian.uber.game.engine.metrics.PacketErrorTelemetry;
 import net.dodian.uber.game.engine.metrics.PacketRejectTelemetry;
-import net.dodian.uber.game.skill.crafting.Tanning;
+import net.dodian.uber.game.engine.systems.skills.crafting.Tanning;
 import net.dodian.uber.game.engine.systems.dialogue.DialogueOptionService;
 import net.dodian.uber.game.ui.dialogue.DialogueDisplayService;
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService;
