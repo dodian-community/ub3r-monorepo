@@ -14,6 +14,7 @@ import net.dodian.uber.game.engine.systems.action.PolicyPreset
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.skills.api.SkillModuleDescriptor
 import net.dodian.uber.game.api.plugin.runtime.TomlRecordReader
+import kotlin.math.roundToInt
 
 data class FarmingCropDef(
     val type: String,
@@ -24,6 +25,8 @@ data class FarmingCropDef(
     val harvestXp: Int,
     val harvestItem: Int,
     val stages: Int,
+    val growTick: Int,
+    val diseaseChance: Int,
 )
 
 /** Where a live patch object id sits: which persisted-state slot it maps to, and its crop type. */
@@ -192,6 +195,7 @@ object FarmingModule : SkillPlugin {
     private fun clearPatch(player: SkillPlayer, loc: PatchLocation) {
         player.farmingState.writePatchSlot(loc.patchName, loc.slot, -1, WEED, NO_COMPOST, 3, 0, -1)
         player.farmingState.markDirty()
+        player.farmingState.notifyInteraction()
         player.farmingState.refreshVisuals()
     }
 
@@ -204,6 +208,7 @@ object FarmingModule : SkillPlugin {
                     player.inventory.transaction { add(regularCompostItemIds[0]) }
                     player.farmingState.writePatchSlot(loc.patchName, loc.slot, slot.itemId, WEED, slot.compost, slot.stageOrLife + 1, slot.progress, slot.plantedBy)
                     player.farmingState.markDirty()
+                    player.farmingState.notifyInteraction()
                     player.farmingState.refreshVisuals()
                 } else {
                     player.ui.message("You need a rake in order to clear the weed.")
@@ -223,6 +228,7 @@ object FarmingModule : SkillPlugin {
                     player.inventory.transaction { remove(PLANT_CURE) }
                     player.farmingState.writePatchSlot(loc.patchName, loc.slot, slot.itemId, GROWING, slot.compost, slot.stageOrLife, 0, slot.plantedBy)
                     player.farmingState.markDirty()
+                    player.farmingState.notifyInteraction()
                     player.farmingState.refreshVisuals()
                 } else {
                     // Legacy shows this exact (wrong-item) message for the disease-cure refusal
@@ -244,6 +250,7 @@ object FarmingModule : SkillPlugin {
                         } else {
                             player.farmingState.writePatchSlot(loc.patchName, loc.slot, slot.itemId, HARVEST, slot.compost, life, slot.progress, slot.plantedBy)
                             player.farmingState.markDirty()
+                            player.farmingState.notifyInteraction()
                             player.farmingState.refreshVisuals()
                         }
                     }
@@ -287,6 +294,7 @@ object FarmingModule : SkillPlugin {
                     player.inventory.transaction { remove(itemId); add(emptiedCanId) }
                     player.farmingState.writePatchSlot(loc.patchName, loc.slot, slot.itemId, WATER, slot.compost, slot.stageOrLife, slot.progress, slot.plantedBy)
                     player.farmingState.markDirty()
+                    player.farmingState.notifyInteraction()
                     player.farmingState.refreshVisuals()
                 } else {
                     player.ui.message(
@@ -312,6 +320,7 @@ object FarmingModule : SkillPlugin {
                 player.inventory.transaction { remove(itemId); add(BUCKET) }
                 player.farmingState.writePatchSlot(loc.patchName, loc.slot, slot.itemId, slot.state, name, slot.stageOrLife, slot.progress, slot.plantedBy)
                 player.farmingState.markDirty()
+                player.farmingState.notifyInteraction()
             } else {
                 // Legacy's exact (bug-preserving) concatenation: "supercompost"/"ultracompost"
                 // already end in "compost", so this doubles the word for those two tiers -
@@ -357,6 +366,7 @@ object FarmingModule : SkillPlugin {
         player.skills.gainXp(crop.plantXp, Skill.FARMING)
         player.farmingState.writePatchSlot(loc.patchName, loc.slot, itemId, GROWING, slot.compost, 1, 0, System.currentTimeMillis().toInt())
         player.farmingState.markDirty()
+        player.farmingState.notifyInteraction()
         player.farmingState.refreshVisuals()
     }
 
@@ -440,11 +450,13 @@ object FarmingModule : SkillPlugin {
                 bin.state == BIN_FILLED && bin.amount == 15 -> {
                     player.farmingState.writeCompostBin(binName, bin.compost, BIN_CLOSED, bin.amount, bin.progress)
                     player.farmingState.markDirty()
+                    player.farmingState.notifyInteraction()
                     player.farmingState.refreshVisuals()
                 }
                 bin.state == BIN_DONE -> {
                     player.farmingState.writeCompostBin(binName, bin.compost, BIN_OPEN, bin.amount, bin.progress)
                     player.farmingState.markDirty()
+                    player.farmingState.notifyInteraction()
                     player.farmingState.refreshVisuals()
                 }
                 bin.state == BIN_OPEN -> {
@@ -457,6 +469,7 @@ object FarmingModule : SkillPlugin {
                             player.farmingState.writeCompostBin(binName, bin.compost, BIN_OPEN, amount, bin.progress)
                         }
                         player.farmingState.markDirty()
+                        player.farmingState.notifyInteraction()
                         player.farmingState.refreshVisuals()
                     } else {
                         player.ui.message("You are missing a bucket to be filled with compost.")
@@ -475,6 +488,7 @@ object FarmingModule : SkillPlugin {
                             // fixed, matching this effort's standing preserve-over-fix default.
                             p.farmingState.writeCompostBin(binName, NO_COMPOST, BIN_EMPTY, bin.amount, 0)
                             p.farmingState.markDirty()
+                            p.farmingState.notifyInteraction()
                             p.farmingState.refreshVisuals()
                             p.ui.message("You dump all the content inside the bin!")
                         }
@@ -489,6 +503,7 @@ object FarmingModule : SkillPlugin {
         player.inventory.transaction { remove(itemId) }
         player.farmingState.writeCompostBin(binName, compostType, BIN_FILLED, bin.amount + 1, bin.progress)
         player.farmingState.markDirty()
+        player.farmingState.notifyInteraction()
         player.farmingState.refreshVisuals()
     }
 
@@ -505,6 +520,7 @@ object FarmingModule : SkillPlugin {
                 player.inventory.transaction { remove(VOLCANIC_ASH, 25) }
                 player.farmingState.writeCompostBin(binName, "ULTRACOMPOST", bin.state, bin.amount, bin.progress)
                 player.farmingState.markDirty()
+                player.farmingState.notifyInteraction()
             } else {
                 player.ui.message("You need 25 $itemName in order to convert into ultra compost.")
             }
@@ -561,6 +577,102 @@ object FarmingModule : SkillPlugin {
         return true
     }
 
+    // --- Growth-tick simulation: one wall-clock pulse's worth of patch/bin progression ---------
+    // Called by the engine's FarmingRuntimeService catch-up scheduler (once per due pulse, not
+    // once per game tick). Reproduces legacy Farming.kt's updateFarming() exactly for allotment/
+    // flower/herb patches and compost bins - STUMP/PRODUCTION (bush/fruit-tree/tree) are
+    // confirmed dead (no live object ids exist anywhere) and were not ported; the sapling bank/
+    // inventory auto-conversion loop stays legacy-owned (Farming.kt's updateSaplings(), out of
+    // scope - bush/fruit-tree/tree territory).
+
+    private val binTicks: Map<String, Int> = mapOf(
+        "CATHERBY" to 1,
+        "ARDOUGNE" to 1,
+        "CANAFIS" to 1,
+        "FALADOR" to 60,
+    )
+
+    private fun compostDivideValue(compost: String): Int = when (compost) {
+        "COMPOST" -> 4
+        "SUPERCOMPOST" -> 8
+        "ULTRACOMPOST" -> 12
+        else -> 1
+    }
+
+    fun applyGrowthPulse(player: SkillPlayer) {
+        val patchSlotsByKey = player.farmingState.patchSlots().associateBy { it.patchName to it.slot }
+        patchLocations.values.forEach { loc ->
+            val slot = patchSlotsByKey[loc.patchName to loc.slot]
+                ?: SkillPatchSlot(loc.patchName, loc.slot, -1, WEED, NO_COMPOST, 0, 0, -1)
+            applyPatchPulse(player, loc, slot)
+        }
+        player.farmingState.compostBins().forEach { bin -> applyBinPulse(player, bin) }
+    }
+
+    private fun applyPatchPulse(player: SkillPlayer, loc: PatchLocation, slot: SkillPatchSlot) {
+        val crop = cropFor(slot.itemId)
+        when {
+            slot.state == WEED && slot.stageOrLife > 0 -> {
+                val progress = slot.progress + 1
+                if (progress == 3) {
+                    player.farmingState.writePatchSlot(loc.patchName, loc.slot, slot.itemId, WEED, slot.compost, slot.stageOrLife - 1, 0, slot.plantedBy)
+                    player.farmingState.markDirty()
+                    player.farmingState.refreshVisuals()
+                    player.farmingState.notifyInteraction()
+                } else {
+                    player.farmingState.writePatchSlot(loc.patchName, loc.slot, slot.itemId, WEED, slot.compost, slot.stageOrLife, progress, slot.plantedBy)
+                }
+            }
+            slot.itemId != -1 && crop != null && (slot.state == GROWING || slot.state == WATER || slot.state == PROTECTED) && slot.stageOrLife < crop.stages -> {
+                val progress = slot.progress + 1
+                if (progress >= crop.growTick) {
+                    var newState = if (slot.state == WATER) GROWING else slot.state
+                    var stageOrLife = slot.stageOrLife + 1
+                    var diseaseChance = if (slot.state == WATER) crop.diseaseChance * 0.9 else crop.diseaseChance.toDouble()
+                    diseaseChance *= (1.0 - ((player.skills.current(Skill.FARMING).toDouble() / 2.85) / 100))
+                    diseaseChance /= compostDivideValue(slot.compost)
+                    if (stageOrLife == crop.stages) {
+                        newState = HARVEST
+                        stageOrLife = if (crop.type == "allotment" || crop.type == "herb") 3 + compostTierOrdinal(slot.compost) else 1
+                    } else if (slot.state != PROTECTED && player.random.chance(diseaseChance.roundToInt().coerceIn(0, 1024), 1024)) {
+                        newState = DISEASE
+                    }
+                    player.farmingState.writePatchSlot(loc.patchName, loc.slot, slot.itemId, newState, slot.compost, stageOrLife, 0, slot.plantedBy)
+                    player.farmingState.markDirty()
+                    player.farmingState.refreshVisuals()
+                    player.farmingState.notifyInteraction()
+                } else {
+                    player.farmingState.writePatchSlot(loc.patchName, loc.slot, slot.itemId, slot.state, slot.compost, slot.stageOrLife, progress, slot.plantedBy)
+                }
+            }
+            slot.itemId != -1 && crop != null && slot.state == DISEASE -> {
+                val progress = slot.progress + 1
+                if (progress == crop.growTick * 2) {
+                    player.farmingState.writePatchSlot(loc.patchName, loc.slot, slot.itemId, DEAD, slot.compost, slot.stageOrLife, 0, slot.plantedBy)
+                    player.farmingState.markDirty()
+                    player.farmingState.refreshVisuals()
+                    player.farmingState.notifyInteraction()
+                } else {
+                    player.farmingState.writePatchSlot(loc.patchName, loc.slot, slot.itemId, DISEASE, slot.compost, slot.stageOrLife, progress, slot.plantedBy)
+                }
+            }
+        }
+    }
+
+    private fun applyBinPulse(player: SkillPlayer, bin: SkillCompostBinState) {
+        if (bin.state != BIN_CLOSED) return
+        val ticks = binTicks[bin.binName] ?: return
+        val progress = bin.progress + 1
+        if (progress >= ticks) {
+            player.farmingState.writeCompostBin(bin.binName, bin.compost, BIN_DONE, bin.amount, 0)
+            player.farmingState.markDirty()
+            player.farmingState.refreshVisuals()
+            player.farmingState.notifyInteraction()
+        } else {
+            player.farmingState.writeCompostBin(bin.binName, bin.compost, bin.state, bin.amount, progress)
+        }
+    }
+
     private fun loadCrops(): List<FarmingCropDef> =
         TomlRecordReader.readRecords("farming/patches.toml", "crop").map { row ->
             FarmingCropDef(
@@ -572,6 +684,8 @@ object FarmingModule : SkillPlugin {
                 harvestXp = row.getValue("harvest_xp").toInt(),
                 harvestItem = row.getValue("harvest_item").toInt(),
                 stages = row.getValue("stages").toInt(),
+                growTick = row.getValue("grow_tick").toInt(),
+                diseaseChance = row.getValue("disease_chance").toInt(),
             )
         }
 }

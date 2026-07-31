@@ -1,19 +1,22 @@
 package net.dodian.uber.game.engine.systems.skills.farming
 
-import com.google.gson.JsonPrimitive
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.netty.listener.out.SendMessage
 import net.dodian.uber.game.engine.systems.skills.farming.FarmingData.patches
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
 import net.dodian.uber.game.api.content.ContentRuntimeApi
-import net.dodian.uber.game.engine.util.Misc
 
 class Farming {
     val farmData = FarmingData()
 
-    fun Client.updateFarming() {
-        /* Saplings in inventory + bank! */
+    // The compost-bin CLOSED->DONE tick and the allotment/flower/herb WEED/GROWING/DISEASE
+    // progression loop that used to live here moved to FarmingModule.applyGrowthPulse (plugin-
+    // owned, called once per due wall-clock pulse by FarmingRuntimeService). STUMP/PRODUCTION
+    // (bush/fruit-tree/tree) were confirmed dead - no live object ids exist anywhere - and were
+    // deleted, not ported. Only the sapling bank/inventory auto-conversion loop remains here,
+    // since bush/fruit-tree/tree/saplings are still out of scope (Farming part 3, undecided).
+    fun Client.updateSaplings() {
         for (sapling in FarmingData.sapling.values()) {
             for(slot in playerItems.indices)
                 if(playerItems[slot] == sapling.waterId + 1) {
@@ -34,97 +37,8 @@ class Farming {
                     checkItemUpdate()
                 }
         }
-        /* Compost Bin */
-        for(compost in FarmingData.compostBin.values()) { /* Compost default values */
-            if (farmingJson.getCompostData().get(compost.name) != null) {
-                val farmCompost = farmingJson.getCompostData().get(compost.name).asJsonArray
-                if(compostGrow(farmCompost.get(1).asString)) {
-                    farmCompost.set(3, JsonPrimitive(farmCompost.get(3).asInt + 1))
-                    if(farmCompost.get(3).asInt >= compost.ticks) {
-                        farmCompost.set(1, JsonPrimitive(FarmingData.compostState.DONE.toString()))
-                        updateCompost(farmCompost.get(0).asString,farmCompost.get(1).asString, farmCompost.get(2).asInt)
-                        markFarmingDirty()
-                    }
-                }
-            }
-        }
-        /* Farming Patches */
-        for(patch in patches.values()) { /* Patches default values */
-            if (farmingJson.getPatchData().get(patch.name) != null) {
-                val farmPatches = farmingJson.getPatchData().get(patch.name).asJsonArray //Not sure if we need just yet!
-                (0 until patch.objectId.size).forEach { slot ->
-                    val objectId = patch.objectId[slot]
-                    val itemId = findPatch(objectId, 0).toInt()
-                    val checkPos = slot * farmingJson.PATCHAMOUNT
-                    /* Weed generation */
-                    if(findPatch(objectId, 1) == FarmingData.patchState.WEED.toString() && findPatch(objectId, 3).toInt() > 0) {
-                        farmPatches.set(checkPos + 4, JsonPrimitive(farmPatches.get(checkPos + 4).asInt + 1))
-                        if(farmPatches.get(checkPos + 4).asInt == 3) {
-                            farmPatches.set(checkPos + 4, JsonPrimitive(0))
-                            farmPatches.set(checkPos + 3, JsonPrimitive(farmPatches.get(checkPos + 3).asInt - 1))
-                            updateFarmPatch()
-                            markFarmingDirty()
-                        }
-                    } else if(itemId != -1 && plantGrow(findPatch(objectId, 1)) && farmPatches.get(checkPos + 3).asInt < farmData.getEndStage(itemId)) { //Growing of plant!
-                            farmPatches.set(checkPos + 4, JsonPrimitive(farmPatches.get(checkPos + 4).asInt + 1))
-                            if(farmPatches.get(checkPos + 4).asInt >= farmData.getGrowTick(itemId)) {
-                                var diseaseChance = if(findPatch(objectId, 1) == "WATER") farmData.getDiseaseChance(itemId) * 0.9 else farmData.getDiseaseChance(itemId)
-                                /* Change status on patch */
-                                if(findPatch(objectId, 1) == "WATER") //Change status due to water!
-                                    farmPatches.set(checkPos + 1, JsonPrimitive(FarmingData.patchState.GROWING.toString()))
-                                farmPatches.set(checkPos + 4, JsonPrimitive(0))
-                                farmPatches.set(checkPos + 3, JsonPrimitive(farmPatches.get(checkPos + 3).asInt + 1))
-                                /* Disease checks */
-                                val chance = Misc.chance(1024)
-                                val divideValue = FarmingData.compost.find(farmPatches.get(checkPos + 2).asString)?.divideValue ?: 1
-                                diseaseChance = diseaseChance.toDouble() * (1.0 - ((getLevel(Skill.FARMING).toDouble() / 2.85) / 100))
-                                diseaseChance /= divideValue //Compost value decrease :D
-                                //System.out.println("Test.." + farmData.getDiseaseChance(itemId) + ", " + chance + ", " + diseaseChance)
-                                if (farmPatches.get(checkPos + 3).asInt == farmData.getEndStage(itemId)) { //full grown
-                                    farmPatches.set(checkPos + 1, JsonPrimitive(FarmingData.patchState.HARVEST.toString()))
-                                    val life = farmData.getLife(itemId, FarmingData.compost.find(farmPatches.get(checkPos + 2).asString)?.ordinal ?: 0)
-                                    farmPatches.set(checkPos + 3, JsonPrimitive(life))
-                                } else if(chance <= diseaseChance && findPatch(objectId, 1) != "PROTECTED") //Disease here?
-                                    farmPatches.set(checkPos + 1, JsonPrimitive(FarmingData.patchState.DISEASE.toString()))
-                                updateFarmPatch()
-                                markFarmingDirty()
-                        }
-                    } else if(itemId != -1 && findPatch(objectId, 1) == FarmingData.patchState.STUMP.toString()) { //Growing of production of a patch!
-                        farmPatches.set(checkPos + 4, JsonPrimitive(farmPatches.get(checkPos + 4).asInt + 1))
-                        if(farmPatches.get(checkPos + 4).asInt >= farmData.getGrowTick(itemId) / 3) {
-                            farmPatches.set(checkPos + 4, JsonPrimitive(0))
-                            farmPatches.set(checkPos + 1, JsonPrimitive(FarmingData.patchState.PRODUCTION.toString()))
-                            updateFarmPatch()
-                            markFarmingDirty()
-                        }
-                    } else if(itemId != -1 && findPatch(objectId, 1) == FarmingData.patchState.PRODUCTION.toString()) { //Growing of production of a patch!
-                        val life = if(FarmingData.treePatch.find(itemId) != null) 1 else if (FarmingData.bushPatch.find(itemId) != null) 4 else 6
-                        if(farmPatches.get(checkPos + 3).asInt < life) {
-                            farmPatches.set(checkPos + 4, JsonPrimitive(farmPatches.get(checkPos + 4).asInt + 1))
-                            if(farmPatches.get(checkPos + 4).asInt >= farmData.getGrowTick(itemId) / 3) {
-                                farmPatches.set(checkPos + 4, JsonPrimitive(0))
-                                farmPatches.set(checkPos + 3, JsonPrimitive(farmPatches.get(checkPos + 3).asInt + 1))
-                                updateFarmPatch()
-                                markFarmingDirty()
-                            }
-                        }
-                    } else if(itemId != -1 && findPatch(objectId, 1) == "DISEASE") {
-                        farmPatches.set(checkPos + 4, JsonPrimitive(farmPatches.get(checkPos + 4).asInt + 1))
-                        if(farmPatches.get(checkPos + 4).asInt == farmData.getGrowTick(itemId) * 2) { //Dead patch!
-                            farmPatches.set(checkPos + 4, JsonPrimitive(0))
-                            farmPatches.set(checkPos + 1, JsonPrimitive(FarmingData.patchState.DEAD.toString()))
-                            updateFarmPatch()
-                            markFarmingDirty()
-                        }
-                    }
-                }
-            }
-        }
     }
 
-    fun compostGrow(status: String) : Boolean {
-        return status.equals(FarmingData.compostState.CLOSED.toString(), true)
-    }
     fun Client.updateCompost(compost : String, status: String, amount : Int) {
         when (status) {
             FarmingData.compostState.CLOSED.toString() -> varbit(

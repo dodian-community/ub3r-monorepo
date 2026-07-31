@@ -112,4 +112,30 @@ class FarmingRealWorldTest : RealWorldSkillTest() {
         assertEquals("EMPTY", binState(player).state)
         assertEquals("NONE", binState(player).compost)
     }
+
+    @Test
+    fun `applyGrowthPulse advances a real planted patch to harvest through the real farmingJson storage`() {
+        val player = spawnPlayer("GrowthPulseFarmer", allotmentX, allotmentY)
+        player.farmingJson.farmingLoad("")
+        // potato: growTick=8, stages=5 - seed one pulse away from the final stage so the
+        // transition is deterministic (bypasses the real, genuinely-random disease roll).
+        player.asSkillPlayer().farmingState.writePatchSlot("CATHERBY_WEST", 0, 5318, "GROWING", "NONE", 4, 7, -1)
+
+        net.dodian.uber.skills.farming.FarmingModule.applyGrowthPulse(player.asSkillPlayer())
+
+        val slot = player.asSkillPlayer().farmingState.patchSlots().single { it.patchName == "CATHERBY_WEST" && it.slot == 0 }
+        assertEquals("HARVEST", slot.state)
+        assertEquals(3, slot.stageOrLife) // 3 + compostTierOrdinal(NONE)=0
+    }
+
+    @Test
+    fun `applyGrowthPulse closes a real full compost bin through the real farmingJson storage`() {
+        val player = spawnPlayer("GrowthPulseBinFarmer", binX, binY)
+        player.farmingJson.farmingLoad("")
+        player.asSkillPlayer().farmingState.writeCompostBin("CATHERBY", "COMPOST", "CLOSED", 15, 0)
+
+        net.dodian.uber.skills.farming.FarmingModule.applyGrowthPulse(player.asSkillPlayer())
+
+        assertEquals("DONE", binState(player).state)
+    }
 }

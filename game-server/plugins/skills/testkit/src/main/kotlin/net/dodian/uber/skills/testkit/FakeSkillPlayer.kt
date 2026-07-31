@@ -411,8 +411,11 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
         }
         override fun markDirty() { farmingStateDirty = true }
         override fun refreshVisuals() { farmingRefreshVisualsCalls++ }
+        override fun notifyInteraction() { farmingNotifyInteractionCalls++ }
     }
     var farmingRefreshVisualsCalls = 0
+        private set
+    var farmingNotifyInteractionCalls = 0
         private set
 
     /** Seeds a patch slot's starting state for a test - defaults match a fresh, unplanted patch. */

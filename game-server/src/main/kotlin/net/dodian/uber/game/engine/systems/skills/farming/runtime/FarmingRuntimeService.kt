@@ -8,11 +8,13 @@ import net.dodian.uber.game.engine.systems.skills.farming.markFarmingDirty
 import net.dodian.uber.game.api.content.ContentScheduling
 import net.dodian.uber.game.api.content.ContentTiming
 import net.dodian.uber.game.engine.config.runtimePhaseWarnMs
+import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
 import net.dodian.uber.game.engine.tasking.TaskHandle
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.persistence.player.PlayerSaveReason
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
+import net.dodian.uber.skills.farming.FarmingModule
 import org.slf4j.LoggerFactory
 
 open class FarmingRuntimeService {
@@ -206,7 +208,8 @@ open class FarmingRuntimeService {
 
         val elapsedNs = measureNanoTime {
             repeat(pulsesToApply) {
-                player.farming.run { player.updateFarming() }
+                FarmingModule.applyGrowthPulse(player.asSkillPlayer())
+                player.farming.run { player.updateSaplings() }
             }
         }
 

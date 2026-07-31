@@ -215,11 +215,10 @@ internal object AccountLoginMapper {
         }
     }
 
-    private fun applyBank(player: Client, bank: String) {
+    internal fun applyBank(player: Client, bank: String, size: Int = player.bankSize()) {
         if (bank.isEmpty()) {
             return
         }
-        val size = player.bankSize()
         if (player.bankSlotTabs == null || player.bankSlotTabs.size != size) {
             player.bankSlotTabs = IntArray(size)
         }

@@ -161,6 +161,10 @@ open class ItemManager @JvmOverloads constructor(
                 val isTwoHanded = json.equipment?.let { Item.isTwoHandedFromSlot(it.slot) } == true
                 val slotVal = json.equipment?.let { Item.slotFromName(it.slot, isTwoHanded) } ?: 0
                 val nameLower = json.name.lowercase()
+                val linkedItemId = json.effectiveUnnotedId ?: 0
+                val linkedNotedId = json.effectiveNotedId ?: 0
+                val isNoted = json.noted || (linkedItemId > 0 && linkedItemId != json.id)
+                val isNoteable = json.noteable || (linkedNotedId > 0 && linkedNotedId != json.id)
                 val item = Item(
                     id = json.id,
                     name = json.name,
@@ -172,10 +176,10 @@ open class ItemManager @JvmOverloads constructor(
                     shopSellValue = json.cost,
                     shopBuyValue = json.cost,
                     bonuses = json.equipment?.toBonusArray() ?: IntArray(14),
-                    stackable = json.stackable || json.noted,
-                    noted = json.noted,
+                    stackable = json.stackable || isNoted,
+                    noted = isNoted,
                     placeholder = json.placeholder,
-                    noteable = json.noteable,
+                    noteable = isNoteable,
                     tradeable = json.tradeable,
                     twoHanded = isTwoHanded,
                     full = Item.deriveFull(nameLower, slotVal),
@@ -185,8 +189,8 @@ open class ItemManager @JvmOverloads constructor(
                     alchemy = json.highAlch,
                     weight = json.weight,
                     lowAlch = json.lowAlch,
-                    linkedItemId = json.linkedIdItem ?: 0,
-                    linkedNotedId = json.linkedIdNoted ?: 0,
+                    linkedItemId = linkedItemId,
+                    linkedNotedId = linkedNotedId,
                     attackSpeed = json.weapon?.attackSpeed ?: 4,
                     weaponType = json.weapon?.weaponType ?: "",
                     stances = json.weapon?.stances ?: emptyArray(),

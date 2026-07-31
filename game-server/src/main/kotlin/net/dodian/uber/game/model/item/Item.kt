@@ -199,9 +199,13 @@ class Item(
                 else -> 0
             }
 
-            val stackable = (json?.stackable ?: base.stackable) || (json?.noted == true)
+            val linkedItemId = json?.effectiveUnnotedId ?: base.unnotedId ?: 0
+            val linkedNotedId = json?.effectiveNotedId ?: base.notedId ?: 0
+
+            val isNoted = json?.noted == true || (linkedItemId > 0 && linkedItemId != base.id)
+            val isNoteable = json?.noteable == true || (linkedNotedId > 0 && linkedNotedId != base.id)
+            val stackable = (json?.stackable ?: base.stackable) || isNoted
             val tradeable = json?.tradeable ?: base.tradeable
-            val noteable = json?.noteable ?: false
             val premium = json?.members ?: false
 
             val highAlch = json?.highAlch ?: base.highAlch
@@ -227,9 +231,6 @@ class Item(
             } else null
 
             val jsonBlockAnimation: Int = base.blockAnimation ?: 0
-
-            val linkedItemId = json?.linkedIdItem ?: base.unnotedId ?: 0
-            val linkedNotedId = json?.linkedIdNoted ?: base.notedId ?: 0
 
             val bonuses = when {
                 json?.equipment != null -> json.equipment.toBonusArray()
@@ -278,9 +279,9 @@ class Item(
                 shopBuyValue = baseValue,
                 bonuses = bonuses,
                 stackable = stackable,
-                noted = json?.noted ?: false,
+                noted = isNoted,
                 placeholder = json?.placeholder ?: false,
-                noteable = noteable,
+                noteable = isNoteable,
                 tradeable = tradeable,
                 twoHanded = isTwoHanded,
                 full = full,

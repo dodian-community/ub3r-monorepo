@@ -84,6 +84,14 @@ interface SkillFarmingState {
      * sees the new patch state right away, not just on the next login/walk-triggered refresh.
      */
     fun refreshVisuals()
+    /**
+     * Nudges the wall-clock growth-catch-up scheduler to apply any due pulses immediately
+     * instead of waiting for its next poll - call alongside [markDirty]/[refreshVisuals] after
+     * any patch or compost-bin interaction that changes state, matching the legacy
+     * `ContentRuntimeApi.onFarmingPatchInteraction`/`.onFarmingCompostInteraction` call points
+     * (their underlying scheduler bodies are identical, hence one consolidated method here).
+     */
+    fun notifyInteraction()
 }
 
 interface SkillLevels {

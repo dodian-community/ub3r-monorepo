@@ -88,6 +88,8 @@ object CacheCollisionAuditStore {
         )
     }
 
+    internal fun regionIdsForTests(): Set<Int> = packedObjectsByRegion.keys
+
     internal fun clearForTests() {
         entriesByRegion = emptyMap()
         packedObjectsByRegion = emptyMap()

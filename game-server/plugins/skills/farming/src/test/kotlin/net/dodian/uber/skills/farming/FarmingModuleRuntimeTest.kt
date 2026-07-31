@@ -662,6 +662,133 @@ class FarmingModuleRuntimeTest {
             player.messages.single(),
         )
     }
+
+    // --- Growth pulse simulation ---------------------------------------------------------------
+    // FakeSkillPlayer.random.chance(numerator, denominator) is deterministic: numerator > 0
+    // always succeeds. Real crop diseaseChance values (180-340 base, scaled by level/compost)
+    // never round to exactly 0, so every non-final-stage growth transition below deterministically
+    // rolls disease in these tests - that's exercised deliberately, not worked around.
+
+    @Test
+    fun `weed regrowth only decrements stageOrLife on the third pulse`() {
+        val player = FakeSkillPlayer().apply { seedPatchSlot("CATHERBY_WEST", 0, state = "WEED", stageOrLife = 2, progress = 0) }
+
+        FarmingModule.applyGrowthPulse(player)
+        assertEquals(2, player.patchSlot("CATHERBY_WEST", 0)?.stageOrLife)
+        assertEquals(1, player.patchSlot("CATHERBY_WEST", 0)?.progress)
+        assertEquals(0, player.farmingNotifyInteractionCalls)
+
+        FarmingModule.applyGrowthPulse(player)
+        assertEquals(2, player.patchSlot("CATHERBY_WEST", 0)?.stageOrLife)
+        assertEquals(2, player.patchSlot("CATHERBY_WEST", 0)?.progress)
+        assertEquals(0, player.farmingNotifyInteractionCalls)
+
+        FarmingModule.applyGrowthPulse(player)
+        val slot = player.patchSlot("CATHERBY_WEST", 0)!!
+        assertEquals(1, slot.stageOrLife)
+        assertEquals(0, slot.progress)
+        assertEquals(1, player.farmingNotifyInteractionCalls)
+        assertEquals(1, player.farmingRefreshVisualsCalls)
+    }
+
+    @Test
+    fun `a growing patch below its final stage rolls disease once growTick is reached`() {
+        // potato: growTick=8, stages=5
+        val player = FakeSkillPlayer().apply {
+            seedPatchSlot("CATHERBY_WEST", 0, itemId = 5318, state = "GROWING", stageOrLife = 1, progress = 7)
+        }
+
+        FarmingModule.applyGrowthPulse(player)
+
+        val slot = player.patchSlot("CATHERBY_WEST", 0)!!
+        assertEquals("DISEASE", slot.state)
+        assertEquals(2, slot.stageOrLife)
+        assertEquals(0, slot.progress)
+        assertEquals(1, player.farmingNotifyInteractionCalls)
+    }
+
+    @Test
+    fun `a watered patch resolves through growing en route to the disease roll`() {
+        val player = FakeSkillPlayer().apply {
+            seedPatchSlot("CATHERBY_WEST", 0, itemId = 5318, state = "WATER", stageOrLife = 1, progress = 7)
+        }
+
+        FarmingModule.applyGrowthPulse(player)
+
+        val slot = player.patchSlot("CATHERBY_WEST", 0)!!
+        assertEquals("DISEASE", slot.state)
+        assertEquals(2, slot.stageOrLife)
+    }
+
+    @Test
+    fun `reaching the final stage bypasses the disease roll and harvests an allotment crop with life 3 plus compost tier`() {
+        val player = FakeSkillPlayer().apply {
+            seedPatchSlot("CATHERBY_WEST", 0, itemId = 5318, state = "GROWING", stageOrLife = 4, progress = 7, compost = "SUPERCOMPOST")
+        }
+
+        FarmingModule.applyGrowthPulse(player)
+
+        val slot = player.patchSlot("CATHERBY_WEST", 0)!!
+        assertEquals("HARVEST", slot.state)
+        assertEquals(5, slot.stageOrLife) // 3 + compostTierOrdinal(SUPERCOMPOST)=2
+    }
+
+    @Test
+    fun `reaching the final stage harvests a flower crop with life 1 regardless of compost`() {
+        val player = FakeSkillPlayer().apply {
+            seedPatchSlot("CATHERBY_WEST", 2, itemId = 5096, state = "GROWING", stageOrLife = 4, progress = 3, compost = "ULTRACOMPOST")
+        }
+
+        FarmingModule.applyGrowthPulse(player)
+
+        val slot = player.patchSlot("CATHERBY_WEST", 2)!!
+        assertEquals("HARVEST", slot.state)
+        assertEquals(1, slot.stageOrLife)
+    }
+
+    @Test
+    fun `a diseased patch dies after growTick times 2 pulses`() {
+        val player = FakeSkillPlayer().apply {
+            seedPatchSlot("CATHERBY_WEST", 0, itemId = 5318, state = "DISEASE", stageOrLife = 2, progress = 0)
+        }
+
+        repeat(15) { FarmingModule.applyGrowthPulse(player) }
+        assertEquals("DISEASE", player.patchSlot("CATHERBY_WEST", 0)?.state)
+        assertEquals(15, player.patchSlot("CATHERBY_WEST", 0)?.progress)
+
+        FarmingModule.applyGrowthPulse(player) // 16th pulse = growTick(8) * 2
+
+        val slot = player.patchSlot("CATHERBY_WEST", 0)!!
+        assertEquals("DEAD", slot.state)
+        assertEquals(0, slot.progress)
+    }
+
+    @Test
+    fun `a closed 1-tick compost bin becomes done after a single pulse`() {
+        val player = FakeSkillPlayer().apply { seedCompostBin("CATHERBY", compost = "COMPOST", state = "CLOSED", amount = 15, progress = 0) }
+
+        FarmingModule.applyGrowthPulse(player)
+
+        val bin = player.compostBin("CATHERBY")!!
+        assertEquals("DONE", bin.state)
+        assertEquals(0, bin.progress)
+        assertEquals(1, player.farmingNotifyInteractionCalls)
+    }
+
+    @Test
+    fun `falador's 60-tick compost bin only becomes done on the 60th pulse`() {
+        val player = FakeSkillPlayer().apply { seedCompostBin("FALADOR", compost = "COMPOST", state = "CLOSED", amount = 15, progress = 0) }
+
+        repeat(59) { FarmingModule.applyGrowthPulse(player) }
+        assertEquals("CLOSED", player.compostBin("FALADOR")?.state)
+        assertEquals(59, player.compostBin("FALADOR")?.progress)
+
+        FarmingModule.applyGrowthPulse(player)
+
+        val bin = player.compostBin("FALADOR")!!
+        assertEquals("DONE", bin.state)
+        assertEquals(0, bin.progress)
+    }
 }
 
 private fun objRef(id: Int) = net.dodian.uber.game.api.plugin.skills.SkillObjectRef(id, net.dodian.uber.game.api.plugin.skills.SkillPosition(0, 0, 0))

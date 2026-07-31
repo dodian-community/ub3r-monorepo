@@ -422,6 +422,7 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
 
         override fun markDirty() = with(client) { markFarmingDirty() }
         override fun refreshVisuals() = client.farming.run { client.updateFarmPatch(); client.updateCompost() }
+        override fun notifyInteraction() = net.dodian.uber.game.api.content.ContentRuntimeApi.onFarmingPatchInteraction(client)
     }
     override val slayerTask = object : net.dodian.uber.game.api.plugin.skills.SkillSlayerTask {
         override val masterNpcId: Int get() = client.slayerTaskState.masterNpcId

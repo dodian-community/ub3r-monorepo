@@ -68,10 +68,7 @@ object PacketWalkingService {
             player.antique = false
         }
         player.clearPlayerPotatoState()
-        with(player.farming) {
-            player.updateCompost()
-            player.updateFarmPatch()
-        }
+        player.asSkillPlayer().farmingState.refreshVisuals()
 
         if ((player.getStunTimer() > 0 || player.getSnareTimer() > 0) && request.opcode != 98) {
             player.send(SendMessage(if (player.getSnareTimer() > 0) "You are ensnared!" else "You are currently stunned!"))
