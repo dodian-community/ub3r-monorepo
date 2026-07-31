@@ -4,12 +4,12 @@ import net.dodian.uber.game.engine.systems.interaction.commands.*
 
 import java.util.LinkedHashSet
 import net.dodian.uber.skills.cooking.CookingModule
-import net.dodian.uber.game.engine.systems.skills.crafting.CraftingData
+import net.dodian.uber.skills.crafting.CraftingModule
 import net.dodian.uber.skills.firemaking.FiremakingModule
-import net.dodian.uber.game.engine.systems.skills.farming.FarmingData
+import net.dodian.uber.skills.farming.FarmingModule
 import net.dodian.uber.skills.fishing.FishingModule
 import net.dodian.uber.skills.fletching.FletchingModule
-import net.dodian.uber.game.engine.systems.skills.herblore.HerbloreData
+import net.dodian.uber.skills.herblore.HerbloreModule
 import net.dodian.uber.skills.mining.MiningModule
 import net.dodian.uber.skills.smithing.SmithingFrameDefinitions
 import net.dodian.uber.skills.smithing.SmithingData
@@ -154,15 +154,13 @@ object SkillTestItemCatalog {
     private fun craftingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
         addAll(items, 1733, 1734, 1755, 1592, 1595, 1597, 11065, 2357, 1783, 1781, 401, 1775, 1779, 1777, 1712)
-        CraftingData.gemDefinitions.forEach {
+        CraftingModule.gems.forEach {
             addIfValid(items, it.uncutId)
             addIfValid(items, it.cutId)
         }
-        CraftingData.orbDefinitions.forEach {
-            addIfValid(items, it.orbId)
-            addIfValid(items, it.staffId)
-        }
-        CraftingData.hideDefinitions.forEach {
+        // Orb IDs and their charged staff results (static game data, no plugin list)
+        addAll(items, 571, 569, 573, 575, 1395, 1393, 1397, 1399)
+        CraftingModule.hides.forEach {
             addIfValid(items, it.itemId)
             addIfValid(items, it.glovesId)
             addIfValid(items, it.chapsId)
@@ -184,16 +182,16 @@ object SkillTestItemCatalog {
     private fun herbloreItems(): List<Int> {
         val items = LinkedHashSet<Int>()
         addAll(items, 227, 228, 229, 233)
-        HerbloreData.herbDefinitions.forEach {
+        HerbloreModule.herbs.forEach {
             addIfValid(items, it.grimyId)
             addIfValid(items, it.cleanId)
-            addIfValid(items, it.unfinishedPotionId)
+            addIfValid(items, it.unfinishedId)
         }
-        HerbloreData.potionRecipes.forEach {
+        HerbloreModule.potions.forEach {
             addIfValid(items, it.secondaryId)
-            addIfValid(items, it.finishedPotionId)
+            addIfValid(items, it.productId)
         }
-        HerbloreData.potionDoseDefinitions.forEach {
+        HerbloreModule.doses.forEach {
             addIfValid(items, it.oneDoseId)
             addIfValid(items, it.twoDoseId)
             addIfValid(items, it.threeDoseId)
@@ -205,45 +203,28 @@ object SkillTestItemCatalog {
 
     private fun farmingItems(): List<Int> {
         val items = LinkedHashSet<Int>()
-        FarmingData.allotmentPatch.values().forEach {
-            addIfValid(items, it.seed)
+        // All crop types (allotment, flower, herb, bush, fruit_tree, tree) from the plugin's TOML data
+        FarmingModule.crops.forEach {
+            addIfValid(items, it.seedId)
             addIfValid(items, it.harvestItem)
         }
-        FarmingData.flowerPatch.values().forEach {
-            addIfValid(items, it.seed)
-            addIfValid(items, it.harvestItem)
-        }
-        FarmingData.herbPatch.values().forEach {
-            addIfValid(items, it.seed)
-            addIfValid(items, it.harvestItem)
-        }
-        FarmingData.bushPatch.values().forEach {
-            addIfValid(items, it.seed)
-            addIfValid(items, it.harvestItem)
-        }
-        FarmingData.fruitTreePatch.values().forEach {
-            addIfValid(items, it.seed)
-            addIfValid(items, it.harvestItem)
-        }
-        FarmingData.treePatch.values().forEach {
-            addIfValid(items, it.seed)
-            addIfValid(items, it.harvestItem)
-        }
-        FarmingData.sapling.values().forEach {
-            addIfValid(items, it.treeSeed)
-            addIfValid(items, it.plantedId)
-            addIfValid(items, it.waterId)
-            addIfValid(items, it.saplingId)
-        }
-        FarmingData.compost.values().forEach { addIfValid(items, it.itemId) }
-        FarmingData().regularCompostItems.forEach { addIfValid(items, it) }
-        FarmingData().superCompostItems.forEach { addIfValid(items, it) }
-        addAll(
-            items,
-            FarmingData().BUCKET, FarmingData().SPADE, FarmingData().RAKE, FarmingData().SEED_DIBBER, FarmingData().TROWEL,
-            FarmingData().FILLED_PLANT_POT, FarmingData().EMPTY_PLANT_POT, FarmingData().SECATEURS, FarmingData().MAGIC_SECATEURS,
-            FarmingData().PLANT_CURE, FarmingData().VOLCANIC_ASH
+        // Sapling potting items (oak/willow/maple/yew/magic tree seeds, plant pots, saplings)
+        addAll(items,
+            5312, 5313, 5314, 5315, 5316,  // tree seeds
+            5358, 5359, 5360, 5361, 5362,  // planted pots
+            5364, 5365, 5366, 5367, 5368,  // watered pots
+            5370, 5371, 5372, 5373, 5374,  // saplings
         )
+        // Compost item IDs
+        addAll(items, 6032, 6034, 21483)  // compost, supercompost, ultracompost
+        // Regular compost inputs
+        addAll(items, 6055, 6010, 6014, 6020, 1793, 5986, 5504, 1955, 1963, 2108, 5970,
+            1957, 1942, 1965, 1951, 2126, 753, 1779, 401, 249, 199, 251, 201, 253, 203, 255, 205, 257, 207)
+        // Super compost inputs
+        addAll(items, 2114, 5982, 5972, 5974, 5978, 5976, 231, 247, 239, 6018, 2998, 3049,
+            261, 211, 263, 213, 3000, 3051, 265, 215, 2481, 2485, 267, 217, 269, 219, 259, 209)
+        // Farming tools
+        addAll(items, 1925, 952, 5341, 5343, 5325, 5354, 5350, 5329, 7409, 6036, 21622)
         return items.toList()
     }
 

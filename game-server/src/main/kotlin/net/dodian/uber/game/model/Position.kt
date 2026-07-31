@@ -42,7 +42,11 @@ class Position @JvmOverloads constructor(x: Int = 2611, y: Int = 3093, z: Int = 
         return kotlin.math.sqrt((difX * difX + difY * difY).toDouble())
     }
 
-    fun isWithinRange(position: Position, threshold: Double): Boolean = getDistance(position) <= threshold
+    fun isWithinRange(position: Position, threshold: Double): Boolean {
+        val difX = getX() - position.getX()
+        val difY = getY() - position.getY()
+        return (difX * difX + difY * difY) <= (threshold * threshold)
+    }
 
     fun moveTo(x: Int, y: Int, z: Int) {
         packed = pack(x, y, z)
@@ -144,14 +148,18 @@ class Position @JvmOverloads constructor(x: Int = 2611, y: Int = 3093, z: Int = 
         }
 
         private fun encodeCoordinate(axis: String, value: Int): Int {
-            require(value in MIN_COORDINATE..MAX_COORDINATE) { "Position $axis out of range: $value" }
+            if (value !in MIN_COORDINATE..MAX_COORDINATE) {
+                throw IllegalArgumentException("Position $axis out of range: $value")
+            }
             return value + 1
         }
 
         private fun unpackCoordinate(encoded: Int): Int = (encoded and X_MASK) - 1
 
         private fun encodeHeight(value: Int): Int {
-            require(value in MIN_HEIGHT..MAX_HEIGHT) { "Position z out of range: $value" }
+            if (value !in MIN_HEIGHT..MAX_HEIGHT) {
+                throw IllegalArgumentException("Position z out of range: $value")
+            }
             return value
         }
     }

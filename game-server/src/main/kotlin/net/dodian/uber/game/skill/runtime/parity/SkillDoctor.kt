@@ -1,7 +1,7 @@
 package net.dodian.uber.game.skill.runtime.parity
 
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.engine.systems.skills.herblore.HerbloreData
+import net.dodian.uber.skills.herblore.HerbloreModule
 import net.dodian.uber.skills.prayer.PrayerModule
 import net.dodian.uber.game.api.plugin.ContentModuleIndex
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
@@ -238,7 +238,7 @@ object SkillDoctor {
             }
         }
 
-        val grimyHerbIds = HerbloreData.herbDefinitions.map { it.grimyId }.toIntArray()
+        val grimyHerbIds = HerbloreModule.herbs.map { it.grimyId }.toIntArray()
         grimyHerbIds.forEach { itemId ->
             if (skillSnapshot.itemBinding(option = 1, itemId = itemId) == null) {
                 findings += SkillDoctorFinding(

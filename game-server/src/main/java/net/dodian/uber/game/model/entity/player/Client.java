@@ -2601,17 +2601,17 @@ public class Client extends Player implements Runnable {
             return 1;
         }
         String ItemName = getItemName(ItemID);
-        String ItemName2 = ItemName.replaceAll("Bronze", "");
+        String ItemName2 = ItemName.replace("Bronze", "");
 
-        ItemName2 = ItemName2.replaceAll("Iron", "");
-        ItemName2 = ItemName2.replaceAll("Steel", "");
-        ItemName2 = ItemName2.replaceAll("Black", "");
-        ItemName2 = ItemName2.replaceAll("Mithril", "");
-        ItemName2 = ItemName2.replaceAll("Adamant", "");
-        ItemName2 = ItemName2.replaceAll("Rune", "");
-        ItemName2 = ItemName2.replaceAll("Granite", "");
-        ItemName2 = ItemName2.replaceAll("Dragon", "");
-        ItemName2 = ItemName2.replaceAll("Crystal", "");
+        ItemName2 = ItemName2.replace("Iron", "");
+        ItemName2 = ItemName2.replace("Steel", "");
+        ItemName2 = ItemName2.replace("Black", "");
+        ItemName2 = ItemName2.replace("Mithril", "");
+        ItemName2 = ItemName2.replace("Adamant", "");
+        ItemName2 = ItemName2.replace("Rune", "");
+        ItemName2 = ItemName2.replace("Granite", "");
+        ItemName2 = ItemName2.replace("Dragon", "");
+        ItemName2 = ItemName2.replace("Crystal", "");
         ItemName2 = ItemName2.trim();
         if (ItemName2.startsWith("claws") || ItemName2.startsWith("dagger") || ItemName2.startsWith("sword")
                 || ItemName2.startsWith("scimitar") || ItemName2.startsWith("mace") || ItemName2.startsWith("longsword")
@@ -2658,16 +2658,16 @@ public class Client extends Player implements Runnable {
         String ItemName = getItemName(ItemID);
         if (ItemName.toLowerCase().contains("beret") || ItemName.toLowerCase().contains("cavalier") || ItemName.toLowerCase().contains("mystic") || checkName.contains("mask") || checkName.contains("partyhat"))
             return 1;
-        String ItemName2 = ItemName.replaceAll("Bronze", "");
-        ItemName2 = ItemName2.replaceAll("Iron", "");
-        ItemName2 = ItemName2.replaceAll("Steel", "");
-        ItemName2 = ItemName2.replaceAll("Black", "");
-        ItemName2 = ItemName2.replaceAll("Mithril", "");
-        ItemName2 = ItemName2.replaceAll("Adamant", "");
-        ItemName2 = ItemName2.replaceAll("Rune", "");
-        ItemName2 = ItemName2.replaceAll("Granite", "");
-        ItemName2 = ItemName2.replaceAll("Dragon", "");
-        ItemName2 = ItemName2.replaceAll("Crystal", "");
+        String ItemName2 = ItemName.replace("Bronze", "");
+        ItemName2 = ItemName2.replace("Iron", "");
+        ItemName2 = ItemName2.replace("Steel", "");
+        ItemName2 = ItemName2.replace("Black", "");
+        ItemName2 = ItemName2.replace("Mithril", "");
+        ItemName2 = ItemName2.replace("Adamant", "");
+        ItemName2 = ItemName2.replace("Rune", "");
+        ItemName2 = ItemName2.replace("Granite", "");
+        ItemName2 = ItemName2.replace("Dragon", "");
+        ItemName2 = ItemName2.replace("Crystal", "");
         ItemName2 = ItemName2.trim();
         if (ItemName2.startsWith("claws") || ItemName2.startsWith("dagger") || ItemName2.startsWith("sword")
                 || ItemName2.startsWith("scimitar") || ItemName2.startsWith("mace") || ItemName2.startsWith("longsword")

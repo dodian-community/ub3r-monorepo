@@ -6,7 +6,7 @@ import net.dodian.uber.game.engine.systems.world.item.Ground
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.player.skills.Skill
 import net.dodian.uber.game.engine.systems.skills.agility.AgilityTravel
-import net.dodian.uber.game.engine.systems.skills.herblore.HerbloreData
+import net.dodian.uber.skills.herblore.HerbloreModule
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.netty.listener.out.SendFrame27
 import net.dodian.uber.game.netty.listener.out.SendMessage
@@ -426,7 +426,7 @@ object DialogueOptionService {
             } else {
                 c.send(RemoveInterfaces())
                 resetDialogue()
-                val doseDefinitions = HerbloreData.potionDoseDefinitions
+                val doseDefinitions = HerbloreModule.doses
                 val amount = LongArray(doseDefinitions.size)
                 val vials = LongArray(doseDefinitions.size)
                 for (i in doseDefinitions.indices) {

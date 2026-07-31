@@ -1,6 +1,6 @@
 package net.dodian.uber.game.engine.systems.world.item
 
-import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.ConcurrentHashMap
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.npc.Npc
@@ -9,13 +9,13 @@ import net.dodian.uber.game.model.item.GroundItem
 
 object Ground {
     @JvmField
-    val ground_items: CopyOnWriteArrayList<GroundItem> = CopyOnWriteArrayList()
+    val ground_items: MutableSet<GroundItem> = ConcurrentHashMap.newKeySet()
 
     @JvmField
-    val untradeable_items: CopyOnWriteArrayList<GroundItem> = CopyOnWriteArrayList()
+    val untradeable_items: MutableSet<GroundItem> = ConcurrentHashMap.newKeySet()
 
     @JvmField
-    val tradeable_items: CopyOnWriteArrayList<GroundItem> = CopyOnWriteArrayList()
+    val tradeable_items: MutableSet<GroundItem> = ConcurrentHashMap.newKeySet()
 
     // Exact-tile index mirroring the three flat lists above, so findGroundItem - called on every
     // pickup attempt - only ever scans however many items are stacked on one tile, instead of
@@ -71,15 +71,15 @@ object Ground {
     fun addItem(item: GroundItem) {
         when (item.type) {
             0 -> {
-                val existingIndex = ground_items.indexOf(item)
-                if (existingIndex < 0) {
+                val existing = ground_items.find { it == item }
+                if (existing == null) {
                     ground_items.add(item)
                     indexAdd(item)
                 } else {
-                    val previous = ground_items[existingIndex]
-                    ground_items[existingIndex] = item
-                    if (previous !== item) {
-                        indexRemove(previous)
+                    ground_items.remove(existing)
+                    ground_items.add(item)
+                    if (existing !== item) {
+                        indexRemove(existing)
                         indexAdd(item)
                     }
                 }

@@ -67,14 +67,14 @@ object PlayerRegistry {
         val regionX = player.position.x shr 6
         val regionY = player.position.y shr 6
         val locals = ArrayList<Player>(256)
-        for (other in players) {
-            if (other == null || !other.isActive || other === player) {
+        for (client in playersOnline.values) {
+            if (!client.isActive || client === player) {
                 continue
             }
-            val otherRegionX = other.position.x shr 6
-            val otherRegionY = other.position.y shr 6
+            val otherRegionX = client.position.x shr 6
+            val otherRegionY = client.position.y shr 6
             if (kotlin.math.abs(regionX - otherRegionX) <= 1 && kotlin.math.abs(regionY - otherRegionY) <= 1) {
-                locals.add(other)
+                locals.add(client)
             }
         }
         return locals

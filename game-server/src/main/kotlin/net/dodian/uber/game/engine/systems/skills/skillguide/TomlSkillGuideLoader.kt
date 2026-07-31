@@ -4,7 +4,7 @@ import com.fasterxml.jackson.dataformat.toml.TomlMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.engine.systems.skills.herblore.HerbloreData
+import net.dodian.uber.skills.herblore.HerbloreModule
 import net.dodian.uber.skills.smithing.SmithingFrameDefinitions
 import org.slf4j.LoggerFactory
 
@@ -124,12 +124,12 @@ object TomlSkillGuideLoader {
             "smithing_frame_5" -> loadSmithingFrame(client, 5)
             "herblore_herbs" -> {
                 SkillGuidePage(
-                    entries = HerbloreData.herbDefinitions.map { definition ->
+                    entries = HerbloreModule.herbs.map { definition ->
                         val cleanName = client.getItemName(definition.cleanId)
                         val suffix = if (definition.premiumOnly) " @red@(Premium only)" else ""
                         SkillGuideEntry(
                             text = cleanName + suffix,
-                            levelText = definition.requiredLevel.toString(),
+                            levelText = definition.level.toString(),
                             itemId = definition.grimyId,
                         )
                     }
