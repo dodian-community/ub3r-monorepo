@@ -115,6 +115,21 @@ class ThievingModuleRuntimeTest {
         assertTrue(player.varbits.getValue(820) != 0)
     }
 
+    // Regression test for the Pyramid Plunder exit-confirmation port: previously a legacy
+    // game-server dialogue module/handler pair (PyramidPlunderDialogueModule/OptionHandler),
+    // now a confirmDialogue binding that calls the plugin's own resetPlunder directly.
+    @Test
+    fun `pyramid exit confirmation resets plunder state`() {
+        val player = FakeSkillPlayer()
+        ThievingModule.startPlunder(player)
+        assertTrue(ThievingModule.hindersTeleport(player))
+
+        val binding = ThievingModule.definition.confirmDialogueBindings.single { it.dialogueId == 20931 }
+        binding.handler(player)
+
+        assertFalse(ThievingModule.hindersTeleport(player))
+    }
+
     @Test
     fun `solving the room's assigned exit tomb advances the room`() {
         val player = FakeSkillPlayer().apply { setLevel(Skill.THIEVING, 99) }

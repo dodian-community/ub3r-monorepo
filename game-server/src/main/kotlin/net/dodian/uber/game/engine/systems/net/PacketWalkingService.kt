@@ -21,7 +21,7 @@ import net.dodian.uber.game.engine.systems.interaction.InteractionProcessor
 import net.dodian.uber.game.engine.state.GroundItemIntentStateAdapter
 import net.dodian.uber.game.engine.state.TeleportIntentStateAdapter
 import net.dodian.uber.game.economy.PriceCheckerService
-import net.dodian.uber.game.engine.systems.skills.herblore.HerbloreDialogueService
+import net.dodian.uber.game.engine.systems.skills.SkillItemListMenuService
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicLong
 
@@ -191,7 +191,7 @@ object PacketWalkingService {
         if (player.refundSlot != -1) {
             player.refundSlot = -1
         }
-        HerbloreDialogueService.clear(player)
+        SkillItemListMenuService.clear(player)
         if (player.IsBanking) {
             player.IsBanking = false
             player.send(RemoveInterfaces())

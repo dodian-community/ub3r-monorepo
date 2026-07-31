@@ -2,7 +2,6 @@ package net.dodian.uber.game.model.entity.player;
 
 import net.dodian.uber.game.netty.listener.out.*;
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService;
-import net.dodian.uber.game.engine.systems.skills.herblore.HerbloreDialogueService;
 import net.dodian.uber.game.engine.systems.action.PlayerActionCancelReason;
 import net.dodian.uber.game.api.content.ContentActions;
 
@@ -175,7 +174,7 @@ public class InterfaceManager {
         if (player.refundSlot != -1) {
             player.refundSlot = -1;
         }
-        HerbloreDialogueService.clear(player);
+        net.dodian.uber.game.engine.systems.skills.SkillItemListMenuService.INSTANCE.clear(player);
 
         if (refreshItems) {
             player.checkItemUpdate();

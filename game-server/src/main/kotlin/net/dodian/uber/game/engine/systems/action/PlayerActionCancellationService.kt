@@ -5,7 +5,6 @@ import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
 import net.dodian.uber.game.skill.runtime.action.ActionStopReason
 import net.dodian.uber.skills.cooking.CookingModule
 import net.dodian.uber.skills.fishing.FishingModule
-import net.dodian.uber.game.engine.systems.skills.crafting.Crafting
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
 import net.dodian.uber.game.engine.systems.skills.SmithingAnvilBridge
@@ -51,7 +50,6 @@ object PlayerActionCancellationService {
         fullResetAnimation: Boolean,
     ) {
         SmithingSmeltingBridge.clearSelection(player)
-        Crafting.stopFromReset(player, fullResetAnimation)
         FishingModule.stopAction(player.asSkillPlayer(), ActionStopReason.USER_INTERRUPT)
         CookingModule.stopAction(player.asSkillPlayer(), ActionStopReason.USER_INTERRUPT)
         WoodcuttingModule.stopAction(player.asSkillPlayer())

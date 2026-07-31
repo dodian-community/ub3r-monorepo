@@ -13,6 +13,10 @@ enum class SkillPolicyRoute {
     MAGIC_ON_OBJECT,
     BUTTON,
     ACTION_CYCLE,
+    CONFIRM_DIALOGUE,
+    ITEM_ON_NPC,
+    PLAYER_OPTION_MENU,
+    MAGIC_ON_ITEM,
 }
 
 enum class SkillPolicyResult {

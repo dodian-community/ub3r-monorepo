@@ -771,7 +771,8 @@ object InteractionProcessor {
         player.activeInteraction = ActiveInteraction(intent, player.lastProcessedCycle)
         player.faceNpc(intent.npcIndex)
         val handled = GameEventBus.postWithResult(ItemOnNpcEvent(player, intent.itemId, intent.itemSlot, intent.npcIndex, npc))
-        if (!handled) {
+        val handledBySkill = !handled && SkillInteractionDispatcher.tryHandleItemOnNpc(player, npc, intent.itemId, intent.itemSlot)
+        if (!handled && !handledBySkill) {
             ItemOnNpcContentService.handle(player, intent.itemId, intent.itemSlot, intent.npcIndex, npc)
         }
         clear(player)
@@ -783,7 +784,7 @@ object InteractionProcessor {
             routeNs,
             0L,
             0L,
-            if (handled) "GameEventBus" else ItemOnNpcContentService::class.java.name,
+            if (handled) "GameEventBus" else if (handledBySkill) SkillInteractionDispatcher::class.java.name else ItemOnNpcContentService::class.java.name,
             startNs,
         )
         return InteractionExecutionResult.COMPLETE

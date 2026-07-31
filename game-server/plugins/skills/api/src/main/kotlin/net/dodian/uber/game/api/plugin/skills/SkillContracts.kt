@@ -164,6 +164,15 @@ interface SkillActions {
      * interaction without needing engine-side constants.
      */
     fun tryThrottle(key: String, cooldownMs: Long): Boolean
+    /**
+     * Marks the shared magic-cast cooldown as consumed for this cycle (the same cooldown every
+     * magic-on-item cast - alchemy, enchant, superheat - is gated on). Legacy Superheat only set
+     * this after its own validation passed (level/rune/ore-presence) but before rolling for
+     * success, so a rejected cast doesn't consume the cooldown while a valid-but-unlucky one
+     * does; call this at the equivalent point when porting similar cast logic, not automatically
+     * on dispatch.
+     */
+    fun markMagicCastCycle()
 }
 
 interface SkillUi {
@@ -178,16 +187,103 @@ interface SkillUi {
     fun componentVisible(componentId: Int, visible: Boolean)
     fun menuGrid(entries: List<SkillItemGridEntry>)
     fun npcDialogue(dialogueId: Int, npcId: Int)
+    /**
+     * Opens [dialogueId] directly, with no blocking-interaction guard (unlike [npcDialogue],
+     * which goes through the engine's "already mid-interaction" check). Use only when porting
+     * legacy content that opened a dialogue id the same bare way - e.g. an item-on-item trigger
+     * that never had that guard applied to it.
+     */
+    fun openDialogue(dialogueId: Int)
     fun varbit(id: Int, value: Int)
+    /**
+     * Opens a paginated (3-per-page, with Close/Next/Previous) picker over an arbitrary-length
+     * [items] list of item ids, showing each item's name. Calls [onSelect] once with the chosen
+     * item id when the player picks one - the menu does not auto-reopen after a selection (the
+     * caller re-opens it explicitly, e.g. after an amount prompt completes, for a "keep picking
+     * until you close" workflow). Use this instead of `playerOptionMenu`'s fixed 2-5-option
+     * shape when the option count is dynamic/unbounded.
+     */
+    fun itemListMenu(items: List<Int>, onSelect: (Int) -> Unit)
     /** Opens an existing client skill-guide page without exposing Client to plugin content. */
     fun skillGuide(skillId: Int, tab: Int = 0)
     /** Opens the guide-book item page. */
     fun guideBook()
     /** The skill id of the currently-open skill guide page, or -1 if none is open. */
     fun currentSkillGuideSkillId(): Int
+    /**
+     * Starts a branching, multi-step NPC conversation - npc/player chat lines, statements,
+     * 2-5 option branches (which can themselves lead to further chat/options), and terminal
+     * actions - built with [SkillDialogueFactory]. Use this instead of [playerOptionMenu] or
+     * [itemListMenu] when the flow has more than one screen (e.g. an npc chat line, then an
+     * option menu, then a confirm prompt depending on the choice).
+     */
+    fun dialogue(builder: SkillDialogueFactory.() -> Unit)
 }
 
 data class SkillItemGridEntry(val itemId: Int, val amount: Int)
+
+/**
+ * Queue/chain dialogue authoring API for plugins - a [SkillPlayer]-coupled mirror of the
+ * engine's own `DialogueFactory` (game-server, `Client`-coupled, not importable by plugins).
+ * A pure builder; runtime state is managed engine-side by [SkillUi.dialogue]'s implementation.
+ * Intentionally omits the engine version's `restart` step - add it only when a real plugin
+ * dialogue needs it.
+ *
+ * Emote ids are the engine's raw `DialogueEmote` values, hardcoded here since plugins can't
+ * import that enum (game-server-owned) - same convention as other cross-boundary numeric ids
+ * used elsewhere in this API (dialogue ids, interface ids). Common values: 591=DEFAULT,
+ * 592=EVIL1, 596=DISTRESSED, 614=ANGRY1.
+ */
+class SkillDialogueFactory {
+    /** Engine-only - the built step list, read by [SkillUi.dialogue]'s implementation. */
+    val steps: MutableList<SkillDialogueStep> = mutableListOf()
+
+    fun npcChat(npcId: Int, emote: Int = 591, vararg lines: String) {
+        steps += SkillDialogueStep.NpcChat(npcId, emote, lines.joinToString("\n"))
+    }
+
+    fun playerChat(emote: Int = 591, vararg lines: String) {
+        steps += SkillDialogueStep.PlayerChat(emote, lines.joinToString("\n"))
+    }
+
+    fun statement(vararg lines: String) {
+        steps += SkillDialogueStep.Statement(lines.toList())
+    }
+
+    fun options(title: String = "Select an option", vararg options: SkillDialogueOption) {
+        require(options.size in 2..5) { "Options must be 2..5 (got ${options.size})" }
+        val built = options.map { opt -> SkillDialogueStep.Option(opt.text, buildSteps(opt.build)) }
+        steps += SkillDialogueStep.Options(title, built)
+    }
+
+    fun action(action: (SkillPlayer) -> Unit) {
+        steps += SkillDialogueStep.Action(action)
+    }
+
+    fun finish(closeInterfaces: Boolean = true, action: (SkillPlayer) -> Unit = {}) {
+        steps += SkillDialogueStep.Finish(closeInterfaces, action)
+    }
+
+    fun finishThen(closeInterfaces: Boolean = true, action: (SkillPlayer) -> Unit = {}) {
+        steps += SkillDialogueStep.FinishThen(closeInterfaces, action)
+    }
+
+    private fun buildSteps(builder: SkillDialogueFactory.() -> Unit): List<SkillDialogueStep> =
+        SkillDialogueFactory().apply(builder).steps.toList()
+}
+
+data class SkillDialogueOption(val text: String, val build: SkillDialogueFactory.() -> Unit)
+
+sealed interface SkillDialogueStep {
+    data class NpcChat(val npcId: Int, val emote: Int, val text: String) : SkillDialogueStep
+    data class PlayerChat(val emote: Int, val text: String) : SkillDialogueStep
+    data class Statement(val lines: List<String>) : SkillDialogueStep
+    data class Options(val title: String, val options: List<Option>) : SkillDialogueStep
+    data class Option(val text: String, val steps: List<SkillDialogueStep>)
+    data class Action(val action: (SkillPlayer) -> Unit) : SkillDialogueStep
+    data class Finish(val closeInterfaces: Boolean, val action: (SkillPlayer) -> Unit) : SkillDialogueStep
+    data class FinishThen(val closeInterfaces: Boolean, val action: (SkillPlayer) -> Unit) : SkillDialogueStep
+}
 
 interface SkillWorld {
     val position: SkillPosition
@@ -201,6 +297,11 @@ interface SkillWorld {
     fun graphic(id: Int, height: Int = 0)
     /** Plays graphic [id] at an arbitrary world [position] (e.g. on the object being interacted with). */
     fun graphic(id: Int, position: SkillPosition, height: Int = 0)
+    /**
+     * Plays graphic [id] attached to the player's own model (follows them, e.g. a spell-cast
+     * visual) - distinct from [graphic], which is a positional/ground-level effect.
+     */
+    fun castGraphic(id: Int, height: Int = 0)
     /**
      * Swaps [target] for [replacementId] world-wide (every nearby viewer sees it, not just this
      * player), reverting back to [target]'s original id after [restoreTicks] ticks (0 = permanent
@@ -260,6 +361,10 @@ interface SkillSlayerTask {
     fun killCount(): Int
     /** Resets the assigned task's kill counter. Returns false if there's no active task. */
     fun resetKillCount(): Boolean
+    /** Assigns a new task, replacing whatever (if anything) was previously assigned. */
+    fun assign(masterNpcId: Int, ordinal: Int, amount: Int)
+    /** Clears the current task's remaining count to 0 (the task is now considered inactive). */
+    fun cancel()
 }
 
 interface SkillProduction {
@@ -286,12 +391,24 @@ fun interface SkillClock { fun nowMillis(): Long }
 interface SkillVitals {
     val currentPrayer: Int
     val maximumPrayer: Int
+    /** Prayer-bonus equipment stat (drain-resistance), used to compute prayer drain rate. */
+    val prayerBonus: Int
+    /** Whether the player is currently in a duel fight - prayer toggling is blocked here. */
+    val inDuel: Boolean
+    /** Whether the player is in the death sequence - prayer toggling is blocked here. */
+    val isDead: Boolean
     /**
      * Whether a prayer is currently active.  Skill modules use this stable
      * identifier instead of reaching into the engine's prayer manager.
      */
     fun isPrayerActive(prayer: SkillPrayer): Boolean
-    /** Toggles a prayer while preserving the engine's level, drain, and UI rules. */
+    /**
+     * Raw prayer state flip (sets the on/off state, writes the client varbit, and updates the
+     * overhead-prayer head icon if applicable) - does NOT validate level/points/duel/death or
+     * handle the mutual-exclusion cascade between conflicting prayers. Callers (skill modules)
+     * own that decision-making; this is only the low-level engine-side consequence of "yes,
+     * flip this one prayer."
+     */
     fun togglePrayer(prayer: SkillPrayer)
     fun deactivatePrayer(prayer: SkillPrayer)
     fun setPrayer(amount: Int)
@@ -369,5 +486,9 @@ class SkillMagicOnObjectInteraction(val player: SkillPlayer, val target: SkillOb
     val position get() = target.position
     val definition get() = target
 }
+class SkillItemOnNpcInteraction(val player: SkillPlayer, val npc: SkillNpcRef, val itemId: Int, val itemSlot: Int) {
+    val npcId get() = npc.id
+}
+class SkillMagicOnItemInteraction(val player: SkillPlayer, val itemId: Int, val itemSlot: Int, val spellId: Int)
 class SkillButtonInteraction(val player: SkillPlayer, val rawButtonId: Int, val opIndex: Int, val activeInterfaceId: Int)
 class SkillItemGridInteraction(val player: SkillPlayer, val interfaceId: Int, val itemId: Int, val slot: Int, val amount: Int)

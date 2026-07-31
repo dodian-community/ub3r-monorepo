@@ -3,9 +3,11 @@ package net.dodian.uber.game.npc
 import net.dodian.uber.game.api.content.dialogue.DialogueEmote
 import net.dodian.uber.game.api.content.dialogue.DialogueOption
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
+import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.shop.ShopId
+import net.dodian.uber.skills.herblore.HerbloreModule
 
 internal object Jatix : NpcFamily by npcFamily("Jatix", 8532, block = {
     definition {
@@ -53,7 +55,7 @@ private fun handleJatixTalkTo(client: Client, npc: Npc): Boolean {
             },
             DialogueOption("Decant potions") {
                 finishThen {
-                    HerbloreNpcDialogue.openDecantDoseOptions(it, npc.id)
+                    HerbloreModule.openDecantMenu(it.asSkillPlayer())
                 }
             },
             DialogueOption("Nevermind") {

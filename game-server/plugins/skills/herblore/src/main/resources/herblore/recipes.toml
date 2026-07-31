@@ -181,3 +181,80 @@ key = "eye_of_newt_pack"
 item_id = 12859
 product_id = 222
 amount = 100
+
+# Dose-mixing identities, ported 1:1 from the legacy HerbloreData.potionDoseDefinitions -
+# independent from the [[potion]] table above (that one tracks unfinished+secondary->product
+# recipes, this one tracks the 1/2/3/4-dose item ids for a finished potion so doses can be
+# split/merged). Not all of these have a [[potion]] recipe above (e.g. super/overload potions
+# are mixed via multi-ingredient combos in HerbloreModule.kt, not the unfinished+secondary path).
+[[dose]]
+one_dose_id = 119
+two_dose_id = 117
+three_dose_id = 115
+four_dose_id = 113
+
+[[dose]]
+one_dose_id = 125
+two_dose_id = 123
+three_dose_id = 121
+four_dose_id = 2428
+
+[[dose]]
+one_dose_id = 137
+two_dose_id = 135
+three_dose_id = 133
+four_dose_id = 2432
+
+[[dose]]
+one_dose_id = 143
+two_dose_id = 141
+three_dose_id = 139
+four_dose_id = 2434
+
+[[dose]]
+one_dose_id = 149
+two_dose_id = 147
+three_dose_id = 145
+four_dose_id = 2436
+
+[[dose]]
+one_dose_id = 161
+two_dose_id = 159
+three_dose_id = 157
+four_dose_id = 2440
+
+[[dose]]
+one_dose_id = 167
+two_dose_id = 165
+three_dose_id = 163
+four_dose_id = 2442
+
+[[dose]]
+one_dose_id = 173
+two_dose_id = 171
+three_dose_id = 169
+four_dose_id = 2444
+
+[[dose]]
+one_dose_id = 3030
+two_dose_id = 3028
+three_dose_id = 3026
+four_dose_id = 3024
+
+[[dose]]
+one_dose_id = 2458
+two_dose_id = 2456
+three_dose_id = 2454
+four_dose_id = 2452
+
+[[dose]]
+one_dose_id = 12701
+two_dose_id = 12699
+three_dose_id = 12697
+four_dose_id = 12695
+
+[[dose]]
+one_dose_id = 11733
+two_dose_id = 11732
+three_dose_id = 11731
+four_dose_id = 11730

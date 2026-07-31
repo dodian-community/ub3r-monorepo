@@ -44,11 +44,14 @@ object ThievingModule : SkillPlugin {
     private val urnObjectIds = intArrayOf(
         26580, 26600, 26601, 26602, 26603, 26604, 26605, 26606, 26607, 26608, 26609, 26610, 26611, 26612, 26613,
     )
-    // Remaining plunder-room objects (20275, 20277, 20931 - the exit-confirmation dialogue id,
-    // 20932, 26622-26625) have no confirmed real-world behavior recovered from the dead legacy
-    // code (Thieving.kt never dispatched to them either) - left as an honest placeholder rather
-    // than fabricated behavior, same as the rest of this module's documented approach.
-    private val plunderPlaceholderObjectIds = intArrayOf(20275, 20277, 20931, 20932, 26622, 26623, 26624, 26625)
+    // Remaining plunder-room objects (20275, 20277, 20932, 26622-26625) have no confirmed
+    // real-world behavior recovered from the dead legacy code (Thieving.kt never dispatched to
+    // them either) - left as an honest placeholder rather than fabricated behavior, same as the
+    // rest of this module's documented approach. 20931 (the exit-confirmation dialogue id) used
+    // to be listed here too, but it's not an object id at all - it's implemented below via
+    // confirmDialogue, ported from the legacy PyramidPlunderDialogueModule/OptionHandler.
+    private val plunderPlaceholderObjectIds = intArrayOf(20275, 20277, 20932, 26622, 26623, 26624, 26625)
+    private const val PYRAMID_EXIT_DIALOGUE_ID = 20931
     private val plunderObjectIds = tombObjectIds + urnObjectIds + plunderPlaceholderObjectIds
 
     private val npcIds by lazy { targets.filter { it.targetType == "npc" }.map { it.id }.toIntArray() }
@@ -100,6 +103,14 @@ object ThievingModule : SkillPlugin {
         objectClick(preset = PolicyPreset.GATHERING, option = 1, *urnObjectIds) { interaction ->
             toggleObstacle(interaction.player, interaction.objectId)
         }
+        // Ported from the legacy PyramidPlunderDialogueModule/PyramidPlunderDialogueOptionHandler
+        // (game-server) - the client opens this dialogue id itself (e.g. leaving the pyramid),
+        // this only renders the Yes/No text and handles the response.
+        confirmDialogue(
+            preset = PolicyPreset.GATHERING,
+            dialogueId = PYRAMID_EXIT_DIALOGUE_ID,
+            message = "Exit pyramid plunder?",
+        ) { player -> resetPlunder(player) }
     }
 
     override val contentManifest: ContentModuleManifest = definition.manifest(

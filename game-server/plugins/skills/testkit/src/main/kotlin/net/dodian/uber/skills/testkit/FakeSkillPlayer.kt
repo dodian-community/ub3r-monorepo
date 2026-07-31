@@ -22,6 +22,8 @@ import net.dodian.uber.game.api.plugin.skills.SkillVitals
 import net.dodian.uber.game.api.plugin.skills.SkillPrayer
 import net.dodian.uber.game.api.plugin.skills.SkillRunePouches
 import net.dodian.uber.game.api.plugin.skills.SkillSlayerTask
+import net.dodian.uber.game.api.plugin.skills.SkillDialogueFactory
+import net.dodian.uber.game.api.plugin.skills.SkillDialogueStep
 import net.dodian.uber.game.api.plugin.skills.SkillFarming
 import net.dodian.uber.game.api.plugin.skills.SkillItemGridEntry
 import net.dodian.uber.game.api.plugin.skills.SkillValidationResult
@@ -49,6 +51,9 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
     val yells = mutableListOf<String>()
     private val throttleAcquiredAtMillis = mutableMapOf<String, Long>()
     val graphicsPlayed = mutableListOf<Pair<Int, SkillPosition>>()
+    val castGraphicsPlayed = mutableListOf<Pair<Int, Int>>()
+    val openedDialogueIds = mutableListOf<Int>()
+    var magicCastCycleMarked = false
     var positionValue = SkillPosition(3200, 3200, 0)
     var resetPositionCalls = 0
     val openedInterfaces = mutableListOf<Int>()
@@ -82,6 +87,9 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
     var amountPromptTitle: String? = null
         private set
     private var pendingAmountPrompt: ((Int) -> Boolean)? = null
+    private var pendingItemListMenu: Pair<List<Int>, (Int) -> Unit>? = null
+    private var dialogueQueue: ArrayDeque<SkillDialogueStep>? = null
+    private var pendingDialogueOptions: SkillDialogueStep.Options? = null
     private val moduleStateValues = mutableMapOf<String, String>()
     private class PendingExpiry(var ticksRemaining: Int, val onExpire: () -> Unit)
     private val pendingExpiries = mutableListOf<PendingExpiry>()
@@ -171,6 +179,7 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
         override fun triggerRandomEvent(experience: Int) { if (experience > 0) randomEventChecks++ }
         override fun logGathering(itemId: Int, amount: Int, reason: String) { gatheringLogs += Triple(itemId, amount, reason) }
         override fun yell(message: String) { yells += message }
+        override fun markMagicCastCycle() { magicCastCycleMarked = true }
         override fun tryThrottle(key: String, cooldownMs: Long): Boolean {
             val lastAcquired = throttleAcquiredAtMillis[key]
             if (lastAcquired != null && nowMillis - lastAcquired < cooldownMs) return false
@@ -205,6 +214,8 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
         override fun componentVisible(componentId: Int, visible: Boolean) { componentVisibility[componentId] = visible }
         override fun menuGrid(entries: List<SkillItemGridEntry>) { this@FakeSkillPlayer.menuGrid = entries }
         override fun npcDialogue(dialogueId: Int, npcId: Int) = Unit
+        override fun openDialogue(dialogueId: Int) { openedDialogueIds += dialogueId }
+        override fun itemListMenu(items: List<Int>, onSelect: (Int) -> Unit) { pendingItemListMenu = items to onSelect }
         override fun varbit(id: Int, value: Int) { varbits[id] = value }
         override fun skillGuide(skillId: Int, tab: Int) {
             openedInterfaces += 8714
@@ -213,6 +224,11 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
         }
         override fun guideBook() { openedInterfaces += 8134 }
         override fun currentSkillGuideSkillId(): Int = currentSkillGuideSkillIdValue
+        override fun dialogue(builder: SkillDialogueFactory.() -> Unit) {
+            val factory = SkillDialogueFactory().apply(builder)
+            dialogueQueue = ArrayDeque(factory.steps)
+            advanceDialogue()
+        }
     }
     val skillGuideCalls = mutableListOf<Pair<Int, Int>>()
     var currentSkillGuideSkillIdValue = -1
@@ -225,6 +241,7 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
         override fun face(position: SkillPosition) = Unit
         override fun graphic(id: Int, height: Int) { graphicsPlayed += id to positionValue }
         override fun graphic(id: Int, position: SkillPosition, height: Int) { graphicsPlayed += id to position }
+        override fun castGraphic(id: Int, height: Int) { castGraphicsPlayed += id to height }
         override fun replaceObject(target: SkillObjectRef, replacementId: Int, restoreTicks: Int, type: Int, face: Int) {
             replacedObjects += target to replacementId
         }
@@ -311,9 +328,15 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
         override fun chance(numerator: Int, denominator: Int) = numerator > 0
     }
     override val clock = SkillClock { nowMillis }
+    var prayerBonusValue = 0
+    var inDuelValue = false
+    var isDeadValue = false
     override val vitals = object : SkillVitals {
         override val currentPrayer: Int get() = currentPrayerValue
         override val maximumPrayer: Int get() = maximumPrayerValue
+        override val prayerBonus: Int get() = prayerBonusValue
+        override val inDuel: Boolean get() = inDuelValue
+        override val isDead: Boolean get() = isDeadValue
         override fun isPrayerActive(prayer: SkillPrayer): Boolean = prayer in activePrayers
         override fun togglePrayer(prayer: SkillPrayer) {
             if (!activePrayers.add(prayer)) activePrayers.remove(prayer)
@@ -354,6 +377,13 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
             slayerKillCountValue = 0
             return true
         }
+        override fun assign(masterNpcId: Int, ordinal: Int, amount: Int) {
+            slayerMasterNpcId = masterNpcId
+            slayerTaskOrdinal = ordinal
+            slayerAssignmentAmount = amount
+            slayerRemainingAmount = amount
+        }
+        override fun cancel() { slayerRemainingAmount = 0 }
     }
     /** objectId -> "handled" call log, for tests that just need to assert dispatch fired. */
     val farmingClickPatchCalls = mutableListOf<Int>()
@@ -383,6 +413,51 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
         pendingAmountPrompt = null
         return prompt(amount)
     }
+
+    fun pendingItemListMenuItems(): List<Int>? = pendingItemListMenu?.first
+    fun selectItemListOption(itemId: Int): Boolean {
+        val (items, onSelect) = pendingItemListMenu ?: return false
+        if (itemId !in items) return false
+        pendingItemListMenu = null
+        onSelect(itemId)
+        return true
+    }
+
+    /**
+     * Drains [dialogueQueue] through non-interactive steps (npcChat/playerChat/statement/
+     * action) immediately, exactly as the real engine does synchronously between clicks -
+     * this fake has no continue-click pacing concept, matching how [SkillUi.message] already
+     * fires immediately with no pacing. Stops at the first [SkillDialogueStep.Options] (see
+     * [pendingDialogueOptionTexts]/[selectDialogueOption]) or drains to a Finish/FinishThen.
+     */
+    private fun advanceDialogue() {
+        val queue = dialogueQueue ?: return
+        while (true) {
+            val step = queue.removeFirstOrNull() ?: run { dialogueQueue = null; return }
+            when (step) {
+                is SkillDialogueStep.NpcChat -> Unit
+                is SkillDialogueStep.PlayerChat -> Unit
+                is SkillDialogueStep.Statement -> Unit
+                is SkillDialogueStep.Action -> step.action(this)
+                is SkillDialogueStep.Options -> { pendingDialogueOptions = step; return }
+                is SkillDialogueStep.Finish -> { step.action(this); dialogueQueue = null; return }
+                is SkillDialogueStep.FinishThen -> { dialogueQueue = null; step.action(this); return }
+            }
+        }
+    }
+
+    fun pendingDialogueOptionTexts(): List<String>? = pendingDialogueOptions?.options?.map { it.text }
+
+    /** Selects the pending dialogue option with exact text [text] and resumes the tree. */
+    fun selectDialogueOption(text: String): Boolean {
+        val options = pendingDialogueOptions ?: return false
+        val chosen = options.options.firstOrNull { it.text == text } ?: return false
+        pendingDialogueOptions = null
+        dialogueQueue = ArrayDeque(chosen.steps)
+        advanceDialogue()
+        return true
+    }
+
     fun setLevel(skill: Skill, level: Int) { levels[skill] = level.coerceAtLeast(1) }
     fun equip(slot: Int, itemId: Int, amount: Int = 1) { equipmentItems[slot] = itemId to amount }
     fun activeActionName(): String? = activeAction?.spec?.name

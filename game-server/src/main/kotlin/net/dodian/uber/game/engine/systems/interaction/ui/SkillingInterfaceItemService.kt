@@ -1,7 +1,5 @@
 package net.dodian.uber.game.engine.systems.interaction.ui
 
-import net.dodian.uber.game.engine.systems.skills.crafting.Crafting
-import net.dodian.uber.game.engine.systems.skills.crafting.GoldJewelryRequest
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.engine.systems.skills.SmithingAnvilBridge
 import net.dodian.uber.game.engine.systems.skills.SkillInteractionDispatcher
@@ -24,10 +22,6 @@ object SkillingInterfaceItemService {
             }
             interfaceId in 1119..1123 -> {
                 SmithingAnvilBridge.startFromInterfaceSelection(client, interfaceId, itemId, slot, amount)
-                true
-            }
-            interfaceId in 4233..4257 -> {
-                Crafting.startGoldJewelry(client, GoldJewelryRequest(interfaceId, slot, amount))
                 true
             }
             else -> false

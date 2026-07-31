@@ -4,9 +4,6 @@ import net.dodian.uber.game.item.admin.PotatoItemInteractionState
 import net.dodian.uber.game.item.cosmetic.NoveltyItemCombinations
 import net.dodian.uber.game.item.equipment.RepairPlaceholderItemCombinations
 import net.dodian.uber.game.engine.systems.skills.farming.SaplingItemCombinations
-import net.dodian.uber.game.engine.systems.skills.herblore.HerbloreItemCombinations
-import net.dodian.uber.game.engine.systems.skills.crafting.CraftingItemCombinations
-import net.dodian.uber.game.engine.systems.skills.smithing.rockshell.DialogueGateItemCombinations
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.api.content.ContentActionCancelReason
 import net.dodian.uber.game.api.content.ContentActions
@@ -59,27 +56,7 @@ object ItemCombinationService {
         val otherItem = client.playerItems[usedWithSlot] - 1
         val knife = (useWith == 946 || itemUsed == 946) || (useWith == 5605 || itemUsed == 5605)
 
-        if (CraftingItemCombinations.handleCrystalKey(client, itemUsed, otherItem, itemUsedSlot, usedWithSlot)) {
-            return
-        }
-
-        if (DialogueGateItemCombinations.handle(client, itemUsed, useWith)) {
-            return
-        }
-
-        if (HerbloreItemCombinations.handle(client, itemUsed, otherItem)) {
-            return
-        }
-
-        if (HerbloreItemCombinations.handleDoseMixing(client, itemUsed, useWith)) {
-            return
-        }
-
         if (NoveltyItemCombinations.handle(client, itemUsed, otherItem, itemUsedSlot, usedWithSlot, knife)) {
-            return
-        }
-
-        if (CraftingItemCombinations.handle(client, itemUsed, otherItem, itemUsedSlot, usedWithSlot)) {
             return
         }
 

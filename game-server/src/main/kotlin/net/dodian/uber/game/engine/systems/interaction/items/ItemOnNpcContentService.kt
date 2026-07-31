@@ -34,28 +34,6 @@ object ItemOnNpcContentService {
             return
         }
 
-        if (npcId == 535 && (itemId == 1540 || itemId == 11286)) {
-            if (itemId == 1540 && !client.playerHasItem(11286)) {
-                client.showNPCChat(npcId, 596, arrayOf("You need a draconic visage!"))
-                return
-            }
-            if (itemId == 11286 && !client.playerHasItem(1540)) {
-                client.showNPCChat(npcId, 596, arrayOf("You need a anti-dragon shield!"))
-                return
-            }
-            if (!client.playerHasItem(995, 1_500_000)) {
-                client.showNPCChat(npcId, 596, arrayOf("You need 1.5 million coins!"))
-                return
-            }
-            client.deleteItem(itemId, slot, 1)
-            client.deleteItem(if (itemId == 1540) 11286 else 1540, 1)
-            client.deleteItem(995, 1_500_000)
-            client.addItemSlot(11284, 1, slot)
-            client.checkItemUpdate()
-            client.showNPCChat(npcId, 591, arrayOf("Here you go.", "Your shield is done."))
-            return
-        }
-
         if (npcId == 2794) {
             if (itemId == 1735) {
                 client.addItem(1737, 1)

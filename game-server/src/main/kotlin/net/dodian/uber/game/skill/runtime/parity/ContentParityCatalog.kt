@@ -38,12 +38,15 @@ object SkillMigrationCatalog {
         // Prayer reached full parity: bury/altar/toggle fully own the plugin, and the combat
         // protect-prayer checks now route through PrayerCombatService instead of duplicating
         // logic against the old PrayerManager class directly.
-        // Crafting reached full parity: gems/hides/spinning are plugin-native; the regular-leather
-        // menu, tanning, and gold jewelry (still Client-based, driven by CraftingInterface.kt's
-        // button bindings) and the crystal-key/orb/fishbowl/wool combos (ItemCombinationService.kt)
-        // no longer depend on the old game/skill/crafting package - only the confirmed-dead
-        // ResourceFilling/shaft-crafting/old-spinning paths were dropped, all still-live routes
-        // are unchanged.
+        // Crafting reached full parity, then went fully plugin-native (no legacy owners left at
+        // all, not just "off the old package"): gems/hides/spinning/tanning/glass-blowing/crystal
+        // key/fishbowl-helmet/wool-amulet are all plugin-native now. The old game/skill/crafting
+        // package (Crafting.kt/CraftingActions.kt/CraftingItemCombinations.kt) and
+        // ui/CraftingInterface.kt are deleted entirely - a follow-up audit found the "regular
+        // leather" (item 1741) 7-product menu and the gold-jewelry mould interface were both
+        // confirmed dead/unreachable content (no live trigger existed for either), not migration
+        // work, so they were deleted rather than ported (same "dead code, not missing content"
+        // treatment already applied to the old orb-charging-spell/molten-glass gaps).
         // Herblore reached full parity: simple herb-cleaning/potion-mixing (19 recipes) are
         // plugin-native and shadow the old combo loops; dose-mixing, the two multi-ingredient
         // specials (super combat, overload), and the NPC-dialogue batch grind/pack flow are all

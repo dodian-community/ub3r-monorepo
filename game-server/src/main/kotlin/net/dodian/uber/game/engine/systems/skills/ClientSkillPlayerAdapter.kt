@@ -126,6 +126,7 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
         override fun yell(message: String) = client.yell(message)
         override fun tryThrottle(key: String, cooldownMs: Long): Boolean =
             ContentInteraction.tryAcquireMs(client, key, cooldownMs)
+        override fun markMagicCastCycle() { client.lastMagicCycle = GameCycleClock.currentCycle() }
         override fun queue(spec: ActionSpec, beforeStart: () -> Unit): SkillActionHandle? {
             val player = this@ClientSkillPlayerAdapter
             val task = object : GatheringTask(
@@ -170,10 +171,19 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
         override fun menuGrid(entries: List<net.dodian.uber.game.api.plugin.skills.SkillItemGridEntry>) =
             client.setMenuItems(entries.map { it.itemId }.toIntArray(), entries.map { it.amount }.toIntArray())
         override fun npcDialogue(dialogueId: Int, npcId: Int) = client.startNpcDialogue(dialogueId, npcId)
+        override fun openDialogue(dialogueId: Int) {
+            net.dodian.uber.game.engine.systems.dialogue.DialogueService.setDialogueId(client, dialogueId)
+            net.dodian.uber.game.engine.systems.dialogue.DialogueService.setDialogueSent(client, false)
+        }
+        override fun itemListMenu(items: List<Int>, onSelect: (Int) -> Unit) = SkillItemListMenuService.open(client, items, onSelect)
         override fun varbit(id: Int, value: Int) = client.varbit(id, value)
         override fun skillGuide(skillId: Int, tab: Int) = SkillGuide.open(client, skillId, tab)
         override fun guideBook() = SkillGuide.openBook(client)
         override fun currentSkillGuideSkillId(): Int = client.contentRuntimeState.getSelectedSkillGuideSkillId()
+        override fun dialogue(builder: net.dodian.uber.game.api.plugin.skills.SkillDialogueFactory.() -> Unit) {
+            val factory = net.dodian.uber.game.api.plugin.skills.SkillDialogueFactory().apply(builder)
+            net.dodian.uber.game.engine.systems.dialogue.DialogueService.start(client) { emitSkillDialogue(factory.steps, client) }
+        }
     }
     override val world = object : SkillWorld {
         override val position: SkillPosition get() = client.position.toSkillPosition()
@@ -185,6 +195,7 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
         override fun graphic(id: Int, height: Int) = client.stillgfx(id, client.position, height)
         override fun graphic(id: Int, position: SkillPosition, height: Int) =
             client.stillgfx(id, position.toPosition(), height)
+        override fun castGraphic(id: Int, height: Int) = client.callGfxMask(id, height)
         override fun replaceObject(target: SkillObjectRef, replacementId: Int, restoreTicks: Int, type: Int, face: Int) {
             val worldObject = WorldObject(replacementId, target.position.x, target.position.y, target.position.z, type, face, target.id)
             GlobalObject.addGlobalObject(worldObject, restoreTicks * 600)
@@ -338,6 +349,9 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
     override val vitals = object : SkillVitals {
         override val currentPrayer: Int get() = client.currentPrayer
         override val maximumPrayer: Int get() = client.maxPrayer
+        override val prayerBonus: Int get() = client.playerBonus[13]
+        override val inDuel: Boolean get() = client.duelFight
+        override val isDead: Boolean get() = client.deathStage > 0
         override fun isPrayerActive(prayer: SkillPrayer): Boolean =
             client.prayerManager.isPrayerOn(
                 net.dodian.uber.game.engine.systems.skills.prayer.PrayerManager.Prayer.valueOf(prayer.name),
@@ -410,6 +424,14 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
             }
             return true
         }
+
+        override fun assign(masterNpcId: Int, ordinal: Int, amount: Int) {
+            client.slayerTaskState = client.slayerTaskState.withAssignment(masterNpcId, ordinal, amount, amount)
+        }
+
+        override fun cancel() {
+            client.slayerTaskState = client.slayerTaskState.withRemainingAmount(0)
+        }
     }
     override val attributes = object : ContentAttributes {
         override fun <T : Any> get(key: ContentAttributeKey<T>): T? =
@@ -440,6 +462,115 @@ internal object SkillAmountPromptService {
         client.contentRuntimeState.removePluginAttribute(AMOUNT_PROMPT_KEY)
         prompt.onEntered(amount)
         return true
+    }
+}
+
+private const val ITEM_LIST_MENU_KEY = "skill-module:pending-item-list-menu"
+private class PendingItemListMenu(val items: List<Int>, var page: Int, val onSelect: (Int) -> Unit)
+
+/**
+ * Generic, plugin-owned paginated item picker (3-per-page, Close/Next/Previous) - the engine
+ * side of [SkillUi.itemListMenu]. Generalizes the pagination math legacy Herblore's
+ * `HerbloreDialogueService.showOptions`/`DialogueInterface.handleHerbMenu` hand-rolled around a
+ * hardcoded `Client.herbloreDialogueState` field; this replaces that field entirely with the
+ * same `pluginAttributes` bridge [SkillAmountPromptService] already established. [DialogueInterface]
+ * calls [isActive]/[handleOption] the same way it already special-cases moderation/refund-menu/
+ * account-services dialogues, ahead of the generic [net.dodian.uber.game.engine.systems.dialogue.DialogueService.onOption] fallback.
+ */
+internal object SkillItemListMenuService {
+    fun open(client: Client, items: List<Int>, onSelect: (Int) -> Unit) {
+        client.contentRuntimeState.putPluginAttribute(ITEM_LIST_MENU_KEY, PendingItemListMenu(items, 0, onSelect))
+        render(client)
+    }
+
+    fun isActive(client: Client): Boolean =
+        client.contentRuntimeState.getPluginAttribute<PendingItemListMenu>(ITEM_LIST_MENU_KEY) != null
+
+    /** Silently drops any pending menu state with no packet sent - mirrors legacy
+     * `HerbloreDialogueState.clear()`'s use at interface-close/walk-interrupt/logout points. */
+    fun clear(client: Client) {
+        client.contentRuntimeState.removePluginAttribute(ITEM_LIST_MENU_KEY)
+    }
+
+    fun handleOption(client: Client, optionIndex: Int) {
+        val state = client.contentRuntimeState.getPluginAttribute<PendingItemListMenu>(ITEM_LIST_MENU_KEY) ?: return
+        val size = state.items.size
+        val position = size - state.page
+        when {
+            state.page == 0 && ((size > 3 && optionIndex == 5) || (size == 3 && optionIndex == 4) || (size == 1 && optionIndex == 2) || (size == 2 && optionIndex == 3)) -> {
+                client.contentRuntimeState.removePluginAttribute(ITEM_LIST_MENU_KEY)
+                client.send(RemoveInterfaces())
+            }
+            position > 3 && optionIndex == 4 -> {
+                state.page += 3
+                render(client)
+            }
+            state.page != 0 && ((position <= 3 && optionIndex == position + 1) || (position > 3 && optionIndex == 5)) -> {
+                state.page -= 3
+                render(client)
+            }
+            state.page + optionIndex <= size -> {
+                val itemId = state.items[state.page + optionIndex - 1]
+                client.contentRuntimeState.removePluginAttribute(ITEM_LIST_MENU_KEY)
+                client.send(RemoveInterfaces())
+                state.onSelect(itemId)
+            }
+        }
+    }
+
+    private fun render(client: Client) {
+        val state = client.contentRuntimeState.getPluginAttribute<PendingItemListMenu>(ITEM_LIST_MENU_KEY) ?: return
+        val size = state.items.size
+        if (size == 0) {
+            client.contentRuntimeState.removePluginAttribute(ITEM_LIST_MENU_KEY)
+            return
+        }
+        val page = state.page.coerceAtLeast(0)
+        val textSize = if (size < 4) size + 2 else if (size - page <= 3) size - page + 2 else 6
+        val text = Array(textSize) { "" }
+        text[0] = "What do you wish me to do?"
+        val shown = minOf(3, size - page)
+        repeat(shown) { index -> text[index + 1] = client.getItemName(state.items[page + index]) }
+        text[shown + 1] = if (textSize < 6 && page == 0) "Close" else if (textSize == 6) "Next" else "Previous"
+        if (textSize == 6) text[shown + 2] = if (page == 0) "Close" else "Previous"
+        net.dodian.uber.game.ui.dialogue.DialogueUi.showPlayerOption(client, text)
+    }
+}
+
+/**
+ * Recursively translates a [net.dodian.uber.game.api.plugin.skills.SkillDialogueStep] tree
+ * (built by a plugin via [net.dodian.uber.game.api.plugin.skills.SkillDialogueFactory], which
+ * is [SkillPlayer]-coupled and can't reach the engine's own [DialogueFactory]/[Client]-coupled
+ * dialogue builder directly) into real calls against [DialogueFactory] - the same builder
+ * [DialogueService.start] already accepts for every game-server-authored dialogue tree.
+ */
+private fun net.dodian.uber.game.api.content.dialogue.DialogueFactory.emitSkillDialogue(
+    steps: List<net.dodian.uber.game.api.plugin.skills.SkillDialogueStep>,
+    client: Client,
+) {
+    val skillPlayer = client.asSkillPlayer()
+    steps.forEach { step ->
+        when (step) {
+            is net.dodian.uber.game.api.plugin.skills.SkillDialogueStep.NpcChat ->
+                npcChat(step.npcId, step.emote, step.text)
+            is net.dodian.uber.game.api.plugin.skills.SkillDialogueStep.PlayerChat ->
+                playerChat(step.emote, step.text)
+            is net.dodian.uber.game.api.plugin.skills.SkillDialogueStep.Statement ->
+                statement(*step.lines.toTypedArray())
+            is net.dodian.uber.game.api.plugin.skills.SkillDialogueStep.Options ->
+                options(
+                    title = step.title,
+                    *step.options.map { opt ->
+                        net.dodian.uber.game.api.content.dialogue.DialogueOption(opt.text) { emitSkillDialogue(opt.steps, client) }
+                    }.toTypedArray(),
+                )
+            is net.dodian.uber.game.api.plugin.skills.SkillDialogueStep.Action ->
+                action { step.action(skillPlayer) }
+            is net.dodian.uber.game.api.plugin.skills.SkillDialogueStep.Finish ->
+                finish(step.closeInterfaces) { step.action(skillPlayer) }
+            is net.dodian.uber.game.api.plugin.skills.SkillDialogueStep.FinishThen ->
+                finishThen(step.closeInterfaces) { step.action(skillPlayer) }
+        }
     }
 }
 

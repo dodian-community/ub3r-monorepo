@@ -3,48 +3,23 @@ package net.dodian.uber.game.engine.systems.skills.prayer
 import net.dodian.uber.game.model.entity.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.model.entity.player.Player
-import net.dodian.uber.game.model.player.skills.Skill
-import net.dodian.uber.game.model.player.skills.Skills
-import kotlin.jvm.JvmName
 
+/**
+ * Persisted prayer on/off state plus the low-level raw-flip primitive. Level/points/duel/death
+ * validation, the mutual-exclusion cascade, and drain-rate computation used to live here too -
+ * they've moved to `plugins/skills/prayer/.../PrayerModule.kt` (`togglePrayer`/`tickDrain`),
+ * which is the plugin-facing `SkillVitals.togglePrayer`/`deactivatePrayer` caller. This class
+ * now only owns what's genuinely persistence/protocol-shaped: the save-format `Prayer.VALUES`/
+ * `forButton` lookup (`PlayerSaveEnvelope`/`PlayerSaveSnapshot`/`AccountLoginMapper` replay saved
+ * button clicks through it on login) and the raw on/off + varbit + head-icon flip.
+ */
 class PrayerManager(player: Player) {
     private val prayerStatus = BooleanArray(Prayer.values().size)
     private val p: Player = player
     private val c: Client = player as Client
-    @Suppress("unused")
-    private val lastClicked: Long = System.currentTimeMillis()
 
-    private var currentDrainRate: Double = 0.0
-
-    @get:JvmName("getDrainRateValue")
-    @set:JvmName("setDrainRateValue")
-    var drainRate: Double
-        get() = currentDrainRate
-        set(value) {
-            currentDrainRate = value
-        }
-
-    fun getCurrentDrainRate(): Double = currentDrainRate
-
-    fun setCurrentDrainRate(value: Double) {
-        currentDrainRate = value
-    }
-
+    /** Raw flip only - no validation, no cascade. See the class doc for where those moved. */
     fun togglePrayer(prayer: Prayer) {
-        if (prayer.prayerLevel != -1 && Skills.getLevelForExperience(p.getExperience(Skill.PRAYER)) < prayer.prayerLevel) {
-            c.sendMessage("You need a prayer level of at least ${prayer.prayerLevel} to use ${formatEnum(prayer).lowercase()}")
-            c.varbit(prayer.configId, 0)
-            return
-        }
-        if (c.currentPrayer < 1) {
-            c.sendMessage("You have no prayer points currently! Recharge at a nearby altar")
-            reset()
-            return
-        }
-        if (c.duelFight || prayer.prayerLevel == -1 || c.deathStage > 0) {
-            reset()
-            return
-        }
         if (isPrayerOn(prayer)) {
             set(prayer, false)
             c.varbit(prayer.configId, 0)
@@ -58,28 +33,11 @@ class PrayerManager(player: Player) {
                 p.headIcon = it.asInt()
                 p.updateFlags.setRequired(UpdateFlag.APPEARANCE, true)
             }
-            checkExtraPrayers(prayer)
         }
     }
 
     fun set(prayer: Prayer, on: Boolean) {
         prayerStatus[prayer.ordinal] = on
-    }
-
-    fun getDrain(): Int {
-        var drain = 0
-        for (prayer in Prayer.values()) {
-            if (isPrayerOn(prayer)) {
-                drain += prayer.drainEffect
-            }
-        }
-        return drain
-    }
-
-    fun getDrainRate(): Double {
-        val drainResistance = 60.0 + (2 * c.playerBonus[13])
-        val drain = getDrain()
-        return if (drain == 0) 0.0 else drainResistance / drain
     }
 
     fun reset() {
@@ -93,7 +51,9 @@ class PrayerManager(player: Player) {
 
     fun isPrayerOn(prayer: Prayer): Boolean = prayerStatus[prayer.ordinal]
 
-    fun ifCheck(): Boolean {
+    /** Whether any overhead-category prayer is still active - used to decide whether to clear
+     * the head icon when deactivating one. */
+    private fun ifCheck(): Boolean {
         for (prayer in Prayer.values()) {
             if (prayer.mask == 1 && prayerStatus[prayer.ordinal]) {
                 return true
@@ -102,66 +62,43 @@ class PrayerManager(player: Player) {
         return false
     }
 
-    fun checkExtraPrayers(prayer: Prayer) {
-        if (prayer.mask == -1) {
-            return
-        }
-        val overheadPrayer = (prayer.mask and OVERHEAD_PRAYER) != 0
-        val attackPrayer = (prayer.mask and ATTACK_PRAYER) != 0
-        val strengthPrayer = (prayer.mask and STRENGTH_PRAYER) != 0
-        val defencePrayer = (prayer.mask and DEFENCE_PRAYER) != 0
-        val rangePrayer = (prayer.mask and RANGE_PRAYER) != 0
-        val magicPrayer = (prayer.mask and MAGIC_PRAYER) != 0
-        for (pray in Prayer.values()) {
-            if (!isPrayerOn(pray) || pray == prayer || pray.mask == -1) {
-                continue
-            }
-            if ((pray.mask and OVERHEAD_PRAYER) != 0 && overheadPrayer
-                || (pray.mask and ATTACK_PRAYER) != 0 && attackPrayer
-                || (pray.mask and STRENGTH_PRAYER) != 0 && strengthPrayer
-                || (pray.mask and DEFENCE_PRAYER) != 0 && defencePrayer
-                || (pray.mask and RANGE_PRAYER) != 0 && rangePrayer
-                || (pray.mask and MAGIC_PRAYER) != 0 && magicPrayer
-            ) {
-                togglePrayer(pray)
-            }
-        }
-    }
-
+    /** Save-format enum: `configId`/`buttonId` are the legacy client varbit/button ids needed
+     * to write varbits and replay saved button clicks on login; `mask`/`headIcon` are used only
+     * by [ifCheck] (whether an overhead prayer remains active) and the raw flip's head-icon
+     * side effect above - the actual level/drainEffect/cascade *decisions* now live in
+     * `PrayerModule.PrayerDef` (`prayer/prayers.toml`), not here. */
     enum class Prayer(
-        val prayerLevel: Int,
-        val drainEffect: Int,
         val configId: Int,
         val buttonId: Int,
         val mask: Int = -1,
         val headIcon: HeadIcon? = null,
     ) {
-        THICK_SKIN(5, 3, 83, 5609, DEFENCE_PRAYER),
-        BURST_OF_STRENGTH(5, 3, 84, 5610, STRENGTH_PRAYER or MAGIC_PRAYER or RANGE_PRAYER),
-        CLARITY_OF_THOUGHT(5, 3, 85, 5611, ATTACK_PRAYER),
-        SHARP_EYE(10, 5, 700, 19812, RANGE_PRAYER or STRENGTH_PRAYER or ATTACK_PRAYER),
-        MYSTIC_WILL(10, 3, 701, 19814, MAGIC_PRAYER or STRENGTH_PRAYER or ATTACK_PRAYER),
-        ROCK_SKIN(20, 6, 86, 5612, DEFENCE_PRAYER),
-        SUPERHUMAN_STRENGTH(20, 6, 87, 5613, STRENGTH_PRAYER or MAGIC_PRAYER or RANGE_PRAYER),
-        IMPROVED_REFLEXES(20, 6, 88, 5614, ATTACK_PRAYER),
-        HAWK_EYE(25, 10, 702, 19816, RANGE_PRAYER or STRENGTH_PRAYER or ATTACK_PRAYER),
-        MYSTIC_LORE(25, 10, 703, 19818, MAGIC_PRAYER or STRENGTH_PRAYER or ATTACK_PRAYER),
-        RAPID_RESTORE(-1, 1, 89, 5615),
-        RAPID_HEAL(-1, 1, 90, 5616),
-        PROTECT_ITEM(-1, 1, 91, 5617),
-        STEEL_SKIN(40, 12, 92, 5618, DEFENCE_PRAYER),
-        ULTIMATE_STRENGTH(40, 12, 93, 5619, STRENGTH_PRAYER or MAGIC_PRAYER or RANGE_PRAYER),
-        INCREDIBLE_REFLEXES(40, 12, 94, 5620, ATTACK_PRAYER),
-        EAGLE_EYE(45, 18, 704, 19821, RANGE_PRAYER or STRENGTH_PRAYER or ATTACK_PRAYER),
-        MYSTIC_MIGHT(45, 18, 705, 19823, MAGIC_PRAYER or STRENGTH_PRAYER or ATTACK_PRAYER),
-        PROTECT_MAGIC(55, 15, 95, 5621, OVERHEAD_PRAYER, HeadIcon.PROTECT_MAGIC),
-        PROTECT_RANGE(55, 15, 96, 5622, OVERHEAD_PRAYER, HeadIcon.PROTECT_MISSLES),
-        PROTECT_MELEE(55, 15, 97, 5623, OVERHEAD_PRAYER, HeadIcon.PROTECT_MELEE),
-        RETRIBUTION(-1, 15, 98, 683, OVERHEAD_PRAYER, HeadIcon.RETRIBUTION),
-        REDEMPTION(-1, 15, 99, 684, OVERHEAD_PRAYER, HeadIcon.REDEMPTION),
-        SMITE(-1, 15, 100, 685, OVERHEAD_PRAYER, HeadIcon.SMITE),
-        CHIVALRY(70, 24, 706, 19825, ATTACK_PRAYER or STRENGTH_PRAYER or DEFENCE_PRAYER or MAGIC_PRAYER or RANGE_PRAYER),
-        PIETY(80, 24, 707, 19827, ATTACK_PRAYER or STRENGTH_PRAYER or DEFENCE_PRAYER or MAGIC_PRAYER or RANGE_PRAYER);
+        THICK_SKIN(83, 5609, DEFENCE_PRAYER),
+        BURST_OF_STRENGTH(84, 5610, STRENGTH_PRAYER or MAGIC_PRAYER or RANGE_PRAYER),
+        CLARITY_OF_THOUGHT(85, 5611, ATTACK_PRAYER),
+        SHARP_EYE(700, 19812, RANGE_PRAYER or STRENGTH_PRAYER or ATTACK_PRAYER),
+        MYSTIC_WILL(701, 19814, MAGIC_PRAYER or STRENGTH_PRAYER or ATTACK_PRAYER),
+        ROCK_SKIN(86, 5612, DEFENCE_PRAYER),
+        SUPERHUMAN_STRENGTH(87, 5613, STRENGTH_PRAYER or MAGIC_PRAYER or RANGE_PRAYER),
+        IMPROVED_REFLEXES(88, 5614, ATTACK_PRAYER),
+        HAWK_EYE(702, 19816, RANGE_PRAYER or STRENGTH_PRAYER or ATTACK_PRAYER),
+        MYSTIC_LORE(703, 19818, MAGIC_PRAYER or STRENGTH_PRAYER or ATTACK_PRAYER),
+        RAPID_RESTORE(89, 5615),
+        RAPID_HEAL(90, 5616),
+        PROTECT_ITEM(91, 5617),
+        STEEL_SKIN(92, 5618, DEFENCE_PRAYER),
+        ULTIMATE_STRENGTH(93, 5619, STRENGTH_PRAYER or MAGIC_PRAYER or RANGE_PRAYER),
+        INCREDIBLE_REFLEXES(94, 5620, ATTACK_PRAYER),
+        EAGLE_EYE(704, 19821, RANGE_PRAYER or STRENGTH_PRAYER or ATTACK_PRAYER),
+        MYSTIC_MIGHT(705, 19823, MAGIC_PRAYER or STRENGTH_PRAYER or ATTACK_PRAYER),
+        PROTECT_MAGIC(95, 5621, OVERHEAD_PRAYER, HeadIcon.PROTECT_MAGIC),
+        PROTECT_RANGE(96, 5622, OVERHEAD_PRAYER, HeadIcon.PROTECT_MISSLES),
+        PROTECT_MELEE(97, 5623, OVERHEAD_PRAYER, HeadIcon.PROTECT_MELEE),
+        RETRIBUTION(98, 683, OVERHEAD_PRAYER, HeadIcon.RETRIBUTION),
+        REDEMPTION(99, 684, OVERHEAD_PRAYER, HeadIcon.REDEMPTION),
+        SMITE(100, 685, OVERHEAD_PRAYER, HeadIcon.SMITE),
+        CHIVALRY(706, 19825, ATTACK_PRAYER or STRENGTH_PRAYER or DEFENCE_PRAYER or MAGIC_PRAYER or RANGE_PRAYER),
+        PIETY(707, 19827, ATTACK_PRAYER or STRENGTH_PRAYER or DEFENCE_PRAYER or MAGIC_PRAYER or RANGE_PRAYER);
 
         companion object {
             @JvmField
@@ -180,12 +117,6 @@ class PrayerManager(player: Player) {
         private const val RANGE_PRAYER = 8
         private const val MAGIC_PRAYER = 16
         private const val DEFENCE_PRAYER = 32
-
-        @JvmStatic
-        fun formatEnum(`object`: Any): String {
-            val s = `object`.toString().lowercase()
-            return s.replaceFirstChar { it.uppercase() }.replace("_", " ")
-        }
     }
 }
 

@@ -1,0 +1,215 @@
+schema_version = 1
+
+# Prayer level/drain/mutual-exclusion data, ported from the legacy PrayerManager.Prayer enum
+# (engine/systems/skills/prayer/PrayerManager.kt) - that enum still exists but now only owns
+# the persisted `VALUES`/`forButton` lookup used by save/load. level = -1 means no level
+# requirement. config_id is the legacy client varbit id (same kind of protocol-level plugin
+# data as SkillPrayer.buttonId), needed to clear the button highlight on a refused toggle.
+# The 6 boolean flags mirror the legacy bitmask categories (OVERHEAD/ATTACK/STRENGTH/RANGE/
+# MAGIC/DEFENCE) used for the mutual-exclusion cascade: activating a prayer deactivates any
+# other active prayer sharing a flag with it.
+
+[[prayer]]
+name = "THICK_SKIN"
+level = 5
+drain_effect = 3
+config_id = 83
+defence = true
+
+[[prayer]]
+name = "BURST_OF_STRENGTH"
+level = 5
+drain_effect = 3
+config_id = 84
+strength = true
+magic = true
+range = true
+
+[[prayer]]
+name = "CLARITY_OF_THOUGHT"
+level = 5
+drain_effect = 3
+config_id = 85
+attack = true
+
+[[prayer]]
+name = "SHARP_EYE"
+level = 10
+drain_effect = 5
+config_id = 700
+range = true
+strength = true
+attack = true
+
+[[prayer]]
+name = "MYSTIC_WILL"
+level = 10
+drain_effect = 3
+config_id = 701
+magic = true
+strength = true
+attack = true
+
+[[prayer]]
+name = "ROCK_SKIN"
+level = 20
+drain_effect = 6
+config_id = 86
+defence = true
+
+[[prayer]]
+name = "SUPERHUMAN_STRENGTH"
+level = 20
+drain_effect = 6
+config_id = 87
+strength = true
+magic = true
+range = true
+
+[[prayer]]
+name = "IMPROVED_REFLEXES"
+level = 20
+drain_effect = 6
+config_id = 88
+attack = true
+
+[[prayer]]
+name = "HAWK_EYE"
+level = 25
+drain_effect = 10
+config_id = 702
+range = true
+strength = true
+attack = true
+
+[[prayer]]
+name = "MYSTIC_LORE"
+level = 25
+drain_effect = 10
+config_id = 703
+magic = true
+strength = true
+attack = true
+
+[[prayer]]
+name = "RAPID_RESTORE"
+level = -1
+drain_effect = 1
+config_id = 89
+
+[[prayer]]
+name = "RAPID_HEAL"
+level = -1
+drain_effect = 1
+config_id = 90
+
+[[prayer]]
+name = "PROTECT_ITEM"
+level = -1
+drain_effect = 1
+config_id = 91
+
+[[prayer]]
+name = "STEEL_SKIN"
+level = 40
+drain_effect = 12
+config_id = 92
+defence = true
+
+[[prayer]]
+name = "ULTIMATE_STRENGTH"
+level = 40
+drain_effect = 12
+config_id = 93
+strength = true
+magic = true
+range = true
+
+[[prayer]]
+name = "INCREDIBLE_REFLEXES"
+level = 40
+drain_effect = 12
+config_id = 94
+attack = true
+
+[[prayer]]
+name = "EAGLE_EYE"
+level = 45
+drain_effect = 18
+config_id = 704
+range = true
+strength = true
+attack = true
+
+[[prayer]]
+name = "MYSTIC_MIGHT"
+level = 45
+drain_effect = 18
+config_id = 705
+magic = true
+strength = true
+attack = true
+
+[[prayer]]
+name = "PROTECT_MAGIC"
+level = 55
+drain_effect = 15
+config_id = 95
+overhead = true
+
+[[prayer]]
+name = "PROTECT_RANGE"
+level = 55
+drain_effect = 15
+config_id = 96
+overhead = true
+
+[[prayer]]
+name = "PROTECT_MELEE"
+level = 55
+drain_effect = 15
+config_id = 97
+overhead = true
+
+[[prayer]]
+name = "RETRIBUTION"
+level = -1
+drain_effect = 15
+config_id = 98
+overhead = true
+
+[[prayer]]
+name = "REDEMPTION"
+level = -1
+drain_effect = 15
+config_id = 99
+overhead = true
+
+[[prayer]]
+name = "SMITE"
+level = -1
+drain_effect = 15
+config_id = 100
+overhead = true
+
+[[prayer]]
+name = "CHIVALRY"
+level = 70
+drain_effect = 24
+config_id = 706
+attack = true
+strength = true
+defence = true
+magic = true
+range = true
+
+[[prayer]]
+name = "PIETY"
+level = 80
+drain_effect = 24
+config_id = 707
+attack = true
+strength = true
+defence = true
+magic = true
+range = true

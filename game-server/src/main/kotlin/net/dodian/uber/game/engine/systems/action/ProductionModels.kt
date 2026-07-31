@@ -26,8 +26,6 @@ data class ActiveProductionSelection(
 
 enum class ProductionMode {
     GENERIC,
-    SUPER_COMBAT,
-    OVERLOAD,
     CHARGED_ORB,
     MOLTEN_GLASS,
 }

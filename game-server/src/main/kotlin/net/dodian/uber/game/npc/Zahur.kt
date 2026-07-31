@@ -3,9 +3,11 @@ package net.dodian.uber.game.npc
 import net.dodian.uber.game.api.content.dialogue.DialogueEmote
 import net.dodian.uber.game.api.content.dialogue.DialogueOption
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
+import net.dodian.uber.game.engine.systems.skills.asSkillPlayer
 import net.dodian.uber.game.model.entity.npc.Npc
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.shop.ShopId
+import net.dodian.uber.skills.herblore.HerbloreModule
 
 internal object Zahur : NpcFamily by npcFamily("Zahur", 4753, block = {
     definition {
@@ -59,12 +61,12 @@ private fun handleZahurTalkTo(client: Client, npc: Npc): Boolean {
             },
             DialogueOption("Clean herbs") {
                 finishThen {
-                    HerbloreNpcDialogue.openHerbCleaner(it, npc.id)
+                    HerbloreModule.openHerbCleanerMenu(it.asSkillPlayer())
                 }
             },
             DialogueOption("Make unfinish potions") {
                 finishThen {
-                    HerbloreNpcDialogue.openUnfinishedPotionMaker(it, npc.id)
+                    HerbloreModule.openUnfinishedPotionMakerMenu(it.asSkillPlayer())
                 }
             },
         )
@@ -72,20 +74,19 @@ private fun handleZahurTalkTo(client: Client, npc: Npc): Boolean {
     return true
 }
 
+// Shadowed in practice by HerbloreModule's own npcClick(option=3/4, 4753) bindings
+// (SkillInteractionDispatcher is tried before NpcContentRegistry) - kept functionally correct
+// rather than stubbed, since these registrations still drive the client-visible "decant"/"clean"
+// right-click menu labels (see the Tanner.kt precedent for why the registration must stay even
+// though the handler body won't run).
 @Suppress("UNUSED_PARAMETER")
 private fun handleZahurDecant(client: Client, npc: Npc): Boolean {
-    HerbloreNpcDialogue.openDecantDoseOptions(client, npc.id)
+    HerbloreModule.openDecantMenu(client.asSkillPlayer())
     return true
 }
 
 @Suppress("UNUSED_PARAMETER")
 private fun handleZahurCleanHerbs(client: Client, npc: Npc): Boolean {
-    HerbloreNpcDialogue.openHerbCleaner(client, npc.id)
-    return true
-}
-
-@Suppress("UNUSED_PARAMETER")
-private fun handleZahurMakeUnfinishedPotions(client: Client, npc: Npc): Boolean {
-    HerbloreNpcDialogue.openUnfinishedPotionMaker(client, npc.id)
+    HerbloreModule.openHerbCleanerMenu(client.asSkillPlayer())
     return true
 }

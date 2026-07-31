@@ -74,4 +74,57 @@ class SmithingRealWorldTest : RealWorldSkillTest() {
         assertEquals(1, player.getInvAmt(copperOreId), "expected the copper ore already held to be untouched by the rolled-back transaction")
         assertEquals(0, player.getExperience(Skill.SMITHING))
     }
+
+    @Test
+    fun `dragonfire shield assembles from a draconic visage used on the shield npc`() {
+        val player = spawnPlayer("SmithDfs", 3240, 3227)
+        RealWorldHarness.giveItem(player, 1540, 1)
+        RealWorldHarness.giveItem(player, 11286, 1)
+        RealWorldHarness.giveItem(player, 995, 1_500_000)
+        val npc = spawnNpc(535, 3241, 3227)
+
+        RealWorldHarness.itemOnNpc(player, npc, 1540)
+        RealWorldHarness.tick(5)
+
+        assertEquals(1, player.getInvAmt(11284), "expected an assembled dragonfire shield")
+        assertEquals(0, player.getInvAmt(1540))
+        assertEquals(0, player.getInvAmt(11286))
+        assertEquals(0, player.getInvAmt(995))
+    }
+
+    @Test
+    fun `rockshell item pair opens the menu and a button click crafts the piece`() {
+        val player = spawnPlayer("SmithRockshell", 3240, 3230)
+        RealWorldHarness.setSkillLevel(player, Skill.SMITHING, 60)
+        RealWorldHarness.giveItem(player, 2347, 1)
+        RealWorldHarness.giveItem(player, 6159, 1)
+        RealWorldHarness.giveItem(player, 6161, 1)
+
+        RealWorldHarness.itemOnItem(player, 6159, 6161)
+        RealWorldHarness.dialogueOption(player, 1)
+
+        assertEquals(1, player.getInvAmt(6128), "expected a Rock-shell head")
+        assertEquals(0, player.getInvAmt(6159))
+        assertEquals(0, player.getInvAmt(6161))
+    }
+
+    @Test
+    fun `superheat spell smelts a bronze bar without visiting a furnace`() {
+        val player = spawnPlayer("SmithSuperheat", 3240, 3233)
+        RealWorldHarness.setSkillLevel(player, Skill.SMITHING, 1)
+        RealWorldHarness.setSkillLevel(player, Skill.MAGIC, 43)
+        RealWorldHarness.giveItem(player, copperOreId, 1)
+        RealWorldHarness.giveItem(player, tinOreId, 1)
+        RealWorldHarness.giveItem(player, 561, 1)
+        RealWorldHarness.tick(5)
+
+        RealWorldHarness.magicOnItem(player, copperOreId, 1173)
+
+        assertEquals(1, player.getInvAmt(bronzeBarId))
+        assertEquals(0, player.getInvAmt(copperOreId))
+        assertEquals(0, player.getInvAmt(tinOreId))
+        assertEquals(0, player.getInvAmt(561))
+        assertTrue(player.getExperience(Skill.SMITHING) > 0)
+        assertTrue(player.getExperience(Skill.MAGIC) > 0)
+    }
 }

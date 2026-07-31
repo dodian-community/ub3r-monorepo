@@ -23,11 +23,6 @@ object PlayerLifecycleTickService {
         val snareTimer: Int,
     )
 
-    data class PrayerDrainStep(
-        val nextCurrentDrainRate: Double,
-        val shouldDrainPrayer: Boolean,
-    )
-
     data class PostCombatOutcome(
         val disconnectPlayer: Boolean,
         val logoutPlayer: Boolean,
@@ -45,24 +40,6 @@ object PlayerLifecycleTickService {
             stunTimer = maxOf(stunTimer - 1, 0),
             snareTimer = maxOf(snareTimer - 1, 0),
         )
-
-    internal fun nextPrayerDrainStep(
-        currentDrainRate: Double,
-        drainRate: Double,
-    ): PrayerDrainStep {
-        if (currentDrainRate <= 0.0 && drainRate <= 0.0) {
-            return PrayerDrainStep(0.0, false)
-        }
-        if (drainRate <= 0.0) {
-            return PrayerDrainStep(0.0, false)
-        }
-        val updated = currentDrainRate + 0.6
-        return if (updated >= drainRate) {
-            PrayerDrainStep(0.0, true)
-        } else {
-            PrayerDrainStep(updated, false)
-        }
-    }
 
     internal fun shouldPersistActiveEffects(
         effects: List<Int?>,
@@ -172,12 +149,7 @@ object PlayerLifecycleTickService {
     }
 
     private fun handlePrayerDrain(player: Client) {
-        val prayers = player.prayerManager
-        val step = nextPrayerDrainStep(prayers.getCurrentDrainRate(), prayers.getDrainRate())
-        prayers.setCurrentDrainRate(step.nextCurrentDrainRate)
-        if (step.shouldDrainPrayer) {
-            player.drainPrayer(1)
-        }
+        net.dodian.uber.skills.prayer.PrayerModule.tickDrain(player.asSkillPlayer())
     }
 
     private fun handleBrimhavenDungeon(player: Client) {

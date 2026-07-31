@@ -29,8 +29,6 @@ import net.dodian.uber.game.activity.partyroom.PartyRoomBalloons;
 import net.dodian.uber.game.activity.partyroom.PartyRoomRewardItem;
 import net.dodian.uber.game.activity.partyroom.PartyRoomOfferState;
 import net.dodian.uber.game.persistence.player.PlayerSaveSegment;
-import net.dodian.uber.game.engine.systems.skills.crafting.CraftingState;
-import net.dodian.uber.game.engine.systems.skills.herblore.HerbloreDialogueState;
 import net.dodian.uber.game.engine.systems.interaction.ActiveInteraction;
 import net.dodian.uber.game.engine.systems.interaction.StaticObjectOverrides;
 import net.dodian.uber.game.engine.systems.interaction.InteractionAnchorState;
@@ -87,7 +85,6 @@ public abstract class PlayerCore extends Entity {
     private final PlayerAccountState accountState = new PlayerAccountState(asPlayer());
     private final PlayerContentRuntimeState interactionState = new PlayerContentRuntimeState();
     private final PlayerQuestProgressState questProgressState = new PlayerQuestProgressState();
-    private final HerbloreDialogueState herbloreDialogueState = new HerbloreDialogueState();
     private final PartyRoomOfferState partyRoomOfferState = new PartyRoomOfferState();
     private final BossKillLogState bossKillLogState = new BossKillLogState();
 
@@ -101,10 +98,6 @@ public abstract class PlayerCore extends Entity {
 
     public PlayerQuestProgressState getQuestProgressState() {
         return questProgressState;
-    }
-
-    public HerbloreDialogueState getHerbloreDialogueState() {
-        return herbloreDialogueState;
     }
 
     public PartyRoomOfferState getPartyRoomOfferState() {
@@ -371,7 +364,6 @@ public abstract class PlayerCore extends Entity {
         clearDamageAttribution();
         interactionState.terminatePlayerTasks();
         interactionState.clearPluginAttributes();
-        herbloreDialogueState.clear();
         partyRoomOfferState.clear();
         removeFromChunk();
         getPosition().moveTo(-1, -1);
@@ -1034,18 +1026,6 @@ public abstract class PlayerCore extends Entity {
 
     public void cancelFarmDebugTask() {
         interactionState.cancelFarmDebugTask();
-    }
-
-    public CraftingState getCraftingState() {
-        return interactionState.getCraftingState();
-    }
-
-    public void setCraftingState(CraftingState craftingState) {
-        interactionState.setCraftingState(craftingState);
-    }
-
-    public void clearCraftingState() {
-        interactionState.clearCraftingState();
     }
 
     public InteractionAnchorState getInteractionAnchorState() {

@@ -16,7 +16,6 @@ import net.dodian.uber.game.engine.systems.interaction.InteractionAnchorState
 import net.dodian.uber.game.engine.systems.interaction.InteractionIntent
 import net.dodian.uber.game.engine.sync.player.PlayerSyncInvariantValidator
 import net.dodian.uber.game.engine.tasking.GameTaskSet
-import net.dodian.uber.game.engine.systems.skills.crafting.CraftingState
 import net.dodian.uber.game.api.plugin.skills.PendingSkillMulti
 
 /**
@@ -56,7 +55,6 @@ class PlayerContentRuntimeState {
     @Volatile private var pendingProductionSelection: PendingProductionSelection? = null
     @Volatile private var activeProductionSelection: ActiveProductionSelection? = null
     @Volatile private var playerTaskSet: GameTaskSet<*>? = null
-    @Volatile private var craftingState: CraftingState? = null
     @Volatile private var interactionAnchorState: InteractionAnchorState? = null
     @Volatile private var movementLockState: MovementLockState? = null
     @Volatile private var skillingEventState: SkillingEventState? = null
@@ -95,9 +93,6 @@ class PlayerContentRuntimeState {
     fun getFarmDebugTaskHandle() = farmDebugTaskHandle
     fun setFarmDebugTaskHandle(value: QueueTaskHandle?) { farmDebugTaskHandle = value }
     fun cancelFarmDebugTask() { farmDebugTaskHandle.cancelAndClear { farmDebugTaskHandle = null } }
-    fun getCraftingState() = craftingState
-    fun setCraftingState(value: CraftingState?) { craftingState = value }
-    fun clearCraftingState() { craftingState = null }
     fun getInteractionAnchorState() = interactionAnchorState
     fun setInteractionAnchorState(value: InteractionAnchorState?) { interactionAnchorState = value }
     fun clearInteractionAnchorState() { interactionAnchorState = null }

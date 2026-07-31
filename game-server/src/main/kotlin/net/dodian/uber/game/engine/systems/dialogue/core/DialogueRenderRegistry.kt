@@ -2,8 +2,6 @@ package net.dodian.uber.game.engine.systems.dialogue.core
 
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.objects.travel.dialogue.BrimhavenEntryDialogueModule
-import net.dodian.uber.game.engine.systems.skills.thieving.dialogue.PyramidPlunderDialogueModule
-import net.dodian.uber.game.engine.systems.skills.smithing.rockshell.RockshellDialogueModule
 import net.dodian.uber.game.ui.dialogue.modules.SettingsDialogueModule
 import net.dodian.uber.game.model.entity.player.Client
 
@@ -29,13 +27,14 @@ object DialogueRenderRegistry {
     private val handlers: Map<Int, DialogueRenderHandler> = Builder().apply {
         include(SettingsDialogueModule)
         include(BrimhavenEntryDialogueModule)
-        include(RockshellDialogueModule)
-        include(PyramidPlunderDialogueModule)
     }.build()
 
     @JvmStatic
     fun render(client: Client): Boolean {
-        val handler = handlers[DialogueService.currentDialogueId(client)] ?: return false
-        return handler.render(client)
+        val dialogueId = DialogueService.currentDialogueId(client)
+        val handler = handlers[dialogueId]
+        if (handler != null) return handler.render(client)
+        return net.dodian.uber.game.engine.systems.skills.SkillInteractionDispatcher.tryRenderConfirmDialogue(client, dialogueId) ||
+            net.dodian.uber.game.engine.systems.skills.SkillInteractionDispatcher.tryRenderPlayerOptionMenu(client, dialogueId)
     }
 }

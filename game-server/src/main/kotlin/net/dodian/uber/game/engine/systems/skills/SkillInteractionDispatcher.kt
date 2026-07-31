@@ -13,6 +13,8 @@ import net.dodian.uber.game.api.plugin.skills.SkillItemInteraction
 import net.dodian.uber.game.api.plugin.skills.SkillItemOnItemInteraction
 import net.dodian.uber.game.api.plugin.skills.SkillItemOnObjectInteraction
 import net.dodian.uber.game.api.plugin.skills.SkillItemGridInteraction
+import net.dodian.uber.game.api.plugin.skills.SkillItemOnNpcInteraction
+import net.dodian.uber.game.api.plugin.skills.SkillMagicOnItemInteraction
 import net.dodian.uber.game.api.plugin.skills.SkillMagicOnObjectInteraction
 import net.dodian.uber.game.api.plugin.skills.SkillNpcInteraction
 import net.dodian.uber.game.api.plugin.skills.SkillObjectInteraction
@@ -163,6 +165,73 @@ object SkillInteractionDispatcher {
         }
     }
 
+    @JvmStatic
+    fun tryHandleItemOnNpc(client: Client, npc: Npc, itemId: Int, itemSlot: Int): Boolean {
+        validateThread("item-on-npc")
+        val binding = PluginRegistry.currentSkills().itemOnNpcBinding(npc.id, itemId) ?: return false
+        return executeSkillRoute(client, "skill.item.on.npc", "skill.item-on-npc:${npc.id}:$itemId", SkillPolicyRoute.ITEM_ON_NPC) {
+            val handled = binding.handler(SkillItemOnNpcInteraction(client.asSkillPlayer(), SkillNpcRef(npc.id, npc.slot, npc.position.toSkillPosition()), itemId, itemSlot))
+            SkillPolicyMetrics.record(
+                binding.preset,
+                SkillPolicyRoute.ITEM_ON_NPC,
+                if (handled) SkillPolicyResult.HANDLED else SkillPolicyResult.POLICY_REJECT,
+            )
+            handled
+        }
+    }
+
+    @JvmStatic
+    fun tryHandleMagicOnItem(client: Client, itemId: Int, itemSlot: Int, spellId: Int): Boolean {
+        validateThread("magic-on-item")
+        val binding = PluginRegistry.currentSkills().magicOnItemBinding(itemId, spellId) ?: return false
+        return executeSkillRoute(client, "skill.magic.on.item", "skill.magic-on-item:$itemId:$spellId", SkillPolicyRoute.MAGIC_ON_ITEM) {
+            val handled = binding.handler(SkillMagicOnItemInteraction(client.asSkillPlayer(), itemId, itemSlot, spellId))
+            SkillPolicyMetrics.record(
+                binding.preset,
+                SkillPolicyRoute.MAGIC_ON_ITEM,
+                if (handled) SkillPolicyResult.HANDLED else SkillPolicyResult.POLICY_REJECT,
+            )
+            handled
+        }
+    }
+
+    /** Renders a plugin-owned [net.dodian.uber.game.api.plugin.skills.SkillPlayerOptionMenuBinding]'s
+     * N-option menu (or its [guard][net.dodian.uber.game.api.plugin.skills.SkillPlayerOptionMenuBinding.guard]
+     * message) when its dialogue id opens - see
+     * [net.dodian.uber.game.engine.systems.dialogue.core.DialogueRenderRegistry]. */
+    @JvmStatic
+    fun tryRenderPlayerOptionMenu(client: Client, dialogueId: Int): Boolean {
+        val binding = PluginRegistry.currentSkills().playerOptionMenuBinding(dialogueId) ?: return false
+        val guardMessage = binding.guard?.invoke(client.asSkillPlayer())
+        if (guardMessage != null) {
+            client.sendMessage(guardMessage)
+            net.dodian.uber.game.engine.systems.dialogue.DialogueService.setDialogueSent(client, true)
+            return true
+        }
+        net.dodian.uber.game.ui.dialogue.DialogueUi.showPlayerOption(
+            client,
+            (listOf(binding.title) + binding.options).toTypedArray(),
+        )
+        net.dodian.uber.game.engine.systems.dialogue.DialogueService.setDialogueSent(client, true)
+        return true
+    }
+
+    /** Handles the option-button response for a plugin-owned player-option menu - see
+     * [net.dodian.uber.game.engine.systems.dialogue.DialogueOptionService]. */
+    @JvmStatic
+    fun tryHandlePlayerOptionMenu(client: Client, dialogueId: Int, button: Int): Boolean {
+        validateThread("player-option-menu")
+        val binding = PluginRegistry.currentSkills().playerOptionMenuBinding(dialogueId) ?: return false
+        if (button in 1..binding.options.size) {
+            executeSkillRoute(client, "skill.player.option.menu", "skill.player-option-menu:$dialogueId", SkillPolicyRoute.PLAYER_OPTION_MENU) {
+                binding.handler(client.asSkillPlayer(), button)
+                true
+            }
+        }
+        client.send(net.dodian.uber.game.netty.listener.out.RemoveInterfaces())
+        return true
+    }
+
     private fun objectRef(id: Int, position: Position, definition: GameObjectData?) = SkillObjectRef(
         id = id,
         position = position.toSkillPosition(),
@@ -234,6 +303,35 @@ object SkillInteractionDispatcher {
         return executeSkillRoute(client, "skill.item.grid", "skill.item-grid:$interfaceId", SkillPolicyRoute.ITEM) {
             binding.handler(SkillItemGridInteraction(client.asSkillPlayer(), interfaceId, itemId, slot, amount))
         }
+    }
+
+    /** Renders a plugin-owned [SkillConfirmDialogueBinding]'s Yes/No text when its dialogue id
+     * opens - see [net.dodian.uber.game.engine.systems.dialogue.core.DialogueRenderRegistry]. */
+    @JvmStatic
+    fun tryRenderConfirmDialogue(client: Client, dialogueId: Int): Boolean {
+        val binding = PluginRegistry.currentSkills().confirmDialogueBinding(dialogueId) ?: return false
+        net.dodian.uber.game.ui.dialogue.DialogueUi.showPlayerOption(
+            client,
+            arrayOf(binding.message, binding.yesLabel, binding.noLabel),
+        )
+        net.dodian.uber.game.engine.systems.dialogue.DialogueService.setDialogueSent(client, true)
+        return true
+    }
+
+    /** Handles the Yes/No button response for a plugin-owned confirm dialogue - see
+     * [net.dodian.uber.game.engine.systems.dialogue.DialogueOptionService]. */
+    @JvmStatic
+    fun tryHandleConfirmDialogue(client: Client, dialogueId: Int, button: Int): Boolean {
+        validateThread("confirm-dialogue")
+        val binding = PluginRegistry.currentSkills().confirmDialogueBinding(dialogueId) ?: return false
+        if (button == 1) {
+            executeSkillRoute(client, "skill.confirm.dialogue", "skill.confirm-dialogue:$dialogueId", SkillPolicyRoute.CONFIRM_DIALOGUE) {
+                binding.handler(client.asSkillPlayer())
+                true
+            }
+        }
+        client.send(net.dodian.uber.game.netty.listener.out.RemoveInterfaces())
+        return true
     }
 
     private fun executeSkillRoute(

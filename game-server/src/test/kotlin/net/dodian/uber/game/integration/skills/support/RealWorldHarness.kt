@@ -11,7 +11,10 @@ import net.dodian.uber.game.engine.loop.GameThreadContext
 import net.dodian.uber.game.engine.systems.cache.CacheBootstrapService
 import net.dodian.uber.game.engine.systems.interaction.items.ItemCombinationService
 import net.dodian.uber.game.engine.systems.interaction.items.ItemDispatcher
+import net.dodian.uber.game.engine.systems.dialogue.DialogueOptionService
+import net.dodian.uber.game.engine.systems.net.PacketBankingService
 import net.dodian.uber.game.engine.systems.net.PacketInteractionService
+import net.dodian.uber.game.engine.systems.net.PacketMagicService
 import net.dodian.uber.game.engine.systems.net.PacketObjectService
 import net.dodian.uber.game.engine.systems.objectexamines.ObjectExamines
 import net.dodian.uber.game.engine.systems.skills.SkillMultiButtonService
@@ -146,6 +149,15 @@ object RealWorldHarness {
         PacketInteractionService.handleNpcClick(client, opcodeForNpcOption(option), option, npc.slot)
     }
 
+    /** [itemId] must already be present in [client]'s inventory; the slot is resolved for you.
+     * Calls the same PacketInteractionService.handleUseItemOnNpc(...) a real "use item on npc"
+     * packet reaches (see UseItemOnNpcListener, opcode 57). */
+    fun itemOnNpc(client: Client, npc: Npc, itemId: Int) {
+        val itemSlot = client.getItemSlot(itemId)
+        require(itemSlot >= 0) { "Item $itemId is not in ${client.playerName}'s inventory" }
+        PacketInteractionService.handleUseItemOnNpc(client, 57, itemId, itemSlot, npc.slot)
+    }
+
     /** [itemId] and [otherItemId] must already be present in [client]'s inventory; slots
      * are resolved for you. Calls the same ItemCombinationService.handle(...) a real
      * client's "use item on item" packet reaches (see ItemOnItemListener) once the
@@ -171,6 +183,32 @@ object RealWorldHarness {
      */
     fun completeProduction(client: Client, buttonId: Int): Boolean =
         SkillMultiButtonService.tryHandle(client, buttonId)
+
+    /** Clicks option [button] on whatever dialogue is currently open for [client] - the same
+     * DialogueOptionService.triggerChat(...) a real dialogue-option-click packet reaches. */
+    fun dialogueOption(client: Client, button: Int) {
+        DialogueOptionService.triggerChat(client, button)
+    }
+
+    /** Submits [amount] on whatever pending "enter amount" prompt [client] has open - the
+     * same PacketBankingService.handleXAmount(...) a real enter-amount packet reaches. */
+    fun enterAmount(client: Client, amount: Int) {
+        PacketBankingService.handleXAmount(client, amount)
+    }
+
+    /** Clicks [rawButtonId] on whatever interface is currently open for [client] (tracked via
+     * client.activeInterfaceId, set as a side effect of SkillUi.open/openInterface) - the same
+     * InterfaceButtonService.tryHandle(...) a real interface-button-click packet reaches. */
+    fun button(client: Client, rawButtonId: Int, opIndex: Int = -1): Boolean =
+        net.dodian.uber.game.ui.buttons.InterfaceButtonService.tryHandle(client, rawButtonId, opIndex)
+
+    /** Casts [spellId] on [itemId] (must already be in [client]'s inventory) - calls the same
+     * PacketMagicService.handleMagicOnItem(...) a real magic-on-inventory-item packet reaches. */
+    fun magicOnItem(client: Client, itemId: Int, spellId: Int) {
+        val itemSlot = client.getItemSlot(itemId)
+        require(itemSlot >= 0) { "Item $itemId is not in ${client.playerName}'s inventory" }
+        PacketMagicService.handleMagicOnItem(client, itemSlot, itemId, spellId)
+    }
 
     /** [itemId] must already be present in [client]'s inventory. Calls the same
      * ItemDispatcher.tryHandle(...) a real "click item option" packet reaches (see

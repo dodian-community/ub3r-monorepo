@@ -41,7 +41,6 @@ import net.dodian.uber.game.engine.net.OutboundSessionQueue;
 import net.dodian.uber.game.engine.processing.EntityProcessor;
 import net.dodian.uber.game.engine.metrics.PacketErrorTelemetry;
 import net.dodian.uber.game.engine.metrics.PacketRejectTelemetry;
-import net.dodian.uber.game.engine.systems.skills.crafting.Tanning;
 import net.dodian.uber.game.engine.systems.dialogue.DialogueOptionService;
 import net.dodian.uber.game.ui.dialogue.DialogueDisplayService;
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService;
@@ -71,7 +70,6 @@ import net.dodian.utilities.Utils;
 import net.dodian.uber.game.engine.systems.skills.ProgressionService;
 import net.dodian.uber.game.engine.systems.inventory.EconomyTransaction;
 import net.dodian.uber.game.model.item.transaction.OfferTransactions;
-import net.dodian.uber.game.engine.systems.skills.agility.AgilityTicketExchangeService;
 
 import java.util.*;
 import io.netty.channel.Channel;
@@ -212,10 +210,6 @@ public class Client extends Player implements Runnable {
     public int skillX = 0, skillY = 0;
     public int stairs = 0, stairDistance = 0;
     public boolean validLogin = false;
-
-    public void openTan() {
-        Tanning.open(this);
-    }
 
     /**
      * Replaces an object in the game world.
@@ -3279,7 +3273,15 @@ public class Client extends Player implements Runnable {
     }
 
     public void spendTickets() {
-        AgilityTicketExchangeService.spendTickets(this);
+        // Agility ticket id 2996 - routes through the real item-click dispatch pipeline so this
+        // uses the exact same AgilityModule.exchangeTickets() logic a plain inventory click on
+        // the ticket already reaches, instead of a duplicate legacy implementation.
+        int slot = getItemSlot(2996);
+        if (slot < 0) {
+            send(new SendMessage("You have no agility tickets!"));
+            return;
+        }
+        ItemDispatcher.tryHandle(this, 1, 2996, slot, 3214);
     }
 
     public PrayerManager getPrayerManager() {

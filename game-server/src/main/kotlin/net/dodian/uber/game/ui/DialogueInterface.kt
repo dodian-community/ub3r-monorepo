@@ -3,13 +3,11 @@ package net.dodian.uber.game.ui
 import net.dodian.uber.game.api.content.ContentEvents
 import net.dodian.uber.game.events.widget.DialogueOptionEvent
 import net.dodian.uber.game.netty.listener.out.RemoveInterfaces
-import net.dodian.uber.game.netty.listener.out.SendFrame27
 import net.dodian.uber.game.ui.buttons.InterfaceButtonContent
 import net.dodian.uber.game.ui.buttons.buttonBinding
 import net.dodian.uber.game.engine.systems.dialogue.DialogueService
 import net.dodian.uber.game.engine.systems.dialogue.DialogueIds
 import net.dodian.uber.game.shop.ShopId
-import net.dodian.uber.game.engine.systems.skills.herblore.HerbloreDialogueService
 import net.dodian.uber.game.social.moderation.ModerationService
 
 object DialogueInterface : InterfaceButtonContent {
@@ -65,8 +63,8 @@ object DialogueInterface : InterfaceButtonContent {
             handleRefundMenu(client, optionIndex)
             return true
         }
-        if (client.herbloreDialogueState.page != -1) {
-            handleHerbMenu(client, optionIndex)
+        if (net.dodian.uber.game.engine.systems.skills.SkillItemListMenuService.isActive(client)) {
+            net.dodian.uber.game.engine.systems.skills.SkillItemListMenuService.handleOption(client, optionIndex)
             return true
         }
         if (ContentEvents.postWithResult(DialogueOptionEvent(client, optionIndex))) {
@@ -163,24 +161,4 @@ object DialogueInterface : InterfaceButtonContent {
         }
     }
 
-    private fun handleHerbMenu(client: net.dodian.uber.game.model.entity.player.Client, optionIndex: Int) {
-        val state = client.herbloreDialogueState
-        val size = state.options.size
-        val position = size - state.page
-        if (state.page == 0 && ((size > 3 && optionIndex == 5) || (size == 3 && optionIndex == 4) || (size == 1 && optionIndex == 2) || (size == 2 && optionIndex == 3))) {
-            state.page = -1
-            client.send(RemoveInterfaces())
-        } else if ((position > 3) && optionIndex == 4) {
-            state.page += 3
-        } else if (state.page != 0 && ((position <= 3 && optionIndex == position + 1) || (position > 3 && optionIndex == 5))) {
-            state.page -= 3
-        } else if (state.page + optionIndex <= size) {
-            client.send(RemoveInterfaces())
-            client.XinterfaceID = 4753
-            client.XremoveSlot = state.page + optionIndex
-            state.page = -1
-            client.send(SendFrame27())
-        }
-        HerbloreDialogueService.showOptions(client)
-    }
 }
