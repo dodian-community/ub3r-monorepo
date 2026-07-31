@@ -85,7 +85,7 @@ dependencies {
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-toml:2.14.0")
     implementation("org.apache.commons:commons-compress:1.21")
 
-    implementation("mysql:mysql-connector-java:8.0.29")
+    implementation("org.mariadb.jdbc:mariadb-java-client:3.3.3")
     implementation("com.zaxxer:HikariCP:6.3.0")
     implementation("org.mybatis:mybatis:3.5.10")
 

@@ -4,7 +4,7 @@ internal fun buildDatabaseJdbcUrl(
     host: String,
     port: Int,
     databaseName: String,
-): String = "jdbc:mysql://$host:$port/$databaseName?serverTimezone=UTC&autoReconnect=true"
+): String = "jdbc:mariadb://$host:$port/$databaseName?autoReconnect=true"
 
 internal fun validateDatabaseConfig(
     host: String,
@@ -20,4 +20,4 @@ internal fun sanitizedJdbcTarget(
     host: String,
     port: Int,
     databaseName: String,
-): String = "mysql://$host:$port/$databaseName"
+): String = "mariadb://$host:$port/$databaseName"

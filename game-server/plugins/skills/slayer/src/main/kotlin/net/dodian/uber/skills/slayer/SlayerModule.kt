@@ -2,10 +2,14 @@ package net.dodian.uber.skills.slayer
 
 import net.dodian.uber.game.api.plugin.ContentMaturity
 import net.dodian.uber.game.api.plugin.ContentModuleManifest
+import net.dodian.uber.game.api.plugin.skills.SkillDialogueFactory
+import net.dodian.uber.game.api.plugin.skills.SkillDialogueOption
 import net.dodian.uber.game.api.plugin.skills.SkillItemInteraction
 import net.dodian.uber.game.api.plugin.skills.SkillNpcInteraction
+import net.dodian.uber.game.api.plugin.skills.SkillPlayer
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
 import net.dodian.uber.game.api.plugin.skills.SkillPluginDefinition
+import net.dodian.uber.game.api.plugin.skills.SkillPosition
 import net.dodian.uber.game.api.plugin.skills.manifest
 import net.dodian.uber.game.api.plugin.skills.skillPlugin
 import net.dodian.uber.game.engine.systems.action.PolicyPreset
@@ -26,14 +30,22 @@ object SlayerModule : SkillPlugin {
     val descriptor = SkillModuleDescriptor("skill.slayer", "Slayer")
     val tasks: List<SlayerTaskDef> = SlayerTaskRegistry.tasks
 
-    // Master conversations and assignment selection remain on the legacy route until the
-    // complete 34-task dialogue/state machine is transferred.  Registering a simplified
-    // plugin handler here shadowed those routes (and used the wrong Duradel id, 404 vs 405).
-    private val masterNpcIds = intArrayOf(402, 403, 405)
+    private const val MAZCHNA_NPC_ID = 402
+    private const val VANNAKA_NPC_ID = 403
+    private const val DURADEL_NPC_ID = 405
+    private val masterNpcIds = intArrayOf(MAZCHNA_NPC_ID, VANNAKA_NPC_ID, DURADEL_NPC_ID)
     private const val ENCHANTED_GEM_ID = 4155
     private val slayerMaskIds = intArrayOf(11784, 11864, 11865)
 
     override val definition: SkillPluginDefinition = skillPlugin("Slayer", Skill.SLAYER) {
+        npcClick(preset = PolicyPreset.DIALOGUE, option = 1, *masterNpcIds) { interaction ->
+            startIntro(interaction.player, interaction.npc.id)
+            true
+        }
+        npcClick(preset = PolicyPreset.DIALOGUE, option = 3, *masterNpcIds) { interaction ->
+            assignTask(interaction.player, interaction.npc.id)
+            true
+        }
         itemClick(preset = PolicyPreset.DIALOGUE, option = 1, ENCHANTED_GEM_ID) { interaction ->
             checkGemTask(interaction)
         }
@@ -185,4 +197,193 @@ object SlayerModule : SkillPlugin {
         return true
     }
 
+    // --- Slayer master conversations -------------------------------------------------------
+    // Reproduces legacy SlayerMasterDialogue.kt exactly via the SkillUi.dialogue branching-tree
+    // primitive. showCurrentTask/showResetCountPrompt (+ their private resetCurrentTaskCount
+    // helper) were confirmed dead code - zero callers anywhere - and were not ported; the
+    // capability they'd expose (resetting the kill count) is already reachable via
+    // SkillSlayerTask.resetKillCount, already used by resetGemKillCount above.
+    //
+    // Emote ids are the engine's raw DialogueEmote values (npcChat/playerChat default to 591 =
+    // DEFAULT); 596 = DISTRESSED, 614 = ANGRY1, 592 = EVIL1.
+
+    private data class SlayerReply(val emote: Int = 591, val lines: Array<String>)
+
+    // Public: called both by the npcClick bindings above and directly by Mazchna.kt/Vannaka.kt/
+    // Duradel.kt's own talkTo/assignment option handlers (which stay registered - deleting them
+    // would drop the client-visible menu label - but are shadowed in practice since
+    // SkillInteractionDispatcher is tried before the legacy NpcFamily system).
+    fun startIntro(player: SkillPlayer, npcId: Int) {
+        player.ui.dialogue {
+            npcChat(npcId, lines = arrayOf("Need help with your slayer assignment?"))
+            options(
+                title = "Select an option",
+                SkillDialogueOption("Yes please.") { mainMenu(player, npcId) },
+                SkillDialogueOption("No thanks.") { finish() },
+            )
+        }
+    }
+
+    fun assignTask(player: SkillPlayer, npcId: Int) {
+        val reply = assignTaskReply(player, npcId) ?: return
+        player.ui.dialogue {
+            npcChat(npcId, reply.emote, *reply.lines)
+            finish()
+        }
+    }
+
+    private fun SkillDialogueFactory.mainMenu(player: SkillPlayer, npcId: Int) {
+        val gate = requirementsMessage(player, npcId)
+        if (gate != null) {
+            npcChat(npcId, lines = gate)
+            finish()
+            return
+        }
+
+        val gotHelmet = player.inventory.contains(11864)
+        val taskName = currentTaskName(player)
+
+        options(
+            title = "What would you like to say?",
+            SkillDialogueOption("I'd like a task please") {
+                // Deferred to finishThen (not called eagerly inline like the other DSL calls
+                // in this branch) - the SkillDialogueFactory/DialogueFactory builder evaluates
+                // every options() branch body immediately while *constructing* the menu, not
+                // when the player actually picks it, so a direct call here would silently
+                // assign a task just from opening this menu. See the fixes below for the same
+                // reason on the cancel/upgrade branches.
+                finishThen { p -> assignTaskReply(p, npcId)?.lines?.forEach { p.ui.message(it) } }
+            },
+            SkillDialogueOption(if (taskName.isNotEmpty()) "Cancel ${taskName.lowercase()} task" else "No task to skip") {
+                cancelTaskFlow(player, npcId)
+            },
+            SkillDialogueOption("I'd like to upgrade my ${if (gotHelmet) "slayer helmet" else "black mask"}") {
+                upgradeFlow(player, npcId)
+            },
+            SkillDialogueOption("Can you teleport me to west ardougne?") {
+                npcChat(npcId, lines = arrayOf("Be careful out there!"))
+                finishThen { p -> p.world.teleport(SkillPosition(2542, 3306, 0)) }
+            },
+        )
+    }
+
+    private fun SkillDialogueFactory.cancelTaskFlow(player: SkillPlayer, npcId: Int) {
+        val taskName = currentTaskName(player)
+        val cost = cancelTaskCost(player)
+
+        if (taskName.isEmpty()) {
+            npcChat(npcId, lines = arrayOf("You do not have a task currently.", "Talk to me to get one."))
+            finish()
+            return
+        }
+
+        npcChat(npcId, lines = arrayOf("I can cancel your ${taskName.lowercase()} task", "task for $cost coins."))
+        options(
+            title = "Do you wish to cancel your ${taskName.lowercase()} task?",
+            SkillDialogueOption("Yes") {
+                finishThen { p -> cancelTaskReply(p, taskName).lines.forEach { p.ui.message(it) } }
+            },
+            SkillDialogueOption("No") { finish() },
+        )
+    }
+
+    private fun SkillDialogueFactory.upgradeFlow(player: SkillPlayer, npcId: Int) {
+        val hasHelmet = player.inventory.contains(11864)
+        val hasMask = player.inventory.contains(8921)
+        if (!hasMask && !hasHelmet) {
+            npcChat(npcId, 596, "You do not have a black mask or a slayer helmet!")
+            finish()
+            return
+        }
+
+        npcChat(
+            npcId,
+            lines = arrayOf(
+                "Would you like to upgrade your ${if (hasHelmet) "slayer helmet" else "black mask"}?",
+                "It will cost you 2 million gold pieces.",
+            ),
+        )
+        options(
+            title = "Do you wish to upgrade?",
+            SkillDialogueOption("Yes, please") {
+                playerChat(614, "Yes, thank you.")
+                finishThen { p -> upgradeItemReply(p).lines.forEach { p.ui.message(it) } }
+            },
+            SkillDialogueOption("No, please") { finish() },
+        )
+    }
+
+    private fun cancelTaskReply(player: SkillPlayer, taskName: String): SlayerReply {
+        val cost = cancelTaskCost(player)
+        if (player.inventory.amount(995) < cost) {
+            return SlayerReply(lines = arrayOf("You do not have enough coins to cancel your task!"))
+        }
+        player.inventory.transaction { remove(995, cost) }
+        player.slayerTask.cancel()
+        return SlayerReply(lines = arrayOf("I have now canceled your ${taskName.lowercase()} task!"))
+    }
+
+    private fun upgradeItemReply(player: SkillPlayer): SlayerReply {
+        if (!player.inventory.contains(995, 2_000_000)) {
+            return SlayerReply(emote = 596, lines = arrayOf("You do not have enough money!"))
+        }
+
+        val hasHelmet = player.inventory.contains(11864)
+        val fromItem = if (hasHelmet) 11864 else 8921
+        val toItem = if (hasHelmet) 11865 else 11784
+        player.inventory.transaction {
+            remove(995, 2_000_000)
+            remove(fromItem, 1)
+            add(toItem, 1)
+        }
+        return SlayerReply(
+            emote = 592,
+            lines = arrayOf("Here is your imbued ${if (hasHelmet) "slayer helmet" else "black mask"}."),
+        )
+    }
+
+    private fun assignTaskReply(player: SkillPlayer, npcId: Int): SlayerReply? {
+        requirementsMessage(player, npcId)?.let { return SlayerReply(lines = it) }
+
+        val candidateTasks = SlayerTaskRegistry.tasksForMaster(player, npcId)
+        if (candidateTasks.isEmpty()) {
+            return SlayerReply(lines = arrayOf("You cant get any task!"))
+        }
+        if (player.slayerTask.remainingAmount > 0) {
+            return SlayerReply(lines = arrayOf("You already have a task!"))
+        }
+
+        val task = candidateTasks[player.random.between(0, candidateTasks.size - 1)]
+        val amount = player.random.between(task.amountMin, task.amountMax)
+        player.slayerTask.assign(npcId, SlayerTaskRegistry.tasks.indexOf(task), amount)
+        return SlayerReply(
+            lines = arrayOf(
+                "You must go out and kill $amount ${task.name}",
+                "If you want a new task that's too bad",
+                "Visit Dodian.net for a slayer guide",
+            ),
+        )
+    }
+
+    private fun requirementsMessage(player: SkillPlayer, npcId: Int): Array<String>? {
+        if (npcId == DURADEL_NPC_ID && (player.profile.combatLevel < 50 || player.skills.current(Skill.SLAYER) < 50)) {
+            return arrayOf("You need 50 combat and slayer", "to be assign tasks from me!")
+        }
+        if (npcId == VANNAKA_NPC_ID && (!player.inventory.contains(989) || player.skills.current(Skill.SLAYER) < 50)) {
+            return arrayOf("You need a crystal key and 50 slayer", "to be assign tasks from me!")
+        }
+        return null
+    }
+
+    private fun cancelTaskCost(player: SkillPlayer): Int = when (player.slayerTask.masterNpcId) {
+        VANNAKA_NPC_ID -> 250_000
+        DURADEL_NPC_ID -> 500_000
+        else -> 100_000
+    }
+
+    private fun currentTaskName(player: SkillPlayer): String {
+        val task = player.slayerTask
+        if (task.masterNpcId == -1 || task.remainingAmount <= 0) return ""
+        return SlayerTaskRegistry.forOrdinal(task.ordinal)?.name ?: ""
+    }
 }

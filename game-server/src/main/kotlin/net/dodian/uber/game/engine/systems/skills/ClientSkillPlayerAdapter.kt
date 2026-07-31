@@ -392,9 +392,8 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
         override val remainingAmount: Int get() = client.slayerTaskState.remainingAmount
         override val streak: Int get() = client.slayerTaskState.streak
 
-        // Mirrors the legacy SlayerMasterDialogue.resetCurrentTaskCount/monster-log kill tally,
-        // which tracks kills per monster name in client.monsterName/monsterCount rather than a
-        // single counter on the task state itself.
+        // Tracks kills per monster name in client.monsterName/monsterCount rather than a
+        // single counter on the task state itself (legacy behavior, preserved as-is).
         private fun currentTask() =
             net.dodian.uber.skills.slayer.SlayerTaskRegistry.forOrdinal(client.slayerTaskState.taskOrdinal)
 

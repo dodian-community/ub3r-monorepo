@@ -30,13 +30,13 @@ private val dataSource: HikariDataSource
     get() = dataSourceLazy.value
 
 private fun createDataSource(): HikariDataSource {
-    logger.debug("Initializing MySQL connection pool...")
+    logger.debug("Initializing MariaDB connection pool...")
     validateDatabaseConfig(databaseHost, databaseName, databaseUsername)
     val config = HikariConfig().apply {
         jdbcUrl = databaseJdbcUrl
         username = databaseUsername
         password = databasePassword
-        driverClassName = "com.mysql.cj.jdbc.Driver"
+        driverClassName = "org.mariadb.jdbc.Driver"
         minimumIdle = databasePoolMinSize
         maximumPoolSize = databasePoolMaxSize
         connectionTimeout = databasePoolConnectionTimeout

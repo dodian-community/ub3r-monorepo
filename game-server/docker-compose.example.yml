@@ -1,8 +1,8 @@
 version: '3.7'
 
 services:
-  mysql: # A MySQL instance for the game server to use
-    image: mysql:5.7
+  mariadb: # A MariaDB instance for the game server to use
+    image: mariadb:10.11
     restart: always
     networks:
       # Added the network bridge, so server and database can communicate
@@ -10,11 +10,11 @@ services:
         ipv4_address: 172.16.238.10
     environment:
       # Configured the database credentials
-      # Refer to https://hub.docker.com/_/mysql for more info.
-      MYSQL_DATABASE: dodiannet
-      MYSQL_USER: dodian
-      MYSQL_PASSWORD: dodian_local_development_123
-      MYSQL_ALLOW_EMPTY_PASSWORD: 'true'
+      # Refer to https://hub.docker.com/_/mariadb for more info.
+      MARIADB_DATABASE: dodiannet
+      MARIADB_USER: dodian
+      MARIADB_PASSWORD: dodian_local_development_123
+      MARIADB_ALLOW_EMPTY_PASSWORD: 'true'
     volumes:
       # Where our data will be persisted
       - dev-db:/var/lib/mysql

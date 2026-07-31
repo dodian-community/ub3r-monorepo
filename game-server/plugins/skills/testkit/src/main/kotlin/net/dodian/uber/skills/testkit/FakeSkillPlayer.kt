@@ -90,6 +90,8 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
     private var pendingItemListMenu: Pair<List<Int>, (Int) -> Unit>? = null
     private var dialogueQueue: ArrayDeque<SkillDialogueStep>? = null
     private var pendingDialogueOptions: SkillDialogueStep.Options? = null
+    /** Every npcChat line seen so far across all `ui.dialogue { ... }` calls, in order. */
+    val dialogueNpcChatLines = mutableListOf<String>()
     private val moduleStateValues = mutableMapOf<String, String>()
     private class PendingExpiry(var ticksRemaining: Int, val onExpire: () -> Unit)
     private val pendingExpiries = mutableListOf<PendingExpiry>()
@@ -435,7 +437,7 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
         while (true) {
             val step = queue.removeFirstOrNull() ?: run { dialogueQueue = null; return }
             when (step) {
-                is SkillDialogueStep.NpcChat -> Unit
+                is SkillDialogueStep.NpcChat -> dialogueNpcChatLines += step.text.split("\n")
                 is SkillDialogueStep.PlayerChat -> Unit
                 is SkillDialogueStep.Statement -> Unit
                 is SkillDialogueStep.Action -> step.action(this)

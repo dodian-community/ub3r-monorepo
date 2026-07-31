@@ -196,6 +196,12 @@ object RealWorldHarness {
         PacketBankingService.handleXAmount(client, amount)
     }
 
+    /** Advances a pending SkillUi.dialogue npc-chat step past its "click to continue" wait -
+     * the same DialogueService.onContinue(...) a real continue-click packet reaches. */
+    fun continueDialogue(client: Client) {
+        net.dodian.uber.game.engine.systems.dialogue.DialogueService.onContinue(client)
+    }
+
     /** Clicks [rawButtonId] on whatever interface is currently open for [client] (tracked via
      * client.activeInterfaceId, set as a side effect of SkillUi.open/openInterface) - the same
      * InterfaceButtonService.tryHandle(...) a real interface-button-click packet reaches. */
