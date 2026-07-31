@@ -27,6 +27,7 @@ data class FarmingCropDef(
     val stages: Int,
     val growTick: Int,
     val diseaseChance: Int,
+    val checkHealthXp: Int,
 )
 
 /** Where a live patch object id sits: which persisted-state slot it maps to, and its crop type. */
@@ -44,45 +45,59 @@ object FarmingModule : SkillPlugin {
     val patchObjectIds = intArrayOf(8573, 7840, 8132)
 
     /**
-     * objectId -> (patch location name, slot index, crop type) for every confirmed allotment/
-     * flower/herb patch. Resolved by cross-referencing this server's own cache-decoded object
-     * positions (`CacheCollisionAuditStore`) against the Tarnish reference server's exact
-     * per-patch-type zone rectangles - `GameObjectData.name`/`.description` are both the literal
-     * string `"null"` for every one of these ids (genuinely absent from the cache, not a decoder
-     * bug), so there is no name-based way to resolve patch type; see the migration plan/memory
-     * for the full cross-reference. Catherby/Ardougne/Canifis each got an *exact* coordinate
-     * match (their 4 patches' footprint rectangles matched Tarnish's NORTH_ALLOTMENT_PATCH/
-     * SOUTH_ALLOTMENT_PATCH/FLOWER_PATCH/HERB_PATCH constants down to the tile); the 3 single-id
-     * "standalone" locations aren't covered by Tarnish's simplified zone model, so they're a
-     * best-effort classification (2x2 `GameObjectData` size signature matching the confirmed
-     * flower/herb ids, not the 1x1 allotment-subpatch signature - treated as standalone herb
-     * patches, matching real OSRS's well-known standalone herb patch south of Ardougne).
+     * objectId -> (patch location name, slot index, crop type) for every confirmed patch, across
+     * all 6 categories. Allotment/flower/herb resolved by cross-referencing this server's own
+     * cache-decoded object positions (`CacheCollisionAuditStore`) against the Tarnish reference
+     * server's exact per-patch-type zone rectangles - `GameObjectData.name`/`.description` are
+     * both the literal string `"null"` for every one of these ids (genuinely absent from the
+     * cache, not a decoder bug), so there is no name-based way to resolve patch type; see the
+     * migration plan/memory for the full cross-reference. Catherby/Ardougne/Canifis each got an
+     * *exact* coordinate match for their 4-patch clusters (footprint rectangles matched Tarnish's
+     * NORTH_ALLOTMENT_PATCH/SOUTH_ALLOTMENT_PATCH/FLOWER_PATCH/HERB_PATCH constants down to the
+     * tile).
      *
-     * Taverley (8388) and Gnome Stronghold South (19147) - both previously (mis)listed as
-     * allotment/flower/herb locations - are 3x3, bush-patch-sized (every confirmed allotment/
-     * flower/herb id here is 1x1 or 2x2), and Tarnish has zero farming zones at either location
-     * at all. Excluded: they're bush patches, out of scope for this chunk (matches the existing
-     * bush/fruit-tree/tree exclusion below), not allotment/flower/herb.
+     * The remaining single-id "standalone" locations (Taverley/Gnome Stronghold x2/Catherby East/
+     * Ardougne South/N Falador/Varrock/Lumbridge/Tree Gnome Village/Brimhaven/Champions Guild/
+     * Rimmington/Etceteria) are all bush/fruit-tree/tree, confirmed by cross-referencing this
+     * server's cache-decoded positions against the 2009scape reference server's `FarmingPatch.kt`
+     * object-id ranges (`tree`=8388-8391+19147, `fruit tree`=7962-7965, `bush`=7577-7580) - every
+     * one of those 13 ids resolved to exactly one real-world position. **Correction to an earlier
+     * best-effort guess**: `CATHERBY_EAST`(7965)/`GNOME_STRONGHOLD_EAST`(7962)/`ARDOUGNE_SOUTH`
+     * (7580) were previously classified "herb" (a size-signature guess made before this
+     * cross-reference existed) - they are not in the herb id range at all and are actually
+     * fruit-tree/fruit-tree/bush respectively. `TAVERLY_SOUTH`(8388)/`GNOME_STRONGHOLD_SOUTH`
+     * (19147) were previously excluded as "bush-sized, unclassifiable" - both are tree patches.
+     * The `FarmingData.patches` enum constant names were NOT renamed to match (they're just
+     * persisted-JSON key labels; renaming would silently orphan existing save data under the old
+     * key), only the `patchType` here changed for these 5 ids.
      */
     private val patchLocations: Map<Int, PatchLocation> = buildMap {
         fun location(patchName: String, vararg entries: Pair<Int, String>) {
             entries.forEachIndexed { slot, (objectId, type) -> put(objectId, PatchLocation(patchName, slot, type)) }
         }
         location("CATHERBY_WEST", 8552 to "allotment", 8553 to "allotment", 7848 to "flower", 8151 to "herb")
-        location("CATHERBY_EAST", 7965 to "herb")
+        location("CATHERBY_EAST", 7965 to "fruit tree")
         location("ARDOUGNE_EAST", 8554 to "allotment", 8555 to "allotment", 7849 to "flower", 8152 to "herb")
-        location("ARDOUGNE_SOUTH", 7580 to "herb")
+        location("ARDOUGNE_SOUTH", 7580 to "bush")
         location("CANIFIS_NORTH", 8556 to "allotment", 8557 to "allotment", 7850 to "flower", 8153 to "herb")
-        location("GNOME_STRONGHOLD_EAST", 7962 to "herb")
+        location("GNOME_STRONGHOLD_EAST", 7962 to "fruit tree")
+        location("TAVERLY_SOUTH", 8388 to "tree")
+        location("GNOME_STRONGHOLD_SOUTH", 19147 to "tree")
+        location("N_FALADOR_TREE", 8389 to "tree")
+        location("VARROCK_TREE", 8390 to "tree")
+        location("LUMBRIDGE_TREE", 8391 to "tree")
+        location("TREE_GNOME_VILLAGE_FRUIT_TREE", 7963 to "fruit tree")
+        location("BRIMHAVEN_FRUIT_TREE", 7964 to "fruit tree")
+        location("CHAMPIONS_GUILD_BUSH", 7577 to "bush")
+        location("RIMMINGTON_BUSH", 7578 to "bush")
+        location("ETCETERIA_BUSH", 7579 to "bush")
     }
 
-    /** Static placed ids of the 6 confirmed allotment/flower/herb patch locations (15 ids,
-     * covering the 27 allotment/flower/herb crop types) - see [patchLocations]. Multiloc
+    /** Static placed ids of every confirmed patch location across all 6 categories (25 ids
+     * total: 12 allotment/flower/herb + 13 bush/fruit-tree/tree) - see [patchLocations]. Multiloc
      * parents: the client swaps the rendered child model/menu per growth stage, but click
      * packets always report this placed id (verified: old Farming.kt's clickPatch/
-     * interactItemBin already keyed off these exact ids). Bush/fruit-tree/tree patch locations
-     * (17 remaining crop types) have no confirmed real-world coordinates in this repo yet and
-     * are intentionally not wired here. */
+     * interactItemBin already keyed off these exact ids). */
     val livePatchObjectIds: IntArray = patchLocations.keys.toIntArray()
 
     /** Catherby/Ardougne/Canifis compost bins (op1=Open, op5=Dump) plus Falador's (item-on-object only, no menu ops). */
@@ -96,6 +111,7 @@ object FarmingModule : SkillPlugin {
     private const val BUCKET = 1925
     private const val VOLCANIC_ASH = 21622
     private const val SEED_DIBBER = 5343
+    private const val EMPTY_PLANT_POT = 5350
     private val wateringCanIds = intArrayOf(5331, 5333, 5334, 5335, 5336, 5337, 5338, 5339, 5340)
     private val regularCompostItemIds = intArrayOf(
         6055, 6010, 6014, 6020, 1793, 5986, 5504, 1955, 1963, 2108, 5970,
@@ -115,6 +131,8 @@ object FarmingModule : SkillPlugin {
     private const val DEAD = "DEAD"
     private const val HARVEST = "HARVEST"
     private const val WATER = "WATER"
+    private const val PRODUCTION = "PRODUCTION"
+    private const val STUMP = "STUMP"
     private const val NO_COMPOST = "NONE"
     private const val COMPOST_ITEM_ID = 6032
     private const val SUPERCOMPOST_ITEM_ID = 6034
@@ -127,6 +145,9 @@ object FarmingModule : SkillPlugin {
     private const val HARVEST_ANIM = 2282
     private const val COMPOST_PATCH_ANIM = 2283
     private const val CURING_ANIM = 2288
+    private const val PRUNE_SECATEURS_ANIM = 2279
+    private const val HARVEST_FRUIT_ANIM = 2280
+    private const val HARVEST_BUSH_ANIM = 2281
 
     private val seedIds by lazy { crops.map { it.seedId }.toIntArray() }
     private val patchItemIds by lazy {
@@ -177,11 +198,12 @@ object FarmingModule : SkillPlugin {
         maturity = ContentMaturity.STABLE,
     )
 
-    // --- Patch interactions: weed/plant/water/compost/disease/harvest for allotment/flower/herb.
-    // Reproduces legacy Farming.kt's clickPatch/interactItemBin/inspectPatch exactly for these 3
-    // categories - STUMP/PRODUCTION states and the "check health" branches never apply here
-    // (only bush/fruit-tree/tree ever reach them; getCheckHealthXp is always 0 for allotment/
-    // flower/herb in the legacy data too), so they're not reproduced.
+    // --- Patch interactions: weed/plant/water/compost/disease/harvest across all 6 categories.
+    // Reproduces legacy Farming.kt's clickPatch/interactItemBin/inspectPatch exactly. STUMP/
+    // PRODUCTION and the "check health" second-harvest tier (checkHealthXp>0, gated per-crop via
+    // FarmingCropDef.checkHealthXp) only ever fire for bush/fruit-tree/tree - allotment/flower/
+    // herb crops all have checkHealthXp=0, so they always take the ordinary HARVEST/DISEASE
+    // branches below and never reach the checkHealthXp-gated ones (Farming part 3).
 
     private fun slotFor(player: SkillPlayer, objectId: Int): Pair<PatchLocation, SkillPatchSlot>? {
         val loc = patchLocations[objectId] ?: return null
@@ -222,6 +244,24 @@ object FarmingModule : SkillPlugin {
                     player.ui.message("You need to have a spade in order to clear the dead plant.")
                 }
             }
+            // Bush/fruit-tree/tree only (checkHealthXp > 0) - secateurs-prune, must come before
+            // the plain PLANT_CURE branch below so allotment/flower/herb keep hitting that one.
+            slot.state == DISEASE && (cropFor(slot.itemId)?.checkHealthXp ?: 0) > 0 -> {
+                if (player.inventory.contains(SECATEURS) || player.inventory.contains(MAGIC_SECATEURS)) {
+                    player.actions.animate(if (loc.patchType == "bush") PRUNE_SECATEURS_ANIM else PRUNE_SECATEURS_ANIM - 1)
+                    player.inventory.transaction { add(6020) }
+                    if (player.random.chance(3, 4)) {
+                        player.farmingState.writePatchSlot(loc.patchName, loc.slot, slot.itemId, GROWING, slot.compost, slot.stageOrLife, 0, slot.plantedBy)
+                        player.farmingState.markDirty()
+                        player.farmingState.notifyInteraction()
+                        player.farmingState.refreshVisuals()
+                    } else {
+                        player.ui.message("You failed to cure the tree.")
+                    }
+                } else {
+                    player.ui.message("You need to use a pair of secateurs to prune the tree.")
+                }
+            }
             slot.state == DISEASE -> {
                 if (player.inventory.contains(PLANT_CURE)) {
                     player.actions.animate(CURING_ANIM)
@@ -236,6 +276,17 @@ object FarmingModule : SkillPlugin {
                     // preserve-legacy-quirks-exactly policy.
                     player.ui.message("You need to use a spade in order to clear the dead plant.")
                 }
+            }
+            // Bush/fruit-tree/tree only (checkHealthXp > 0) - no tool/space requirement, unlike
+            // the plain allotment/flower/herb HARVEST branch below. Must come first.
+            slot.state == HARVEST && (cropFor(slot.itemId)?.checkHealthXp ?: 0) > 0 -> {
+                val crop = cropFor(slot.itemId)!!
+                player.farmingState.writePatchSlot(loc.patchName, loc.slot, slot.itemId, PRODUCTION, slot.compost, productionLifeFor(loc.patchType), 0, slot.plantedBy)
+                player.skills.gainXp(crop.checkHealthXp, Skill.FARMING)
+                player.ui.message("You check the health of the ${crop.name.lowercase()} and it is in perfect condition.")
+                player.farmingState.markDirty()
+                player.farmingState.notifyInteraction()
+                player.farmingState.refreshVisuals()
             }
             slot.state == HARVEST -> {
                 if (player.inventory.contains(SPADE) && player.inventory.freeSlots() > 0) {
@@ -260,9 +311,47 @@ object FarmingModule : SkillPlugin {
                     player.ui.message("You need to use a spade in order to clear the dead plant.")
                 }
             }
+            // Bush/fruit-tree/tree only, entered from the checkHealthXp HARVEST branch above or
+            // via the STUMP->PRODUCTION growth pulse.
+            slot.state == PRODUCTION -> {
+                val crop = cropFor(slot.itemId)
+                when {
+                    loc.patchType == "tree" -> {
+                        player.farmingState.writePatchSlot(loc.patchName, loc.slot, slot.itemId, STUMP, slot.compost, slot.stageOrLife, slot.progress, slot.plantedBy)
+                        player.farmingState.markDirty()
+                        player.farmingState.notifyInteraction()
+                        player.farmingState.refreshVisuals()
+                    }
+                    crop != null && slot.stageOrLife > 0 && player.inventory.freeSlots() > 0 -> {
+                        player.actions.animate(if (loc.patchType.contains("tree")) HARVEST_FRUIT_ANIM else HARVEST_BUSH_ANIM)
+                        player.inventory.transaction { add(crop.harvestItem) }
+                        player.skills.gainXp(crop.harvestXp, Skill.FARMING)
+                        player.farmingState.writePatchSlot(loc.patchName, loc.slot, slot.itemId, PRODUCTION, slot.compost, slot.stageOrLife - 1, slot.progress, slot.plantedBy)
+                        player.farmingState.markDirty()
+                        player.farmingState.notifyInteraction()
+                        player.farmingState.refreshVisuals()
+                    }
+                    slot.stageOrLife == 0 && loc.patchType == "fruit tree" -> {
+                        player.farmingState.writePatchSlot(loc.patchName, loc.slot, slot.itemId, STUMP, slot.compost, slot.stageOrLife, slot.progress, slot.plantedBy)
+                        player.farmingState.markDirty()
+                        player.farmingState.notifyInteraction()
+                        player.farmingState.refreshVisuals()
+                    }
+                    slot.stageOrLife == 0 && loc.patchType == "bush" -> clearPatch(player, loc)
+                    else -> player.ui.message("You do not have enough inventory space!")
+                }
+            }
             else -> return false
         }
         return true
+    }
+
+    /** The repeat-harvest life count once a checkHealthXp crop enters PRODUCTION - not persisted
+     * (recomputed fresh from crop type every time), matching legacy's exact formula. */
+    private fun productionLifeFor(patchType: String): Int = when (patchType) {
+        "tree" -> 1
+        "bush" -> 4
+        else -> 6 // fruit tree
     }
 
     fun useItem(player: SkillPlayer, objectId: Int, itemId: Int): Boolean {
@@ -362,7 +451,12 @@ object FarmingModule : SkillPlugin {
             return
         }
         player.actions.animate(if (crop.type.contains("tree")) SPADE_ANIM else PLANTSEED_ANIM)
-        player.inventory.transaction { remove(itemId, amount) }
+        player.inventory.transaction {
+            remove(itemId, amount)
+            // Tree/fruit-tree saplings are grown in a plant pot (SaplingItemCombinations.kt,
+            // legacy-owned, out of scope) - planting one onto the patch empties the pot.
+            if (crop.type.contains("tree")) add(EMPTY_PLANT_POT)
+        }
         player.skills.gainXp(crop.plantXp, Skill.FARMING)
         player.farmingState.writePatchSlot(loc.patchName, loc.slot, itemId, GROWING, slot.compost, 1, 0, System.currentTimeMillis().toInt())
         player.farmingState.markDirty()
@@ -656,6 +750,33 @@ object FarmingModule : SkillPlugin {
                     player.farmingState.writePatchSlot(loc.patchName, loc.slot, slot.itemId, DISEASE, slot.compost, slot.stageOrLife, progress, slot.plantedBy)
                 }
             }
+            // Bush/fruit-tree/tree only, regrowing after a click chopped/exhausted it to STUMP -
+            // doesn't touch stageOrLife (legacy doesn't either - the PRODUCTION-regrowth branch
+            // below always recomputes the life cap fresh from crop type, not from stored state).
+            slot.itemId != -1 && crop != null && slot.state == STUMP -> {
+                val progress = slot.progress + 1
+                if (progress >= crop.growTick / 3) {
+                    player.farmingState.writePatchSlot(loc.patchName, loc.slot, slot.itemId, PRODUCTION, slot.compost, slot.stageOrLife, 0, slot.plantedBy)
+                    player.farmingState.markDirty()
+                    player.farmingState.refreshVisuals()
+                    player.farmingState.notifyInteraction()
+                } else {
+                    player.farmingState.writePatchSlot(loc.patchName, loc.slot, slot.itemId, STUMP, slot.compost, slot.stageOrLife, progress, slot.plantedBy)
+                }
+            }
+            // Regrows stageOrLife back up to the fresh per-type life cap after a harvest
+            // decremented it (or after a STUMP->PRODUCTION reset left it wherever it was).
+            slot.itemId != -1 && crop != null && slot.state == PRODUCTION && slot.stageOrLife < productionLifeFor(loc.patchType) -> {
+                val progress = slot.progress + 1
+                if (progress >= crop.growTick / 3) {
+                    player.farmingState.writePatchSlot(loc.patchName, loc.slot, slot.itemId, PRODUCTION, slot.compost, slot.stageOrLife + 1, 0, slot.plantedBy)
+                    player.farmingState.markDirty()
+                    player.farmingState.refreshVisuals()
+                    player.farmingState.notifyInteraction()
+                } else {
+                    player.farmingState.writePatchSlot(loc.patchName, loc.slot, slot.itemId, PRODUCTION, slot.compost, slot.stageOrLife, progress, slot.plantedBy)
+                }
+            }
         }
     }
 
@@ -686,6 +807,7 @@ object FarmingModule : SkillPlugin {
                 stages = row.getValue("stages").toInt(),
                 growTick = row.getValue("grow_tick").toInt(),
                 diseaseChance = row.getValue("disease_chance").toInt(),
+                checkHealthXp = row.getValue("check_health_xp").toInt(),
             )
         }
 }

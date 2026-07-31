@@ -14,8 +14,10 @@ import org.junit.jupiter.api.Test
  * `SkillFarmingState` adapter. Object id/position confirmed via `CacheCollisionAuditStore`
  * cross-referenced against the Tarnish reference server's zone rectangles (see
  * `FarmingModule.patchLocations`'s doc comment). Also covers the Catherby compost bin's
- * open/extract/dump cycle (Chunk 9). Bush/fruit-tree/tree patches and the wall-clock
- * growth-tick scheduler stay legacy-owned - not covered here.
+ * open/extract/dump cycle (Chunk 9) and a bush checkHealthXp/PRODUCTION cycle (Chunk 11 - object
+ * id/position cross-referenced against the 2009scape reference server, see the same doc comment).
+ * The wall-clock growth-tick *scheduler* (not the pulse math itself, which is plugin-owned) stays
+ * legacy-owned - not covered here, no clock injection exists to drive it end-to-end.
  */
 class FarmingRealWorldTest : RealWorldSkillTest() {
     // CATHERBY_WEST slot 0 - an allotment patch, confirmed at this exact tile.
@@ -137,5 +139,34 @@ class FarmingRealWorldTest : RealWorldSkillTest() {
         net.dodian.uber.skills.farming.FarmingModule.applyGrowthPulse(player.asSkillPlayer())
 
         assertEquals("DONE", binState(player).state)
+    }
+
+    // ARDOUGNE_SOUTH slot 0 - a bush patch, confirmed at this exact tile (Chunk 11).
+    private val bushObjectId = 7580
+    private val bushX = 2617
+    private val bushY = 3225
+
+    @Test
+    fun `a real bush patch's checkHealthXp-PRODUCTION-harvest cycle round-trips through farmingJson`() {
+        val player = spawnPlayer("BushFarmer", bushX, bushY)
+        player.farmingJson.farmingLoad("")
+        // redberry bush: checkHealthXp=256, seed one click away from the check-health branch.
+        player.asSkillPlayer().farmingState.writePatchSlot("ARDOUGNE_SOUTH", 0, 5101, "HARVEST", "NONE", 1, 0, -1)
+
+        RealWorldHarness.objectOption(player, bushObjectId, 1, bushX, bushY)
+        RealWorldHarness.tick(5)
+
+        val checked = player.asSkillPlayer().farmingState.patchSlots().single { it.patchName == "ARDOUGNE_SOUTH" && it.slot == 0 }
+        assertEquals("PRODUCTION", checked.state)
+        assertEquals(4, checked.stageOrLife) // bush life cap
+        assertTrue(player.getExperience(Skill.FARMING) >= 256)
+
+        RealWorldHarness.objectOption(player, bushObjectId, 1, bushX, bushY)
+        RealWorldHarness.tick(5)
+
+        val harvested = player.asSkillPlayer().farmingState.patchSlots().single { it.patchName == "ARDOUGNE_SOUTH" && it.slot == 0 }
+        assertEquals("PRODUCTION", harvested.state)
+        assertEquals(3, harvested.stageOrLife)
+        assertEquals(1, player.getInvAmt(1951)) // redberries
     }
 }

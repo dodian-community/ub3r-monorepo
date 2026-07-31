@@ -317,11 +317,21 @@ class FarmingData {
         CATHERBY_EAST(Position(2860,3433,0), arrayOf(7965)),
         ARDOUGNE_EAST(Position(2666,3374,0), arrayOf(8554, 8555, 7849, 8152)),
         ARDOUGNE_SOUTH(Position(2617,3225,0), arrayOf(7580)),
-        //ARDOUGNE_WEST(Position(2489,3179,0), arrayOf(7963)), //Fruit tree patch, but need to update map so we got 3 fruit and 3 regular tree patches!
         CANIFIS_NORTH(Position(3601,3525,0), arrayOf(8556, 8557, 7850, 8153)),
         GNOME_STRONGHOLD_SOUTH(Position(2435,3414,0), arrayOf(19147)),
         GNOME_STRONGHOLD_EAST(Position(2475,3445,0), arrayOf(7962)),
-        TAVERLY_SOUTH(Position(2935,3437,0), arrayOf(8388))
+        TAVERLY_SOUTH(Position(2935,3437,0), arrayOf(8388)),
+        // Bush/fruit-tree/tree patches (Farming part 3) - real coordinates cross-referenced
+        // against CacheCollisionAuditStore's rev-218 decoded object positions, object id
+        // ranges confirmed against the 2009scape reference server's FarmingPatch.kt.
+        N_FALADOR_TREE(Position(3003,3372,0), arrayOf(8389)),
+        VARROCK_TREE(Position(3228,3458,0), arrayOf(8390)),
+        LUMBRIDGE_TREE(Position(3192,3230,0), arrayOf(8391)),
+        TREE_GNOME_VILLAGE_FRUIT_TREE(Position(2489,3179,0), arrayOf(7963)),
+        BRIMHAVEN_FRUIT_TREE(Position(2764,3212,0), arrayOf(7964)),
+        CHAMPIONS_GUILD_BUSH(Position(3181,3357,0), arrayOf(7577)),
+        RIMMINGTON_BUSH(Position(2940,3221,0), arrayOf(7578)),
+        ETCETERIA_BUSH(Position(2591,3863,0), arrayOf(7579))
         ;
     }
     enum class patchState {

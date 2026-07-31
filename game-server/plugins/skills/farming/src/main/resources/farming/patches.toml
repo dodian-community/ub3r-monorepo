@@ -11,6 +11,7 @@ harvest_item = 1942
 stages = 5
 grow_tick = 8
 disease_chance = 180
+check_health_xp = 0
 
 [[crop]]
 type = "allotment"
@@ -23,6 +24,7 @@ harvest_item = 1957
 stages = 5
 grow_tick = 8
 disease_chance = 190
+check_health_xp = 0
 
 [[crop]]
 type = "allotment"
@@ -35,6 +37,7 @@ harvest_item = 1965
 stages = 5
 grow_tick = 8
 disease_chance = 200
+check_health_xp = 0
 
 [[crop]]
 type = "allotment"
@@ -47,6 +50,7 @@ harvest_item = 1982
 stages = 5
 grow_tick = 8
 disease_chance = 210
+check_health_xp = 0
 
 [[crop]]
 type = "allotment"
@@ -59,6 +63,7 @@ harvest_item = 5986
 stages = 7
 grow_tick = 8
 disease_chance = 220
+check_health_xp = 0
 
 [[crop]]
 type = "allotment"
@@ -71,6 +76,7 @@ harvest_item = 5504
 stages = 7
 grow_tick = 8
 disease_chance = 230
+check_health_xp = 0
 
 [[crop]]
 type = "allotment"
@@ -83,6 +89,7 @@ harvest_item = 5982
 stages = 9
 grow_tick = 8
 disease_chance = 240
+check_health_xp = 0
 
 [[crop]]
 type = "allotment"
@@ -95,6 +102,7 @@ harvest_item = -1
 stages = 8
 grow_tick = 8
 disease_chance = 250
+check_health_xp = 0
 
 [[crop]]
 type = "flower"
@@ -107,6 +115,7 @@ harvest_item = 6010
 stages = 5
 grow_tick = 4
 disease_chance = 185
+check_health_xp = 0
 
 [[crop]]
 type = "flower"
@@ -119,6 +128,7 @@ harvest_item = 6014
 stages = 5
 grow_tick = 4
 disease_chance = 190
+check_health_xp = 0
 
 [[crop]]
 type = "flower"
@@ -131,6 +141,7 @@ harvest_item = 6012
 stages = 5
 grow_tick = 4
 disease_chance = 195
+check_health_xp = 0
 
 [[crop]]
 type = "flower"
@@ -143,6 +154,7 @@ harvest_item = 1793
 stages = 5
 grow_tick = 4
 disease_chance = 200
+check_health_xp = 0
 
 [[crop]]
 type = "flower"
@@ -155,6 +167,7 @@ harvest_item = 225
 stages = 5
 grow_tick = 4
 disease_chance = 210
+check_health_xp = 0
 
 [[crop]]
 type = "herb"
@@ -167,6 +180,7 @@ harvest_item = 199
 stages = 5
 grow_tick = 15
 disease_chance = 210
+check_health_xp = 0
 
 [[crop]]
 type = "herb"
@@ -179,6 +193,7 @@ harvest_item = 201
 stages = 5
 grow_tick = 15
 disease_chance = 220
+check_health_xp = 0
 
 [[crop]]
 type = "herb"
@@ -191,6 +206,7 @@ harvest_item = 203
 stages = 5
 grow_tick = 15
 disease_chance = 230
+check_health_xp = 0
 
 [[crop]]
 type = "herb"
@@ -203,6 +219,7 @@ harvest_item = -1
 stages = 5
 grow_tick = 15
 disease_chance = 240
+check_health_xp = 0
 
 [[crop]]
 type = "herb"
@@ -215,6 +232,7 @@ harvest_item = 207
 stages = 5
 grow_tick = 15
 disease_chance = 250
+check_health_xp = 0
 
 [[crop]]
 type = "herb"
@@ -227,6 +245,7 @@ harvest_item = -1
 stages = 5
 grow_tick = 15
 disease_chance = 260
+check_health_xp = 0
 
 [[crop]]
 type = "herb"
@@ -239,6 +258,7 @@ harvest_item = 209
 stages = 5
 grow_tick = 15
 disease_chance = 270
+check_health_xp = 0
 
 [[crop]]
 type = "herb"
@@ -251,6 +271,7 @@ harvest_item = -1
 stages = 5
 grow_tick = 15
 disease_chance = 280
+check_health_xp = 0
 
 [[crop]]
 type = "herb"
@@ -263,6 +284,7 @@ harvest_item = 213
 stages = 5
 grow_tick = 15
 disease_chance = 290
+check_health_xp = 0
 
 [[crop]]
 type = "herb"
@@ -275,6 +297,7 @@ harvest_item = 3051
 stages = 5
 grow_tick = 15
 disease_chance = 300
+check_health_xp = 0
 
 [[crop]]
 type = "herb"
@@ -287,6 +310,7 @@ harvest_item = 215
 stages = 5
 grow_tick = 15
 disease_chance = 310
+check_health_xp = 0
 
 [[crop]]
 type = "herb"
@@ -299,6 +323,7 @@ harvest_item = -1
 stages = 5
 grow_tick = 15
 disease_chance = 320
+check_health_xp = 0
 
 [[crop]]
 type = "herb"
@@ -311,6 +336,7 @@ harvest_item = 217
 stages = 5
 grow_tick = 15
 disease_chance = 330
+check_health_xp = 0
 
 [[crop]]
 type = "herb"
@@ -323,6 +349,7 @@ harvest_item = 219
 stages = 5
 grow_tick = 15
 disease_chance = 340
+check_health_xp = 0
 
 # The 17 crop types below (bush/fruit tree/tree families) share the same
 # clickPatch/interactItemBin state machine as allotment/flower/herb, but this
@@ -343,6 +370,7 @@ harvest_item = 1951
 stages = 6
 grow_tick = 16
 disease_chance = 230
+check_health_xp = 256
 
 [[crop]]
 type = "bush"
@@ -355,6 +383,7 @@ harvest_item = 1987
 stages = 7
 grow_tick = 16
 disease_chance = 230
+check_health_xp = 2280
 
 [[crop]]
 type = "bush"
@@ -367,6 +396,7 @@ harvest_item = 2126
 stages = 8
 grow_tick = 16
 disease_chance = 230
+check_health_xp = 700
 
 [[crop]]
 type = "bush"
@@ -379,6 +409,7 @@ harvest_item = 247
 stages = 9
 grow_tick = 16
 disease_chance = 230
+check_health_xp = 1120
 
 [[crop]]
 type = "bush"
@@ -391,147 +422,160 @@ harvest_item = 239
 stages = 9
 grow_tick = 16
 disease_chance = 230
+check_health_xp = 1720
 
 [[crop]]
 type = "fruit tree"
 name = "apple tree"
 level = 27
-seed_id = 5283
+seed_id = 5496
 plant_xp = 88
 harvest_xp = 36
 harvest_item = 1955
 stages = 7
 grow_tick = 120
 disease_chance = 240
+check_health_xp = 5090
 
 [[crop]]
 type = "fruit tree"
 name = "banana tree"
 level = 33
-seed_id = 5284
+seed_id = 5497
 plant_xp = 112
 harvest_xp = 44
 harvest_item = 1963
 stages = 7
 grow_tick = 120
 disease_chance = 240
+check_health_xp = 7366
 
 [[crop]]
 type = "fruit tree"
 name = "orange tree"
 level = 39
-seed_id = 5285
+seed_id = 5498
 plant_xp = 140
 harvest_xp = 52
 harvest_item = 2108
 stages = 7
 grow_tick = 120
 disease_chance = 240
+check_health_xp = 10340
 
 [[crop]]
 type = "fruit tree"
 name = "curry tree"
 level = 45
-seed_id = 5286
+seed_id = 5499
 plant_xp = 160
 harvest_xp = 64
 harvest_item = 5970
 stages = 7
 grow_tick = 120
 disease_chance = 240
+check_health_xp = 12140
 
 [[crop]]
 type = "fruit tree"
 name = "pineapple tree"
 level = 51
-seed_id = 5287
+seed_id = 5500
 plant_xp = 220
 harvest_xp = 84
 harvest_item = 2114
 stages = 7
 grow_tick = 120
 disease_chance = 240
+check_health_xp = 19160
 
 [[crop]]
 type = "fruit tree"
 name = "papaya tree"
 level = 57
-seed_id = 5288
+seed_id = 5501
 plant_xp = 280
 harvest_xp = 108
 harvest_item = 5972
 stages = 7
 grow_tick = 120
 disease_chance = 240
+check_health_xp = 25520
 
 [[crop]]
 type = "fruit tree"
 name = "palm tree"
 level = 63
-seed_id = 5289
+seed_id = 5502
 plant_xp = 440
 harvest_xp = 140
 harvest_item = 5974
 stages = 7
 grow_tick = 120
 disease_chance = 240
+check_health_xp = 42000
 
 [[crop]]
 type = "tree"
 name = "oak tree"
 level = 15
-seed_id = 5312
+seed_id = 5370
 plant_xp = 60
 harvest_xp = 0
 harvest_item = 1521
 stages = 5
 grow_tick = 30
 disease_chance = 190
+check_health_xp = 1860
 
 [[crop]]
 type = "tree"
 name = "willow tree"
 level = 30
-seed_id = 5313
+seed_id = 5371
 plant_xp = 100
 harvest_xp = 0
 harvest_item = 1519
 stages = 7
 grow_tick = 30
 disease_chance = 200
+check_health_xp = 5800
 
 [[crop]]
 type = "tree"
 name = "maple tree"
 level = 45
-seed_id = 5314
+seed_id = 5372
 plant_xp = 180
 harvest_xp = 0
 harvest_item = 1517
 stages = 9
 grow_tick = 30
 disease_chance = 210
+check_health_xp = 13600
 
 [[crop]]
 type = "tree"
 name = "yew tree"
 level = 60
-seed_id = 5315
+seed_id = 5373
 plant_xp = 320
 harvest_xp = 0
 harvest_item = 1515
 stages = 11
 grow_tick = 30
 disease_chance = 220
+check_health_xp = 28000
 
 [[crop]]
 type = "tree"
 name = "magic tree"
 level = 75
-seed_id = 5316
+seed_id = 5374
 plant_xp = 580
 harvest_xp = 0
 harvest_item = 1513
 stages = 13
 grow_tick = 30
 disease_chance = 230
+check_health_xp = 54800

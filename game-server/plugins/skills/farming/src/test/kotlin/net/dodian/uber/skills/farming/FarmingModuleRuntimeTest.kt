@@ -389,12 +389,37 @@ class FarmingModuleRuntimeTest {
     // doc comment and the migration plan/memory for the full derivation).
 
     @Test
-    fun `live patch object ids exclude the two bush-sized locations`() {
-        // 8388 (Taverley) and 19147 (Gnome Stronghold South) are 3x3, bush-patch-sized -
-        // confirmed misclassified in the old id list, excluded here as out of scope.
-        assertFalse(8388 in FarmingModule.livePatchObjectIds)
-        assertFalse(19147 in FarmingModule.livePatchObjectIds)
-        assertEquals(15, FarmingModule.livePatchObjectIds.size)
+    fun `live patch object ids cover all 6 categories including the corrected bush-fruit-tree-tree locations`() {
+        // 12 allotment/flower/herb (the 3 previously-standalone-herb ids are now correctly
+        // classified as fruit-tree/bush, not herb) + 13 bush/fruit-tree/tree = 25.
+        assertEquals(25, FarmingModule.livePatchObjectIds.size)
+        // 8388 (Taverley) and 19147 (Gnome Stronghold South) were previously excluded as
+        // "unclassifiable bush-sized" - confirmed tree patches via the 2009scape object-id
+        // range cross-reference, now live.
+        assertTrue(8388 in FarmingModule.livePatchObjectIds)
+        assertTrue(19147 in FarmingModule.livePatchObjectIds)
+    }
+
+    @Test
+    fun `the 3 previously-misclassified standalone locations now resolve to their real crop type`() {
+        // Confirmed via the 2009scape object-id range cross-reference (Farming part 3) - none
+        // of these 3 were ever in the herb id range (8150-8156) at all. Behavioral check: a
+        // fruit-tree sapling plants successfully at 7965, a herb seed does not.
+        val herbSeedPlayer = FakeSkillPlayer(mapOf(5291 to 1, 5343 to 1)).apply { // guam herb seed
+            setLevel(Skill.FARMING, 99)
+            seedPatchSlot("CATHERBY_EAST", 0, state = "WEED", stageOrLife = 3)
+        }
+        FarmingModule.useItem(herbSeedPlayer, 7965, 5291)
+        assertTrue(herbSeedPlayer.messages.single().endsWith("can only be planted at a herb patch."))
+
+        val appleSaplingPlayer = FakeSkillPlayer(mapOf(5496 to 1, 952 to 1)).apply { // apple sapling + spade
+            setLevel(Skill.FARMING, 99)
+            seedPatchSlot("CATHERBY_EAST", 0, state = "WEED", stageOrLife = 3)
+        }
+        FarmingModule.useItem(appleSaplingPlayer, 7965, 5496)
+        assertEquals("GROWING", appleSaplingPlayer.patchSlot("CATHERBY_EAST", 0)?.state)
+        assertEquals(0, appleSaplingPlayer.amount(5496))
+        assertEquals(1, appleSaplingPlayer.amount(5350)) // empty plant pot returned
     }
 
     @Test
@@ -788,6 +813,148 @@ class FarmingModuleRuntimeTest {
         val bin = player.compostBin("FALADOR")!!
         assertEquals("DONE", bin.state)
         assertEquals(0, bin.progress)
+    }
+
+    // --- Bush/fruit-tree/tree patches (Farming part 3) -----------------------------------------
+    // redberry bush: seed 5101, growTick=16, checkHealthXp=256, stages=6, harvestItem=1951 @ ARDOUGNE_SOUTH/7580
+    // apple tree: sapling 5496, growTick=120, checkHealthXp=5090, stages=7, harvestItem=1955 @ CATHERBY_EAST/7965
+    // oak tree: sapling 5370, growTick=30, checkHealthXp=1860, harvestItem=1521 (0 harvestXp) @ TAVERLY_SOUTH/8388
+
+    @Test
+    fun `planting a bush seed consumes the seed and returns no plant pot`() {
+        val player = FakeSkillPlayer(mapOf(5101 to 1, 5343 to 1)).apply { // redberry seed + dibber
+            setLevel(Skill.FARMING, 99)
+            seedPatchSlot("ARDOUGNE_SOUTH", 0, state = "WEED", stageOrLife = 3)
+        }
+
+        val handled = FarmingModule.useItem(player, 7580, 5101)
+
+        assertTrue(handled)
+        assertEquals("GROWING", player.patchSlot("ARDOUGNE_SOUTH", 0)?.state)
+        assertEquals(0, player.amount(5101))
+        assertEquals(0, player.amount(5350)) // no empty plant pot for bush
+    }
+
+    @Test
+    fun `reaching harvest on a checkHealthXp crop checks health instead of collecting, entering PRODUCTION`() {
+        val player = FakeSkillPlayer().apply {
+            setLevel(Skill.FARMING, 50)
+            seedPatchSlot("ARDOUGNE_SOUTH", 0, itemId = 5101, state = "HARVEST", stageOrLife = 1)
+        }
+
+        val handled = FarmingModule.clickPatch(player, 7580)
+
+        assertTrue(handled)
+        val slot = player.patchSlot("ARDOUGNE_SOUTH", 0)!!
+        assertEquals("PRODUCTION", slot.state)
+        assertEquals(4, slot.stageOrLife) // bush life
+        assertEquals(256, player.skills.experience(Skill.FARMING))
+        assertTrue(player.messages.single().startsWith("You check the health of the redberry"))
+    }
+
+    @Test
+    fun `PRODUCTION harvest decrements life and grants produce for a bush`() {
+        val player = FakeSkillPlayer().apply { seedPatchSlot("ARDOUGNE_SOUTH", 0, itemId = 5101, state = "PRODUCTION", stageOrLife = 4) }
+
+        FarmingModule.clickPatch(player, 7580)
+
+        val slot = player.patchSlot("ARDOUGNE_SOUTH", 0)!!
+        assertEquals("PRODUCTION", slot.state)
+        assertEquals(3, slot.stageOrLife)
+        assertEquals(1, player.amount(1951))
+        assertEquals(20, player.skills.experience(Skill.FARMING))
+    }
+
+    @Test
+    fun `clicking a tree in PRODUCTION always stumps it regardless of remaining life`() {
+        val player = FakeSkillPlayer().apply { seedPatchSlot("TAVERLY_SOUTH", 0, itemId = 5370, state = "PRODUCTION", stageOrLife = 1) }
+
+        FarmingModule.clickPatch(player, 8388)
+
+        assertEquals("STUMP", player.patchSlot("TAVERLY_SOUTH", 0)?.state)
+    }
+
+    @Test
+    fun `an exhausted bush in PRODUCTION resets fully to a fresh weedy patch, not a stump`() {
+        val player = FakeSkillPlayer().apply { seedPatchSlot("ARDOUGNE_SOUTH", 0, itemId = 5101, state = "PRODUCTION", stageOrLife = 0) }
+
+        FarmingModule.clickPatch(player, 7580)
+
+        val slot = player.patchSlot("ARDOUGNE_SOUTH", 0)!!
+        assertEquals(-1, slot.itemId)
+        assertEquals("WEED", slot.state)
+        assertEquals(3, slot.stageOrLife)
+    }
+
+    @Test
+    fun `an exhausted fruit tree in PRODUCTION stumps`() {
+        val player = FakeSkillPlayer().apply { seedPatchSlot("CATHERBY_EAST", 0, itemId = 5496, state = "PRODUCTION", stageOrLife = 0) }
+
+        FarmingModule.clickPatch(player, 7965)
+
+        assertEquals("STUMP", player.patchSlot("CATHERBY_EAST", 0)?.state)
+    }
+
+    @Test
+    fun `secateurs cure a diseased checkHealthXp crop and grant item 6020 regardless of outcome`() {
+        // FakeSkillPlayer.random.chance(numerator, denominator) is numerator > 0, deterministically
+        // true here - only the success path is directly observable via the fake, matching the
+        // same convention noted for the disease-roll tests above.
+        val player = FakeSkillPlayer(mapOf(5329 to 1)).apply { // secateurs
+            seedPatchSlot("ARDOUGNE_SOUTH", 0, itemId = 5101, state = "DISEASE", stageOrLife = 2, progress = 5)
+        }
+
+        FarmingModule.clickPatch(player, 7580)
+
+        val slot = player.patchSlot("ARDOUGNE_SOUTH", 0)!!
+        assertEquals("GROWING", slot.state)
+        assertEquals(0, slot.progress)
+        assertEquals(1, player.amount(6020))
+    }
+
+    @Test
+    fun `secateurs cure without the tool shows a message`() {
+        val player = FakeSkillPlayer().apply { seedPatchSlot("ARDOUGNE_SOUTH", 0, itemId = 5101, state = "DISEASE", stageOrLife = 2) }
+
+        FarmingModule.clickPatch(player, 7580)
+
+        assertEquals("You need to use a pair of secateurs to prune the tree.", player.messages.single())
+    }
+
+    @Test
+    fun `a stump regrows into PRODUCTION after growTick over 3 pulses`() {
+        val player = FakeSkillPlayer().apply { seedPatchSlot("TAVERLY_SOUTH", 0, itemId = 5370, state = "STUMP", stageOrLife = 0, progress = 0) }
+
+        repeat(9) { FarmingModule.applyGrowthPulse(player) } // oak growTick=30, 30/3=10
+        assertEquals("STUMP", player.patchSlot("TAVERLY_SOUTH", 0)?.state)
+
+        FarmingModule.applyGrowthPulse(player)
+
+        val slot = player.patchSlot("TAVERLY_SOUTH", 0)!!
+        assertEquals("PRODUCTION", slot.state)
+        assertEquals(0, slot.progress)
+    }
+
+    @Test
+    fun `PRODUCTION regrows stageOrLife back up to the fresh per-type life cap`() {
+        val player = FakeSkillPlayer().apply { seedPatchSlot("ARDOUGNE_SOUTH", 0, itemId = 5101, state = "PRODUCTION", stageOrLife = 3, progress = 0) }
+
+        repeat(4) { FarmingModule.applyGrowthPulse(player) } // redberry growTick=16, integer 16/3=5 -> the 5th pulse triggers
+        assertEquals(3, player.patchSlot("ARDOUGNE_SOUTH", 0)?.stageOrLife)
+
+        FarmingModule.applyGrowthPulse(player)
+
+        assertEquals(4, player.patchSlot("ARDOUGNE_SOUTH", 0)?.stageOrLife) // bush life cap
+    }
+
+    @Test
+    fun `PRODUCTION stops regrowing once it reaches the life cap`() {
+        val player = FakeSkillPlayer().apply { seedPatchSlot("ARDOUGNE_SOUTH", 0, itemId = 5101, state = "PRODUCTION", stageOrLife = 4, progress = 0) }
+
+        repeat(20) { FarmingModule.applyGrowthPulse(player) }
+
+        assertEquals(4, player.patchSlot("ARDOUGNE_SOUTH", 0)?.stageOrLife)
+        assertEquals(0, player.patchSlot("ARDOUGNE_SOUTH", 0)?.progress, "should never accumulate progress once at the cap")
     }
 }
 
