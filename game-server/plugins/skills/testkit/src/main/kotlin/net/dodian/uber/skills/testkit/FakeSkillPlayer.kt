@@ -387,25 +387,60 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
         }
         override fun cancel() { slayerRemainingAmount = 0 }
     }
-    /** objectId -> "handled" call log, for tests that just need to assert dispatch fired. */
-    val farmingClickPatchCalls = mutableListOf<Int>()
-    val farmingUseItemCalls = mutableListOf<Pair<Int, Int>>()
-    val farmingInspectPatchCalls = mutableListOf<Int>()
+    /** objectId/option -> "handled" call log, for tests that just need to assert dispatch fired. */
     val farmingInteractBinCalls = mutableListOf<Pair<Int, Int>>()
-    var farmingClickPatchResult = true
-    var farmingUseItemResult = true
+    val farmingUseItemOnBinCalls = mutableListOf<Pair<Int, Int>>()
+    var farmingUseItemOnBinResult = true
     override val farming = object : SkillFarming {
-        override fun clickPatch(objectId: Int): Boolean {
-            farmingClickPatchCalls += objectId
-            return farmingClickPatchResult
-        }
-        override fun useItem(objectId: Int, itemId: Int): Boolean {
-            farmingUseItemCalls += objectId to itemId
-            return farmingUseItemResult
-        }
-        override fun inspectPatch(objectId: Int) { farmingInspectPatchCalls += objectId }
         override fun interactBin(objectId: Int, option: Int) { farmingInteractBinCalls += objectId to option }
+        override fun useItemOnBin(objectId: Int, itemId: Int): Boolean {
+            farmingUseItemOnBinCalls += objectId to itemId
+            return farmingUseItemOnBinResult
+        }
     }
+    private val patchSlotState = mutableMapOf<Pair<String, Int>, net.dodian.uber.game.api.plugin.skills.SkillPatchSlot>()
+    private val compostBinFakeState = mutableMapOf<String, net.dodian.uber.game.api.plugin.skills.SkillCompostBinState>()
+    var farmingStateDirty = false
+        private set
+    override val farmingState = object : net.dodian.uber.game.api.plugin.skills.SkillFarmingState {
+        override fun patchSlots(): List<net.dodian.uber.game.api.plugin.skills.SkillPatchSlot> = patchSlotState.values.toList()
+        override fun writePatchSlot(
+            patchName: String,
+            slot: Int,
+            itemId: Int,
+            state: String,
+            compost: String,
+            stageOrLife: Int,
+            progress: Int,
+            plantedBy: Int,
+        ) {
+            patchSlotState[patchName to slot] =
+                net.dodian.uber.game.api.plugin.skills.SkillPatchSlot(patchName, slot, itemId, state, compost, stageOrLife, progress, plantedBy)
+        }
+        override fun compostBins(): List<net.dodian.uber.game.api.plugin.skills.SkillCompostBinState> = compostBinFakeState.values.toList()
+        override fun markDirty() { farmingStateDirty = true }
+        override fun refreshVisuals() { farmingRefreshVisualsCalls++ }
+    }
+    var farmingRefreshVisualsCalls = 0
+        private set
+
+    /** Seeds a patch slot's starting state for a test - defaults match a fresh, unplanted patch. */
+    fun seedPatchSlot(
+        patchName: String,
+        slot: Int,
+        itemId: Int = -1,
+        state: String = "WEED",
+        compost: String = "NONE",
+        stageOrLife: Int = 0,
+        progress: Int = 0,
+        plantedBy: Int = -1,
+    ) {
+        patchSlotState[patchName to slot] =
+            net.dodian.uber.game.api.plugin.skills.SkillPatchSlot(patchName, slot, itemId, state, compost, stageOrLife, progress, plantedBy)
+    }
+
+    fun patchSlot(patchName: String, slot: Int): net.dodian.uber.game.api.plugin.skills.SkillPatchSlot? = patchSlotState[patchName to slot]
+
     override val attributes = FakeContentAttributes()
 
     fun amount(itemId: Int): Int = itemAmounts[itemId].orZero()

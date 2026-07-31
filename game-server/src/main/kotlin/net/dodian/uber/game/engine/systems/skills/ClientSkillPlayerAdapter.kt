@@ -57,6 +57,7 @@ import net.dodian.uber.skills.runtime.SkillRecipePlanner
 import net.dodian.uber.game.engine.util.Misc
 import net.dodian.uber.game.model.entity.Entity
 import net.dodian.uber.game.engine.systems.skills.skillguide.SkillGuide
+import net.dodian.uber.game.engine.systems.skills.farming.markFarmingDirty
 
 /** Engine-only protocol adapter. Public content receives [SkillPlayer], never [Client]. */
 internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlayer {
@@ -377,11 +378,45 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
         override fun capacity(slot: Int): Int = client.runePouchState.capacity(slot)
     }
     override val farming = object : net.dodian.uber.game.api.plugin.skills.SkillFarming {
-        override fun clickPatch(objectId: Int): Boolean = client.farming.run { client.clickPatch(objectId) }
-        override fun useItem(objectId: Int, itemId: Int): Boolean =
-            client.farming.run { client.interactItemBin(objectId, itemId) }
-        override fun inspectPatch(objectId: Int) = client.farming.run { client.inspectPatch(objectId) }
         override fun interactBin(objectId: Int, option: Int) = client.farming.run { client.interactBin(objectId, option) }
+        override fun useItemOnBin(objectId: Int, itemId: Int): Boolean = client.farming.run { client.interactItemBin(objectId, itemId) }
+    }
+    override val farmingState = object : net.dodian.uber.game.api.plugin.skills.SkillFarmingState {
+        override fun patchSlots(): List<net.dodian.uber.game.api.plugin.skills.SkillPatchSlot> =
+            net.dodian.uber.game.engine.systems.skills.farming.runtime.FarmingPersistenceCodec.snapshot(client).patchSlots.map {
+                net.dodian.uber.game.api.plugin.skills.SkillPatchSlot(
+                    it.patch.name, it.slot, it.itemId, it.state, it.compost, it.stageOrLife, it.progress, it.plantedBy,
+                )
+            }
+
+        override fun writePatchSlot(
+            patchName: String,
+            slot: Int,
+            itemId: Int,
+            state: String,
+            compost: String,
+            stageOrLife: Int,
+            progress: Int,
+            plantedBy: Int,
+        ) {
+            val patch = net.dodian.uber.game.engine.systems.skills.farming.FarmingData.patches.valueOf(patchName)
+            net.dodian.uber.game.engine.systems.skills.farming.runtime.FarmingPersistenceCodec.writePatchSlot(
+                client.farmingJson,
+                patch,
+                slot,
+                net.dodian.uber.game.engine.systems.skills.farming.runtime.PatchSlotSnapshot(
+                    patch, slot, itemId, state, compost, stageOrLife, progress, plantedBy,
+                ),
+            )
+        }
+
+        override fun compostBins(): List<net.dodian.uber.game.api.plugin.skills.SkillCompostBinState> =
+            net.dodian.uber.game.engine.systems.skills.farming.runtime.FarmingPersistenceCodec.snapshot(client).compostBins.map {
+                net.dodian.uber.game.api.plugin.skills.SkillCompostBinState(it.bin.name, it.compost, it.state, it.amount, it.progress)
+            }
+
+        override fun markDirty() = with(client) { markFarmingDirty() }
+        override fun refreshVisuals() = client.farming.run { client.updateFarmPatch() }
     }
     override val slayerTask = object : net.dodian.uber.game.api.plugin.skills.SkillSlayerTask {
         override val masterNpcId: Int get() = client.slayerTaskState.masterNpcId

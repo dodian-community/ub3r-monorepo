@@ -8,6 +8,7 @@ seed_id = 5318
 plant_xp = 32
 harvest_xp = 36
 harvest_item = 1942
+stages = 5
 
 [[crop]]
 type = "allotment"
@@ -17,6 +18,7 @@ seed_id = 5319
 plant_xp = 38
 harvest_xp = 42
 harvest_item = 1957
+stages = 5
 
 [[crop]]
 type = "allotment"
@@ -26,6 +28,7 @@ seed_id = 5324
 plant_xp = 40
 harvest_xp = 46
 harvest_item = 1965
+stages = 5
 
 [[crop]]
 type = "allotment"
@@ -35,6 +38,7 @@ seed_id = 5322
 plant_xp = 50
 harvest_xp = 56
 harvest_item = 1982
+stages = 5
 
 [[crop]]
 type = "allotment"
@@ -44,6 +48,7 @@ seed_id = 5320
 plant_xp = 68
 harvest_xp = 76
 harvest_item = 5986
+stages = 7
 
 [[crop]]
 type = "allotment"
@@ -53,6 +58,7 @@ seed_id = 5323
 plant_xp = 100
 harvest_xp = 116
 harvest_item = 5504
+stages = 7
 
 [[crop]]
 type = "allotment"
@@ -62,6 +68,7 @@ seed_id = 5321
 plant_xp = 180
 harvest_xp = 208
 harvest_item = 5982
+stages = 9
 
 [[crop]]
 type = "allotment"
@@ -71,6 +78,7 @@ seed_id = 22879
 plant_xp = 300
 harvest_xp = 312
 harvest_item = -1
+stages = 8
 
 [[crop]]
 type = "flower"
@@ -80,6 +88,7 @@ seed_id = 5096
 plant_xp = 36
 harvest_xp = 180
 harvest_item = 6010
+stages = 5
 
 [[crop]]
 type = "flower"
@@ -89,6 +98,7 @@ seed_id = 5097
 plant_xp = 48
 harvest_xp = 260
 harvest_item = 6014
+stages = 5
 
 [[crop]]
 type = "flower"
@@ -98,6 +108,7 @@ seed_id = 5098
 plant_xp = 80
 harvest_xp = 440
 harvest_item = 6012
+stages = 5
 
 [[crop]]
 type = "flower"
@@ -107,6 +118,7 @@ seed_id = 5099
 plant_xp = 88
 harvest_xp = 480
 harvest_item = 1793
+stages = 5
 
 [[crop]]
 type = "flower"
@@ -116,6 +128,7 @@ seed_id = 5100
 plant_xp = 96
 harvest_xp = 500
 harvest_item = 225
+stages = 5
 
 [[crop]]
 type = "herb"
@@ -125,6 +138,7 @@ seed_id = 5291
 plant_xp = 44
 harvest_xp = 50
 harvest_item = 199
+stages = 5
 
 [[crop]]
 type = "herb"
@@ -134,6 +148,7 @@ seed_id = 5292
 plant_xp = 54
 harvest_xp = 60
 harvest_item = 201
+stages = 5
 
 [[crop]]
 type = "herb"
@@ -143,6 +158,7 @@ seed_id = 5293
 plant_xp = 64
 harvest_xp = 72
 harvest_item = 203
+stages = 5
 
 [[crop]]
 type = "herb"
@@ -152,6 +168,7 @@ seed_id = 5294
 plant_xp = 86
 harvest_xp = 96
 harvest_item = -1
+stages = 5
 
 [[crop]]
 type = "herb"
@@ -161,6 +178,7 @@ seed_id = 5295
 plant_xp = 108
 harvest_xp = 122
 harvest_item = 207
+stages = 5
 
 [[crop]]
 type = "herb"
@@ -170,6 +188,7 @@ seed_id = 5296
 plant_xp = 154
 harvest_xp = 154
 harvest_item = -1
+stages = 5
 
 [[crop]]
 type = "herb"
@@ -179,6 +198,7 @@ seed_id = 5297
 plant_xp = 172
 harvest_xp = 194
 harvest_item = 209
+stages = 5
 
 [[crop]]
 type = "herb"
@@ -188,6 +208,7 @@ seed_id = 5298
 plant_xp = 218
 harvest_xp = 246
 harvest_item = -1
+stages = 5
 
 [[crop]]
 type = "herb"
@@ -197,6 +218,7 @@ seed_id = 5299
 plant_xp = 276
 harvest_xp = 312
 harvest_item = 213
+stages = 5
 
 [[crop]]
 type = "herb"
@@ -206,6 +228,7 @@ seed_id = 5300
 plant_xp = 350
 harvest_xp = 394
 harvest_item = 3051
+stages = 5
 
 [[crop]]
 type = "herb"
@@ -215,6 +238,7 @@ seed_id = 5301
 plant_xp = 426
 harvest_xp = 480
 harvest_item = 215
+stages = 5
 
 [[crop]]
 type = "herb"
@@ -224,6 +248,7 @@ seed_id = 5302
 plant_xp = 538
 harvest_xp = 606
 harvest_item = -1
+stages = 5
 
 [[crop]]
 type = "herb"
@@ -233,6 +258,7 @@ seed_id = 5303
 plant_xp = 682
 harvest_xp = 768
 harvest_item = 217
+stages = 5
 
 [[crop]]
 type = "herb"
@@ -242,6 +268,7 @@ seed_id = 5304
 plant_xp = 798
 harvest_xp = 898
 harvest_item = 219
+stages = 5
 
 # The 17 crop types below (bush/fruit tree/tree families) share the same
 # clickPatch/interactItemBin state machine as allotment/flower/herb, but this
@@ -259,6 +286,7 @@ seed_id = 5101
 plant_xp = 44
 harvest_xp = 20
 harvest_item = 1951
+stages = 6
 
 [[crop]]
 type = "bush"
@@ -268,6 +296,7 @@ seed_id = 5102
 plant_xp = 400
 harvest_xp = 136
 harvest_item = 1987
+stages = 7
 
 [[crop]]
 type = "bush"
@@ -277,6 +306,7 @@ seed_id = 5103
 plant_xp = 120
 harvest_xp = 48
 harvest_item = 2126
+stages = 8
 
 [[crop]]
 type = "bush"
@@ -286,6 +316,7 @@ seed_id = 5104
 plant_xp = 200
 harvest_xp = 76
 harvest_item = 247
+stages = 9
 
 [[crop]]
 type = "bush"
@@ -295,6 +326,7 @@ seed_id = 5105
 plant_xp = 312
 harvest_xp = 116
 harvest_item = 239
+stages = 9
 
 [[crop]]
 type = "fruit tree"
@@ -304,6 +336,7 @@ seed_id = 5283
 plant_xp = 88
 harvest_xp = 36
 harvest_item = 1955
+stages = 7
 
 [[crop]]
 type = "fruit tree"
@@ -313,6 +346,7 @@ seed_id = 5284
 plant_xp = 112
 harvest_xp = 44
 harvest_item = 1963
+stages = 7
 
 [[crop]]
 type = "fruit tree"
@@ -322,6 +356,7 @@ seed_id = 5285
 plant_xp = 140
 harvest_xp = 52
 harvest_item = 2108
+stages = 7
 
 [[crop]]
 type = "fruit tree"
@@ -331,6 +366,7 @@ seed_id = 5286
 plant_xp = 160
 harvest_xp = 64
 harvest_item = 5970
+stages = 7
 
 [[crop]]
 type = "fruit tree"
@@ -340,6 +376,7 @@ seed_id = 5287
 plant_xp = 220
 harvest_xp = 84
 harvest_item = 2114
+stages = 7
 
 [[crop]]
 type = "fruit tree"
@@ -349,6 +386,7 @@ seed_id = 5288
 plant_xp = 280
 harvest_xp = 108
 harvest_item = 5972
+stages = 7
 
 [[crop]]
 type = "fruit tree"
@@ -358,6 +396,7 @@ seed_id = 5289
 plant_xp = 440
 harvest_xp = 140
 harvest_item = 5974
+stages = 7
 
 [[crop]]
 type = "tree"
@@ -367,6 +406,7 @@ seed_id = 5312
 plant_xp = 60
 harvest_xp = 0
 harvest_item = 1521
+stages = 5
 
 [[crop]]
 type = "tree"
@@ -376,6 +416,7 @@ seed_id = 5313
 plant_xp = 100
 harvest_xp = 0
 harvest_item = 1519
+stages = 7
 
 [[crop]]
 type = "tree"
@@ -385,6 +426,7 @@ seed_id = 5314
 plant_xp = 180
 harvest_xp = 0
 harvest_item = 1517
+stages = 9
 
 [[crop]]
 type = "tree"
@@ -394,6 +436,7 @@ seed_id = 5315
 plant_xp = 320
 harvest_xp = 0
 harvest_item = 1515
+stages = 11
 
 [[crop]]
 type = "tree"
@@ -403,3 +446,4 @@ seed_id = 5316
 plant_xp = 580
 harvest_xp = 0
 harvest_item = 1513
+stages = 13

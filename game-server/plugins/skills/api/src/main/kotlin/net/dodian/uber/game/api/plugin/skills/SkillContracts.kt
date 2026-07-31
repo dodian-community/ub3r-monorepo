@@ -36,26 +36,68 @@ interface SkillPlayer {
     val runePouches: SkillRunePouches
     val slayerTask: SkillSlayerTask
     val farming: SkillFarming
+    val farmingState: SkillFarmingState
     /** Plugin-owned temporary state; cleared when the player logs out. */
     val attributes: ContentAttributes
     val moduleState: SkillModuleState
 }
 
 /**
- * Persisted farming-patch/compost-bin state, exposed to the Farming plugin only (same shape as
- * [SkillRunePouches] for Runecrafting). Each method mirrors a legacy `Farming`/`FarmingData` entry
- * point 1:1 so the underlying save-data JSON shape stays unchanged; the engine adapter owns the
- * actual state machine, this interface is only the plugin-module dispatch boundary.
+ * Compost-bin interactions only - patch planting/growth/harvest is plugin-owned directly
+ * (see `FarmingModule.clickPatch`/`.useItem`/`.inspectPatch`, backed by [SkillFarmingState]),
+ * but compost bins remain a legacy `Client`-owned state machine for now (deferred to a future
+ * Farming chunk), so this stays a thin dispatch-through-the-engine boundary for that one piece.
  */
 interface SkillFarming {
-    /** Object-click on a planted patch (rake weeds / clear dead-or-stump / harvest / cure disease). */
-    fun clickPatch(objectId: Int): Boolean
-    /** Item-on-object for both patches (seed/tool/compost/watering-can) and compost bins (bucket/compost/ash). */
-    fun useItem(objectId: Int, itemId: Int): Boolean
-    /** Object-click "Inspect" on an empty patch. */
-    fun inspectPatch(objectId: Int)
     /** Object-click on a compost bin: option 1 = open/fill/empty cycle, option 5 = dump-all dialogue. */
     fun interactBin(objectId: Int, option: Int)
+    /** Item-on-object on a compost bin only (bucket/compost/ash) - patches never reach this. */
+    fun useItemOnBin(objectId: Int, itemId: Int): Boolean
+}
+
+/** A single patch's persisted state - see [SkillFarmingState.patchSlots]. */
+data class SkillPatchSlot(
+    val patchName: String,
+    val slot: Int,
+    val itemId: Int,
+    val state: String,
+    val compost: String,
+    val stageOrLife: Int,
+    val progress: Int,
+    val plantedBy: Int,
+)
+
+/** A single compost bin's persisted state - see [SkillFarmingState.compostBins]. */
+data class SkillCompostBinState(
+    val binName: String,
+    val compost: String,
+    val state: String,
+    val amount: Int,
+    val progress: Int,
+)
+
+/**
+ * Read/write access to the player's persisted farming state - a thin plugin-facing view over
+ * the engine's existing `FarmingPersistenceCodec`/`client.farmingJson` storage (not a new
+ * persistence mechanism; nothing else needs a generic persisted-blob API yet). `state`/
+ * `compost` values are the same plain strings the legacy `FarmingData.patchState`/`.compost`
+ * enums already used (e.g. `"WEED"`, `"GROWING"`, `"NONE"`) - kept as strings at this boundary
+ * rather than a new shared enum type, matching how other migrated skills' data-driven string
+ * constants already cross this same boundary.
+ */
+interface SkillFarmingState {
+    fun patchSlots(): List<SkillPatchSlot>
+    fun writePatchSlot(patchName: String, slot: Int, itemId: Int, state: String, compost: String, stageOrLife: Int, progress: Int, plantedBy: Int)
+    /** Read-only for now - compost bins aren't written through this interface yet. */
+    fun compostBins(): List<SkillCompostBinState>
+    /** Marks the farming save segment dirty and refreshes the cached save snapshot. */
+    fun markDirty()
+    /**
+     * Refreshes the client's patch varbits immediately (the legacy visual-only
+     * `updateFarmPatch()` refresh) - call after any state-changing interaction so the client
+     * sees the new patch state right away, not just on the next login/walk-triggered refresh.
+     */
+    fun refreshVisuals()
 }
 
 interface SkillLevels {
