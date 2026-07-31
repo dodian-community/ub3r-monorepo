@@ -1983,7 +1983,8 @@ public abstract class PlayerCore extends Entity {
     }
     public void examineObject(Client c, int objectId, Position objPos) {
         //Do we handle objects?!
-        c.farming.examineBin(c, objPos);
+        net.dodian.uber.skills.farming.FarmingModule.INSTANCE.examineBin(
+            net.dodian.uber.game.engine.systems.skills.SkillPlayerBridge.of(c), objectId);
         String examine = net.dodian.uber.game.engine.systems.objectexamines.ObjectExamines.getExamine(objectId);
         if (examine != null && !examine.equals("null")) {
             c.send(new SendMessage(examine));

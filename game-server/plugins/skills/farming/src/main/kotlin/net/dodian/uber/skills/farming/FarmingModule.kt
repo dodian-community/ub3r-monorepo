@@ -4,6 +4,8 @@ import net.dodian.uber.game.api.plugin.ContentMaturity
 import net.dodian.uber.game.api.plugin.ContentModuleManifest
 import net.dodian.uber.game.api.plugin.skills.SkillPlayer
 import net.dodian.uber.game.api.plugin.skills.SkillPatchSlot
+import net.dodian.uber.game.api.plugin.skills.SkillCompostBinState
+import net.dodian.uber.game.api.plugin.skills.SkillDialogueOption
 import net.dodian.uber.game.api.plugin.skills.SkillPlugin
 import net.dodian.uber.game.api.plugin.skills.SkillPluginDefinition
 import net.dodian.uber.game.api.plugin.skills.manifest
@@ -150,18 +152,18 @@ object FarmingModule : SkillPlugin {
             true
         }
         objectClick(preset = PolicyPreset.GATHERING, option = 1, *compostBinObjectIds) { interaction ->
-            interaction.player.farming.interactBin(interaction.objectId, 1)
+            interactBin(interaction.player, interaction.objectId, 1)
             true
         }
         objectClick(preset = PolicyPreset.GATHERING, option = 5, *compostBinObjectIds) { interaction ->
-            interaction.player.farming.interactBin(interaction.objectId, 5)
+            interactBin(interaction.player, interaction.objectId, 5)
             true
         }
         itemOnObject(PolicyPreset.PRODUCTION, *livePatchObjectIds, *patchObjectIds, itemIds = patchItemIds) { interaction ->
             useItem(interaction.player, interaction.objectId, interaction.itemId)
         }
         itemOnObject(PolicyPreset.PRODUCTION, *compostBinObjectIds, itemIds = binItemIds) { interaction ->
-            interaction.player.farming.useItemOnBin(interaction.objectId, interaction.itemId)
+            useItemOnBin(interaction.player, interaction.objectId, interaction.itemId)
         }
     }
 
@@ -381,6 +383,182 @@ object FarmingModule : SkillPlugin {
             else -> "The patch (${crop?.name?.lowercase() ?: ""}) is fully grown."
         }
         player.ui.message("$messageOne $messageTwo $messageThree")
+    }
+
+    // --- Compost bins: fill/open/extract/dump cycle ---------------------------------------------
+    // Reproduces legacy Farming.kt's Client.interactBin/Client.interactItemBin/Client.examineBin's
+    // compost-bin logic exactly. examineBin is reached from PlayerCore.examineObject (a real,
+    // live op10 dispatch path via ExamineListener.java/ObjectExamineBootstrap.kt) - it is called
+    // directly from there (Java can't see the SkillInteractionDispatcher route the other bindings
+    // use), matching the same "direct call into the plugin object" pattern already used by
+    // Mazchna.kt/Vannaka.kt/Duradel.kt's redirects.
+
+    private val binLocations: Map<Int, String> = mapOf(
+        7837 to "CATHERBY",
+        7839 to "ARDOUGNE",
+        7838 to "CANAFIS",
+        1003 to "FALADOR",
+    )
+
+    private const val BIN_EMPTY = "EMPTY"
+    private const val BIN_FILLED = "FILLED"
+    private const val BIN_CLOSED = "CLOSED"
+    private const val BIN_DONE = "DONE"
+    private const val BIN_OPEN = "OPEN"
+
+    private fun binFor(player: SkillPlayer, objectId: Int): Pair<String, SkillCompostBinState>? {
+        val binName = binLocations[objectId] ?: return null
+        val bin = player.farmingState.compostBins().firstOrNull { it.binName == binName }
+            ?: SkillCompostBinState(binName, NO_COMPOST, BIN_EMPTY, 0, 0)
+        return binName to bin
+    }
+
+    private fun compostItemFor(compostName: String): Int = when (compostName) {
+        "COMPOST" -> COMPOST_ITEM_ID
+        "SUPERCOMPOST" -> SUPERCOMPOST_ITEM_ID
+        "ULTRACOMPOST" -> ULTRACOMPOST_ITEM_ID
+        else -> COMPOST_ITEM_ID
+    }
+
+    fun examineBin(player: SkillPlayer, objectId: Int) {
+        val (_, bin) = binFor(player, objectId) ?: return
+        player.ui.message(
+            when (bin.state) {
+                BIN_CLOSED -> "The bin is currently in the process of rotting the containment."
+                BIN_DONE -> "The ${bin.compost.lowercase()} is ready."
+                BIN_EMPTY -> "The bin is currently empty."
+                BIN_OPEN -> "There is currently ${bin.amount}/15 ${bin.compost.lowercase()} remaining."
+                else -> "There is currently ${bin.amount}/15 ${bin.compost.lowercase()} filled."
+            },
+        )
+    }
+
+    fun interactBin(player: SkillPlayer, objectId: Int, option: Int) {
+        val (binName, bin) = binFor(player, objectId) ?: return
+        when (option) {
+            1 -> when {
+                bin.state == BIN_FILLED && bin.amount == 15 -> {
+                    player.farmingState.writeCompostBin(binName, bin.compost, BIN_CLOSED, bin.amount, bin.progress)
+                    player.farmingState.markDirty()
+                    player.farmingState.refreshVisuals()
+                }
+                bin.state == BIN_DONE -> {
+                    player.farmingState.writeCompostBin(binName, bin.compost, BIN_OPEN, bin.amount, bin.progress)
+                    player.farmingState.markDirty()
+                    player.farmingState.refreshVisuals()
+                }
+                bin.state == BIN_OPEN -> {
+                    if (player.inventory.contains(BUCKET)) {
+                        player.inventory.transaction { remove(BUCKET); add(compostItemFor(bin.compost)) }
+                        val amount = bin.amount - 1
+                        if (amount == 0) {
+                            player.farmingState.writeCompostBin(binName, NO_COMPOST, BIN_EMPTY, 0, 0)
+                        } else {
+                            player.farmingState.writeCompostBin(binName, bin.compost, BIN_OPEN, amount, bin.progress)
+                        }
+                        player.farmingState.markDirty()
+                        player.farmingState.refreshVisuals()
+                    } else {
+                        player.ui.message("You are missing a bucket to be filled with compost.")
+                    }
+                }
+            }
+            5 -> player.ui.dialogue {
+                options(
+                    title = "You wish to empty the compost bin?",
+                    SkillDialogueOption("Yes") {
+                        finishThen { p ->
+                            // Legacy quirk, preserved verbatim: the dump handler resets compost
+                            // type/state/progress to NONE/EMPTY/0 but never explicitly clears
+                            // `amount` (it's only zeroed elsewhere as a side effect of the
+                            // extract-to-0 path) - so amount is left stale after a dump. Not
+                            // fixed, matching this effort's standing preserve-over-fix default.
+                            p.farmingState.writeCompostBin(binName, NO_COMPOST, BIN_EMPTY, bin.amount, 0)
+                            p.farmingState.markDirty()
+                            p.farmingState.refreshVisuals()
+                            p.ui.message("You dump all the content inside the bin!")
+                        }
+                    },
+                    SkillDialogueOption("No") { finish() },
+                )
+            }
+        }
+    }
+
+    private fun fillBinAs(player: SkillPlayer, binName: String, bin: SkillCompostBinState, itemId: Int, compostType: String) {
+        player.inventory.transaction { remove(itemId) }
+        player.farmingState.writeCompostBin(binName, compostType, BIN_FILLED, bin.amount + 1, bin.progress)
+        player.farmingState.markDirty()
+        player.farmingState.refreshVisuals()
+    }
+
+    fun useItemOnBin(player: SkillPlayer, objectId: Int, itemId: Int): Boolean {
+        val (binName, bin) = binFor(player, objectId) ?: return false
+        val itemName = player.inventory.itemName(itemId).lowercase()
+
+        if (itemId == BUCKET && bin.amount > 0 && bin.state == BIN_OPEN) {
+            interactBin(player, objectId, 1)
+            return true
+        }
+        if (itemId == VOLCANIC_ASH && bin.amount == 15 && bin.state == BIN_OPEN) {
+            if (player.inventory.contains(VOLCANIC_ASH, 25)) {
+                player.inventory.transaction { remove(VOLCANIC_ASH, 25) }
+                player.farmingState.writeCompostBin(binName, "ULTRACOMPOST", bin.state, bin.amount, bin.progress)
+                player.farmingState.markDirty()
+            } else {
+                player.ui.message("You need 25 $itemName in order to convert into ultra compost.")
+            }
+            return true
+        }
+
+        // Not empty, and not still-fillable (FILLED with room left) - refuse with the matching
+        // legacy message for whichever state it's actually in.
+        if (bin.state != BIN_EMPTY && !(bin.state == BIN_FILLED && bin.amount < 15)) {
+            player.ui.message(
+                when {
+                    bin.state == BIN_CLOSED -> "The bin is currently in the process of rotting the containment."
+                    bin.state == BIN_FILLED && bin.amount == 15 -> "The bin is currently full!"
+                    bin.state == BIN_OPEN && bin.amount > 0 -> "Empty the bin before you try and fill it!"
+                    else -> "The bin is done rotting the containment; Perhaps you should open it?"
+                },
+            )
+            return false
+        }
+
+        val isSuper = itemId in superCompostItemIds
+        val isRegular = itemId in regularCompostItemIds
+        if (!isSuper && !isRegular) {
+            player.ui.message("This item has no use to be put into the bin.")
+            return false
+        }
+
+        // Both cross-tier confirmations intentionally force the bin to plain COMPOST (not the
+        // item's own tier) - legacy hardcodes this in both dialogs (they're both "use this item
+        // as if it were regular compost" flows), not a bug - preserved as the direct-insert
+        // path below (which does pick the item's own tier) is the only place that varies.
+        if (bin.state != BIN_EMPTY && isSuper && bin.compost != "SUPERCOMPOST") {
+            player.ui.dialogue {
+                options(
+                    title = "You wish to convert to use this item for regular compost",
+                    SkillDialogueOption("Yes") { finishThen { p -> fillBinAs(p, binName, bin, itemId, "COMPOST") } },
+                    SkillDialogueOption("No") { finish() },
+                )
+            }
+            return true
+        }
+        if (isRegular && bin.compost == "SUPERCOMPOST") {
+            player.ui.dialogue {
+                options(
+                    title = "You wish to convert to regular compost?",
+                    SkillDialogueOption("Yes") { finishThen { p -> fillBinAs(p, binName, bin, itemId, "COMPOST") } },
+                    SkillDialogueOption("No") { finish() },
+                )
+            }
+            return true
+        }
+
+        fillBinAs(player, binName, bin, itemId, if (isRegular) "COMPOST" else "SUPERCOMPOST")
+        return true
     }
 
     private fun loadCrops(): List<FarmingCropDef> =

@@ -13,14 +13,20 @@ import org.junit.jupiter.api.Test
  * patch lifecycle - plant/harvest, driven through the real `client.farmingJson`-backed
  * `SkillFarmingState` adapter. Object id/position confirmed via `CacheCollisionAuditStore`
  * cross-referenced against the Tarnish reference server's zone rectangles (see
- * `FarmingModule.patchLocations`'s doc comment). Compost bins, bush/fruit-tree/tree patches,
- * and the wall-clock growth-tick scheduler stay legacy-owned this chunk - not covered here.
+ * `FarmingModule.patchLocations`'s doc comment). Also covers the Catherby compost bin's
+ * open/extract/dump cycle (Chunk 9). Bush/fruit-tree/tree patches and the wall-clock
+ * growth-tick scheduler stay legacy-owned - not covered here.
  */
 class FarmingRealWorldTest : RealWorldSkillTest() {
     // CATHERBY_WEST slot 0 - an allotment patch, confirmed at this exact tile.
     private val allotmentObjectId = 8552
     private val allotmentX = 2805
     private val allotmentY = 3466
+
+    // Catherby compost bin - FarmingData.compostBin.CATHERBY, confirmed at this exact tile.
+    private val binObjectId = 7837
+    private val binX = 2804
+    private val binY = 3464
 
     @Test
     fun `planting a potato at the real catherby allotment patch grants xp and starts it growing`() {
@@ -60,5 +66,50 @@ class FarmingRealWorldTest : RealWorldSkillTest() {
         val slot = player.asSkillPlayer().farmingState.patchSlots().single { it.patchName == "CATHERBY_WEST" && it.slot == 0 }
         assertEquals(-1, slot.itemId, "expected the patch to remain unplanted")
         assertEquals(0, player.getExperience(Skill.FARMING))
+    }
+
+    private fun binState(player: net.dodian.uber.game.model.entity.player.Client) =
+        player.asSkillPlayer().farmingState.compostBins().single { it.binName == "CATHERBY" }
+
+    @Test
+    fun `clicking a full compost bin through the real object dispatch starts it rotting`() {
+        val player = spawnPlayer("BinCloser", binX, binY)
+        player.farmingJson.farmingLoad("")
+        player.asSkillPlayer().farmingState.writeCompostBin("CATHERBY", "COMPOST", "FILLED", 15, 0)
+
+        RealWorldHarness.objectOption(player, binObjectId, 1, binX, binY)
+        RealWorldHarness.tick(5)
+
+        assertEquals("CLOSED", binState(player).state)
+    }
+
+    @Test
+    fun `using a bucket on an open compost bin through the real item-on-object dispatch extracts compost`() {
+        val player = spawnPlayer("BinExtractor", binX, binY)
+        player.farmingJson.farmingLoad("")
+        player.asSkillPlayer().farmingState.writeCompostBin("CATHERBY", "COMPOST", "OPEN", 5, 0)
+        RealWorldHarness.giveItem(player, 1925, 1) // bucket
+
+        RealWorldHarness.itemOnObject(player, binObjectId, binX, binY, 1925)
+        RealWorldHarness.tick(2)
+
+        assertEquals(4, binState(player).amount)
+        assertEquals(0, player.getInvAmt(1925))
+        assertEquals(1, player.getInvAmt(6032)) // a bucket of compost granted
+    }
+
+    @Test
+    fun `dumping a compost bin through the real dialogue option click empties it`() {
+        val player = spawnPlayer("BinDumper", binX, binY)
+        player.farmingJson.farmingLoad("")
+        player.asSkillPlayer().farmingState.writeCompostBin("CATHERBY", "COMPOST", "FILLED", 10, 0)
+
+        RealWorldHarness.objectOption(player, binObjectId, 5, binX, binY)
+        RealWorldHarness.tick(5)
+        RealWorldHarness.button(player, 2461) // "Yes"
+        RealWorldHarness.tick(3)
+
+        assertEquals("EMPTY", binState(player).state)
+        assertEquals("NONE", binState(player).compost)
     }
 }

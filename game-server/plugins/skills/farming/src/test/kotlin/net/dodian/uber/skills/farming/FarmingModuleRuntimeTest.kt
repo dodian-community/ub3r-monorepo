@@ -33,26 +33,354 @@ class FarmingModuleRuntimeTest {
     }
 
     @Test
-    fun `compost bin open and dump options route to SkillFarming interactBin`() {
+    fun `compost bin object bindings route option 1 and option 5 to interactBin`() {
         val openBinding = FarmingModule.definition.objectBindings.single { it.option == 1 && 7837 in it.objectIds }
         val dumpBinding = FarmingModule.definition.objectBindings.single { it.option == 5 && 7837 in it.objectIds }
-        val player = FakeSkillPlayer()
+        val player = FakeSkillPlayer().apply { seedCompostBin("CATHERBY", compost = "COMPOST", state = "DONE") }
 
         openBinding.handler(net.dodian.uber.game.api.plugin.skills.SkillObjectInteraction(player, 1, objRef(7837)))
-        dumpBinding.handler(net.dodian.uber.game.api.plugin.skills.SkillObjectInteraction(player, 5, objRef(7837)))
+        assertEquals("OPEN", player.compostBin("CATHERBY")?.state)
 
-        assertEquals(listOf(7837 to 1, 7837 to 5), player.farmingInteractBinCalls)
+        dumpBinding.handler(net.dodian.uber.game.api.plugin.skills.SkillObjectInteraction(player, 5, objRef(7837)))
+        assertEquals(listOf("Yes", "No"), player.pendingDialogueOptionTexts())
     }
 
     @Test
-    fun `item used on a compost bin routes to SkillFarming useItemOnBin, not the patch logic`() {
-        val binding = FarmingModule.definition.itemOnObjectBindings.single { 7837 in it.objectIds && 1925 in it.itemIds }
-        val player = FakeSkillPlayer()
+    fun `item-on-object binding routes a compost item to useItemOnBin, not the patch logic`() {
+        val binding = FarmingModule.definition.itemOnObjectBindings.single { 7837 in it.objectIds && 6055 in it.itemIds }
+        val player = FakeSkillPlayer(mapOf(6055 to 1))
 
-        val handled = binding.handler(net.dodian.uber.game.api.plugin.skills.SkillItemOnObjectInteraction(player, objRef(7837), 1925, 0, -1))
+        val handled = binding.handler(net.dodian.uber.game.api.plugin.skills.SkillItemOnObjectInteraction(player, objRef(7837), 6055, 0, -1))
 
         assertTrue(handled)
-        assertEquals(listOf(7837 to 1925), player.farmingUseItemOnBinCalls)
+        assertEquals("FILLED", player.compostBin("CATHERBY")?.state)
+        assertEquals(0, player.amount(6055))
+    }
+
+    // --- Compost bins: fill cycle -----------------------------------------------------------
+
+    @Test
+    fun `filling an empty bin with a regular compost item sets FILLED and the regular tier`() {
+        val player = FakeSkillPlayer(mapOf(6055 to 1))
+
+        val handled = FarmingModule.useItemOnBin(player, 7837, 6055)
+
+        assertTrue(handled)
+        val bin = player.compostBin("CATHERBY")!!
+        assertEquals("FILLED", bin.state)
+        assertEquals("COMPOST", bin.compost)
+        assertEquals(1, bin.amount)
+        assertEquals(0, player.amount(6055))
+    }
+
+    @Test
+    fun `filling an empty bin with a super compost item sets the super tier`() {
+        val player = FakeSkillPlayer(mapOf(2114 to 1))
+
+        FarmingModule.useItemOnBin(player, 7837, 2114)
+
+        assertEquals("SUPERCOMPOST", player.compostBin("CATHERBY")?.compost)
+    }
+
+    @Test
+    fun `filling a partially-filled bin with the same tier increments amount`() {
+        val player = FakeSkillPlayer(mapOf(6055 to 1)).apply {
+            seedCompostBin("CATHERBY", compost = "COMPOST", state = "FILLED", amount = 4)
+        }
+
+        FarmingModule.useItemOnBin(player, 7837, 6055)
+
+        assertEquals(5, player.compostBin("CATHERBY")?.amount)
+    }
+
+    @Test
+    fun `inserting a super compost item into a regular-compost bin asks to convert to regular`() {
+        val player = FakeSkillPlayer(mapOf(2114 to 1)).apply {
+            seedCompostBin("CATHERBY", compost = "COMPOST", state = "FILLED", amount = 3)
+        }
+
+        val handled = FarmingModule.useItemOnBin(player, 7837, 2114)
+
+        assertTrue(handled)
+        assertEquals(listOf("Yes", "No"), player.pendingDialogueOptionTexts())
+        assertEquals(3, player.compostBin("CATHERBY")?.amount, "nothing consumed until an option is picked")
+    }
+
+    @Test
+    fun `accepting the cross-tier super-into-regular conversion fills as plain COMPOST`() {
+        val player = FakeSkillPlayer(mapOf(2114 to 1)).apply {
+            seedCompostBin("CATHERBY", compost = "COMPOST", state = "FILLED", amount = 3)
+        }
+
+        FarmingModule.useItemOnBin(player, 7837, 2114)
+        assertTrue(player.selectDialogueOption("Yes"))
+
+        val bin = player.compostBin("CATHERBY")!!
+        assertEquals("COMPOST", bin.compost, "legacy hardcodes both cross-tier confirmations to plain COMPOST")
+        assertEquals(4, bin.amount)
+        assertEquals(0, player.amount(2114))
+    }
+
+    @Test
+    fun `declining the cross-tier conversion leaves the bin and inventory untouched`() {
+        val player = FakeSkillPlayer(mapOf(2114 to 1)).apply {
+            seedCompostBin("CATHERBY", compost = "COMPOST", state = "FILLED", amount = 3)
+        }
+
+        FarmingModule.useItemOnBin(player, 7837, 2114)
+        assertTrue(player.selectDialogueOption("No"))
+
+        val bin = player.compostBin("CATHERBY")!!
+        assertEquals("COMPOST", bin.compost)
+        assertEquals(3, bin.amount)
+        assertEquals(1, player.amount(2114))
+    }
+
+    @Test
+    fun `inserting a regular compost item into a supercompost bin asks to convert to regular`() {
+        val player = FakeSkillPlayer(mapOf(6055 to 1)).apply {
+            seedCompostBin("CATHERBY", compost = "SUPERCOMPOST", state = "FILLED", amount = 2)
+        }
+
+        FarmingModule.useItemOnBin(player, 7837, 6055)
+        assertTrue(player.selectDialogueOption("Yes"))
+
+        val bin = player.compostBin("CATHERBY")!!
+        assertEquals("COMPOST", bin.compost)
+        assertEquals(3, bin.amount)
+    }
+
+    @Test
+    fun `a closed bin refuses new items with the rotting message`() {
+        val player = FakeSkillPlayer(mapOf(6055 to 1)).apply {
+            seedCompostBin("CATHERBY", compost = "COMPOST", state = "CLOSED", amount = 15)
+        }
+
+        val handled = FarmingModule.useItemOnBin(player, 7837, 6055)
+
+        assertFalse(handled)
+        assertEquals("The bin is currently in the process of rotting the containment.", player.messages.single())
+    }
+
+    @Test
+    fun `a full bin refuses new items with the currently-full message`() {
+        val player = FakeSkillPlayer(mapOf(6055 to 1)).apply {
+            seedCompostBin("CATHERBY", compost = "COMPOST", state = "FILLED", amount = 15)
+        }
+
+        FarmingModule.useItemOnBin(player, 7837, 6055)
+
+        assertEquals("The bin is currently full!", player.messages.single())
+    }
+
+    @Test
+    fun `an open bin with leftover compost refuses new items until emptied`() {
+        val player = FakeSkillPlayer(mapOf(6055 to 1)).apply {
+            seedCompostBin("CATHERBY", compost = "COMPOST", state = "OPEN", amount = 3)
+        }
+
+        FarmingModule.useItemOnBin(player, 7837, 6055)
+
+        assertEquals("Empty the bin before you try and fill it!", player.messages.single())
+    }
+
+    @Test
+    fun `a done bin refuses new items and suggests opening it`() {
+        val player = FakeSkillPlayer(mapOf(6055 to 1)).apply {
+            seedCompostBin("CATHERBY", compost = "COMPOST", state = "DONE", amount = 15)
+        }
+
+        FarmingModule.useItemOnBin(player, 7837, 6055)
+
+        assertEquals("The bin is done rotting the containment; Perhaps you should open it?", player.messages.single())
+    }
+
+    @Test
+    fun `an item that is not compost has no use on the bin`() {
+        val player = FakeSkillPlayer(mapOf(952 to 1)) // spade
+
+        val handled = FarmingModule.useItemOnBin(player, 7837, 952)
+
+        assertFalse(handled)
+        assertEquals("This item has no use to be put into the bin.", player.messages.single())
+    }
+
+    // --- Compost bins: option-1 open/extract cycle -------------------------------------------
+
+    @Test
+    fun `option 1 on a full filled bin starts it rotting`() {
+        val player = FakeSkillPlayer().apply { seedCompostBin("CATHERBY", compost = "COMPOST", state = "FILLED", amount = 15) }
+
+        FarmingModule.interactBin(player, 7837, 1)
+
+        assertEquals("CLOSED", player.compostBin("CATHERBY")?.state)
+        assertTrue(player.farmingStateDirty)
+        assertEquals(1, player.farmingRefreshVisualsCalls)
+    }
+
+    @Test
+    fun `option 1 on a done bin opens it for extraction`() {
+        val player = FakeSkillPlayer().apply { seedCompostBin("CATHERBY", compost = "COMPOST", state = "DONE", amount = 15) }
+
+        FarmingModule.interactBin(player, 7837, 1)
+
+        assertEquals("OPEN", player.compostBin("CATHERBY")?.state)
+    }
+
+    @Test
+    fun `option 1 on an open bin with a bucket extracts one unit of compost`() {
+        val player = FakeSkillPlayer(mapOf(1925 to 1)).apply {
+            seedCompostBin("CATHERBY", compost = "COMPOST", state = "OPEN", amount = 5)
+        }
+
+        FarmingModule.interactBin(player, 7837, 1)
+
+        assertEquals(4, player.compostBin("CATHERBY")?.amount)
+        assertEquals("OPEN", player.compostBin("CATHERBY")?.state)
+        assertEquals(0, player.amount(1925))
+        assertEquals(1, player.amount(6032)) // COMPOST_ITEM_ID granted
+    }
+
+    @Test
+    fun `extracting the last unit of compost resets the bin to empty`() {
+        val player = FakeSkillPlayer(mapOf(1925 to 1)).apply {
+            seedCompostBin("CATHERBY", compost = "COMPOST", state = "OPEN", amount = 1)
+        }
+
+        FarmingModule.interactBin(player, 7837, 1)
+
+        val bin = player.compostBin("CATHERBY")!!
+        assertEquals("EMPTY", bin.state)
+        assertEquals("NONE", bin.compost)
+        assertEquals(0, bin.amount)
+    }
+
+    @Test
+    fun `extracting without a bucket shows a message`() {
+        val player = FakeSkillPlayer().apply { seedCompostBin("CATHERBY", compost = "COMPOST", state = "OPEN", amount = 5) }
+
+        FarmingModule.interactBin(player, 7837, 1)
+
+        assertEquals("You are missing a bucket to be filled with compost.", player.messages.single())
+        assertEquals(5, player.compostBin("CATHERBY")?.amount)
+    }
+
+    @Test
+    fun `using a bucket directly on an open bin extracts, same as option 1`() {
+        val player = FakeSkillPlayer(mapOf(1925 to 1)).apply {
+            seedCompostBin("CATHERBY", compost = "COMPOST", state = "OPEN", amount = 5)
+        }
+
+        val handled = FarmingModule.useItemOnBin(player, 7837, 1925)
+
+        assertTrue(handled)
+        assertEquals(4, player.compostBin("CATHERBY")?.amount)
+        assertEquals(1, player.amount(6032))
+    }
+
+    // --- Compost bins: dump dialogue (option 5) -----------------------------------------------
+
+    @Test
+    fun `dumping a bin with Yes clears it but leaves amount stale, matching the legacy quirk`() {
+        val player = FakeSkillPlayer().apply { seedCompostBin("CATHERBY", compost = "COMPOST", state = "FILLED", amount = 10) }
+
+        FarmingModule.interactBin(player, 7837, 5)
+        assertTrue(player.selectDialogueOption("Yes"))
+
+        val bin = player.compostBin("CATHERBY")!!
+        assertEquals("NONE", bin.compost)
+        assertEquals("EMPTY", bin.state)
+        assertEquals(10, bin.amount, "legacy never explicitly clears amount on dump - preserved verbatim")
+        assertEquals("You dump all the content inside the bin!", player.messages.single())
+    }
+
+    @Test
+    fun `declining the dump dialogue leaves the bin untouched`() {
+        val player = FakeSkillPlayer().apply { seedCompostBin("CATHERBY", compost = "COMPOST", state = "FILLED", amount = 10) }
+
+        FarmingModule.interactBin(player, 7837, 5)
+        assertTrue(player.selectDialogueOption("No"))
+
+        val bin = player.compostBin("CATHERBY")!!
+        assertEquals("COMPOST", bin.compost)
+        assertEquals("FILLED", bin.state)
+        assertEquals(10, bin.amount)
+        assertTrue(player.messages.isEmpty())
+    }
+
+    // --- Compost bins: volcanic ash -> ultra compost -------------------------------------------
+
+    @Test
+    fun `volcanic ash converts a full open bin to ultra compost`() {
+        val player = FakeSkillPlayer(mapOf(21622 to 25)).apply {
+            seedCompostBin("CATHERBY", compost = "COMPOST", state = "OPEN", amount = 15)
+        }
+
+        val handled = FarmingModule.useItemOnBin(player, 7837, 21622)
+
+        assertTrue(handled)
+        assertEquals("ULTRACOMPOST", player.compostBin("CATHERBY")?.compost)
+        assertEquals(0, player.amount(21622))
+    }
+
+    @Test
+    fun `volcanic ash without 25 in inventory shows a message and does not convert`() {
+        val player = FakeSkillPlayer(mapOf(21622 to 10)).apply {
+            seedCompostBin("CATHERBY", compost = "COMPOST", state = "OPEN", amount = 15)
+        }
+
+        FarmingModule.useItemOnBin(player, 7837, 21622)
+
+        assertEquals("You need 25 item 21622 in order to convert into ultra compost.", player.messages.single())
+        assertEquals("COMPOST", player.compostBin("CATHERBY")?.compost)
+        assertEquals(10, player.amount(21622))
+    }
+
+    // --- Compost bins: examine (op10, wired from PlayerCore.examineObject) -------------------
+
+    @Test
+    fun `examining a fresh (unseeded) bin reports it as empty`() {
+        val player = FakeSkillPlayer()
+
+        FarmingModule.examineBin(player, 7837)
+
+        assertEquals("The bin is currently empty.", player.messages.single())
+    }
+
+    @Test
+    fun `examining a closed bin reports it as rotting`() {
+        val player = FakeSkillPlayer().apply { seedCompostBin("CATHERBY", compost = "COMPOST", state = "CLOSED", amount = 15) }
+
+        FarmingModule.examineBin(player, 7837)
+
+        assertEquals("The bin is currently in the process of rotting the containment.", player.messages.single())
+    }
+
+    @Test
+    fun `examining a done bin reports the compost type is ready`() {
+        val player = FakeSkillPlayer().apply { seedCompostBin("CATHERBY", compost = "COMPOST", state = "DONE", amount = 15) }
+
+        FarmingModule.examineBin(player, 7837)
+
+        assertEquals("The compost is ready.", player.messages.single())
+    }
+
+    @Test
+    fun `examining an open bin reports the remaining amount`() {
+        val player = FakeSkillPlayer().apply { seedCompostBin("CATHERBY", compost = "SUPERCOMPOST", state = "OPEN", amount = 5) }
+
+        FarmingModule.examineBin(player, 7837)
+
+        assertEquals("There is currently 5/15 supercompost remaining.", player.messages.single())
+    }
+
+    @Test
+    fun `examining a filled bin reports the filled amount`() {
+        val player = FakeSkillPlayer().apply { seedCompostBin("CATHERBY", compost = "COMPOST", state = "FILLED", amount = 3) }
+
+        FarmingModule.examineBin(player, 7837)
+
+        assertEquals("There is currently 3/15 compost filled.", player.messages.single())
     }
 
     // --- objectId -> patch type table ------------------------------------------------------

@@ -24,7 +24,6 @@ import net.dodian.uber.game.api.plugin.skills.SkillRunePouches
 import net.dodian.uber.game.api.plugin.skills.SkillSlayerTask
 import net.dodian.uber.game.api.plugin.skills.SkillDialogueFactory
 import net.dodian.uber.game.api.plugin.skills.SkillDialogueStep
-import net.dodian.uber.game.api.plugin.skills.SkillFarming
 import net.dodian.uber.game.api.plugin.skills.SkillItemGridEntry
 import net.dodian.uber.game.api.plugin.skills.SkillValidationResult
 import net.dodian.uber.game.model.player.skills.Skill
@@ -387,17 +386,6 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
         }
         override fun cancel() { slayerRemainingAmount = 0 }
     }
-    /** objectId/option -> "handled" call log, for tests that just need to assert dispatch fired. */
-    val farmingInteractBinCalls = mutableListOf<Pair<Int, Int>>()
-    val farmingUseItemOnBinCalls = mutableListOf<Pair<Int, Int>>()
-    var farmingUseItemOnBinResult = true
-    override val farming = object : SkillFarming {
-        override fun interactBin(objectId: Int, option: Int) { farmingInteractBinCalls += objectId to option }
-        override fun useItemOnBin(objectId: Int, itemId: Int): Boolean {
-            farmingUseItemOnBinCalls += objectId to itemId
-            return farmingUseItemOnBinResult
-        }
-    }
     private val patchSlotState = mutableMapOf<Pair<String, Int>, net.dodian.uber.game.api.plugin.skills.SkillPatchSlot>()
     private val compostBinFakeState = mutableMapOf<String, net.dodian.uber.game.api.plugin.skills.SkillCompostBinState>()
     var farmingStateDirty = false
@@ -418,6 +406,9 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
                 net.dodian.uber.game.api.plugin.skills.SkillPatchSlot(patchName, slot, itemId, state, compost, stageOrLife, progress, plantedBy)
         }
         override fun compostBins(): List<net.dodian.uber.game.api.plugin.skills.SkillCompostBinState> = compostBinFakeState.values.toList()
+        override fun writeCompostBin(binName: String, compost: String, state: String, amount: Int, progress: Int) {
+            compostBinFakeState[binName] = net.dodian.uber.game.api.plugin.skills.SkillCompostBinState(binName, compost, state, amount, progress)
+        }
         override fun markDirty() { farmingStateDirty = true }
         override fun refreshVisuals() { farmingRefreshVisualsCalls++ }
     }
@@ -440,6 +431,13 @@ class FakeSkillPlayer(initialItems: Map<Int, Int> = emptyMap()) : SkillPlayer {
     }
 
     fun patchSlot(patchName: String, slot: Int): net.dodian.uber.game.api.plugin.skills.SkillPatchSlot? = patchSlotState[patchName to slot]
+
+    /** Seeds a compost bin's starting state for a test - defaults match a fresh, empty bin. */
+    fun seedCompostBin(binName: String, compost: String = "NONE", state: String = "EMPTY", amount: Int = 0, progress: Int = 0) {
+        compostBinFakeState[binName] = net.dodian.uber.game.api.plugin.skills.SkillCompostBinState(binName, compost, state, amount, progress)
+    }
+
+    fun compostBin(binName: String): net.dodian.uber.game.api.plugin.skills.SkillCompostBinState? = compostBinFakeState[binName]
 
     override val attributes = FakeContentAttributes()
 

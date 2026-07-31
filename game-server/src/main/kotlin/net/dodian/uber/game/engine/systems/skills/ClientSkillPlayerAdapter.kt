@@ -377,10 +377,6 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
         override fun levelRequirement(slot: Int): Int = client.runePouchState.levelRequirement(slot)
         override fun capacity(slot: Int): Int = client.runePouchState.capacity(slot)
     }
-    override val farming = object : net.dodian.uber.game.api.plugin.skills.SkillFarming {
-        override fun interactBin(objectId: Int, option: Int) = client.farming.run { client.interactBin(objectId, option) }
-        override fun useItemOnBin(objectId: Int, itemId: Int): Boolean = client.farming.run { client.interactItemBin(objectId, itemId) }
-    }
     override val farmingState = object : net.dodian.uber.game.api.plugin.skills.SkillFarmingState {
         override fun patchSlots(): List<net.dodian.uber.game.api.plugin.skills.SkillPatchSlot> =
             net.dodian.uber.game.engine.systems.skills.farming.runtime.FarmingPersistenceCodec.snapshot(client).patchSlots.map {
@@ -415,8 +411,17 @@ internal class ClientSkillPlayerAdapter(internal val client: Client) : SkillPlay
                 net.dodian.uber.game.api.plugin.skills.SkillCompostBinState(it.bin.name, it.compost, it.state, it.amount, it.progress)
             }
 
+        override fun writeCompostBin(binName: String, compost: String, state: String, amount: Int, progress: Int) {
+            val bin = net.dodian.uber.game.engine.systems.skills.farming.FarmingData.compostBin.valueOf(binName)
+            net.dodian.uber.game.engine.systems.skills.farming.runtime.FarmingPersistenceCodec.writeCompostBin(
+                client.farmingJson,
+                bin,
+                net.dodian.uber.game.engine.systems.skills.farming.runtime.CompostBinSnapshot(bin, compost, state, amount, progress),
+            )
+        }
+
         override fun markDirty() = with(client) { markFarmingDirty() }
-        override fun refreshVisuals() = client.farming.run { client.updateFarmPatch() }
+        override fun refreshVisuals() = client.farming.run { client.updateFarmPatch(); client.updateCompost() }
     }
     override val slayerTask = object : net.dodian.uber.game.api.plugin.skills.SkillSlayerTask {
         override val masterNpcId: Int get() = client.slayerTaskState.masterNpcId
