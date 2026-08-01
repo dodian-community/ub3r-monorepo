@@ -1,37 +1,37 @@
 # Ub3r Documentation
 
-This is the documentation for the RS2 Ub3r server. This once was the original server used for Dodian.com back in the
-days. These days it has been quite heavily modified by many people.
-
-**Disclaimer!** _The docs are a work in progress, you can report information that is missing, outdated, or incorrect in our [Discord server](https://discord.gg/m4CkqrakHn)!_
+Welcome to the documentation for the Dodian Ub3r monorepo.
 
 ---
 
-<details>
+<details open>
 <summary>Navigation Menu</summary>
 
 <ul>
-    <li><a href="/docs/contribution">Guides</a>
+    <li><strong>Guides</strong>
         <ul>
-            <li><a href="/docs/guides/getting_started.md">Getting Started</a></li>
-            <li><a href="/docs/guides/installing_mysql.md">Installing MySQL Database</a></li>
-            <li style="margin-top: 5px"><a href="/docs/guides/glossary.md">Glossary</a></li>
+            <li><a href="/docs/guides/getting_started.md">Getting Started Guide</a></li>
+            <li><a href="/docs/guides/installing_mysql.md">Installing MariaDB / MySQL Database</a></li>
+            <li><a href="/docs/guides/discord_account_creation.md">Discord OAuth2 Account Creation</a></li>
+            <li><a href="/docs/guides/glossary.md">Glossary</a></li>
         </ul>
     </li>
-    <li><a href="/docs/contribution">Contribution</a>
+    <li><strong>Development & Systems Architecture</strong>
+        <ul>
+            <li><a href="/docs/development/database.md">Ub3r Database & SQL Scripts</a></li>
+            <li><a href="/docs/development/item_definitions.md">Item Definitions System</a></li>
+            <li><a href="/docs/development/metrics_and_telemetry.md">Metrics, Telemetry & Real-Time Dashboard</a></li>
+        </ul>
+    </li>
+    <li><strong>Contribution</strong>
         <ul>
             <li><a href="/docs/contribution/guidelines.md">Contribution Guidelines</a></li>
             <li><a href="/docs/contribution/issue_definitions.md">Issue Definitions</a></li>
         </ul>
     </li>
-    <li><a href="/docs/development">Development</a>
+    <li><strong>Other</strong>
         <ul>
-            <li><a href="/docs/development/database.md">Ub3r Database</a></li>
-        </ul>
-    </li>
-    <li><a href="/docs/other">Other</a>
-        <ul>
-            <li><a href="/docs/other/environment_variables.md">Environment Variables</a></li>
+            <li><a href="/docs/other/environment_variables.md">Environment Variables Overview</a></li>
         </ul>
     </li>
 </ul>
@@ -40,18 +40,10 @@ days. These days it has been quite heavily modified by many people.
 
 ---
 
-## General Information
-- Server supports being run standalone and in a Docker container using Docker Compose.
-- Server supports importing SQL files from the `database`-directory located at the root of the server.
-
-
-### Default Dummy Accounts
-If you import the [4_dummy_development_data.sql](/game-server/database/4_dummy_development_data.sql)-file, some dummy data useful for development purposes will be added to the database.
-- **[USER]** username: `Admin` & password: `abc123`
-  - Which is a user with admin privileges
-
 ## Hosting Requirements
-- Host OS with **JDK 21 or greater**
-- MariaDB or MySQL database
-- Revision 218 Cache / Server Data ([cache-tarnish-218.zip](https://files.jire.org/cache-tarnish-218.zip))
-- [Database initialize scripts](/game-server/database) _(optional)_
+
+- **Host OS**: Linux, macOS, or Windows with **JDK 21 or greater**
+- **Database Engine**: MariaDB 10.11+ or MySQL 8.0+
+- **OSRS Cache / Definitions**: Revision 218 Cache ([cache-tarnish-218.zip](https://files.jire.org/cache-tarnish-218.zip)) extracted to `game-server/data/def`
+- **Memory Footprint**: ~300MB startup heap usage with Generational ZGC
+- **Database Migration Scripts**: Included in [game-server/database](/game-server/database)

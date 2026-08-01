@@ -269,15 +269,6 @@ object ContentModuleIndex {
         pluginCatalog = discoveredCatalog.sortedBy { it.moduleClass }
         ContentPlatformCatalog.publish(discoveredManifests)
         val platformSnapshot = ContentPlatformCatalog.snapshot()
-        // The "Plugin index frozen" line below already reports fingerprint and module counts;
-        // a second info line with the same numbers just doubles the startup log.
-        logger.debug(
-            "Content manifest frozen fingerprint={} modules={} enabled={} disabled={}",
-            platformSnapshot.fingerprint.take(12),
-            platformSnapshot.modules.size,
-            platformSnapshot.enabledCount,
-            platformSnapshot.disabledCount,
-        )
         logger.debug(
             "Content manifest modules enabled=[{}] disabled=[{}]",
             platformSnapshot.modules.filter { it.id in platformSnapshot.enabledModuleIds }.joinToString { it.id },
@@ -285,16 +276,16 @@ object ContentModuleIndex {
         )
         lifecycle = IndexLifecycle.FROZEN
 
+        // commands/npcs/skills/shops are intentionally omitted here - CommandContentRegistry,
+        // NpcContentRegistry, SkillPluginRegistry, and ShopCatalogRegistry each already log their
+        // own count. buttons/objects/items below count content-module classes, a different axis
+        // from those subsystems' binding counts, so they're not duplicates.
         logger.info(
-            "Plugin index {}: buttons={}, objects={}, items={}, commands={}, npcs={}, skills={}, shops={}, events={}, bootstraps={}, catalog={}, enabledModules={}, disabledModules={}, fingerprint={}",
+            "Plugin index {}: buttons={}, objects={}, items={}, events={}, bootstraps={}, catalog={}, enabledModules={}, disabledModules={}, fingerprint={}",
             lifecycle.name.lowercase(),
             interfaceButtons.size,
             objectContents.size,
             itemContents.size,
-            commandContents.size,
-            npcContents.size,
-            skillPlugins.size,
-            shopPlugins.size,
             eventBootstraps.size,
             contentBootstraps.size,
             pluginCatalog.size,

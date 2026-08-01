@@ -76,21 +76,14 @@ public class Server {
 
     private static final GameLoopService gameLoopService = new GameLoopService();
     private static final AtomicBoolean SHUTDOWN_STARTED = new AtomicBoolean(false);
-    private static final String STARTUP_BANNER = String.join("\n",
-            "    ____",
-            "   / __ \\____ ____/ (_)___ _____",
-            "  / / / / __ \\/ __ / / __ `/ __ \\",
-            " / /_/ / /_/ / /_/ / / /_/ / / / /",
-            "/_____/\\____/\\____/_/\\____/_/ /_/",
-            "",
-            "Maintained by Dodian.net");
+    private static final String STARTUP_BANNER = "Dodian Ub3r starting - maintained by Dodian.net";
 
     static String startupBanner() {
         return STARTUP_BANNER;
     }
 
     public static void main(String[] args) throws Exception {
-        logger.info("\n{}", STARTUP_BANNER);
+        logger.info(STARTUP_BANNER);
         List<String> jvmInputArgs = ManagementFactory.getRuntimeMXBean().getInputArguments();
         logger.info("JVM Runtime Arguments: {}", jvmInputArgs);
 
@@ -173,22 +166,15 @@ public class Server {
             logger.warn("Unable to write readiness marker", e);
         }
         long startupMillis = System.currentTimeMillis() - serverStartup;
-        int itemDefinitionCount = 0;
-        for (net.dodian.uber.game.model.item.Item item : itemManager.items) {
-            if (item != null) itemDefinitionCount++;
-        }
-        // The port/item/npc/startup-time numbers here are also reported by server_ready and
-        // Server & Ports overview immediately below - a separate ASCII box used to repeat them
-        // with a hardcoded (and wrong: 8080 instead of the real 8081) web API port.
+        // packet_listeners and items are intentionally omitted here - PacketListenerManager and
+        // ItemManager already log those counts themselves (packet_listeners_ready,
+        // item_definitions_ready). npcs/objects below are live world-state counts nothing else reports.
         logger.info(
-                "server_ready world={} transport={} startup_ms={} " +
-                        "packet_listeners={} npcs={} items={} objects={}",
+                "server_ready world={} transport={} startup_ms={} npcs={} objects={}",
                 getGameWorldId(),
                 nettyServer.getTransportName(),
                 startupMillis,
-                net.dodian.uber.game.netty.listener.PacketListenerManager.getRepository().getRegisteredCount(),
                 npcManager.getNpcs().size(),
-                itemDefinitionCount,
                 objects.size()
         );
 

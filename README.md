@@ -27,7 +27,7 @@ This is the original Dodian Ub3r source code, fully modernized into a high-perfo
 
 - **JDK 21 & Kotlin 2.3 Runtime Modernization**:
   - `game-server` builds and runs natively on **JDK 21** with **Kotlin 2.3** (`jvmTarget = "21"`).
-  - Configured **Generational ZGC** (`-XX:+UseZGC -XX:+ZGenerational`), String Deduplication (`-XX:+UseStringDeduplication`), and memory footprint optimizations (reducing startup heap usage from 1.2GB down to ~600MB).
+  - Configured **Generational ZGC** (`-XX:+UseZGC -XX:+ZGenerational`), String Deduplication (`-XX:+UseStringDeduplication`), and memory footprint optimizations (reducing startup heap usage down to **~300MB**).
   - Leveraged JDK 21 **Virtual Threads** (`Thread.ofVirtual()`) for async database operations and parallel startup data loading (`NpcManager`, `ItemManager`, `CacheBootstrapService`).
 
 - **RSProt-Style Networking & FIFO Packet Pipeline**:
@@ -40,7 +40,20 @@ This is the original Dodian Ub3r source code, fully modernized into a high-perfo
   - Wrapped duel payouts, stake refunds, and banking operations into atomic transactions (`EconomyTransaction.run{}`), eliminating item duplication exploits and race conditions.
 
 - **Developer Experience & Diagnostic Logging**:
+  - Added real-time operational monitoring endpoints: **Prometheus Text Exporter** (`http://localhost:8081/prometheus`) and **Interactive Visual Dashboard** (`http://localhost:8081/dashboard`).
   - Added structured ASCII Service Table boot output, condensed diagnostic metrics, and clean Gradle dev builds.
+
+---
+
+## Quick Setup & Cache Download
+
+1. **Prerequisites**: Host OS with **JDK 21 or greater** (Gradle auto-provisions JDK 21 per machine).
+2. **Database**: MariaDB 10.11+ or MySQL 8.0+ instance running with `.env` configured (`SERVER_DATABASE_INITIALIZE=true`).
+3. **OSRS Cache**: Download the **Revision 218 Cache**: [cache-tarnish-218.zip](https://files.jire.org/cache-tarnish-218.zip) and extract it into:
+   ```
+   game-server/data/def
+   ```
+4. **Run Server**: `./gradlew :game-server:run`
 
 ---
 
@@ -54,15 +67,6 @@ This is the original Dodian Ub3r source code, fully modernized into a high-perfo
 
 - **NPC AI & Movement Mechanics**:  
   Modernizing legacy NPC combat AI, pathing boundaries, and movement behaviors.
-
----
-
-## Quick Setup & Cache Download
-
-1. **Prerequisites**: Host OS with **JDK 21 or greater** (Gradle auto-provisions JDK 21 per machine).
-2. **Database**: MariaDB or MySQL instance running with `.env` configured.
-3. **OSRS Cache**: Download the **Revision 218 Cache**: [cache-tarnish-218.zip](https://files.jire.org/cache-tarnish-218.zip) and extract it into `/game-server/data`.
-4. **Run Server**: `./gradlew :game-server:run`
 
 ---
 

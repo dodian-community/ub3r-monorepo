@@ -1,37 +1,37 @@
-# Ub3r Database
-This document will entail documentation on the Dodian database from a development perspective.
+# Ub3r Database Documentation
+
+This document details the database architecture, schema setup scripts, and driver configuration for Dodian Ub3r.
 
 ---
 
-<details>
-<summary>Navigation Menu</summary>
+## Database Connection & Driver
 
-<ul>
-    <li><a href="/docs/contribution">Guides</a>
-        <ul>
-            <li><a href="/docs/guides/getting_started.md">Getting Started</a></li>
-            <li><a href="/docs/guides/installing_mysql.md">Installing MySQL Database</a></li>
-            <li style="margin-top: 5px"><a href="/docs/guides/glossary.md">Glossary</a></li>
-        </ul>
-    </li>
-    <li><a href="/docs/contribution">Contribution</a>
-        <ul>
-            <li><a href="/docs/contribution/guidelines.md">Contribution Guidelines</a></li>
-            <li><a href="/docs/contribution/issue_definitions.md">Issue Definitions</a></li>
-        </ul>
-    </li>
-    <li><a href="/docs/development">Development</a>
-        <ul>
-            <li><a href="/docs/development/database.md">Ub3r Database</a></li>
-        </ul>
-    </li>
-    <li><a href="/docs/other">Other</a>
-        <ul>
-            <li><a href="/docs/other/environment_variables.md">Environment Variables</a></li>
-        </ul>
-    </li>
-</ul>
-
-</details>
+- **Database Engine**: **MariaDB 10.11+** or **MySQL 8.0+**
+- **JDBC Driver**: `org.mariadb.jdbc:mariadb-java-client`
+- **Connection URL**: `jdbc:mariadb://<host>:<port>/<database>`
+- **Connection Pool**: **HikariCP** managing connections with Virtual Thread async dispatchers (`DbDispatchers.kt`).
 
 ---
+
+## Database Scripts (`game-server/database/`)
+
+The server includes 7 structured SQL migration and initialization scripts located in `game-server/database/`:
+
+| Script Name | Purpose & Contents |
+| :--- | :--- |
+| `1_mandatory_tables.sql` | **Core Schema**: Creates mandatory engine tables (`uber3_players`, `uber3_inventory`, `uber3_bank`, `uber3_staff_logs`, `uber3_highscores`, `uber3_settings`). |
+| `2_dodian_default_data.sql` / `2.1_dodian_default_data.sql` | **World & Game Data**: Imports default NPC spawns, drop tables, teleports, and object definitions. |
+| `3_convenient_data.sql` | **Dev Utilities**: Sets convenient server configuration flags for local development. |
+| `4_dummy_development_data.sql` | **Development Admin Account**: Creates default administrator account (`Admin` / `abc123`). |
+| `5_quest_data.sql` | **Quest Engine**: Creates quest progress tracking tables (`uber3_quests`). |
+| `6_discord_identity.sql` | **Discord Integration**: Schema for Discord OAuth2 account authentication, identity mappings, and token links. |
+| `7_shop_transaction_logs.sql` | **Shop Audit Logs**: Logs all shop purchases, sell transactions, and gold flow for economy monitoring. |
+
+---
+
+## Auto-Import & Setup
+
+When `game-server` boots with `.env` setting `SERVER_DATABASE_INITIALIZE=true`:
+1. The engine connects via HikariCP.
+2. Checks if `1_mandatory_tables.sql` has been imported.
+3. Automatically executes missing `.sql` scripts from `game-server/database/` in sequential order (`1` through `7`).

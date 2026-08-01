@@ -5,17 +5,9 @@ import org.junit.jupiter.api.Test
 
 class StartupPresentationTest {
     @Test
-    fun `startup banner preserves branding and attribution`() {
+    fun `startup banner preserves attribution as a single logger-friendly line`() {
         assertEquals(
-            listOf(
-                "    ____",
-                "   / __ \\____ ____/ (_)___ _____",
-                "  / / / / __ \\/ __ / / __ `/ __ \\",
-                " / /_/ / /_/ / /_/ / / /_/ / / / /",
-                "/_____/\\____/\\____/_/\\____/_/ /_/",
-                "",
-                "Maintained by Dodian.net",
-            ).joinToString("\n"),
+            "Dodian Ub3r starting - maintained by Dodian.net",
             Server.startupBanner(),
         )
     }

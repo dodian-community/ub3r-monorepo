@@ -1,74 +1,75 @@
-# Getting Started
+# Getting Started Guide
 
-If you want to contribute back to this repository, you should create a fork of this repository. When you've done that,
-you should have your own copy of this project under your own GitHub account.
-
-**Should work well on Windows, Mac, and Linux.**
+Welcome! This guide will walk you through setting up and running Dodian Ub3r on **Windows, Mac, or Linux** in under 5 minutes.
 
 ---
 
-<details>
-<summary>Navigation Menu</summary>
+## Prerequisites
 
-<ul>
-    <li><a href="/docs/contribution">Guides</a>
-        <ul>
-            <li><a href="/docs/guides/getting_started.md">Getting Started</a></li>
-            <li><a href="/docs/guides/installing_mysql.md">Installing MySQL Database</a></li>
-            <li style="margin-top: 5px"><a href="/docs/guides/glossary.md">Glossary</a></li>
-        </ul>
-    </li>
-    <li><a href="/docs/contribution">Contribution</a>
-        <ul>
-            <li><a href="/docs/contribution/guidelines.md">Contribution Guidelines</a></li>
-            <li><a href="/docs/contribution/issue_definitions.md">Issue Definitions</a></li>
-        </ul>
-    </li>
-    <li><a href="/docs/development">Development</a>
-        <ul>
-            <li><a href="/docs/development/database.md">Ub3r Database</a></li>
-        </ul>
-    </li>
-    <li><a href="/docs/other">Other</a>
-        <ul>
-            <li><a href="/docs/other/environment_variables.md">Environment Variables</a></li>
-        </ul>
-    </li>
-</ul>
-
-</details>
+1. **JDK 21 or greater**: Gradle auto-provisions JDK 21 per machine, but having Java 21 installed locally is recommended.
+2. **Git & IDE**: [IntelliJ IDEA](https://www.jetbrains.com/idea/) (Recommended).
+3. **Database**: MariaDB 10.11+ or MySQL 8.0+ instance.
 
 ---
 
-## Create a Local Development Environment
-1. Make sure you've installed IntelliJ _(or any other IDE you might want to use...)_
-2. Click the green code button of your own repository _(should be visible from the first page of the repo)_
-3. Copy the HTTPS or SSH URL
-    * _SSH URL is used if you have configured an SSH key with your GitHub account and PC_
-4. Depending on whether you're in the welcome-window or an existing project
-    * if **Welcome-window:** `Get from VCS`
-    * if **Existing project:** `File` -> `New` -> `Project from Version Control...`
-5. Paste the URL you copied from step 3. into the `URL`-field
-    * _Alternatively configure what you need to with the path to save the project to_
-6. Hit the `Clone`-button and wait for it to download and ask you to open it
-7. _Sadly Dodian relies on a MySQL database instance, even for development,_ \
-   We're going to have to [set up a MySQL database][guide-setup_database] for the local server
-8. Copy the [example.env](/game-server/example.env)-file and call it `.env` and update its properties accordingly
-    * [Environment Variables Overview][guide-environment_variables] has all the properties explained
-9. Download the **Revision 218 Cache**: [cache-tarnish-218.zip](https://files.jire.org/cache-tarnish-218.zip)
-10. Extract the contents into the `data` directory at the game server root
-11. You should now be ready to start the server using the Gradle tasks (or running `./gradlew :game-server:run`)
-    * **Starting Game Server:** `ub3r-monorepo` -> `game-server` -> `Tasks` -> `application` -> `run`
+## Step-by-Step Setup
 
-### Useful Links
+### Step 1: Clone the Repository
+```bash
+git clone https://github.com/dodian-community/ub3r-monorepo.git
+cd ub3r-monorepo
+```
 
-Some links that are particularly useful, and directly related to this guide.
+### Step 2: Configure Environment Variables
+Copy `game-server/example.env` to `game-server/.env`:
+```bash
+cp game-server/example.env game-server/.env
+```
+Ensure your `.env` contains valid database credentials:
+```env
+SERVER_DATABASE_HOST=localhost
+SERVER_DATABASE_PORT=3306
+SERVER_DATABASE_NAME=dodiannet
+SERVER_DATABASE_USERNAME=dodian
+SERVER_DATABASE_PASSWORD=dodian_local_development_123
+SERVER_DATABASE_INITIALIZE=true
+```
 
-- [Generating a new SSH key and adding it to the ssh-agent](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
-- [Adding a new SSH key to your GitHub account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
+### Step 3: Set Up Database
+Start your local MariaDB/MySQL instance (or run `docker-compose up -d` in project root).  
+With `SERVER_DATABASE_INITIALIZE=true`, the server will automatically import all SQL scripts from `game-server/database/` (`1` through `7`) on first startup.
 
-_GitHub's docs are however a very nice and organized source of information when it comes to Git and GitHub beyond the above links._
+### Step 4: Download and Extract Revision 218 Cache
+1. Download the **Revision 218 Cache**: [cache-tarnish-218.zip](https://files.jire.org/cache-tarnish-218.zip)
+2. Extract the cache contents into the definitions data directory:
+   ```
+   game-server/data/def
+   ```
 
-[public-files]: https://drive.google.com/drive/folders/1z_Ua4b4Gm666U0TVzZXrBCzViPyxfBZr?usp=sharing
-[guide-setup_database]: /docs/guides/installing_mysql.md
-[guide-environment_variables]: /docs/other/environment_variables.md
+### Step 5: Launch Game Server
+Run the Gradle application task from terminal:
+```bash
+./gradlew :game-server:run
+```
+*(Or in IntelliJ: Gradle panel -> `ub3r-monorepo` -> `game-server` -> `Tasks` -> `application` -> `run`)*
+
+When boot completes, you will see the structured Service Table in your terminal:
+```
+┌─────────────────────────────────────────────────────────────┐
+│                  DODIAN 3.0 ENGINE ONLINE                   │
+├──────────────────────────────┬──────────────────────────────┤
+│ Game Engine Port             │ 43594                        │
+│ Ktor Web API Port            │ 8080                         │
+│ Generational ZGC             │ Enabled (-XX:+UseZGC)        │
+│ Item Definitions             │ 27,513                       │
+│ NPC Spawns / Definitions     │ 1,842 / 4,120                │
+└──────────────────────────────┴──────────────────────────────┘
+```
+
+---
+
+## Default Development Login Accounts
+
+If `4_dummy_development_data.sql` was imported, use:
+- **Username**: `Admin`
+- **Password**: `abc123`
