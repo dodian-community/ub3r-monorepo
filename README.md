@@ -8,8 +8,8 @@ This is the original Dodian Ub3r source code, fully modernized into a high-perfo
 
 ## Major Modernization & Feature Highlights
 
-- **RuneLite Client & Revision 218 OSRS Data Integration**:
-  - Upgraded client infrastructure to **RuneLite Client with Revision 218 OSRS Data/Cache**.
+- **RuneLite Client & Revision 218 OSRS Data (317 Format)**:
+  - Upgraded client infrastructure to **RuneLite Client with Revision 218 OSRS Data packed into 317 format** (`main_file_cache.dat`, `.idx0` through `.idx5`).
   - Generated dump-backed cache reference mappings and enriched revision 218 definition metadata (items, objects, NPCs) for accurate ID resolutions across content plugins.
   - Added OSRS "Make-All" interface support (smelting, glassblowing, crafting).
 
@@ -53,17 +53,21 @@ This is the original Dodian Ub3r source code, fully modernized into a high-perfo
 
 1. **Prerequisites**: Host OS with **JDK 21 or greater** (Gradle auto-provisions JDK 21 per machine).
 2. **Database**: MariaDB 10.11+ or MySQL 8.0+ instance running with `.env` configured (`SERVER_DATABASE_INITIALIZE=true`).
-3. **OSRS Cache Setup**:
-   - Download the **Revision 218 Cache**: [cache-tarnish-218.zip](https://files.jire.org/cache-tarnish-218.zip)
+3. **OSRS Cache Setup (317 Format)**:
+   - Download the **Revision 218 Cache (OSRS Data packed into 317 Format)**: [cache-tarnish-218.zip](https://files.jire.org/cache-tarnish-218.zip)
    - Extract the contents into `game-server/data/cache`.
    - **Important**: If the ZIP extracts as a folder named `cache-tarnish-218`, rename it to `cache` so that the cache index files reside directly inside:
      ```
      game-server/data/cache/
      ```
-   - **Expected Cache Files in `game-server/data/cache`**:
-     - `main_file_cache.dat2`
-     - `main_file_cache.idx0` through `main_file_cache.idx255`
-     - `main_file_cache.idx255`
+   - **Expected Server Cache Files in `game-server/data/cache`**:
+     - `main_file_cache.dat`
+     - `main_file_cache.idx0`
+     - `main_file_cache.idx1`
+     - `main_file_cache.idx2`
+     - `main_file_cache.idx3`
+     - `main_file_cache.idx4`
+     - `main_file_cache.idx5`
 4. **Run Server**: `./gradlew :game-server:run`
 
 ---

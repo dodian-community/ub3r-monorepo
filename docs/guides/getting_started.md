@@ -39,8 +39,8 @@ SERVER_DATABASE_INITIALIZE=true
 Start your local MariaDB/MySQL instance (or run `docker-compose up -d` in project root).  
 With `SERVER_DATABASE_INITIALIZE=true`, the server will automatically import all SQL scripts from `game-server/database/` (`1` through `7`) on first startup.
 
-### Step 4: Download & Extract Revision 218 Cache
-1. Download the **Revision 218 Cache**: [cache-tarnish-218.zip](https://files.jire.org/cache-tarnish-218.zip)
+### Step 4: Download & Extract Revision 218 Cache (317 Format)
+1. Download the **Revision 218 Cache (OSRS Data packed into 317 Format)**: [cache-tarnish-218.zip](https://files.jire.org/cache-tarnish-218.zip)
 2. Extract the ZIP contents into:
    ```
    game-server/data/cache
@@ -48,11 +48,15 @@ With `SERVER_DATABASE_INITIALIZE=true`, the server will automatically import all
 3. **Important — Rename Folder**:
    If the extracted folder is named `cache-tarnish-218`, rename it to `cache` so that the cache index files reside directly inside `game-server/data/cache/`.
 
-#### Required Cache Files List
+#### Required Server Cache Files List
 Ensure `game-server/data/cache` contains the following files:
-* `main_file_cache.dat2` (Cache Data Archive)
-* `main_file_cache.idx0` through `main_file_cache.idx255` (Cache Indices)
-* `main_file_cache.idx255` (Master Reference Index)
+* `main_file_cache.dat`
+* `main_file_cache.idx0`
+* `main_file_cache.idx1`
+* `main_file_cache.idx2`
+* `main_file_cache.idx3`
+* `main_file_cache.idx4`
+* `main_file_cache.idx5`
 
 ### Step 5: Launch Game Server
 Run the Gradle application task from terminal:

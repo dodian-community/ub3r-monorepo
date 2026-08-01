@@ -26,12 +26,42 @@ object CommandContentRegistry : ContentBootstrap {
             rebuildLocked()
             bootstrapped.set(true)
         }
-        logger.info(
-            "commands_ready plugins={} aliases={} : {}",
-            contents.size,
-            byAlias.size,
-            byAlias.keys.sorted().joinToString(", "),
+        logStartupSummary()
+    }
+
+    // Grouped by the registering CommandContent's package (command.player/.admin/.dev/.beta),
+    // which already matches the codebase's own rank/environment convention 1:1 - see StaffCommands
+    // (playerRights checks), the command.dev.* files (dev-tooling commands), and BetaOnlyCommands
+    // (world > 1 only). Each command still enforces its own rank/env gate at call time; this is a
+    // startup-time index of what's registered, not a live per-player availability check.
+    private fun logStartupSummary() {
+        val tiers = linkedMapOf(
+            "player" to sortedSetOf<String>(),
+            "staff" to sortedSetOf(),
+            "dev" to sortedSetOf(),
+            "beta" to sortedSetOf(),
+            "other" to sortedSetOf(),
         )
+        for (content in contents) {
+            val aliases = content.definitions().flatMap { it.aliases }
+            tiers.getValue(tierFor(content)) += aliases
+        }
+        logger.info("commands_ready: {} aliases from {} sources", byAlias.size, contents.size)
+        for ((tier, aliases) in tiers) {
+            if (aliases.isEmpty()) continue
+            logger.info("  {} ({}): {}", tier, aliases.size, aliases.joinToString(", "))
+        }
+    }
+
+    private fun tierFor(content: CommandContent): String {
+        val pkg = content::class.java.packageName
+        return when {
+            pkg.endsWith(".command.player") -> "player"
+            pkg.endsWith(".command.admin") -> "staff"
+            pkg.endsWith(".command.dev") -> "dev"
+            pkg.endsWith(".command.beta") -> "beta"
+            else -> "other"
+        }
     }
 
     fun register(content: CommandContent) {

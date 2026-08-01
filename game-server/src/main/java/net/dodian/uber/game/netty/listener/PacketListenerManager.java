@@ -37,9 +37,14 @@ public final class PacketListenerManager {
             validateCriticalOpcodesOrThrow(report);
             repository.lock();
             registrationReport = report;
+            // Truncated to 12 chars to match every other fingerprint printed at startup
+            // (ContentModuleIndex's "Plugin index frozen" line) - the full hash is still in
+            // report.getFingerprint() for anything that needs to compare it exactly.
+            String fingerprint = report.getFingerprint();
             logger.info("packet_listeners_ready handlers={} bindings={} duplicates={} fingerprint={}",
                     report.getDiscoveredHandlerCount(), report.getRegisteredCount(),
-                    report.getDuplicateOverwriteCount(), report.getFingerprint());
+                    report.getDuplicateOverwriteCount(),
+                    fingerprint.length() > 12 ? fingerprint.substring(0, 12) : fingerprint);
             return report;
         } catch (Throwable e) {
             logger.error("Failed to register packet listeners", e);
