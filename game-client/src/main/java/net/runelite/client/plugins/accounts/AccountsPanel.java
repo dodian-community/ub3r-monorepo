@@ -30,9 +30,11 @@ import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JWindow;
 import javax.swing.SwingUtilities;
@@ -53,8 +55,6 @@ public class AccountsPanel extends PluginPanel
 	private static final Color TEXT_SECONDARY = new Color(140, 152, 168);
 	private static final Color BTN_LOGIN_BG   = new Color(35, 100, 55);
 	private static final Color BTN_LOGIN_HOV  = new Color(45, 130, 70);
-	private static final Color BTN_DEL_BG     = new Color(95, 30, 30);
-	private static final Color BTN_DEL_HOV    = new Color(125, 42, 42);
 	private static final Color BTN_EDIT_BG    = new Color(35, 55, 90);
 	private static final Color BTN_EDIT_HOV   = new Color(48, 75, 120);
 
@@ -354,7 +354,12 @@ public class AccountsPanel extends PluginPanel
 		bottomRow.add(combatBadge, BorderLayout.EAST);
 
 		// ── Action buttons ─────────────────────────────────────────────
-		JPanel btnRow = new JPanel(new GridLayout(1, 0, 5, 0));
+		// BorderLayout instead of GridLayout: with Delete folded into the gear menu below, this
+		// is at most 2 buttons of very different natural widths (Login's text vs. a small icon),
+		// and equal-width grid columns were what pushed the row wider than the sidebar. CENTER
+		// lets Login take the remaining space; EAST keeps the icon button at its own compact size
+		// whether or not Login is present.
+		JPanel btnRow = new JPanel(new BorderLayout(5, 0));
 		btnRow.setOpaque(false);
 		btnRow.setBorder(new EmptyBorder(5, 0, 0, 0));
 
@@ -367,23 +372,16 @@ public class AccountsPanel extends PluginPanel
 				osClient.myPassword = p.getPassword();
 				osClient.attemptLogin(osClient.myUsername, osClient.myPassword, false);
 			});
-			btnRow.add(loginBtn);
+			btnRow.add(loginBtn, BorderLayout.CENTER);
 		}
 
-		// Manage (edit password) button
+		// Account options (edit password + delete) - both live behind this one icon button now.
 		JButton manageBtn = buildIconButton(
 			"/net/runelite/client/plugins/config/config_edit_icon.png",
 			BTN_EDIT_BG, BTN_EDIT_HOV);
-		manageBtn.setToolTipText("Edit password");
-		manageBtn.addActionListener(e -> showEditPasswordDialog(p));
-		btnRow.add(manageBtn);
-
-		JButton deleteBtn = buildStyledButton("Delete", BTN_DEL_BG, BTN_DEL_HOV, new Color(255, 155, 155));
-		deleteBtn.addActionListener(e -> {
-			ProfileManager.delete(p);
-			updatePanel();
-		});
-		btnRow.add(deleteBtn);
+		manageBtn.setToolTipText("Account options");
+		manageBtn.addActionListener(e -> showAccountOptionsMenu(manageBtn, p));
+		btnRow.add(manageBtn, BorderLayout.EAST);
 
 		// Stack bottom row + buttons
 		JPanel southPanel = new JPanel();
@@ -568,6 +566,47 @@ public class AccountsPanel extends PluginPanel
 		badge.setOpaque(false);
 		badge.setBorder(new EmptyBorder(3, 7, 3, 7));
 		return badge;
+	}
+
+	// ── Account options menu (edit password / delete) ─────────────────────
+	private void showAccountOptionsMenu(JButton anchor, Profile p)
+	{
+		JPopupMenu menu = new JPopupMenu();
+		menu.setBackground(BG_CARD);
+		menu.setBorder(BorderFactory.createLineBorder(BORDER_SUBTLE));
+
+		JMenuItem editItem = new JMenuItem("Edit Password");
+		styleMenuItem(editItem, Color.WHITE);
+		editItem.addActionListener(e -> showEditPasswordDialog(p));
+		menu.add(editItem);
+
+		JMenuItem deleteItem = new JMenuItem("Delete Account");
+		styleMenuItem(deleteItem, new Color(255, 140, 140));
+		deleteItem.addActionListener(e -> {
+			int confirm = JOptionPane.showConfirmDialog(
+				this,
+				"Remove the saved login for \"" + com.osroyale.Utility.formatName(p.getUsername())
+					+ "\"?\nThis only forgets it on this device - it does not delete the character.",
+				"Remove saved login",
+				JOptionPane.YES_NO_OPTION,
+				JOptionPane.WARNING_MESSAGE);
+			if (confirm == JOptionPane.YES_OPTION)
+			{
+				ProfileManager.delete(p);
+				updatePanel();
+			}
+		});
+		menu.add(deleteItem);
+
+		menu.show(anchor, 0, anchor.getHeight());
+	}
+
+	private void styleMenuItem(JMenuItem item, Color fg)
+	{
+		item.setFont(FONT_BTN);
+		item.setBackground(BG_CARD);
+		item.setForeground(fg);
+		item.setBorder(new EmptyBorder(6, 12, 6, 12));
 	}
 
 	// ── Edit password dialog ──────────────────────────────────────────────

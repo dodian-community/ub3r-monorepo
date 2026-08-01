@@ -6,18 +6,6 @@ This is the original Dodian Ub3r source code, fully modernized into a high-perfo
 
 ---
 
-## Previews & System Screenshots
-
-| RuneLite Client 317 | Accounts Manager |
-| :---: | :---: |
-| ![RuneLite Client 317](docs/images/game_client_317.png) | ![Accounts Manager](docs/images/accounts_manager.png) |
-
-| Real-Time Visual Telemetry Dashboard | RuneLite Hiscores Integration |
-| :---: | :---: |
-| ![Telemetry Dashboard](docs/images/telemetry_dashboard.png) | ![RuneLite Hiscores](docs/images/runelite_hiscores.png) |
-
----
-
 ## Major Modernization & Feature Highlights
 
 - **RuneLite Client & Revision 218 OSRS Data (317 Format)**:
@@ -103,6 +91,18 @@ This is the original Dodian Ub3r source code, fully modernized into a high-perfo
 ## Long-Term Direction
 
 The long-term goal is to continue modularizing the codebase, reducing main-thread tick workloads, expanding RSMod-style plugin content, and maintaining a state-of-the-art RSPS architecture powered by modern JVM and Kotlin standards.
+
+---
+
+## Previews & System Screenshots
+
+| RuneLite Client 317 | Real-Time Visual Telemetry Dashboard |
+| :---: | :---: |
+| ![RuneLite Client 317](docs/images/game_client_317.png) | ![Telemetry Dashboard](docs/images/telemetry_dashboard.png) |
+
+| In-Game Monster Drop Guide | Accounts Manager | RuneLite Hiscores Integration |
+| :---: | :---: | :---: |
+| ![Monster Drop Guide](docs/images/monster_drop_guide.png) | ![Accounts Manager](docs/images/accounts_manager.png) | ![RuneLite Hiscores](docs/images/runelite_hiscores.png) |
 
 ---
 
