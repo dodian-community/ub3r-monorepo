@@ -8,6 +8,8 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertSame
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 private const val SET_MAP_OPCODE = 85
@@ -83,6 +85,19 @@ class GlobalObjectTest {
         assertEquals(PLACE_OBJECT_OPCODE, (bystander.channel as EmbeddedChannel).readOutbound<ByteMessage>().opcode)
 
         assertFalse(GlobalObject.getGlobalObject().contains(worldObject))
+    }
+
+    @Test
+    fun `global objects at the same tile on different planes keep separate identity`() {
+        val lower = WorldObject(id = 1234, x = 3200, y = 3200, z = 0, type = 10, face = 0)
+        val upper = WorldObject(id = 5678, x = 3200, y = 3200, z = 1, type = 10, face = 0)
+        addedObjects += lower
+        addedObjects += upper
+
+        assertTrue(GlobalObject.addGlobalObject(lower, 60_000))
+        assertTrue(GlobalObject.addGlobalObject(upper, 60_000))
+        assertSame(lower, GlobalObject.getGlobalObject(3200, 3200, 0))
+        assertSame(upper, GlobalObject.getGlobalObject(3200, 3200, 1))
     }
 
     private fun drainAll(vararg players: Client) {

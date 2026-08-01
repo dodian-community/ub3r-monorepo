@@ -262,7 +262,11 @@ object TeleportObjectContent : ObjectContent {
     override fun onSecondClick(context: ObjectInteractionContext): Boolean {
         if (context.objectId == 823) {
             val random = Random()
-            context.player.moveTo(2602 + random.nextInt(5), 3162 + random.nextInt(5), context.player.position.z)
+            // Was a raw moveTo() - unlike every other landing spot in this file (all use
+            // transport()), that bypasses didTeleport/mapRegionDidChange entirely: the client is
+            // never told the position changed, and currentX/currentY permanently desync from the
+            // real position, breaking future region-rebase checks (PlayerMovementState).
+            context.player.transport(Position(2602 + random.nextInt(5), 3162 + random.nextInt(5), context.player.position.z))
             return true
         }
         return false

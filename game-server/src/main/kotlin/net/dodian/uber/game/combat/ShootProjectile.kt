@@ -203,7 +203,10 @@ private fun sendProjectile(
     for (p in PlayerRegistry.players) {
         if (p != null) {
             val viewer = p as Client
-            if (viewer.position != null && viewer.position.withinDistance(source, 64)) {
+            if (viewer.isActive && !viewer.disconnected && viewer.dbId > 0
+                && viewer.position != null
+                && viewer.position.z == source.z
+                && viewer.position.withinDistance(source, 64)) {
                 viewer.send(projectile)
             }
         }

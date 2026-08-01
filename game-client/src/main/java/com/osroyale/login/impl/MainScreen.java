@@ -13,6 +13,7 @@ import com.osroyale.login.ScreenType;
 public class MainScreen extends LoginComponent {
 
 	private static final int EMAIL_CHARACTER_LIMIT = 28;
+	private static final String REMEMBER_ME_LABEL = "Save to Account Manager";
 	public static int loginScreenState = 0;
 	public static String accountCreationStatus = "";
 	public static final LoginModeState loginMode = new LoginModeState();
@@ -122,12 +123,12 @@ public class MainScreen extends LoginComponent {
 			String passText = StringUtils.toAsterisks(client.myPassword);
 			client.boldText.drawText(true, boxX + 40, 0xFFFFFF, "Password: " + passText + ((client.loginScreenCursorPos == 1) & (Client.tick % 40 < 20) ? "|" : ""), startY + 35);
 
-			// Remember Me Checkbox
+			// Save to Account Manager checkbox
 			Sprite remSprite = Client.spriteCache.get(Settings.REMEMBER_ME ? 180 : 178);
 			if (remSprite != null) {
 				remSprite.drawARGBSprite(boxX + 40, startY + 50, alpha);
 			}
-			client.boldText.drawText(true, boxX + 70, 0xFFFFFF, "Remember me?", startY + 64);
+			client.boldText.drawText(true, boxX + 70, 0xFFFFFF, REMEMBER_ME_LABEL, startY + 64);
 
 			// Left Button: Log In / Create Account
 			int btn1X = boxX + 25;
@@ -214,8 +215,12 @@ public class MainScreen extends LoginComponent {
 				client.loginScreenCursorPos = 1;
 			}
 
-			/* Remember Me Toggle */
-			if (MouseHandler.clickMode3 == 1 && client.mouseInRegion(boxX + 35, startY + 50, boxX + 180, startY + 75)) {
+			/* Save to Account Manager Toggle */
+			// Hitbox width follows the actual rendered label width (text starts at boxX + 70,
+			// same as the drawText call above) rather than a fixed guess, so it stays correct
+			// for "Save to Account Manager" instead of the old short "Remember me?" text.
+			int rememberMeRight = boxX + 70 + client.boldText.getTextWidth(REMEMBER_ME_LABEL) + 5;
+			if (MouseHandler.clickMode3 == 1 && client.mouseInRegion(boxX + 35, startY + 50, rememberMeRight, startY + 75)) {
 				Settings.REMEMBER_ME = !Settings.REMEMBER_ME;
 			}
 

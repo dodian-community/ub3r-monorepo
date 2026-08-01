@@ -53,6 +53,10 @@ public class NpcUpdating extends EntityUpdating<Npc> {
 
 
     public void addNpc(Player player, Npc npc, ByteMessage buf) {
+        addNpc(player, npc, buf, npc.getUpdateFlags().isUpdateRequired());
+    }
+
+    public void addNpc(Player player, Npc npc, ByteMessage buf, boolean updateRequired) {
 
         validateNpcSlot(npc.getSlot());
         buf.putBits(NPC_SLOT_BITS, npc.getSlot());
@@ -71,7 +75,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         int displayId = displayIdFor(player, npc);
         validateNpcDefinitionId(displayId);
         buf.putBits(NPC_DEFINITION_BITS, displayId);
-        buf.putBits(1, npc.getUpdateFlags().isUpdateRequired() ? 1 : 0);
+        buf.putBits(1, updateRequired ? 1 : 0);
     }
 
     private int displayIdFor(Player player, Npc npc) {
@@ -79,7 +83,13 @@ public class NpcUpdating extends EntityUpdating<Npc> {
         if (id == 1306 || id == 1307) {
             return player.getGender() == 0 ? 1306 : 1307;
         }
-        return id;
+        // appendAppearanceUpdate (below) already prefers getTransformedNpcId() when set - this
+        // add-local path didn't, so a player entering range after an NPC transformed (or after it
+        // respawned still transformed) would render the base id instead, while a player already
+        // present would see the transformed id from their existing UPDATE_LOCAL blocks. Two
+        // players standing together would disagree on what the NPC looks like.
+        int transformedNpcId = npc.getTransformedNpcId();
+        return transformedNpcId >= 0 ? transformedNpcId : id;
     }
 
     static void validateNpcSlot(int slot) {
@@ -105,7 +115,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     public PackedBitSlice buildLocalMovement(Npc npc) {
         ByteMessage movement = ThreadLocalSyncScratch.packedFixedBlock();
         movement.startBitAccess();
-        updateNPCMovement(npc, movement);
+        updateNPCMovement(npc, movement, NpcUpdateMaskCalculator.computeMask(npc) != 0);
         int bitCount = movement.getBitIndex();
         movement.endBitAccess();
         return new PackedBitSlice(movement.toByteArray(), bitCount);
@@ -179,8 +189,12 @@ public class NpcUpdating extends EntityUpdating<Npc> {
     }
 
     public void updateNPCMovement(Npc npc, ByteMessage buf) {
+        updateNPCMovement(npc, buf, npc.getUpdateFlags().isUpdateRequired());
+    }
+
+    public void updateNPCMovement(Npc npc, ByteMessage buf, boolean updateRequired) {
         if (npc.getDirection() == -1) {
-            if (npc.getUpdateFlags().isUpdateRequired()) {
+            if (updateRequired) {
                 buf.putBits(1, 1);
                 buf.putBits(2, 0);
             } else {
@@ -200,7 +214,7 @@ public class NpcUpdating extends EntityUpdating<Npc> {
             buf.putBits(1, 1);
             buf.putBits(2, 1);
             buf.putBits(3, translatedDirection);
-            if (npc.getUpdateFlags().isUpdateRequired()) {
+            if (updateRequired) {
                 buf.putBits(1, 1);
             } else {
                 buf.putBits(1, 0);

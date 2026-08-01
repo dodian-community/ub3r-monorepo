@@ -5,6 +5,7 @@ import kotlin.random.Random
 import net.dodian.uber.game.Server
 import net.dodian.uber.game.engine.systems.world.player.PlayerRegistry
 import net.dodian.uber.game.item.ItemManager
+import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.codec.ByteMessage
 import org.junit.jupiter.api.AfterEach
@@ -117,6 +118,40 @@ class StagedPlayerSynchronizationServiceTest {
         assertEquals(1, viewer.playerListSize, "idle viewer must still admit a newly-visible player")
         assertSame(newcomer, viewer.playerList[0])
         assertTrue(viewer.playersUpdating.contains(newcomer))
+    }
+
+    @Test
+    fun `idle viewer removes a local player after that player teleports`() {
+        val viewer = client(1, "viewer", 3200, 3200)
+        val subject = client(2, "subject", 3201, 3200)
+        PlayerRegistry.players[1] = viewer
+        PlayerRegistry.players[2] = subject
+        val service = StagedPlayerSynchronizationService()
+
+        assertTrue(service.synchronize(viewer).accepted)
+        assertEquals(1, viewer.playerListSize)
+
+        subject.transport(Position(3400, 3400, 0))
+        subject.getNextPlayerMovement()
+
+        assertTrue(service.synchronize(viewer).accepted)
+        assertEquals(0, viewer.playerListSize, "teleported locals must be removed, not frozen in the idle fast path")
+    }
+
+    @Test
+    fun `idle viewer removes a local player who becomes invisible`() {
+        val viewer = client(1, "viewer", 3200, 3200)
+        val subject = client(2, "subject", 3201, 3200)
+        PlayerRegistry.players[1] = viewer
+        PlayerRegistry.players[2] = subject
+        val service = StagedPlayerSynchronizationService()
+
+        assertTrue(service.synchronize(viewer).accepted)
+        assertEquals(1, viewer.playerListSize)
+
+        subject.invis = true
+        assertTrue(service.synchronize(viewer).accepted)
+        assertEquals(0, viewer.playerListSize, "invisible locals must be removed for ordinary viewers")
     }
 
     @Test

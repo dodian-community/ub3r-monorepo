@@ -15,6 +15,7 @@ import net.dodian.uber.game.engine.sync.player.StagedPlayerSynchronizationServic
 import net.dodian.uber.game.ui.PlayerUiDeltaProcessor
 import net.dodian.uber.game.engine.sync.viewport.ViewportIndex
 import net.dodian.uber.game.engine.loop.GameThreadContext
+import net.dodian.uber.game.engine.processing.EntityProcessor
 import net.dodian.uber.game.engine.systems.zone.ZoneUpdateBus
 import net.dodian.uber.game.engine.config.runtimePhaseWarnMs
 import net.dodian.uber.game.engine.metrics.OperationalTelemetry
@@ -37,6 +38,7 @@ class WorldSynchronizationService {
         val readyPlayers = activePlayers.filter(Client::isSynchronizationReady)
         val viewportIndex = ViewportIndex.build(activePlayers, VIEW_DISTANCE)
         val relevantNpcs: Collection<Npc> = viewportIndex?.relevantNpcs() ?: emptyList()
+        val processedNpcs: Collection<Npc> = EntityProcessor.activeNpcsForSynchronization()
         val rootCache = RootSynchronizationCache()
         val cycle =
             SynchronizationCycle(
@@ -63,7 +65,7 @@ class WorldSynchronizationService {
                 flushActivePlayers(readyPlayers)
             }
             measure(cycle, SynchronizationStage.SYNC_FLAG_CLEAR) {
-                clearFlags(activePlayers, relevantNpcs)
+                clearFlags(activePlayers, processedNpcs)
             }
         } finally {
             SynchronizationContext.clear()
@@ -109,7 +111,9 @@ class WorldSynchronizationService {
         activeNpcs.forEach { npc ->
             rootCache.npcMovements.put(npc, npcUpdating.buildLocalMovement(npc), tick)
             if (npc.updateFlags.isUpdateRequired) {
-                rootCache.npcBlocks.put(npc, npcUpdating.buildSharedBlock(npc), tick)
+                npcUpdating.buildSharedBlock(npc)?.let { block ->
+                    rootCache.npcBlocks.put(npc, block, tick)
+                }
             }
         }
     }

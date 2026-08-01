@@ -46,7 +46,7 @@ object ObjectSpawnService {
     }
 
     fun removeTemporaryGlobal(position: Position): Boolean {
-        val current = GlobalObject.getGlobalObject(position.x, position.y) ?: return false
+        val current = GlobalObject.getGlobalObject(position.x, position.y, position.z) ?: return false
         GlobalObject.getGlobalObject().remove(current)
         activeSpawns.remove(key(position))
         return true

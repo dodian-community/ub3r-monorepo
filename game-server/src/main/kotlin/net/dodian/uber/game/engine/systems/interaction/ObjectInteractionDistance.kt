@@ -210,7 +210,7 @@ object ObjectInteractionDistance {
             var sizeX: Int = objectData.sizeX
             var sizeY: Int = objectData.sizeY
 
-            val globalObject = GlobalObject.getGlobalObject(walkTo.x, walkTo.y)
+            val globalObject = GlobalObject.getGlobalObject(walkTo.x, walkTo.y, walkTo.z)
             if (globalObject != null && globalObject.id == objectId) {
                 val rotation = globalObject.face
                 sizeX = objectData.getSizeX(rotation)

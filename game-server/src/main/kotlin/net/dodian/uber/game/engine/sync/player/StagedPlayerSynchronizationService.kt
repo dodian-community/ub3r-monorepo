@@ -339,11 +339,16 @@ class StagedPlayerSynchronizationService {
 
         val localCount = viewer.playerListSize
         for (i in 0 until localCount) {
-            val local = viewer.playerList[i] ?: return false
-            if (!local.isSynchronizationReady) return false
-            if (local.primaryDirection != -1 || local.secondaryDirection != -1) return false
+            val local = viewer.playerList[i]
+            // Delegate to the same retention predicate buildPlan() uses (slot identity,
+            // didTeleport, isVisibleTo/withinDistance/invis) instead of re-checking a subset of
+            // it here. The old hand-rolled check only tested isSynchronizationReady+withinDistance
+            // and missed didTeleport and invis - a local that teleported (317 has no "moved"
+            // encoding for other players, only remove-then-re-add) or went ::invis stayed frozen
+            // in the idle fast path indefinitely, since nothing here ever caught the change.
+            if (!isRetained(viewer, local)) return false
+            if (local!!.primaryDirection != -1 || local.secondaryDirection != -1) return false
             if (local.updateFlags.isUpdateRequired) return false
-            if (!viewer.withinDistance(local)) return false
         }
 
         return !hasUnadmittedVisibleCandidate(viewer)

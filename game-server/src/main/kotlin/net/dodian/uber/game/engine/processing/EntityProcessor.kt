@@ -64,6 +64,7 @@ class EntityProcessor : Runnable {
         val chunkBuildNs = System.nanoTime() - chunkBuildNsStart
         val collectNsStart = System.nanoTime()
         val activeNpcs = collectActiveNpcs(activeNpcChunks, activeNpcsForTick)
+        publishActiveNpcsForSynchronization(activeNpcs)
         val collectNs = System.nanoTime() - collectNsStart
         val npcLoopNsStart = System.nanoTime()
         for (npc in activeNpcs) {
@@ -130,7 +131,7 @@ class EntityProcessor : Runnable {
                 }
             }
         }
-        for (npc in Server.npcManager.getNpcs()) {
+        for (npc in activeNpcsForTick) {
             if (npc != null && npc.alive) {
                 if (!npc.didMove() && npc.hasPersistedFaceCoord()) {
                     npc.applyFocus(npc.persistedFaceX, npc.persistedFaceY)
@@ -513,6 +514,10 @@ class EntityProcessor : Runnable {
         return output
     }
 
+    private fun publishActiveNpcsForSynchronization(activeNpcs: List<Npc>) {
+        ACTIVE_NPCS_FOR_SYNCHRONIZATION = activeNpcs.toList()
+    }
+
     private fun processInboundPackets() {
         net.dodian.uber.game.engine.metrics.InboundOpcodeProfiler.beginTick()
         val startNs = System.nanoTime()
@@ -755,6 +760,12 @@ class EntityProcessor : Runnable {
     }
 
     companion object {
+        @Volatile
+        private var ACTIVE_NPCS_FOR_SYNCHRONIZATION: List<Npc> = emptyList()
+
+        @JvmStatic
+        fun activeNpcsForSynchronization(): List<Npc> = ACTIVE_NPCS_FOR_SYNCHRONIZATION
+
         private val logger = LoggerFactory.getLogger(EntityProcessor::class.java)
         @Volatile
         private var SPAWN_ALWAYS_ACTIVE: Array<Npc?>? = null

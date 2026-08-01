@@ -86,21 +86,23 @@ class StagedNpcSynchronizationService {
                 updating.writeLocalRemoval(stream)
             } else {
                 val movement = SynchronizationContext.getSharedNpcMovement(npc)
+                val block = if (npc.updateFlags.isUpdateRequired) sharedOrEncode(npc) else null
                 if (movement != null) {
                     stream.putBitSlice(movement.bytes, 0, movement.bitCount)
                 } else {
-                    updating.updateNPCMovement(npc, stream)
+                    updating.updateNPCMovement(npc, stream, block != null)
                 }
-                if (npc.updateFlags.isUpdateRequired) {
-                    plan.queueUpdate(sharedOrEncode(npc))
+                if (block != null) {
+                    plan.queueUpdate(block)
                 }
             }
         }
         for (index in 0 until plan.additionCount) {
             val npc = plan.additions[index] ?: continue
-            updating.addNpc(viewer, npc, stream)
-            if (npc.updateFlags.isUpdateRequired) {
-                plan.queueUpdate(sharedOrEncode(npc))
+            val block = if (npc.updateFlags.isUpdateRequired) sharedOrEncode(npc) else null
+            updating.addNpc(viewer, npc, stream, block != null)
+            if (block != null) {
+                plan.queueUpdate(block)
             }
             SynchronizationContext.recordNpcAdd()
         }
@@ -113,10 +115,10 @@ class StagedNpcSynchronizationService {
         }
     }
 
-    private fun sharedOrEncode(npc: Npc): PackedUpdateBlock {
+    private fun sharedOrEncode(npc: Npc): PackedUpdateBlock? {
         val sharedBlock = SynchronizationContext.getSharedNpcBlock(npc)
         SynchronizationContext.recordNpcBlockCacheHit(sharedBlock != null)
-        return sharedBlock ?: requireNotNull(updating.buildPackedBlock(npc))
+        return sharedBlock ?: updating.buildPackedBlock(npc)
     }
 
     private fun writePackedUpdatePlanes(plan: Plan, stream: ByteMessage) {

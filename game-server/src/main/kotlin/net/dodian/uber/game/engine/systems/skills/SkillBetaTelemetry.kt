@@ -41,7 +41,7 @@ object SkillBetaTelemetry {
         if (routineSuccess && !logger.isDebugEnabled) {
             return
         }
-        val message = "SKILL BETA | outcome={} | module={} | route={} | binding={} | elapsedMs={} | incident={} | player={} | dbId={} | pos={} | interface={}"
+        val message = "SKILL DISPATCH | outcome={} | module={} | route={} | binding={} | elapsedMs={} | incident={} | player={} | dbId={} | pos={} | interface={}"
         val args = arrayOf<Any?>(
             result.outcome,
             moduleId,
@@ -69,9 +69,9 @@ object SkillBetaTelemetry {
     internal fun recordOutcome(moduleId: String, route: SkillPolicyRoute, outcome: String) {
         val key = SkillBetaMetricKey(moduleId, route, outcome)
         counters.computeIfAbsent(key) { LongAdder() }.increment()
-        OperationalTelemetry.incrementCounter("skill.beta.${route.name.lowercase()}.${outcome.lowercase()}")
+        OperationalTelemetry.incrementCounter("skill.dispatch.${route.name.lowercase()}.${outcome.lowercase()}")
         if (outcome == "ERROR" || outcome == "QUARANTINED") {
-            OperationalTelemetry.incrementCounter("skill.beta.failure")
+            OperationalTelemetry.incrementCounter("skill.dispatch.failure")
         }
     }
 

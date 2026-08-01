@@ -97,9 +97,14 @@ public abstract class Entity {
     }
 
     public void applyFocus(int focusPointX, int focusPointY) {
-        faceCoordinateX = encodeFaceCoordinate(focusPointX);
-        faceCoordinateY = encodeFaceCoordinate(focusPointY);
+        int encodedX = encodeFaceCoordinate(focusPointX);
+        int encodedY = encodeFaceCoordinate(focusPointY);
         getUpdateFlags().setRequired(UpdateFlag.FACE_CHARACTER, false);
+        if (faceCoordinateX == encodedX && faceCoordinateY == encodedY) {
+            return;
+        }
+        faceCoordinateX = encodedX;
+        faceCoordinateY = encodedY;
         getUpdateFlags().setRequired(UpdateFlag.FACE_COORDINATE, true);
     }
 

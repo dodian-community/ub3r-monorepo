@@ -808,6 +808,7 @@ public class Npc extends Entity {
         hasWanderTarget = false;
         wanderCooldown = 0;
         wanderStuckTicks = 0;
+        getUpdateFlags().setRequired(UpdateFlag.APPEARANCE, true);
         /* REset effect! */
         resetPoisonDamage(); //Default
         resetBurnDamage(); //Default

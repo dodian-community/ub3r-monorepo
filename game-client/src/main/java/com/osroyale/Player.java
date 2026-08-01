@@ -516,6 +516,13 @@ public final class Player extends Entity implements RSPlayer {
         if (!Settings.REMEMBER_ME) {
             return;
         }
+        // resetLogout() (reached from dropClient()'s failed-reconnect path) used to call this
+        // unconditionally - with only the REMEMBER_ME check above, a failed login attempt could
+        // still get persisted as a "saved account" since myUsername/myPassword hold whatever was
+        // last typed, authenticated or not. Only actually-logged-in sessions should ever save.
+        if (!Client.loggedIn) {
+            return;
+        }
         int[] skills = new int[23];
         if (client.maxStats != null && client.maxStats.length >= 23) {
             System.arraycopy(client.maxStats, 0, skills, 0, 23);

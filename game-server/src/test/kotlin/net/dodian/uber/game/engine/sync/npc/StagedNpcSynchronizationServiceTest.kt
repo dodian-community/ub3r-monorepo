@@ -5,6 +5,7 @@ import net.dodian.uber.game.Server
 import net.dodian.uber.game.engine.systems.world.npc.NpcManager
 import net.dodian.uber.game.model.Position
 import net.dodian.uber.game.model.entity.npc.Npc
+import net.dodian.uber.game.model.entity.UpdateFlag
 import net.dodian.uber.game.model.entity.player.Client
 import net.dodian.uber.game.netty.codec.ByteMessage
 import net.dodian.uber.game.testutil.RequiresCache
@@ -84,6 +85,45 @@ class StagedNpcSynchronizationServiceTest {
 
         assertTrue(!result.accepted)
         assertEquals(0, viewer.localNpcSize)
+    }
+
+    @Test
+    fun `respawn schedules an appearance refresh`() {
+        val npc = Npc(1, 1, Position(3201, 3200, 0), 0)
+        npc.updateFlags.clear()
+
+        npc.respawn()
+
+        assertTrue(npc.updateFlags.isRequired(UpdateFlag.APPEARANCE))
+    }
+
+    @Test
+    fun `unchanged focus does not schedule a repeated face coordinate update`() {
+        val npc = Npc(1, 1, Position(3201, 3200, 0), -1)
+        npc.updateFlags.clear()
+        npc.setFocus(3205, 3200)
+        npc.applyFocus(3205, 3200)
+        assertTrue(npc.updateFlags.isRequired(UpdateFlag.FACE_COORDINATE))
+
+        npc.updateFlags.clear()
+        npc.setFocus(3205, 3200)
+        npc.applyFocus(3205, 3200)
+
+        assertTrue(!npc.updateFlags.isRequired(UpdateFlag.FACE_COORDINATE))
+    }
+
+    @Test
+    fun `unsupported npc flags do not create an empty update block or disconnect the viewer`() {
+        val viewer = client(1)
+        val npc = Npc(1, 1, Position(3201, 3200, 0), 0)
+        npc.updateFlags.setRequired(UpdateFlag.FORCED_MOVEMENT, true)
+        Server.npcManager.npcMap[npc.slot] = npc
+
+        val result = StagedNpcSynchronizationService().synchronize(viewer)
+
+        assertTrue(result.accepted)
+        assertEquals(1, viewer.localNpcSize)
+        assertTrue(!viewer.disconnected)
     }
 
     private fun client(slot: Int): Client {

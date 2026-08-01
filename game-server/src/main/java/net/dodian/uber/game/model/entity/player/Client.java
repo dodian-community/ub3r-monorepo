@@ -350,7 +350,9 @@ public class Client extends Player implements Runnable {
             Player p = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[i];
             if (p != null) {
                 Client person = (Client) p;
-                if (person.distanceToPoint(pos.getX(), pos.getY()) <= 60 && pos.getZ() == getPosition().getZ())
+                if (person.isActive && !person.disconnected && person.getPosition() != null
+                        && person.distanceToPoint(pos.getX(), pos.getY()) <= 60
+                        && person.getPosition().getZ() == pos.getZ())
                     person.animation2(id, pos);
             }
         }
@@ -366,7 +368,12 @@ public class Client extends Player implements Runnable {
                 Player p = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.players[i];
                 if (p != null) {
                     Client person = (Client) p;
-                    if (person.distanceToPoint(pos.getX(), pos.getY()) <= 60 && getPosition().getZ() == pos.getZ())
+                    // Plane check must be against the viewer (person), not the caster (this) -
+                    // comparing this.getPosition().getZ() let the graphic render through every
+                    // floor of a multi-storey building for anyone within 60 tiles on any plane.
+                    if (person.isActive && !person.disconnected && person.getPosition() != null
+                            && person.distanceToPoint(pos.getX(), pos.getY()) <= 60
+                            && person.getPosition().getZ() == pos.getZ())
                         person.stillgfx2(id, pos, height, 0);
                 }
             }
@@ -2166,6 +2173,17 @@ public class Client extends Player implements Runnable {
     }
 
     public void ReplaceObject(int objectX, int objectY, int newObjectID, int face, int objectType) {
+        // Unlike ReplaceObject2, this had no range guard at all - any caller iterating every
+        // online player (e.g. a door toggle broadcast) would send SetMap for a tile far outside
+        // that viewer's loaded scene. The client truncates local coordinates to a byte
+        // (SetMap.java) and wraps mod 256, so a distant SetMap can land back inside the visible
+        // 0..103 range and render a phantom object at an unrelated tile. Match ReplaceObject2's
+        // distance guard so this method is safe regardless of caller. No plane check here - this
+        // method (unlike ReplaceObject2) is never given a z, so callers remain responsible for
+        // filtering by plane themselves (DoorToggleObjectContent already does).
+        if (!withinDistance(new int[]{objectX, objectY, 60})) {
+            return;
+        }
         send(new SetMap(new Position(objectX, objectY)));
         send(new ReplaceObject(newObjectID, face, objectType));
     }
@@ -2948,11 +2966,9 @@ public class Client extends Player implements Runnable {
     public void replaceDoors() {
         for (int d = 0; d < DoorRegistry.doorX.length; d++) {
             if (DoorRegistry.doorX[d] > 0 && DoorRegistry.doorHeight[d] == getPosition().getZ()
-                    && Math.abs(DoorRegistry.doorX[d] - getPosition().getX()) <= 120
-                    && Math.abs(DoorRegistry.doorY[d] - getPosition().getY()) <= 120) {
-                if (distanceToPoint(DoorRegistry.doorX[d], DoorRegistry.doorY[d]) < 50) {
-                    ReplaceObject(DoorRegistry.doorX[d], DoorRegistry.doorY[d], DoorRegistry.doorId[d], DoorRegistry.doorFace[d], 0);
-                }
+                    && Math.abs(DoorRegistry.doorX[d] - getPosition().getX()) <= 52
+                    && Math.abs(DoorRegistry.doorY[d] - getPosition().getY()) <= 52) {
+                ReplaceObject(DoorRegistry.doorX[d], DoorRegistry.doorY[d], DoorRegistry.doorId[d], DoorRegistry.doorFace[d], 0);
             }
         }
     }

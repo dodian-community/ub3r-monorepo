@@ -76,7 +76,7 @@ object GlobalObject {
             if (!isWithinPlayerUpdateDistance(client, worldObject)) {
                 continue
             }
-            val expiresAt = worldObject.getAttachment() as Long
+            val expiresAt = worldObject.getAttachment() as? Long ?: continue
             if (expiresAt - now > 0L) {
                 client.ReplaceObject2(
                     Position(worldObject.x, worldObject.y, worldObject.z),
@@ -106,7 +106,7 @@ object GlobalObject {
     fun sweepExpired() {
         val now = System.currentTimeMillis()
         for (worldObject in globalObjects) {
-            val expiresAt = worldObject.getAttachment() as Long
+            val expiresAt = worldObject.getAttachment() as? Long ?: continue
             if (expiresAt - now > 0L) {
                 continue
             }
@@ -118,7 +118,7 @@ object GlobalObject {
     @JvmStatic
     fun hasGlobalObject(worldObject: WorldObject): Boolean {
         for (existing in globalObjects) {
-            if (existing.x == worldObject.x && existing.y == worldObject.y) {
+            if (existing.x == worldObject.x && existing.y == worldObject.y && existing.z == worldObject.z) {
                 return true
             }
         }
@@ -126,9 +126,9 @@ object GlobalObject {
     }
 
     @JvmStatic
-    fun getGlobalObject(objectX: Int, objectY: Int): WorldObject? {
+    fun getGlobalObject(objectX: Int, objectY: Int, objectZ: Int): WorldObject? {
         for (existing in globalObjects) {
-            if (existing.x == objectX && existing.y == objectY) {
+            if (existing.x == objectX && existing.y == objectY && existing.z == objectZ) {
                 return existing
             }
         }

@@ -92,6 +92,10 @@ object DoorToggleObjectContent : ObjectContent {
                 if (other.playerName == null) continue
                 if (other.position.z != client.position.z) continue
                 if (other.disconnected || other.position.y <= 0 || other.position.x <= 0 || other.dbId <= 0) continue
+                // ReplaceObject now guards range itself, but skip the call (and its SetMap/packet
+                // cost) for players nowhere near this door - avoids an O(players) broadcast on
+                // every toggle when only nearby viewers can ever see it anyway.
+                if (other.distanceToPoint(DoorRegistry.doorX[index], DoorRegistry.doorY[index]) > 60) continue
                 other.ReplaceObject(
                     DoorRegistry.doorX[index],
                     DoorRegistry.doorY[index],

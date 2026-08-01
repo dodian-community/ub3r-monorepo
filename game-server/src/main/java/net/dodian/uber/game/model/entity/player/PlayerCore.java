@@ -1996,14 +1996,24 @@ public abstract class PlayerCore extends Entity {
             }
         }
         if(objectId == 378 && objPos.getX() == 2593 && objPos.getY() == 3108 && objPos.getZ() == 1) { //Check timer on a object!
-            long timeLeft = (long) Objects.requireNonNull(GlobalObject.getGlobalObject(objPos.getX(), objPos.getY())).getAttachment();
-            int secondsLeft = (int)((timeLeft - System.currentTimeMillis()) / 1000L);
-            c.send(new SendMessage("This chest respawn in " + (secondsLeft + 1) + " seconds!"));
+            net.dodian.uber.game.model.objects.WorldObject globalObject =
+                    GlobalObject.getGlobalObject(objPos.getX(), objPos.getY(), objPos.getZ());
+            Object attachment = globalObject == null ? null : globalObject.getAttachment();
+            if (attachment instanceof Long) {
+                long timeLeft = (Long) attachment;
+                int secondsLeft = (int)((timeLeft - System.currentTimeMillis()) / 1000L);
+                c.send(new SendMessage("This chest respawn in " + (secondsLeft + 1) + " seconds!"));
+            }
         }
         if(objectId == 378 && objPos.getX() == 2733 && objPos.getY() == 3374 && objPos.getZ() == 0) { //Check timer on a object!
-            long timeLeft = (long) Objects.requireNonNull(GlobalObject.getGlobalObject(objPos.getX(), objPos.getY())).getAttachment();
-            int secondsLeft = (int)((timeLeft - System.currentTimeMillis()) / 1000L);
-            c.send(new SendMessage("This chest respawn in " + (secondsLeft + 1) + " seconds!"));
+            net.dodian.uber.game.model.objects.WorldObject globalObject =
+                    GlobalObject.getGlobalObject(objPos.getX(), objPos.getY(), objPos.getZ());
+            Object attachment = globalObject == null ? null : globalObject.getAttachment();
+            if (attachment instanceof Long) {
+                long timeLeft = (Long) attachment;
+                int secondsLeft = (int)((timeLeft - System.currentTimeMillis()) / 1000L);
+                c.send(new SendMessage("This chest respawn in " + (secondsLeft + 1) + " seconds!"));
+            }
         }
         if(objectId == 375 && objPos.getX() == 2593 && objPos.getY() == 3108 && objPos.getZ() == 1) { //Check timer on a object!
             ArrayList<Integer> lootedItem = new ArrayList<>();
