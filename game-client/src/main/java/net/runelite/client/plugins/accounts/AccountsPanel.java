@@ -43,6 +43,17 @@ import net.runelite.client.ui.PluginPanel;
 
 public class AccountsPanel extends PluginPanel
 {
+	// PluginPanel's no-arg constructor (wrap=true) wraps this panel in its own outer JScrollPane.
+	// This class already builds its own inner JScrollPane around accountsContainer below, so the
+	// default left two nested scroll panes fighting over mouse wheel / trackpad scroll events -
+	// the outer one (with nothing of its own to scroll) intercepted the event and the inner one
+	// never saw it, so the wheel/trackpad did nothing. super(false) opts out of the outer wrap,
+	// same pattern PluginListPanel/PluginHubPanel/ConfigPanel use for the same reason.
+	public AccountsPanel()
+	{
+		super(false);
+	}
+
 	// ── Palette ───────────────────────────────────────────────────────────
 	private static final Color BG_DEEP        = new Color(14, 17, 22);
 	private static final Color BG_CARD        = new Color(20, 25, 33);
