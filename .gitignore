@@ -115,3 +115,5 @@ mystic-updatedclient/Cache/
 rs-cache-library-master/
 
 **/.DS_Store
+
+*.salive
