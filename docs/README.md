@@ -51,7 +51,7 @@ If you import the [4_dummy_development_data.sql](/game-server/database/4_dummy_d
   - Which is a user with admin privileges
 
 ## Hosting Requirements
-- Host OS with Java 11 or greater
-- MySQL database
-- Ub3r server data package
+- Host OS with **JDK 21 or greater**
+- MariaDB or MySQL database
+- Revision 218 Cache / Server Data ([cache-tarnish-218.zip](https://files.jire.org/cache-tarnish-218.zip))
 - [Database initialize scripts](/game-server/database) _(optional)_

@@ -55,9 +55,9 @@ you should have your own copy of this project under your own GitHub account.
    We're going to have to [set up a MySQL database][guide-setup_database] for the local server
 8. Copy the [example.env](/game-server/example.env)-file and call it `.env` and update its properties accordingly
     * [Environment Variables Overview][guide-environment_variables] has all the properties explained
-9. Download the `server_data_latest.zip` from here: https://drive.google.com/drive/folders/1z_Ua4b4Gm666U0TVzZXrBCzViPyxfBZr
-10. Extract the contents of the ZIP file into a folder called `data` at the game server's root directory
-11. You should now be ready to start the server using the Gradle tasks to the right (little menu called Gradle)
+9. Download the **Revision 218 Cache**: [cache-tarnish-218.zip](https://files.jire.org/cache-tarnish-218.zip)
+10. Extract the contents into the `data` directory at the game server root
+11. You should now be ready to start the server using the Gradle tasks (or running `./gradlew :game-server:run`)
     * **Starting Game Server:** `ub3r-monorepo` -> `game-server` -> `Tasks` -> `application` -> `run`
 
 ### Useful Links
