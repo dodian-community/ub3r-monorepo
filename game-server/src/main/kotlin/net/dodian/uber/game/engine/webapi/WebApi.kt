@@ -496,14 +496,15 @@ object WebApi {
                                 val now = System.currentTimeMillis()
                                 negativeHiscoresCache.entries.removeIf { now - it.value >= 5 * 60_000L }
                                 val csvData = hiscoresCache[sanitizedPlayerName]
+                                val requesterIp = WebClientAddress.resolve(call, webApiTrustedProxyCidrs)
                                 if (csvData == null) {
                                     if (negativeHiscoresCache.size < 10_000) {
                                         negativeHiscoresCache.putIfAbsent(sanitizedPlayerName, now)
                                     }
-                                    logger.info("hiscore_lookup player='{}' status=404 Not Found", sanitizedPlayerName)
+                                    logger.info("hiscore_lookup player='{}' status=404 Not Found ip={}", sanitizedPlayerName, requesterIp)
                                     call.respond(HttpStatusCode.NotFound, "Player not found.")
                                 } else {
-                                    logger.info("hiscore_lookup player='{}' status=200 OK", sanitizedPlayerName)
+                                    logger.info("hiscore_lookup player='{}' status=200 OK ip={}", sanitizedPlayerName, requesterIp)
                                     call.respondText(csvData, ContentType.Text.Plain)
                                 }
                             }

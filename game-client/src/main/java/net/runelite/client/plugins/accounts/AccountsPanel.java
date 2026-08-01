@@ -95,9 +95,10 @@ public class AccountsPanel extends PluginPanel
 		this.config = config;
 		this.refreshAction = refreshAction;
 
-		getParent().setLayout(new BorderLayout());
-		getParent().add(this, BorderLayout.CENTER);
-
+		// No getParent() wrapping here (unlike before super(false)): this panel isn't attached to
+		// anything yet at init() time - AccountsPlugin.startUp() calls init() before handing the
+		// panel to NavigationButton/ClientToolbar. With wrap=false, this *is* the panel the sidebar
+		// hosts directly, so it lays itself out - same pattern as PluginListPanel/ConfigPanel.
 		setLayout(new BorderLayout());
 		setBackground(BG_DEEP);
 
