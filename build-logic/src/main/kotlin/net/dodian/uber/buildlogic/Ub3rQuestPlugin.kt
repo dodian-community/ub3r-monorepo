@@ -17,6 +17,8 @@ import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.withType
 import org.gradle.language.jvm.tasks.ProcessResources
+import org.gradle.api.plugins.JavaPluginExtension
+import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 abstract class QuestModuleExtension {
@@ -91,8 +93,12 @@ class Ub3rQuestPlugin : Plugin<Project> {
             add("testRuntimeOnly", "org.junit.jupiter:junit-jupiter-engine:5.9.3")
         }
 
-        tasks.withType<JavaCompile>().configureEach { options.release.set(11) }
-        tasks.withType<KotlinCompile>().configureEach { kotlinOptions.jvmTarget = "11" }
+        extensions.getByType<JavaPluginExtension>().toolchain {
+            languageVersion.set(JavaLanguageVersion.of(21))
+        }
+
+        tasks.withType<JavaCompile>().configureEach { options.release.set(21) }
+        tasks.withType<KotlinCompile>().configureEach { kotlinOptions.jvmTarget = "21" }
         tasks.withType<Test>().configureEach { useJUnitPlatform() }
 
         val generate = tasks.register<GenerateQuestModuleDescriptor>("generateQuestModuleDescriptor") {

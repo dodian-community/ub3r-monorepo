@@ -76,6 +76,7 @@ private class MinimalQuestPlayer : QuestPlayer {
         override fun logGathering(itemId: Int, amount: Int, reason: String) {}
         override fun yell(message: String) {}
         override fun tryThrottle(key: String, cooldownMs: Long) = true
+        override fun markMagicCastCycle() {}
     }
     override val ui = object : SkillUi {
         override fun message(text: String) {}
@@ -88,10 +89,13 @@ private class MinimalQuestPlayer : QuestPlayer {
         override fun componentVisible(componentId: Int, visible: Boolean) {}
         override fun menuGrid(entries: List<SkillItemGridEntry>) {}
         override fun npcDialogue(dialogueId: Int, npcId: Int) {}
+        override fun openDialogue(dialogueId: Int) {}
         override fun varbit(id: Int, value: Int) {}
+        override fun itemListMenu(items: List<Int>, onSelect: (Int) -> Unit) {}
         override fun skillGuide(skillId: Int, tab: Int) {}
         override fun guideBook() {}
         override fun currentSkillGuideSkillId() = -1
+        override fun dialogue(builder: SkillDialogueFactory.() -> Unit) {}
     }
     override val world = object : SkillWorld {
         override val position = SkillPosition(3200, 3200, 0)
@@ -102,6 +106,7 @@ private class MinimalQuestPlayer : QuestPlayer {
         override fun face(position: SkillPosition) {}
         override fun graphic(id: Int, height: Int) {}
         override fun graphic(id: Int, position: SkillPosition, height: Int) {}
+        override fun castGraphic(id: Int, height: Int) {}
         override fun replaceObject(
             target: SkillObjectRef,
             replacementId: Int,
@@ -136,6 +141,9 @@ private class MinimalQuestPlayer : QuestPlayer {
     override val vitals = object : SkillVitals {
         override val currentPrayer = 0
         override val maximumPrayer = 0
+        override val prayerBonus = 0
+        override val inDuel = false
+        override val isDead = false
         override fun isPrayerActive(prayer: SkillPrayer) = prayer in activePrayers
         override fun togglePrayer(prayer: SkillPrayer) { if (!activePrayers.add(prayer)) activePrayers.remove(prayer) }
         override fun deactivatePrayer(prayer: SkillPrayer) { activePrayers.remove(prayer) }
@@ -153,6 +161,8 @@ private class MinimalQuestPlayer : QuestPlayer {
         override val streak = 0
         override fun killCount() = -1
         override fun resetKillCount() = false
+        override fun assign(masterNpcId: Int, ordinal: Int, amount: Int) {}
+        override fun cancel() {}
     }
     override val runePouches = object : SkillRunePouches {
         override fun amount(slot: Int) = 0
@@ -160,11 +170,14 @@ private class MinimalQuestPlayer : QuestPlayer {
         override fun levelRequirement(slot: Int) = 1
         override fun capacity(slot: Int) = 0
     }
-    override val farming = object : SkillFarming {
-        override fun clickPatch(objectId: Int) = false
-        override fun useItem(objectId: Int, itemId: Int) = false
-        override fun inspectPatch(objectId: Int) {}
-        override fun interactBin(objectId: Int, option: Int) {}
+    override val farmingState = object : SkillFarmingState {
+        override fun patchSlots() = emptyList<SkillPatchSlot>()
+        override fun writePatchSlot(patchName: String, slot: Int, itemId: Int, state: String, compost: String, stageOrLife: Int, progress: Int, plantedBy: Int) {}
+        override fun compostBins() = emptyList<SkillCompostBinState>()
+        override fun writeCompostBin(binName: String, compost: String, state: String, amount: Int, progress: Int) {}
+        override fun markDirty() {}
+        override fun refreshVisuals() {}
+        override fun notifyInteraction() {}
     }
     override val attributes = object : ContentAttributes {
         override fun <T : Any> get(key: ContentAttributeKey<T>): T? = null

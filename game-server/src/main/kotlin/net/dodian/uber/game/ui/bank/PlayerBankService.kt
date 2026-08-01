@@ -94,6 +94,7 @@ object PlayerBankService {
         client.previousBankTab = 0
         sendBankStyleViewContainers(client)
         client.resetItems(5064)
+        client.pendingInterfaceOpenContext = "bank-style read-only view: \"$title\""
         client.send(InventoryInterface(60000, 5063))
     }
 
@@ -173,6 +174,7 @@ object PlayerBankService {
         client.bankSearchQuery = ""
         client.IsBanking = true
         client.checkBankInterface = false
+        client.pendingInterfaceOpenContext = "player bank (PlayerBankService.openUpBank)"
         clearBankStyleView(client)
         // Reset the client-side search field to its placeholder so a previous search doesn't persist.
         client.sendString("Search...", 60019)

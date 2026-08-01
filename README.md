@@ -12,7 +12,7 @@ This is the original Dodian Ub3r source code, which has been maintained by vario
 - **Architecture**: A transition to a robust, modular Kotlin coroutine-based action system, heavily reducing reliance on the monolithic `Client.process()` loop.
 - **Scheduling Modernization**: Legacy scheduling approaches have been cleaned up, including replacing **Quartz Scheduler** with **Kotlin coroutines** for a more unified and lightweight execution model.
 - **Performance**: Zero-allocation strategies in network packets, modernized caching systems, and strict tick-stamped action controllers replacing manual wall-clock checks.
-- **Modernization**: Upgraded tooling to utilize Gradle and Java 17 for the backend, alongside major refactors to social, skilling, and pathfinding systems.
+- **Modernization**: `game-server` now builds and runs on **JDK 21** with **Kotlin 2.1.20** (Gradle toolchains auto-provision the JDK per machine, no local install required), alongside major refactors to social, skilling, and pathfinding systems.
 - **Async MySQL + Connection Pooling**: Database access has been modernized with asynchronous MySQL handling and **HikariCP** connection pooling to reduce blocking and improve scalability.
 - **Netty Migration**: The networking layer has been migrated away from older stream-based I/O to **Netty** and non-blocking I/O for a more modern and efficient packet pipeline.
 - **Player and NPC Delta Updating**: Update handling has been improved so only meaningful state changes are sent, reducing packet waste and unnecessary bandwidth usage.

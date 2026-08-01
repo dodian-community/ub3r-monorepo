@@ -138,7 +138,7 @@ object NpcDataRepository {
                                     amountMin = results.getInt("amt_min"),
                                     amountMax = results.getInt("amt_max"),
                                     percent = results.getDouble("percent"),
-                                    rareShout = results.getBoolean("rareShout"),
+                                    rareShout = results.getString("rareShout").isRareShout(),
                                 )
                         }
                         drops
@@ -167,7 +167,7 @@ object NpcDataRepository {
                                         amountMin = results.getInt("amt_min"),
                                         amountMax = results.getInt("amt_max"),
                                         percent = results.getDouble("percent"),
-                                        rareShout = results.getBoolean("rareShout"),
+                                        rareShout = results.getString("rareShout").isRareShout(),
                                     )
                             }
                             HashMap(dropsByNpc)
@@ -175,4 +175,8 @@ object NpcDataRepository {
                 }
         }
 
+    // rareShout is stored as literal text ("true"/"false"), not a numeric 0/1. MariaDB
+    // Connector/J's ResultSet.getBoolean() on a TEXT column only treats the exact string
+    // "0" as false, so it was reading every "false" row as true - parse the text ourselves.
+    private fun String?.isRareShout(): Boolean = this.equals("true", ignoreCase = true) || this == "1"
 }

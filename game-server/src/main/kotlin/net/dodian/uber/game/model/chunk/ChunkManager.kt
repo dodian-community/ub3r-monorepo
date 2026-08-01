@@ -15,9 +15,14 @@ import net.dodian.uber.game.model.entity.player.Player
 class ChunkManager {
     private val chunks = ConcurrentHashMap<Long, ChunkEntityIndex>(6_000)
 
+    @JvmName("load")
     fun load(chunk: Chunk): ChunkEntityIndex =
         chunks.computeIfAbsent(pack(chunk.x, chunk.y)) { ChunkEntityIndex(chunk) }
 
+    fun load(chunkX: Int, chunkY: Int): ChunkEntityIndex =
+        load(Chunk(chunkX, chunkY))
+
+    @JvmName("getLoaded")
     fun getLoaded(chunk: Chunk): ChunkEntityIndex? = chunks[pack(chunk.x, chunk.y)]
 
     fun getLoaded(chunkX: Int, chunkY: Int): ChunkEntityIndex? = chunks[pack(chunkX, chunkY)]

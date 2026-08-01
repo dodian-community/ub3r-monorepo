@@ -39,8 +39,8 @@ debug_bypass_group_ids = [11, 34, 40]
 
 [metrics]
 enabled = true
-prometheus_endpoint = false
-dashboard_enabled = false
+prometheus_endpoint = true
+dashboard_enabled = true
 
 [discord]
 require_verified_email = false #can be changed if we have issues with abuse

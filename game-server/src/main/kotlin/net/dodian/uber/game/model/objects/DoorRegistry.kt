@@ -14,7 +14,8 @@ class DoorRegistry @JvmOverloads constructor(
         try {
             val definitions = loader.load()
             applyDefinitions(definitions)
-            logger.info("Loaded {} doors...", definitions.size)
+            // ObjectClipService's "Applied startup collision overlays" line reports doors=N too.
+            logger.debug("Loaded {} doors...", definitions.size)
         } catch (exception: Exception) {
             logger.error("Failed to load door definitions.", exception)
         }

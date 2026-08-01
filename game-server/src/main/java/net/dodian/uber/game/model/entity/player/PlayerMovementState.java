@@ -98,54 +98,56 @@ final class PlayerMovementState {
             int targetX = -1;
             int targetY = -1;
             int targetSize = 1;
-            if (pending instanceof net.dodian.uber.game.engine.systems.interaction.NpcInteractionIntent) {
-                int npcIndex = ((net.dodian.uber.game.engine.systems.interaction.NpcInteractionIntent) pending).getNpcIndex();
-                net.dodian.uber.game.model.entity.npc.Npc npc = net.dodian.uber.game.Server.npcManager.getNpcMap().get(npcIndex);
-                if (npc != null) {
-                    targetX = npc.getPosition().getX();
-                    targetY = npc.getPosition().getY();
-                    targetSize = npc.getSize();
+            switch (pending) {
+                case net.dodian.uber.game.engine.systems.interaction.NpcInteractionIntent npcIntent -> {
+                    net.dodian.uber.game.model.entity.npc.Npc npc = net.dodian.uber.game.Server.npcManager.getNpcMap().get(npcIntent.getNpcIndex());
+                    if (npc != null) {
+                        targetX = npc.getPosition().getX();
+                        targetY = npc.getPosition().getY();
+                        targetSize = npc.getSize();
+                    }
                 }
-            } else if (pending instanceof net.dodian.uber.game.engine.systems.interaction.ItemOnNpcIntent) {
-                int npcIndex = ((net.dodian.uber.game.engine.systems.interaction.ItemOnNpcIntent) pending).getNpcIndex();
-                net.dodian.uber.game.model.entity.npc.Npc npc = net.dodian.uber.game.Server.npcManager.getNpcMap().get(npcIndex);
-                if (npc != null) {
-                    targetX = npc.getPosition().getX();
-                    targetY = npc.getPosition().getY();
-                    targetSize = npc.getSize();
+                case net.dodian.uber.game.engine.systems.interaction.ItemOnNpcIntent itemOnNpcIntent -> {
+                    net.dodian.uber.game.model.entity.npc.Npc npc = net.dodian.uber.game.Server.npcManager.getNpcMap().get(itemOnNpcIntent.getNpcIndex());
+                    if (npc != null) {
+                        targetX = npc.getPosition().getX();
+                        targetY = npc.getPosition().getY();
+                        targetSize = npc.getSize();
+                    }
                 }
-            } else if (pending instanceof net.dodian.uber.game.engine.systems.interaction.MagicOnNpcIntent) {
-                int npcIndex = ((net.dodian.uber.game.engine.systems.interaction.MagicOnNpcIntent) pending).getNpcIndex();
-                net.dodian.uber.game.model.entity.npc.Npc npc = net.dodian.uber.game.Server.npcManager.getNpcMap().get(npcIndex);
-                if (npc != null) {
-                    targetX = npc.getPosition().getX();
-                    targetY = npc.getPosition().getY();
-                    targetSize = npc.getSize();
+                case net.dodian.uber.game.engine.systems.interaction.MagicOnNpcIntent magicOnNpcIntent -> {
+                    net.dodian.uber.game.model.entity.npc.Npc npc = net.dodian.uber.game.Server.npcManager.getNpcMap().get(magicOnNpcIntent.getNpcIndex());
+                    if (npc != null) {
+                        targetX = npc.getPosition().getX();
+                        targetY = npc.getPosition().getY();
+                        targetSize = npc.getSize();
+                    }
                 }
-            } else if (pending instanceof net.dodian.uber.game.engine.systems.interaction.PlayerInteractionIntent) {
-                int playerIndex = ((net.dodian.uber.game.engine.systems.interaction.PlayerInteractionIntent) pending).getPlayerIndex();
-                Client targetPlr = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.getClient(playerIndex);
-                if (targetPlr != null) {
-                    targetX = targetPlr.getPosition().getX();
-                    targetY = targetPlr.getPosition().getY();
-                    targetSize = targetPlr.getSize();
+                case net.dodian.uber.game.engine.systems.interaction.PlayerInteractionIntent playerInteractionIntent -> {
+                    Client targetPlr = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.getClient(playerInteractionIntent.getPlayerIndex());
+                    if (targetPlr != null) {
+                        targetX = targetPlr.getPosition().getX();
+                        targetY = targetPlr.getPosition().getY();
+                        targetSize = targetPlr.getSize();
+                    }
                 }
-            } else if (pending instanceof net.dodian.uber.game.engine.systems.interaction.MagicOnPlayerIntent) {
-                int playerIndex = ((net.dodian.uber.game.engine.systems.interaction.MagicOnPlayerIntent) pending).getVictimIndex();
-                Client targetPlr = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.getClient(playerIndex);
-                if (targetPlr != null) {
-                    targetX = targetPlr.getPosition().getX();
-                    targetY = targetPlr.getPosition().getY();
-                    targetSize = targetPlr.getSize();
+                case net.dodian.uber.game.engine.systems.interaction.MagicOnPlayerIntent magicOnPlayerIntent -> {
+                    Client targetPlr = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.getClient(magicOnPlayerIntent.getVictimIndex());
+                    if (targetPlr != null) {
+                        targetX = targetPlr.getPosition().getX();
+                        targetY = targetPlr.getPosition().getY();
+                        targetSize = targetPlr.getSize();
+                    }
                 }
-            } else if (pending instanceof net.dodian.uber.game.engine.systems.interaction.AttackPlayerIntent) {
-                int playerIndex = ((net.dodian.uber.game.engine.systems.interaction.AttackPlayerIntent) pending).getVictimIndex();
-                Client targetPlr = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.getClient(playerIndex);
-                if (targetPlr != null) {
-                    targetX = targetPlr.getPosition().getX();
-                    targetY = targetPlr.getPosition().getY();
-                    targetSize = targetPlr.getSize();
+                case net.dodian.uber.game.engine.systems.interaction.AttackPlayerIntent attackPlayerIntent -> {
+                    Client targetPlr = net.dodian.uber.game.engine.systems.world.player.PlayerRegistry.getClient(attackPlayerIntent.getVictimIndex());
+                    if (targetPlr != null) {
+                        targetX = targetPlr.getPosition().getX();
+                        targetY = targetPlr.getPosition().getY();
+                        targetSize = targetPlr.getSize();
+                    }
                 }
+                default -> { }
             }
 
             if (targetX != -1 && targetY != -1) {

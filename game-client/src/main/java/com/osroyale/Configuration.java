@@ -100,8 +100,10 @@ public final class Configuration {
 
     public static class DiscordConfiguration {
         public static boolean ENABLE_DISCORD_OAUTH_LOGIN = true;
+        // Only the public client id belongs here. The OAuth client secret lives solely in the
+        // server's .env (DISCORD_CLIENT_SECRET) - the token exchange is server-side, and a
+        // secret shipped inside the client jar is readable by every player.
         public static String CLIENT_ID = "1523072866684244139";
-        public static String CLIENT_SECRET = "Ip0Z6hoJxXJOqjijbXoR7YiOEMZlgoEq";
         public static int CALLBACK_PORT = 8080;
         public static String REDIRECT_URL = "http://localhost:8080";
     }

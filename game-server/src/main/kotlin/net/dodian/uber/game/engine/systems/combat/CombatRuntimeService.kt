@@ -46,7 +46,7 @@ object CombatRuntimeService {
         }
         var cooldown = CombatStartService.restoreCooldownState(player, cycleNow)
 
-        val policy = CombatStartService.policyFor(player, engagement.intent)
+        val policy = CombatStartService.policyFor(player)
         val projectileAttack = player.getAttackStyle() != 0
         val reach = CombatReachService.evaluate(player, target, policy.attackDistance, projectileAttack)
         if (gameWorldId == 2) {

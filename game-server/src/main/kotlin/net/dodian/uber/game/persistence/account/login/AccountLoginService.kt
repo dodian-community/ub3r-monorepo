@@ -47,7 +47,7 @@ object AccountLoginService {
                     discordVerified = discordVerified,
                     accountCreationRequested = accountCreationRequested,
                     connection = connection,
-                    allowDevAutoCreate = isDevAutoCreateEnabled(),
+                    allowDevAutoCreate = isDevAutoCreateEnabled() && isLoopback(player),
                     allowDevPasswordBypass = isDevPasswordBypassEnabled(),
                 )
             }
@@ -113,6 +113,7 @@ object AccountLoginService {
         var webUser = AccountLoginRepository.loadWebUser(connection, playerName)
         if (webUser == null) {
             if (!accountCreationRequested) {
+                logger.info("Login rejected for {}: account does not exist and creation was not requested", playerName)
                 return PreparedLogin.failure(26)
             }
             // Mandatory: new accounts require a verified Discord identity (a non-blank email means
@@ -126,6 +127,13 @@ object AccountLoginService {
             if (playerName.length < 3) {
                 logger.warn("Account creation rejected for {}: username shorter than 3 characters", playerName)
                 return PreparedLogin.failure(23)
+            }
+            // A verified Discord identity must include the Discord user id, not just an email -
+            // without this, a Success response missing the id would fall through to the
+            // unlimited insertWebUser branch below and bypass the per-Discord account cap.
+            if (discordId.isBlank() && !allowDevAutoCreate) {
+                logger.warn("Account creation rejected for {}: Discord identity missing user id", playerName)
+                return PreparedLogin.failure(26)
             }
             if (discordId.isNotBlank()) {
                 if (discordRequireVerifiedEmail && !discordVerified) {
@@ -213,13 +221,19 @@ object AccountLoginService {
 
     private fun isDevAutoCreateEnabled(): Boolean = serverEnv == "dev" && serverDebugMode
 
+    private fun isLoopback(player: Client): Boolean =
+        player.connectedFrom == "127.0.0.1" || player.connectedFrom == "0:0:0:0:0:0:0:1"
+
     private fun constantTimeEquals(left: String, right: String): Boolean =
         MessageDigest.isEqual(
             left.lowercase().toByteArray(StandardCharsets.US_ASCII),
             right.lowercase().toByteArray(StandardCharsets.US_ASCII),
         )
 
-    private fun isDevPasswordBypassEnabled(): Boolean = serverEnv == "dev"
+    // Both dev bypasses require SERVER_ENV=dev AND debug=true, matching the startup banner's
+    // documented contract ("dev allows them only from localhost/debug-bypass ranks and only
+    // with debug=true"). Previously the localhost password bypass worked in dev without debug.
+    private fun isDevPasswordBypassEnabled(): Boolean = serverEnv == "dev" && serverDebugMode
 
     private fun isDebugPasswordBypassAllowed(
         player: Client,
@@ -229,8 +243,7 @@ object AccountLoginService {
         if (!allowDevPasswordBypass) {
             return false
         }
-        return player.connectedFrom == "127.0.0.1" ||
-            (serverDebugMode && rankDebugBypassGroupIds.contains(playerGroup))
+        return isLoopback(player) || rankDebugBypassGroupIds.contains(playerGroup)
     }
 
     data class PreparedLogin(

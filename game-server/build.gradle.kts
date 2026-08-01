@@ -1,5 +1,3 @@
-import org.gradle.api.tasks.compile.JavaCompile
-
 plugins {
     kotlin("jvm")
     id("application")
@@ -8,15 +6,30 @@ plugins {
 
 application {
     mainClass.set("net.dodian.uber.game.Server")
+    applicationDefaultJvmArgs += arrayOf(
+        "-XX:+UseZGC",
+        "-XX:+ZGenerational",
+        "-XX:+UnlockExperimentalVMOptions",
+        "-XX:+UseStringDeduplication",
+        "-XX:AutoBoxCacheMax=65535",
+        "-XX:+AlwaysPreTouch",
+        "-Xms1g",
+        "-Xmx4g"
+    )
+}
+
+tasks.withType<Tar>().configureEach {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.withType<Zip>().configureEach {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
-}
-
-tasks.withType<JavaCompile>().configureEach {
-    options.release.set(11)
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
 }
 
 // Netty patches DoS/security CVEs frequently; pin one version here and force it
@@ -32,6 +45,7 @@ val syncTestSourceSet = sourceSets.create("syncTest") {
 }
 
 tasks.jar {
+    dependsOn(provider { configurations.runtimeClasspath.get().buildDependencies })
     dependsOn(":routefinder:jar")
     dependsOn(":content-platform:api:jar", ":content-platform:runtime:jar")
     dependsOn(":skills:api:jar", ":skills:runtime:jar")
@@ -129,10 +143,10 @@ configurations.all {
     }
 }
 
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    kotlinOptions {
-        freeCompilerArgs = listOf("-Xjsr305=strict")
-        jvmTarget = "11"
+kotlin {
+    jvmToolchain(21)
+    compilerOptions {
+        freeCompilerArgs.add("-Xjsr305=strict")
     }
 }
 

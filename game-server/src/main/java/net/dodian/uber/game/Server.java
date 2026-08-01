@@ -37,8 +37,11 @@ import net.dodian.uber.game.engine.systems.interaction.ObjectClipService;
 
 import net.dodian.uber.game.netty.bootstrap.NettyGameServer;
 
+import java.lang.management.ManagementFactory;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static net.dodian.uber.game.engine.config.DotEnvKt.*;
@@ -88,6 +91,8 @@ public class Server {
 
     public static void main(String[] args) throws Exception {
         logger.info("\n{}", STARTUP_BANNER);
+        List<String> jvmInputArgs = ManagementFactory.getRuntimeMXBean().getInputArguments();
+        logger.info("JVM Runtime Arguments: {}", jvmInputArgs);
 
         serverStartup = System.currentTimeMillis();
         try {
@@ -107,13 +112,30 @@ public class Server {
         }
 
         npcManager = new NpcManager();
-        npcManager.loadSpawns();
+
+        try (var startupExecutor = Executors.newVirtualThreadPerTaskExecutor()) {
+            Future<Void> npcTask = startupExecutor.submit(() -> {
+                npcManager.loadSpawns();
+                return null;
+            });
+
+            Future<ItemManager> itemTask = startupExecutor.submit(() -> new ItemManager());
+
+            Future<Void> cacheTask = startupExecutor.submit(() -> {
+                GameObjectData.init();
+                net.dodian.uber.game.engine.systems.objectexamines.ObjectExamines.load();
+                new CacheBootstrapService().bootstrap();
+                return null;
+            });
+
+            npcTask.get();
+            itemManager = itemTask.get();
+            cacheTask.get();
+        }
+
         NpcTimerScheduler.initialize(npcManager.getNpcs());
-        logger.info("npc_runtime_ready definitions={} spawns={}", npcManager.getNpcData().size(), npcManager.getNpcs().size());
-        itemManager = new ItemManager();
         chunkManager = new ChunkManager();
-        // NPC spawns are loaded before ChunkManager exists. Now that chunk repos are available,
-        // bootstrap chunk membership once so viewport snapshots and active-chunk processing can see NPCs.
+
         for (net.dodian.uber.game.model.entity.npc.Npc npc : npcManager.getNpcs()) {
             if (npc != null) {
                 npc.syncChunkMembership();
@@ -122,14 +144,9 @@ public class Server {
         shopManager = new ShopManager();
         clientHandler = new Server();
         login = new Login();
-        GameObjectData.init();
-        net.dodian.uber.game.engine.systems.objectexamines.ObjectExamines.load();
-        // Verifies the cache CacheBootstrapService (below) reads from matches its known-good
-        // fingerprint, so a substituted or corrupted cache directory fails loudly at boot instead
-        // of silently serving bad terrain/objects to clients.
-        new CacheBootstrapService().bootstrap();
         loadObjects();
         new DoorRegistry();
+
         // Install shutdown hook before starting I/O so partial startup is cleaned up.
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             logger.info("Shutdown hook triggered. Shutting down server...");
@@ -139,7 +156,6 @@ public class Server {
 
         ObjectClipService.bootstrapStartupOverlays(objects);
         EnginePluginBootstrap.bootstrap();
-
 
         System.gc();
 
@@ -161,6 +177,9 @@ public class Server {
         for (net.dodian.uber.game.model.item.Item item : itemManager.items) {
             if (item != null) itemDefinitionCount++;
         }
+        // The port/item/npc/startup-time numbers here are also reported by server_ready and
+        // Server & Ports overview immediately below - a separate ASCII box used to repeat them
+        // with a hardcoded (and wrong: 8080 instead of the real 8081) web API port.
         logger.info(
                 "server_ready world={} transport={} startup_ms={} " +
                         "packet_listeners={} npcs={} items={} objects={}",

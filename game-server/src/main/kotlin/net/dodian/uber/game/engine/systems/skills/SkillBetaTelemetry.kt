@@ -34,8 +34,15 @@ object SkillBetaTelemetry {
             ContentRouteCatalog.moduleForBinding(it) ?: "unknown"
         }
         recordOutcome(moduleId, route, result.outcome.name)
-        logger.info(
-            "SKILL BETA | outcome={} | module={} | route={} | binding={} | elapsedMs={} | incident={} | player={} | dbId={} | pos={} | interface={}",
+        // A routine HANDLED click is already logged by the object/npc/item audit categories;
+        // repeating it here just doubles every skill interaction in the console. Keep the
+        // per-click line for problems only - counters above still record everything.
+        val routineSuccess = result.outcome.name == "HANDLED" && result.incidentId == null
+        if (routineSuccess && !logger.isDebugEnabled) {
+            return
+        }
+        val message = "SKILL BETA | outcome={} | module={} | route={} | binding={} | elapsedMs={} | incident={} | player={} | dbId={} | pos={} | interface={}"
+        val args = arrayOf<Any?>(
             result.outcome,
             moduleId,
             route,
@@ -47,6 +54,11 @@ object SkillBetaTelemetry {
             client.position,
             client.activeInterfaceId,
         )
+        if (routineSuccess) {
+            logger.debug(message, *args)
+        } else {
+            logger.info(message, *args)
+        }
     }
 
     @JvmStatic

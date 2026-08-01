@@ -3,6 +3,12 @@ plugins {
     `java-library`
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(11))
+    }
+}
+
 dependencies {
     api(project(":content-platform:api"))
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.3")

@@ -101,7 +101,8 @@ public class Npc extends Entity {
     private String interactionProfile;
     private int pendingWalkingDirection = -1;
     private boolean walking = false;
-    private Chunk currentChunk;
+    private int currentChunkX = -1;
+    private int currentChunkY = -1;
     private ChunkEntityIndex chunkEntityIndex;
     private volatile GameTaskSet<?> npcTaskSet;
 
@@ -281,8 +282,9 @@ public class Npc extends Entity {
             return;
         }
 
-        Chunk newChunk = getPosition().getChunk();
-        if (currentChunk != null && currentChunk.equals(newChunk) && chunkEntityIndex != null) {
+        int newChunkX = getPosition().getChunkX();
+        int newChunkY = getPosition().getChunkY();
+        if (currentChunkX == newChunkX && currentChunkY == newChunkY && chunkEntityIndex != null) {
             return;
         }
 
@@ -290,9 +292,10 @@ public class Npc extends Entity {
             chunkEntityIndex.remove(this);
         }
 
-        ChunkEntityIndex repo = Server.chunkManager.load(newChunk);
+        ChunkEntityIndex repo = Server.chunkManager.load(newChunkX, newChunkY);
         repo.add(this);
-        currentChunk = newChunk;
+        currentChunkX = newChunkX;
+        currentChunkY = newChunkY;
         chunkEntityIndex = repo;
     }
 
@@ -301,7 +304,8 @@ public class Npc extends Entity {
             chunkEntityIndex.remove(this);
         }
         chunkEntityIndex = null;
-        currentChunk = null;
+        currentChunkX = -1;
+        currentChunkY = -1;
     }
 
     public GameTaskSet<?> getNpcTaskSet() {

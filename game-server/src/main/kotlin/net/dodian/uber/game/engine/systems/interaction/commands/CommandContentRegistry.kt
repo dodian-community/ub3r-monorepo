@@ -26,6 +26,12 @@ object CommandContentRegistry : ContentBootstrap {
             rebuildLocked()
             bootstrapped.set(true)
         }
+        logger.info(
+            "commands_ready plugins={} aliases={} : {}",
+            contents.size,
+            byAlias.size,
+            byAlias.keys.sorted().joinToString(", "),
+        )
     }
 
     fun register(content: CommandContent) {

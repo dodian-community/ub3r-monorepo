@@ -170,7 +170,8 @@ public abstract class PlayerCore extends Entity {
     private int localNpcSize = 0;
     private long localPlayerMembershipRevision = 0L;
     private long localNpcMembershipRevision = 0L;
-    private Chunk currentChunk;
+    private int currentChunkX = -1;
+    private int currentChunkY = -1;
     private ChunkEntityIndex chunkEntityIndex;
     public boolean loaded = false;
     private final RouteDestination routeDestination = new RouteDestination();
@@ -2133,7 +2134,7 @@ public abstract class PlayerCore extends Entity {
     }
 
     public Chunk getCurrentChunk() {
-        return currentChunk;
+        return currentChunkX == -1 || currentChunkY == -1 ? null : Chunk.of(currentChunkX, currentChunkY);
     }
 
     public ChunkEntityIndex getChunkEntityIndex() {
@@ -2145,9 +2146,10 @@ public abstract class PlayerCore extends Entity {
             return;
         }
 
-        Chunk newChunk = getPosition().getChunk();
+        int newChunkX = getPosition().getChunkX();
+        int newChunkY = getPosition().getChunkY();
 
-        if (currentChunk != null && currentChunk.equals(newChunk) && chunkEntityIndex != null) {
+        if (currentChunkX == newChunkX && currentChunkY == newChunkY && chunkEntityIndex != null) {
             return;
         }
 
@@ -2155,9 +2157,10 @@ public abstract class PlayerCore extends Entity {
             chunkEntityIndex.remove(this);
         }
 
-        ChunkEntityIndex repo = Server.chunkManager.load(newChunk);
+        ChunkEntityIndex repo = Server.chunkManager.load(newChunkX, newChunkY);
         repo.add(this);
-        currentChunk = newChunk;
+        currentChunkX = newChunkX;
+        currentChunkY = newChunkY;
         chunkEntityIndex = repo;
     }
 
@@ -2166,7 +2169,8 @@ public abstract class PlayerCore extends Entity {
             chunkEntityIndex.remove(this);
         }
         chunkEntityIndex = null;
-        currentChunk = null;
+        currentChunkX = -1;
+        currentChunkY = -1;
     }
 
 }

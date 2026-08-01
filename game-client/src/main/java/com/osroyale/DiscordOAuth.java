@@ -69,6 +69,7 @@ public class DiscordOAuth {
         pendingBrowserOpen = new TimerTask() {
             @Override
             public void run() {
+                System.out.println("[DiscordOAuth] Opening browser for authorization: " + url);
                 openBrowser(url);
             }
         };
@@ -105,6 +106,10 @@ public class DiscordOAuth {
                     }
                 }
             }
+            System.out.println("[DiscordOAuth] Callback received: path=" + exchange.getRequestURI().getPath()
+                    + " query=" + query
+                    + " code=" + (code == null ? "MISSING" : "present(len=" + code.length() + ")")
+                    + " onCodeReceived=" + (onCodeReceived == null ? "null (already consumed or never started)" : "set"));
 
             String htmlResponse = "<html><body style='background:#1e1e2e;color:#5865F2;font-family:sans-serif;text-align:center;padding-top:60px;'>"
                     + "<h1>Discord Authorization Successful!</h1>"

@@ -1,4 +1,4 @@
-FROM eclipse-temurin:11-jre
+FROM eclipse-temurin:21-jre
 
 EXPOSE 43594
 EXPOSE 8080
@@ -19,8 +19,8 @@ COPY ./build/libs/*.jar ./ub3r-server.jar
 ENTRYPOINT ["java", \
 	"-Xms1g", \
 	"-Xmx4g", \
-	"-XX:+UseG1GC", \
-	"-XX:MaxGCPauseMillis=100", \
+	"-XX:+UseZGC", \
+	"-XX:+ZGenerational", \
 	"-Djava.security.egd=file:/dev/./urandom", \
 	"-Ddodian.log.level=info", \
 	"-jar", \

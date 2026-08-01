@@ -58,7 +58,7 @@ object AccountPersistenceService {
                         if (creationPreflightCode == AccountLoginService.USERNAME_TAKEN) {
                             logger.info("Account creation rejected: username already exists username={}", username)
                         } else {
-                            logger.debug("Account creation rejected for {}: missing Discord authorization", username)
+                            logger.warn("Account creation rejected for {}: missing Discord authorization", username)
                         }
                         val durationMs = (System.nanoTime() - startedAt) / 1_000_000L
                         onComplete.accept(LoginLoadResult(creationPreflightCode, durationMs, 0, null))
@@ -71,7 +71,7 @@ object AccountPersistenceService {
                             is net.dodian.uber.game.persistence.account.discord.DiscordFetchResult.Success ->
                                 discordResult.user
                             net.dodian.uber.game.persistence.account.discord.DiscordFetchResult.InvalidAuthorization -> {
-                                logger.debug("Account creation rejected for {}: invalid or expired Discord authorization", username)
+                                logger.warn("Account creation rejected for {}: invalid or expired Discord authorization", username)
                                 val durationMs = (System.nanoTime() - startedAt) / 1_000_000L
                                 onComplete.accept(LoginLoadResult(29, durationMs, 0, null))
                                 return@launch

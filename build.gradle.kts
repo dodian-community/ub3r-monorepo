@@ -1,7 +1,7 @@
 import org.gradle.api.tasks.testing.Test
 
 plugins {
-    kotlin("jvm") version "1.9.10" apply false
+    kotlin("jvm") version "2.1.20" apply false
 }
 
 subprojects {

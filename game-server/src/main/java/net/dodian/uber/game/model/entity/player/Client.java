@@ -558,6 +558,13 @@ public class Client extends Player implements Runnable {
      */
     public int activeInterfaceId = -1;
 
+    /**
+     * Gameplay reason for the next interface open, consumed by the audit hook in {@link #send}.
+     * Content code (bank, shops, ...) sets this right before sending its interface packets so the
+     * INTERFACE OPEN audit line can say WHY the interface opened, not just which packet carried it.
+     */
+    public String pendingInterfaceOpenContext = null;
+
     public int WanneBank = 0;
     public int WanneShop = 0;
     public int WanneThieve = 0;
@@ -1092,10 +1099,13 @@ public class Client extends Player implements Runnable {
         }
 
         if (closedVia != null && previousInterfaceId != -1) {
+            pendingInterfaceOpenContext = null;
             ConsoleAuditLog.interfaceClose(this, previousInterfaceId, closedVia);
         }
         if (openedInterfaceId != null && openedInterfaceId != previousInterfaceId) {
-            ConsoleAuditLog.interfaceOpen(this, openedInterfaceId, openedVia);
+            String openContext = pendingInterfaceOpenContext;
+            pendingInterfaceOpenContext = null;
+            ConsoleAuditLog.interfaceOpen(this, openedInterfaceId, openedVia, openContext);
         }
 
         packet.send(this);
@@ -1493,6 +1503,7 @@ public class Client extends Player implements Runnable {
         MyShopID = ShopID;
         checkItemUpdate();
         send(new SendString(ShopManager.ShopName[ShopID], 3901));
+        pendingInterfaceOpenContext = "shop " + ShopID + ": \"" + ShopManager.ShopName[ShopID] + "\"";
         send(new InventoryInterface(3824, 3822));
     }
 
@@ -3457,32 +3468,26 @@ public class Client extends Player implements Runnable {
         }
         boolean home = checkPos != 0;
         TravelDecision decision = TravelRouteService.resolve(home, checkPos, buttonId, this::getTravel);
-        if (decision instanceof TravelDecision.Ignored) {
-            return;
-        }
-        if (decision instanceof TravelDecision.Rejected) {
-            TravelDecision.Rejected rejected = (TravelDecision.Rejected) decision;
-            send(new SendMessage(rejected.getMessage()));
-            return;
-        }
-        if (decision instanceof TravelDecision.RequireUnlockDialogue) {
-            TravelDecision.RequireUnlockDialogue unlockDialogue = (TravelDecision.RequireUnlockDialogue) decision;
-            DialogueService.setDialogueId(this, unlockDialogue.getDialogueId());
-            DialogueService.setDialogueSent(this, false);
-            return;
-        }
-        if (decision instanceof TravelDecision.Approved) {
-            TravelDecision.Approved approved = (TravelDecision.Approved) decision;
-            varbit(153, approved.getVarbitValue());
-            travelInitiate = true;
-            Position destination = approved.getDestination();
-            GameEventScheduler.runLaterMs(1800, () -> {
-                if (!disconnected) {
-                    transport(destination);
-                    send(new RemoveInterfaces());
-                    travelInitiate = false;
-                }
-            });
+        switch (decision) {
+            case TravelDecision.Ignored ignored -> { }
+            case TravelDecision.Rejected rejected -> send(new SendMessage(rejected.getMessage()));
+            case TravelDecision.RequireUnlockDialogue unlockDialogue -> {
+                DialogueService.setDialogueId(this, unlockDialogue.getDialogueId());
+                DialogueService.setDialogueSent(this, false);
+            }
+            case TravelDecision.Approved approved -> {
+                varbit(153, approved.getVarbitValue());
+                travelInitiate = true;
+                Position destination = approved.getDestination();
+                GameEventScheduler.runLaterMs(1800, () -> {
+                    if (!disconnected) {
+                        transport(destination);
+                        send(new RemoveInterfaces());
+                        travelInitiate = false;
+                    }
+                });
+            }
+            default -> { }
         }
     }
 

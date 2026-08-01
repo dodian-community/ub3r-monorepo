@@ -3,6 +3,12 @@ plugins {
     `java-library`
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(11))
+    }
+}
+
 dependencies {
     api(project(":content-platform:api"))
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-toml:2.14.0")

@@ -143,10 +143,11 @@ object NpcContentRegistry : ContentBootstrap {
                 }
             }
         if (rows.isEmpty()) {
-            logger.info("NPC capability report: no interactive entries loaded.")
+            logger.warn("NPC capability report: no interactive entries loaded.")
             return
         }
-        logger.info("NPC capability report entries={}", rows.size)
+        // The "Registered N NPC content modules" line above already covers the counts.
+        logger.debug("NPC capability report entries={}", rows.size)
         rows.sorted().forEach { logger.debug("NPC capability {}", it) }
     }
 

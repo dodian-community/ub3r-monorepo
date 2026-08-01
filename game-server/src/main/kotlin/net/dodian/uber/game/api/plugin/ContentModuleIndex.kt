@@ -269,7 +269,9 @@ object ContentModuleIndex {
         pluginCatalog = discoveredCatalog.sortedBy { it.moduleClass }
         ContentPlatformCatalog.publish(discoveredManifests)
         val platformSnapshot = ContentPlatformCatalog.snapshot()
-        logger.info(
+        // The "Plugin index frozen" line below already reports fingerprint and module counts;
+        // a second info line with the same numbers just doubles the startup log.
+        logger.debug(
             "Content manifest frozen fingerprint={} modules={} enabled={} disabled={}",
             platformSnapshot.fingerprint.take(12),
             platformSnapshot.modules.size,

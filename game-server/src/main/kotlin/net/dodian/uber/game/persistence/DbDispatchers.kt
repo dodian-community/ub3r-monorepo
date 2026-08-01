@@ -9,24 +9,22 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.asCoroutineDispatcher
 
 object DbDispatchers {
-    private fun newSingleThreadExecutor(threadName: String): ExecutorService =
-        Executors.newSingleThreadExecutor(
-            ThreadFactory { runnable ->
-                Thread(runnable, threadName).apply { isDaemon = true }
-            },
+    private fun newVirtualThreadExecutor(threadName: String): ExecutorService =
+        Executors.newThreadPerTaskExecutor(
+            Thread.ofVirtual().name(threadName + "-", 0).factory()
         )
 
     @JvmField
-    val accountExecutor: ExecutorService = newSingleThreadExecutor("account-db")
+    val accountExecutor: ExecutorService = newVirtualThreadExecutor("account-db")
 
     @JvmField
-    val worldExecutor: ExecutorService = newSingleThreadExecutor("world-db")
+    val worldExecutor: ExecutorService = newVirtualThreadExecutor("world-db")
 
     @JvmField
-    val logExecutor: ExecutorService = newSingleThreadExecutor("log-db")
+    val logExecutor: ExecutorService = newVirtualThreadExecutor("log-db")
 
     @JvmField
-    val commandExecutor: ExecutorService = newSingleThreadExecutor("command-db")
+    val commandExecutor: ExecutorService = newVirtualThreadExecutor("command-db")
 
     @JvmField
     val accountDispatcher: CoroutineDispatcher = accountExecutor.asCoroutineDispatcher()

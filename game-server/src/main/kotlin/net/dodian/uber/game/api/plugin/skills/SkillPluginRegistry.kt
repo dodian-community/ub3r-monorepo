@@ -107,9 +107,8 @@ internal class SkillPluginRegistryEngine {
     private fun rebuildSnapshotLocked() {
         snapshot = buildSnapshot(definitions)
         logger.info(
-            "skills bootstrapped {} plugins [{}] (object={}, npc={}, itemOnItem={}, item={}, itemOnObject={}, magicOnObject={}, button={})",
+            "Loaded {} skill plugins (bindings: object={}, npc={}, itemOnItem={}, item={}, itemOnObject={}, magicOnObject={}, button={})",
             definitions.size,
-            definitions.joinToString { "${it.definition.name}:${it.definition.skill.name}" },
             snapshot.objectBindingCount,
             snapshot.npcBindingCount,
             snapshot.itemOnItemBindingCount,

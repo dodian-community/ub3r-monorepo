@@ -11922,7 +11922,10 @@ public class Client extends GameEngine
                 outgoing.writeDWord(ai[1]);
                 outgoing.writeDWord(ai[2]);
                 outgoing.writeDWord(ai[3]);
-                outgoing.writeDWord(ai[3]);
+                // Exactly one dword follows the seeds: the legacy UID the server's login
+                // parser consumes as i32. A duplicated ai[3] here once shifted every later
+                // field by 4 bytes, so the server read loginMode from the UID's zero bytes
+                // and account creation silently degraded into a normal login.
                 outgoing.writeDWord(0);
                 if (discordAuthCode != null && System.currentTimeMillis() - discordAuthCodeReceivedAtMillis > DISCORD_AUTH_CODE_TTL_MILLIS) {
                     discordAuthCode = null;
@@ -11932,6 +11935,9 @@ public class Client extends GameEngine
                     com.osroyale.login.impl.MainScreen.loginScreenState = 0;
                 }
                 int loginMode = com.osroyale.login.impl.MainScreen.loginMode.protocolValue(reconnecting);
+                System.out.println("[DiscordOAuth] Sending login packet: loginMode=" + loginMode
+                        + " reconnecting=" + reconnecting
+                        + " discordAuthCode=" + (discordAuthCode == null ? "null" : "present(len=" + discordAuthCode.length() + ")"));
                 outgoing.writeByte(loginMode);
                 outgoing.writeString(loginMode == 1 && discordAuthCode != null ? discordAuthCode : "");
                 outgoing.writeString("");

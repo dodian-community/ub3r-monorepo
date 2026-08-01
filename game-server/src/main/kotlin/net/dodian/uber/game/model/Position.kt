@@ -87,6 +87,7 @@ class Position @JvmOverloads constructor(x: Int = 2611, y: Int = 3093, z: Int = 
         get() = (getY() shr 3) - 6
 
     val chunk: Chunk
+        @JvmName("getChunk")
         get() = Chunk(chunkX, chunkY)
 
     val chunkX: Int

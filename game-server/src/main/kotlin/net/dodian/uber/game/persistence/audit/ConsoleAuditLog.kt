@@ -369,7 +369,7 @@ object ConsoleAuditLog {
         if (handled) {
             if (!objectLogger.isInfoEnabled) return
             objectLogger.info(
-                "OBJECT OK | type={} | option={} | objectId={} | pos={} | route={} | source={} | elapsedMs={} | player={}",
+                "OBJECT OK | type={} | option={} | objectId={} | pos={} | route={} | source={} | elapsedMs={} | {}",
                 context.type,
                 context.option ?: -1,
                 context.objectId,
@@ -382,7 +382,7 @@ object ConsoleAuditLog {
         } else {
             if (!objectLogger.isWarnEnabled) return
             objectLogger.warn(
-                "OBJECT UNHANDLED | type={} | option={} | objectId={} | pos={} | route={} | packetOpcode={} | elapsedMs={} | player={}",
+                "OBJECT UNHANDLED | type={} | option={} | objectId={} | pos={} | route={} | packetOpcode={} | elapsedMs={} | {}",
                 context.type,
                 context.option ?: -1,
                 context.objectId,
@@ -395,26 +395,64 @@ object ConsoleAuditLog {
         }
     }
 
+    /**
+     * Friendly names for interfaces whose ids show up constantly in audit logs. Purely
+     * advisory - unknown ids just log without a name.
+     */
+    private val interfaceNames = mapOf(
+        60000 to "bank",
+        5292 to "bank (legacy)",
+        3824 to "shop",
+        3559 to "character design",
+        58000 to "teleport menu",
+        2400 to "furnace smelting",
+        36700 to "account services / modcp",
+        12855 to "ancient spellbook",
+        40000 to "spellbook",
+        3323 to "trade",
+        3443 to "trade confirm",
+        6575 to "duel config",
+        6412 to "duel confirm",
+        1119 to "smithing", 1120 to "smithing", 1121 to "smithing", 1122 to "smithing", 1123 to "smithing",
+    )
+
+    private fun interfaceRef(interfaceId: Int): String {
+        val name = interfaceNames[interfaceId] ?: return interfaceId.toString()
+        return "$interfaceId ($name)"
+    }
+
     @JvmStatic
-    fun interfaceOpen(player: Player, interfaceId: Int, via: String) {
+    @JvmOverloads
+    fun interfaceOpen(player: Player, interfaceId: Int, via: String, context: String? = null) {
         if (interfaceLogger.isDebugEnabled) {
             interfaceLogger.debug(
                 "INTERFACE DETAIL | {} | pos={} | interface={} | via={} | details={}",
                 playerRef(player),
                 positionRef(player.position),
-                interfaceId,
+                interfaceRef(interfaceId),
                 via,
                 interfaceDetails(player, interfaceId).replace('\n', ' '),
             )
         }
         if (!interfaceLogger.isInfoEnabled) return
-        interfaceLogger.info(
-            "INTERFACE OPEN | {} | pos={} | interface={} | via={}",
-            playerRef(player),
-            positionRef(player.position),
-            interfaceId,
-            via,
-        )
+        if (context != null) {
+            interfaceLogger.info(
+                "INTERFACE OPEN | {} | pos={} | interface={} | via={} | context={}",
+                playerRef(player),
+                positionRef(player.position),
+                interfaceRef(interfaceId),
+                via,
+                sanitizeInlineText(context),
+            )
+        } else {
+            interfaceLogger.info(
+                "INTERFACE OPEN | {} | pos={} | interface={} | via={}",
+                playerRef(player),
+                positionRef(player.position),
+                interfaceRef(interfaceId),
+                via,
+            )
+        }
     }
 
     internal fun interfaceDetails(player: Player, interfaceId: Int): String {
@@ -547,7 +585,7 @@ object ConsoleAuditLog {
             "INTERFACE CLOSE | {} | pos={} | interface={} | via={}",
             playerRef(player),
             positionRef(player.position),
-            interfaceId,
+            interfaceRef(interfaceId),
             via,
         )
     }

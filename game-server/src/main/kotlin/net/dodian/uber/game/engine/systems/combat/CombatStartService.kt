@@ -44,13 +44,13 @@ object CombatStartService {
     }
 
     @JvmStatic
-    fun policyFor(client: Client, intent: CombatIntent): CombatStartPolicy {
-        val attackDistance =
-            when (intent) {
-                CombatIntent.MAGIC_ON_NPC, CombatIntent.MAGIC_ON_PLAYER -> 5
-                CombatIntent.ATTACK_PLAYER, CombatIntent.ATTACK_NPC ->
-                    if (client.getAttackStyle() == 0) 1 else 5
-            }
+    fun policyFor(client: Client): CombatStartPolicy {
+        // attackDistance must track the attacker's *current* style (client.getAttackStyle()),
+        // not the intent that started this engagement - magicId resets to -1 after a one-shot
+        // spell cast (see Client.handleMagicAttack), so a MAGIC_ON_NPC/MAGIC_ON_PLAYER engagement
+        // can fall back to melee mid-fight. Branching on the frozen `intent` here kept the player
+        // parked at ranged distance forever after the first cast, even once attacks were melee again.
+        val attackDistance = if (client.getAttackStyle() == 0) 1 else 5
         return CombatStartPolicy(attackDistance = attackDistance)
     }
 
