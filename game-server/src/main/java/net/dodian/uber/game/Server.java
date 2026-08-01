@@ -76,14 +76,21 @@ public class Server {
 
     private static final GameLoopService gameLoopService = new GameLoopService();
     private static final AtomicBoolean SHUTDOWN_STARTED = new AtomicBoolean(false);
-    private static final String STARTUP_BANNER = "Dodian Ub3r starting - maintained by Dodian.net";
+    private static final String STARTUP_BANNER = String.join("\n",
+            "    ____",
+            "   / __ \\____ ____/ (_)___ _____",
+            "  / / / / __ \\/ __ / / __ `/ __ \\",
+            " / /_/ / /_/ / /_/ / / /_/ / / / /",
+            "/_____/\\____/\\____/_/\\____/_/ /_/",
+            "",
+            "Maintained by Dodian.net");
 
     static String startupBanner() {
         return STARTUP_BANNER;
     }
 
     public static void main(String[] args) throws Exception {
-        logger.info(STARTUP_BANNER);
+        logger.info("\n{}", STARTUP_BANNER);
         List<String> jvmInputArgs = ManagementFactory.getRuntimeMXBean().getInputArguments();
         logger.info("JVM Runtime Arguments: {}", jvmInputArgs);
 

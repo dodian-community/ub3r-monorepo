@@ -151,7 +151,8 @@ open class ItemManager @JvmOverloads constructor(
         }
         logger.debug("Loaded {} base item definitions", baseMap.size)
 
-        val jsonDefs = parseItemsJsonDir("data/def/items-json")
+        val itemsJsonDir = ServerPaths.definition("items", "items-json").toString()
+        val jsonDefs = parseItemsJsonDir(itemsJsonDir).ifEmpty { parseItemsJsonDir("data/def/items-json") }
         logger.debug("Loaded {} items-json definitions", jsonDefs.size)
 
         val processedIds = LinkedHashSet<Int>()

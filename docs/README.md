@@ -44,6 +44,6 @@ Welcome to the documentation for the Dodian Ub3r monorepo.
 
 - **Host OS**: Linux, macOS, or Windows with **JDK 21 or greater**
 - **Database Engine**: MariaDB 10.11+ or MySQL 8.0+
-- **OSRS Cache / Definitions**: Revision 218 Cache ([cache-tarnish-218.zip](https://files.jire.org/cache-tarnish-218.zip)) extracted to `game-server/data/def`
+- **OSRS Cache / Definitions**: Revision 218 Cache ([cache-tarnish-218.zip](https://files.jire.org/cache-tarnish-218.zip)) extracted to `game-server/data/cache`
 - **Memory Footprint**: ~300MB startup heap usage with Generational ZGC
 - **Database Migration Scripts**: Included in [game-server/database](/game-server/database)

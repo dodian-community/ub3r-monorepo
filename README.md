@@ -13,6 +13,10 @@ This is the original Dodian Ub3r source code, fully modernized into a high-perfo
   - Generated dump-backed cache reference mappings and enriched revision 218 definition metadata (items, objects, NPCs) for accurate ID resolutions across content plugins.
   - Added OSRS "Make-All" interface support (smelting, glassblowing, crafting).
 
+- **Server-Side OSRS Cache Decoding & Spatial Collision Engine**:
+  - Implemented direct server-side OSRS cache decoding (`CacheBootstrapService`) that parses map terrain grids, 3D game object bounds (`ObjectDefinitionDecoder`), graphics spot animations (`SpotAnimDefinitionDecoder`), and interface component definitions (`InterfaceDefinitionDecoder`).
+  - Automatically streams decoded terrain and object boundaries directly into the RSMod `routefinder` spatial collision matrix across all 35.7M world tiles.
+
 - **Discord OAuth2 Account Creation & Bot Integration**:
   - Implemented secure account registration and authentication via **Discord OAuth2**, eliminating plaintext password transmissions over the game protocol.
   - Integrated Discord bot services for server status tracking and account verification.
@@ -45,14 +49,21 @@ This is the original Dodian Ub3r source code, fully modernized into a high-perfo
 
 ---
 
-## Quick Setup & Cache Download
+## Quick Setup & Cache Setup Guide
 
 1. **Prerequisites**: Host OS with **JDK 21 or greater** (Gradle auto-provisions JDK 21 per machine).
 2. **Database**: MariaDB 10.11+ or MySQL 8.0+ instance running with `.env` configured (`SERVER_DATABASE_INITIALIZE=true`).
-3. **OSRS Cache**: Download the **Revision 218 Cache**: [cache-tarnish-218.zip](https://files.jire.org/cache-tarnish-218.zip) and extract it into:
-   ```
-   game-server/data/def
-   ```
+3. **OSRS Cache Setup**:
+   - Download the **Revision 218 Cache**: [cache-tarnish-218.zip](https://files.jire.org/cache-tarnish-218.zip)
+   - Extract the contents into `game-server/data/cache`.
+   - **Important**: If the ZIP extracts as a folder named `cache-tarnish-218`, rename it to `cache` so that the cache index files reside directly inside:
+     ```
+     game-server/data/cache/
+     ```
+   - **Expected Cache Files in `game-server/data/cache`**:
+     - `main_file_cache.dat2`
+     - `main_file_cache.idx0` through `main_file_cache.idx255`
+     - `main_file_cache.idx255`
 4. **Run Server**: `./gradlew :game-server:run`
 
 ---

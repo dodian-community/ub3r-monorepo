@@ -9,8 +9,9 @@ import org.junit.jupiter.api.Test
 class DarkBowDefinitionTest {
     @Test
     fun `dark bow grants ranged accuracy but no ranged strength`() {
+        val path = net.dodian.uber.game.engine.config.ServerPaths.definition("items", "items-json", "11235.json")
         val definition = Gson().fromJson(
-            Files.readString(Path.of("data/def/items-json/11235.json")),
+            Files.readString(path),
             ItemDefJson::class.java,
         )
 
