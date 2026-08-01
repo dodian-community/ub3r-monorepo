@@ -6,6 +6,18 @@ This is the original Dodian Ub3r source code, fully modernized into a high-perfo
 
 ---
 
+## Previews & System Screenshots
+
+| RuneLite Client 317 | Accounts Manager |
+| :---: | :---: |
+| ![RuneLite Client 317](docs/images/game_client_317.png) | ![Accounts Manager](docs/images/accounts_manager.png) |
+
+| Real-Time Visual Telemetry Dashboard | RuneLite Hiscores Integration |
+| :---: | :---: |
+| ![Telemetry Dashboard](docs/images/telemetry_dashboard.png) | ![RuneLite Hiscores](docs/images/runelite_hiscores.png) |
+
+---
+
 ## Major Modernization & Feature Highlights
 
 - **RuneLite Client & Revision 218 OSRS Data (317 Format)**:
@@ -73,6 +85,9 @@ This is the original Dodian Ub3r source code, fully modernized into a high-perfo
 ---
 
 ## Active Work in Progress
+
+- **Map Editing & Custom Map Support**:  
+  Map editing with custom maps (WIP) — ongoing work on pipeline support for loading, editing, and rendering custom 317 map files and collision overlays.
 
 - **Following & Movement Refinements**:  
   Continuously tuning RSMod pathfinder following logic and collision handling to eliminate edge-case pathing quirks.

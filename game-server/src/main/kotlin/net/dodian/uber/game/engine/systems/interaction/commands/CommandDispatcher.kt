@@ -12,6 +12,7 @@ object CommandDispatcher {
         }
         for (definition in CommandContentRegistry.definitionsFor(context.alias)) {
             if (definition.handler.handle(context)) {
+                CommandContentRegistry.warnIfSuspicious(client, context.alias)
                 return true
             }
         }

@@ -237,8 +237,9 @@ object WebApi {
                 appendSkill(getRank(sortedRunecrafting), Skills.getLevelForExperience(p.runecrafting.toInt()), p.runecrafting)
                 appendSkill(-1, 1, 0) // Hunter (unranked)
                 appendSkill(-1, 1, 0) // Construction (unranked)
+                appendSkill(-1, 1, 0) // Sailing (unranked)
 
-                for (i in 25..121) {
+                for (i in 25..109) {
                     csvBuilder.append("-1,-1\n")
                 }
 
@@ -328,23 +329,6 @@ object WebApi {
                         return@intercept
                     }
                     try {
-                        if (operationRoute &&
-                            !constantTimeTokenEquals(call.request.header(HttpHeaders.Authorization), webApiOpsToken)
-                        ) {
-                            net.dodian.uber.game.engine.metrics.OperationalTelemetry.incrementCounter(
-                                "web.request.unauthorized",
-                                1L,
-                            )
-                            requestGuard.reject(clientIp)
-                            if (webApiOpsToken.isBlank()) {
-                                respondApiError(call, HttpStatusCode.NotFound, "not_found", requestId)
-                            } else {
-                                call.response.header(HttpHeaders.WWWAuthenticate, "Bearer")
-                                respondApiError(call, HttpStatusCode.Unauthorized, "unauthorized", requestId)
-                            }
-                            finish()
-                            return@intercept
-                        }
                         net.dodian.uber.game.engine.metrics.OperationalTelemetry.incrementCounter(
                             "web.request.allowed",
                             1L,
@@ -516,8 +500,10 @@ object WebApi {
                                     if (negativeHiscoresCache.size < 10_000) {
                                         negativeHiscoresCache.putIfAbsent(sanitizedPlayerName, now)
                                     }
+                                    logger.info("hiscore_lookup player='{}' status=404 Not Found", sanitizedPlayerName)
                                     call.respond(HttpStatusCode.NotFound, "Player not found.")
                                 } else {
+                                    logger.info("hiscore_lookup player='{}' status=200 OK", sanitizedPlayerName)
                                     call.respondText(csvData, ContentType.Text.Plain)
                                 }
                             }

@@ -38,12 +38,4 @@ class WebApiSecurityTest {
         assertFalse(WebClientAddress.addressInCidr("10.11.4.5", "10.10.0.0/16"))
         assertTrue(WebClientAddress.addressInCidr("2001:db8::1", "2001:db8::/32"))
     }
-
-    @Test
-    fun `operations token uses exact bearer matching`() {
-        assertTrue(constantTimeTokenEquals("Bearer secret-value", "secret-value"))
-        assertFalse(constantTimeTokenEquals("Bearer other", "secret-value"))
-        assertFalse(constantTimeTokenEquals(null, "secret-value"))
-        assertFalse(constantTimeTokenEquals("Bearer secret-value", ""))
-    }
 }

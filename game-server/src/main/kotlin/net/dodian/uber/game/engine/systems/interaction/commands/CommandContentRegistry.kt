@@ -3,7 +3,11 @@ package net.dodian.uber.game.engine.systems.interaction.commands
 import java.util.concurrent.atomic.AtomicBoolean
 import net.dodian.uber.game.api.plugin.ContentModuleIndex
 import net.dodian.uber.game.api.plugin.ContentBootstrap
+import net.dodian.uber.game.engine.config.gameWorldId
+import net.dodian.uber.game.model.entity.player.Client
 import org.slf4j.LoggerFactory
+
+private const val PLAYER_SOURCE = "command.player"
 
 object CommandContentRegistry : ContentBootstrap {
     override val id: String = "commands.registry"
@@ -13,6 +17,10 @@ object CommandContentRegistry : ContentBootstrap {
 
     @Volatile
     private var byAlias: Map<String, List<CommandDefinition>> = emptyMap()
+
+    /** Which source package(s) (command.player/.admin/.dev/.beta) registered each alias. */
+    @Volatile
+    private var aliasSources: Map<String, Set<String>> = emptyMap()
 
     override fun bootstrap() {
         if (bootstrapped.get()) {
@@ -29,37 +37,59 @@ object CommandContentRegistry : ContentBootstrap {
         logStartupSummary()
     }
 
-    // Grouped by the registering CommandContent's package (command.player/.admin/.dev/.beta),
-    // which already matches the codebase's own rank/environment convention 1:1 - see StaffCommands
-    // (playerRights checks), the command.dev.* files (dev-tooling commands), and BetaOnlyCommands
-    // (world > 1 only). Each command still enforces its own rank/env gate at call time; this is a
-    // startup-time index of what's registered, not a live per-player availability check.
+    /**
+     * A command counts as "player-usable" only if EVERY source that registered its alias is
+     * command.player.* - an alias also registered by command.admin/.dev/.beta (like "bank": a
+     * regular TravelCommands.kt registration that's actually staff-gated on the live world) isn't
+     * safe to call player-usable just because one of its handlers lives under command.player.
+     */
     private fun logStartupSummary() {
-        val tiers = linkedMapOf(
-            "player" to sortedSetOf<String>(),
-            "staff" to sortedSetOf(),
-            "dev" to sortedSetOf(),
-            "beta" to sortedSetOf(),
-            "other" to sortedSetOf(),
+        val playerOnly = aliasSources.filterValues { it == setOf(PLAYER_SOURCE) }.keys.sorted()
+        val gated = aliasSources.size - playerOnly.size
+        logger.info(
+            "commands_ready: {} aliases from {} sources ({} player-usable, {} staff/dev/beta-gated - see source for exact rules)",
+            aliasSources.size,
+            contents.size,
+            playerOnly.size,
+            gated,
         )
-        for (content in contents) {
-            val aliases = content.definitions().flatMap { it.aliases }
-            tiers.getValue(tierFor(content)) += aliases
-        }
-        logger.info("commands_ready: {} aliases from {} sources", byAlias.size, contents.size)
-        for ((tier, aliases) in tiers) {
-            if (aliases.isEmpty()) continue
-            logger.info("  {} ({}): {}", tier, aliases.size, aliases.joinToString(", "))
-        }
+        logger.info("player-usable commands ({}): {}", playerOnly.size, playerOnly.joinToString(", "))
     }
 
-    private fun tierFor(content: CommandContent): String {
+    /**
+     * Called by CommandDispatcher right after a command handler succeeds. Flags the case the
+     * source-package grouping can't catch on its own: a non-staff player, off any beta world,
+     * successfully running a command whose alias is also registered under an
+     * admin/dev/beta-only source - which should be impossible if every handler's own guard is
+     * doing its job, so seeing this warning means one of them isn't.
+     */
+    fun warnIfSuspicious(client: Client, alias: String) {
+        val sources = aliasSources[alias] ?: return
+        val gatedSources = sources - PLAYER_SOURCE
+        if (gatedSources.isEmpty()) return
+        if (client.specialRights()) return
+        if (gatedSources == setOf("command.beta") && gameWorldId > 1) return
+        logger.warn(
+            "SUSPICIOUS COMMAND ACCESS: player={} dbId={} alias={} world={} - non-staff player reached " +
+                "a command also registered under {} (expected staff-only and/or beta-world-only there)",
+            client.playerName,
+            client.dbId,
+            alias,
+            gameWorldId,
+            gatedSources,
+        )
+    }
+
+    private fun Client.specialRights(): Boolean =
+        net.dodian.uber.game.engine.config.rankAdminGroupIds.contains(playerGroup)
+
+    private fun sourceFor(content: CommandContent): String {
         val pkg = content::class.java.packageName
         return when {
-            pkg.endsWith(".command.player") -> "player"
-            pkg.endsWith(".command.admin") -> "staff"
-            pkg.endsWith(".command.dev") -> "dev"
-            pkg.endsWith(".command.beta") -> "beta"
+            pkg.endsWith(".command.player") -> PLAYER_SOURCE
+            pkg.endsWith(".command.admin") -> "command.admin"
+            pkg.endsWith(".command.dev") -> "command.dev"
+            pkg.endsWith(".command.beta") -> "command.beta"
             else -> "other"
         }
     }
@@ -95,10 +125,13 @@ object CommandContentRegistry : ContentBootstrap {
 
     private fun rebuildLocked() {
         val rebuilt = LinkedHashMap<String, MutableList<CommandDefinition>>()
+        val sources = HashMap<String, MutableSet<String>>()
         for (content in contents) {
+            val source = sourceFor(content)
             for (definition in content.definitions()) {
                 for (alias in definition.aliases) {
                     rebuilt.getOrPut(alias) { ArrayList() } += definition
+                    sources.getOrPut(alias) { mutableSetOf() } += source
                 }
             }
         }
@@ -108,5 +141,6 @@ object CommandContentRegistry : ContentBootstrap {
             }
         }
         byAlias = rebuilt
+        aliasSources = sources
     }
 }

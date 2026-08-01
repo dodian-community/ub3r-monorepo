@@ -6,7 +6,7 @@ Dodian Ub3r includes built-in real-time operational monitoring, Prometheus expor
 
 ## Service Endpoints
 
-When the server starts up with `web_enabled = true` in `Settings.toml`, the following operational monitoring endpoints are available:
+When the server starts up with `web_enabled = true` in `Settings.toml`, the following operational monitoring endpoints are available directly without requiring authentication tokens:
 
 | Endpoint | Content Type | Purpose |
 | :--- | :--- | :--- |
@@ -14,6 +14,7 @@ When the server starts up with `web_enabled = true` in `Settings.toml`, the foll
 | **`http://localhost:8081/metrics`** | `text/plain` | Alias for `/prometheus`. |
 | **`http://localhost:8081/dashboard`** | `text/html` | Real-time interactive browser dashboard with live visual charts (tick timings, active players, memory usage, packet throughput). |
 | **`http://localhost:8081/metrics/dashboard`** | `text/html` | Alias for `/dashboard`. |
+| **`http://localhost:8081/api/hiscores?player=<name>`** | `text/plain` / `application/json` | Public player hiscores lookup endpoint compatible with RuneLite. |
 
 ---
 
@@ -34,25 +35,16 @@ dashboard_enabled = true
 
 ---
 
-## Authentication & API Access Token (`WEB_API_OPS_TOKEN`)
+## Direct Access Examples
 
-Operational endpoints and administrative Web API routes require token authentication when accessed externally.
-
-### 1. Setting Your Security Token
-Set `WEB_API_OPS_TOKEN` in your `game-server/.env` file:
-```env
-WEB_API_OPS_TOKEN=your_secure_secret_token_here
-```
-
-### 2. Passing the Token in Requests
-Include the token in your HTTP requests using the standard `Authorization` header:
+Endpoints can be queried directly via standard HTTP tools or browser:
 
 ```bash
-# Curl Example for Prometheus Scrape
-curl -H "Authorization: Bearer your_secure_secret_token_here" http://localhost:8081/prometheus
+# Prometheus Scrape
+curl http://localhost:8081/prometheus
 
-# Curl Example for Operations Endpoints
-curl -H "Authorization: your_secure_secret_token_here" http://localhost:8081/ready
+# Player Hiscores Lookup
+curl "http://localhost:8081/api/hiscores?player=Admin"
 ```
 
 ---
@@ -65,7 +57,6 @@ Add Dodian Ub3r to your Prometheus scraper configuration:
 scrape_configs:
   - job_name: 'dodian_ub3r'
     scrape_interval: 5s
-    bearer_token: 'your_secure_secret_token_here'
     static_configs:
       - targets: ['localhost:8081']
     metrics_path: '/prometheus'
