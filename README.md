@@ -51,7 +51,7 @@ This is the original Dodian Ub3r source code, fully modernized into a high-perfo
 
 ## Quick Setup & Cache Setup Guide
 
-1. **Prerequisites**: Host OS with **JDK 21 or greater** (Gradle auto-provisions JDK 21 per machine).
+1. **Prerequisites**: Host OS with **JDK 21**. Confirm it with `java -version` before building. The Kotlin/Gradle build is tested with JDK 21; newer JDKs are not assumed to work.
 2. **Database**: MariaDB 10.11+ or MySQL 8.0+ instance running with `.env` configured (`SERVER_DATABASE_INITIALIZE=true`).
 3. **OSRS Cache Setup (317 Format)**:
    - Download the **Revision 218 Cache (OSRS Data packed into 317 Format)**: [cache-tarnish-218.zip](https://files.jire.org/cache-tarnish-218.zip)
@@ -68,7 +68,15 @@ This is the original Dodian Ub3r source code, fully modernized into a high-perfo
      - `main_file_cache.idx3`
      - `main_file_cache.idx4`
      - `main_file_cache.idx5`
-4. **Run Server**: `./gradlew :game-server:run`
+4. **Compile / run server**:
+   - macOS/Linux: `./gradlew :game-server:compileKotlin` or `./gradlew :game-server:run`
+   - Windows: `gradlew.bat :game-server:compileKotlin` or `gradlew.bat :game-server:run`
+
+   If compilation reports many unresolved references from `net.dodian.uber.game.engine.config`, check that
+   `game-server/src/main/kotlin/net/dodian/uber/game/engine/config/DotEnv.kt` exists in the checkout and that
+   the checkout is on the expected commit. This is a source/checkout problem, not a macOS-versus-Windows
+   difference. The `.env` file and `game-server/Settings.toml` supply runtime values only; they cannot provide
+   missing Kotlin properties.
 
 ---
 

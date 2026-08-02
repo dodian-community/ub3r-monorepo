@@ -32,6 +32,99 @@ java {
     }
 }
 
+// Keep the server's Kotlin configuration API present and inside the main source set. A partial
+// checkout can otherwise produce a long list of unrelated-looking unresolved references (for
+// example metricsEnabled and gameMaxPlayers) that are easy to mistake for a Windows-only issue.
+val serverConfigSource = layout.projectDirectory.file(
+    "src/main/kotlin/net/dodian/uber/game/engine/config/DotEnv.kt"
+).asFile
+val serverConfigSymbols = listOf(
+    "databaseHost",
+    "databasePort",
+    "databaseName",
+    "databaseTablePrefix",
+    "databaseUsername",
+    "databasePassword",
+    "databaseInitialize",
+    "clientVersion",
+    "gameClientCustomVersion",
+    "serverEnv",
+    "gameWorldId",
+    "discordApiEnabled",
+    "discordClientId",
+    "discordClientSecret",
+    "discordRedirectUrl",
+    "discordMaxAccountsPerDiscord",
+    "rsaModulus",
+    "rsaExponent",
+    "serverPort",
+    "serverDebugMode",
+    "nettyLeakDetection",
+    "dodianLogLevel",
+    "webApiEnabled",
+    "webApiPort",
+    "webApiOpsToken",
+    "webApiAllowedOrigins",
+    "webApiTrustedProxyCidrs",
+    "gameConnectionsPerIp",
+    "databasePoolMinSize",
+    "databasePoolMaxSize",
+    "databasePoolConnectionTimeout",
+    "databasePoolIdleTimeout",
+    "databasePoolMaxLifetime",
+    "runtimePhaseWarnMs",
+    "gameMultiplierGlobalXp",
+    "gameMaxPlayers",
+    "rankBannedGroupId",
+    "rankModGroupIds",
+    "rankAdminGroupIds",
+    "rankDebugBypassGroupIds",
+    "metricsEnabled",
+    "metricsPrometheusEndpoint",
+    "metricsDashboardEnabled",
+    "discordRequireVerifiedEmail",
+)
+
+val verifyServerConfigSource = tasks.register("verifyServerConfigSource") {
+    group = "verification"
+    description = "Verifies the server Kotlin configuration source and public properties."
+
+    doLast {
+        val failurePrefix = """
+            Server config preflight failed.
+            The .env and Settings.toml files provide runtime values; they do not define Kotlin symbols.
+        """.trimIndent()
+
+        check(serverConfigSource.isFile) {
+            "$failurePrefix\nMissing expected source file: ${serverConfigSource.path}"
+        }
+
+        val mainSourceFiles = sourceSets.main.get().allSource.files
+            .map { it.canonicalFile }
+            .toSet()
+        check(serverConfigSource.canonicalFile in mainSourceFiles) {
+            "$failurePrefix\nExpected source file is not included in the :game-server:main source set: ${serverConfigSource.path}"
+        }
+
+        val sourceText = serverConfigSource.readText()
+        check(Regex("(?m)^\\s*package\\s+net\\.dodian\\.uber\\.game\\.engine\\.config\\s*$")
+            .containsMatchIn(sourceText)) {
+            "$failurePrefix\nThe expected config package declaration is missing from: ${serverConfigSource.path}"
+        }
+
+        val missingSymbols = serverConfigSymbols.filterNot { symbol ->
+            Regex("(?m)^\\s*val\\s+$symbol\\b").containsMatchIn(sourceText)
+        }
+        check(missingSymbols.isEmpty()) {
+            "$failurePrefix\nMissing public config properties in ${serverConfigSource.path}: ${missingSymbols.joinToString()}"
+        }
+    }
+}
+
+tasks.named("compileKotlin") {
+    dependsOn(verifyServerConfigSource)
+}
+
 // Netty patches DoS/security CVEs frequently; pin one version here and force it
 // below so Ktor's transitive Netty modules can't drift to a different, older
 // version than the one we depend on explicitly.
