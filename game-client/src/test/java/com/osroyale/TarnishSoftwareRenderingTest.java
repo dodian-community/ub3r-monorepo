@@ -1,5 +1,6 @@
 package com.osroyale;
 
+import org.junit.Assume;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -16,6 +17,9 @@ public class TarnishSoftwareRenderingTest {
 
     @Test
     public void brightnessVarpBuildsAVisibleTwoThousandCoinSprite() throws Exception {
+        Assume.assumeTrue(
+                "Requires the shipped Tarnish binary cache under game-server/data/cache - skipped without it (e.g. in CI)",
+                findShippedCache() != null);
         Path cache = shippedCache();
         StreamLoader config = configArchive(cache);
         Varp.unpackConfig(config);
@@ -88,6 +92,14 @@ public class TarnishSoftwareRenderingTest {
     }
 
     private static Path shippedCache() {
+        Path found = findShippedCache();
+        if (found == null) {
+            throw new IllegalStateException("Unable to locate the shipped Tarnish cache");
+        }
+        return found;
+    }
+
+    private static Path findShippedCache() {
         Path[] candidates = {
                 Path.of("game-server", "data", "cache"),
                 Path.of("..", "game-server", "data", "cache"),
@@ -98,6 +110,6 @@ public class TarnishSoftwareRenderingTest {
                 return candidate.toAbsolutePath().normalize();
             }
         }
-        throw new IllegalStateException("Unable to locate the shipped Tarnish cache");
+        return null;
     }
 }

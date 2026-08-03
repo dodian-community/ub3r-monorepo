@@ -35,9 +35,10 @@ java {
 // Keep the server's Kotlin configuration API present and inside the main source set. A partial
 // checkout can otherwise produce a long list of unrelated-looking unresolved references (for
 // example metricsEnabled and gameMaxPlayers) that are easy to mistake for a Windows-only issue.
-val serverConfigSource = layout.projectDirectory.file(
-    "src/main/kotlin/net/dodian/uber/game/engine/config/DotEnv.kt"
-).asFile
+val serverConfigRelPath = "src/main/kotlin/net/dodian/uber/game/engine/config/DotEnv.kt"
+val serverConfigSource = layout.projectDirectory.file(serverConfigRelPath).asFile
+val repoRoot = rootProject.layout.projectDirectory.asFile
+val serverConfigRepoRelPath = "game-server/$serverConfigRelPath"
 val serverConfigSymbols = listOf(
     "databaseHost",
     "databasePort",
@@ -90,33 +91,82 @@ val verifyServerConfigSource = tasks.register("verifyServerConfigSource") {
     description = "Verifies the server Kotlin configuration source and public properties."
 
     doLast {
+        // Runs a git command against the repo root; returns null (rather than throwing) on any
+        // failure so a missing git binary, a shallow clone, or a source export still falls back to
+        // the plain symbol-list failure message below instead of breaking the preflight itself.
+        fun git(vararg args: String): String? = try {
+            val proc = ProcessBuilder(listOf("git", *args)).directory(repoRoot).start()
+            val out = proc.inputStream.bufferedReader().readText().trim()
+            if (proc.waitFor() == 0) out else null
+        } catch (_: Exception) {
+            null
+        }
+
+        // Best-effort explanation of *why* symbols might be missing. In practice this has always
+        // meant a stale local copy of this one file (see git history for verifyServerConfigSource),
+        // not code that actually needs to be written - so lead with that, backed by evidence pulled
+        // from git rather than asserted.
+        fun diagnose(): String {
+            val lines = mutableListOf<String>()
+
+            val headText = git("show", "HEAD:$serverConfigRepoRelPath")
+            if (headText != null && serverConfigSource.isFile) {
+                val workingLineCount = serverConfigSource.readText().lines().size
+                val headLineCount = headText.lines().size
+                if (workingLineCount != headLineCount) {
+                    lines += "Working copy: $workingLineCount lines. Committed at HEAD: $headLineCount lines. " +
+                        "This file is very likely stale, not missing code."
+                }
+            }
+
+            val lsFiles = git("ls-files", "-v", "--", serverConfigRepoRelPath)
+            val flagChar = lsFiles?.trim()?.firstOrNull()
+            when (flagChar) {
+                'S', 's' -> lines += "git reports the skip-worktree flag is set on this file, which " +
+                    "blocks it from being updated by checkout/pull. Clear it with:\n" +
+                    "  git update-index --no-skip-worktree -- $serverConfigRepoRelPath"
+                in 'a'..'z' -> lines += "git reports the assume-unchanged flag is set on this file, " +
+                    "which blocks it from being updated by checkout/pull. Clear it with:\n" +
+                    "  git update-index --no-assume-unchanged -- $serverConfigRepoRelPath"
+                else -> {}
+            }
+
+            lines += "If the file is simply out of date, restore it from the current branch with:\n" +
+                "  git checkout HEAD -- $serverConfigRepoRelPath"
+
+            return lines.joinToString("\n")
+        }
+
         val failurePrefix = """
             Server config preflight failed.
-            The .env and Settings.toml files provide runtime values; they do not define Kotlin symbols.
+            This almost always means the local copy of DotEnv.kt is stale (an old checkout, a
+            skip-worktree/assume-unchanged flag, or a partial pull), not that new Kotlin symbols
+            need to be written. The .env and Settings.toml files provide runtime values; they do
+            not define Kotlin symbols.
         """.trimIndent()
 
         check(serverConfigSource.isFile) {
-            "$failurePrefix\nMissing expected source file: ${serverConfigSource.path}"
+            "$failurePrefix\nMissing expected source file: ${serverConfigSource.path}\n${diagnose()}"
         }
 
         val mainSourceFiles = sourceSets.main.get().allSource.files
             .map { it.canonicalFile }
             .toSet()
         check(serverConfigSource.canonicalFile in mainSourceFiles) {
-            "$failurePrefix\nExpected source file is not included in the :game-server:main source set: ${serverConfigSource.path}"
+            "$failurePrefix\nExpected source file is not included in the :game-server:main source set: ${serverConfigSource.path}\n${diagnose()}"
         }
 
         val sourceText = serverConfigSource.readText()
         check(Regex("(?m)^\\s*package\\s+net\\.dodian\\.uber\\.game\\.engine\\.config\\s*$")
             .containsMatchIn(sourceText)) {
-            "$failurePrefix\nThe expected config package declaration is missing from: ${serverConfigSource.path}"
+            "$failurePrefix\nThe expected config package declaration is missing from: ${serverConfigSource.path}\n${diagnose()}"
         }
 
         val missingSymbols = serverConfigSymbols.filterNot { symbol ->
             Regex("(?m)^\\s*val\\s+$symbol\\b").containsMatchIn(sourceText)
         }
         check(missingSymbols.isEmpty()) {
-            "$failurePrefix\nMissing public config properties in ${serverConfigSource.path}: ${missingSymbols.joinToString()}"
+            "$failurePrefix\nMissing public config properties in ${serverConfigSource.path}: ${missingSymbols.joinToString()}\n${diagnose()}"
         }
     }
 }
