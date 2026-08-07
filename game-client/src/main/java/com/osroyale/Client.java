@@ -8119,12 +8119,27 @@ public class Client extends GameEngine
         BufferedConnection rsSocket = socketStream;
         loggedIn = false;
         loginFailures = 0;
-        attemptLogin(myUsername, myPassword, true);
+
+        // If the connection was stable for at least 10 seconds, reset the counter.
+        if (lastConnectedAtMillis > 0 && System.currentTimeMillis() - lastConnectedAtMillis > 10_000) {
+            reconnectFailures = 0;
+        }
+        reconnectFailures++;
+
+        if (reconnectFailures <= 3) {
+            attemptLogin(myUsername, myPassword, true);
+        }
+
         console.openConsole = false;
         shiftIsDown = false;
         controlIsDown = false;
         loginRenderer.setScreen(new MainScreen());
         if (!loggedIn) {
+            if (reconnectFailures > 3) {
+                loginMessage1 = "Connection lost.";
+                loginMessage2 = "Please check the server and try again.";
+                reconnectFailures = 0;
+            }
             resetLogout();
         }
         keybindManager.save();
@@ -12067,6 +12082,8 @@ public class Client extends GameEngine
                 sendFrame36(429, 1);
                 setBounds();
                 loggedIn = true;
+                lastConnectedAtMillis = System.currentTimeMillis();
+                reconnectFailures = 0;
                 com.osroyale.login.impl.MainScreen.loginMode.selectExistingAccount();
                 com.osroyale.login.impl.MainScreen.accountCreationStatus = "";
                 com.osroyale.login.impl.MainScreen.loginScreenState = 2;
@@ -15262,6 +15279,9 @@ public class Client extends GameEngine
                 drawInterface(RSInterface.interfaceCache[anInt1018], Client.instance.isResized() ? canvasWidth - 700 : canvasWidth - 600, Client.instance.isResized() ? -135 : -70, 0);
             } else if (anInt1018 == 15264 && isResized()) {
                 drawInterface(RSInterface.interfaceCache[anInt1018], Client.instance.isResized() ? canvasWidth - 700 : canvasWidth - 600, Client.instance.isResized() ? -135 : -70, 0);
+
+            } else if (anInt1018 == 6673 && isResized()) {
+                drawInterface(RSInterface.interfaceCache[anInt1018], (canvasWidth / 2) - 256, 4, 0);
 
             } else {
                 drawInterface(RSInterface.interfaceCache[anInt1018], !isResized() ? 4 : (canvasWidth / 2) - 356, !isResized() ? 4 : (canvasHeight / 2) - 230, 0);
@@ -19650,6 +19670,8 @@ public class Client extends GameEngine
     private int anInt1036;
     private int anInt1037;
     private int loginFailures;
+    private int reconnectFailures;
+    private long lastConnectedAtMillis;
     private int anInt1039;
     private int dialogueId;
     public final int[] maxStats;
