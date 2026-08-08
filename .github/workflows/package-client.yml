@@ -5,6 +5,9 @@ on:
     branches: [master]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-jar:
     name: Build fat JAR
@@ -145,11 +148,19 @@ jobs:
           SOURCE="game-client/src/main/resources/icon.png"
           if [ -f "$SOURCE" ]; then
             mkdir -p icon.iconset
-            for size in 16 32 128 256 512; do
-              sips -z $size $size "$SOURCE" --out "icon.iconset/icon_${size}x${size}.png" 2>/dev/null || true
-              double=$((size * 2))
-              sips -z $double $double "$SOURCE" --out "icon.iconset/icon_${size}x${size}@2x.png" 2>/dev/null || true
-            done
+            if command -v magick &>/dev/null; then
+              for size in 16 32 128 256 512; do
+                magick "$SOURCE" -resize ${size}x${size}! "icon.iconset/icon_${size}x${size}.png"
+                double=$((size * 2))
+                magick "$SOURCE" -resize ${double}x${double}! "icon.iconset/icon_${size}x${size}@2x.png"
+              done
+            else
+              for size in 16 32 128 256 512; do
+                sips -z $size $size "$SOURCE" --out "icon.iconset/icon_${size}x${size}.png"
+                double=$((size * 2))
+                sips -z $double $double "$SOURCE" --out "icon.iconset/icon_${size}x${size}@2x.png"
+              done
+            fi
             iconutil -c icns icon.iconset -o package-input/Runith.icns
             echo "ICNS created"
           else
@@ -256,3 +267,24 @@ jobs:
           path: |
             package-output/runith*.deb
             package-output/runith*.rpm
+
+  release:
+    name: Publish Release
+    needs: [package-windows, package-macos, package-linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts/
+          merge-multiple: true
+
+      - name: Create rolling latest release
+        run: |
+          gh release delete latest --yes --cleanup-tag --repo "$GITHUB_REPOSITORY" 2>/dev/null || true
+          gh release create latest \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Latest Build (#${{ github.run_number }})" \
+            --notes "Automated build from commit ${{ github.sha }}" \
+            release-artifacts/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
