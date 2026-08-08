@@ -369,7 +369,6 @@ public class RSInterface {
 		CustomInterface.decode(streamLoader_1, textDrawingAreas);
 		repositionModernSpells();
 		findFreeSlots();
-		editAncientsTab(streamLoader_1, textDrawingAreas);
 		cheapHackCodeGoesHere();
 		setupMagicTab(streamLoader_1, textDrawingAreas);
 		modifySpellLayer(streamLoader_1, textDrawingAreas);
@@ -492,154 +491,6 @@ public class RSInterface {
 		tab.height = height;
 	}
 
-	private static void editAncientsTab(StreamLoader archive, TextDrawingArea[] tda) {
-		RSInterface rsi = interfaceCache[12855];
-
-		//Smoke barrage
-		rsi.childX[22] = 21;
-		rsi.childY[22] = 154;
-
-		//Shadow barrage
-		rsi.childX[30] = 66;
-		rsi.childY[30] = 154;
-
-		//Annakarl teleport
-		rsi.childX[44] = 111;
-		rsi.childY[44] = 154;
-
-		//Annakarl teleport
-		rsi.childX[15] = 153;
-		rsi.childY[15] = 154;
-
-		//Ice barrage
-		rsi.childX[7] = 21;
-		rsi.childY[7] = 184;
-
-		//Gharrock teleport
-		rsi.childX[46] = 66;
-		rsi.childY[46] = 184;
-
-		extendChildren(rsi, 1);
-
-		addNewSpell(18746, 9075, 564, 558, 0, 0, 0, 30013, 30007, 84, "Teleport to Bounty Target", "A teleportation spell", tda, 850, 850, 2, 2);
-
-		rsi.child(74, 18746, 153, 125);
-
-		int[] oldSpells = {
-				12939, 12987, 13035, 12901,
-				12861, 13045, 12963, 10311,
-				13053, 12919, 12881, 13061,
-				12951, 12999, 13069, 12911,
-				12871, 13079, 12975, 13023,
-				13087, 12929, 12891, 13095
-		};
-
-		int[][] boxText = {
-			{ 21789, 21790, 21791, 21792 }, { 21824, 21825, 21826, 21827 }, { 21839, 21840, 21841 }, { 21885, 21886, 21887 },
-			{ 21913, 21914, 21915 }, { 21940, 21942 }, { 21999, 22000, 22001, 22002 }, { 22029, 22030, 22031, 22032 },
-			{ 22056, 22057 }, { 22078, 22079, 22080 }, { 22103, 22104, 22105 }, { 22127, 22128 },
-			{ 22180, 22181, 22182, 22183 }, { 22209, 22210, 22211, 22212 }, { 22237, 22238, 22239 }, { 22263, 22264 },
-			{ 22287, 22288, 22289 }, { 22311, 22312 }, { 22363, 22364, 22365, 22366 }, { 22392, 22393, 22394, 22395 },
-			{ 22419, 22420 }, { 22442, 22444, 22445 }, { 22470, 22471, 22472 }, { 22494, 22495 },
-		};
-
-		for(int index = 0; index < boxText.length; index++) {
-			if (AncientsSpellData.values()[index].spellType == SpellType.TELEPORT) {
-				continue;
-			}
-			for(int index2 = 0; index2 < boxText[index].length; index2++) {
-				RSInterface hoverText = interfaceCache[boxText[index][index2]];
-
-				hoverText.scripts[0] = getScript(AncientsSpellData.values()[index].runes_data[index2][0]);
-			}
-		}
-
-		int teleportHoverId = 22500;
-		for(int index = 0; index < oldSpells.length; index++) {
-			RSInterface widget = interfaceCache[oldSpells[index]];
-			AncientsSpellData spellData = AncientsSpellData.values()[index];
-
-			if (spellData.spellType == SpellType.TELEPORT) {
-				widget.disabledSprite = widget.enabledSprite;
-				widget.valueCompareType = null;
-				widget.requiredValues = null;
-				widget.scripts = null;
-				addTextBoxAncient(archive, teleportHoverId, spellData.level, spellData.spellName, spellData.description, tda);
-				widget.hoverType = teleportHoverId;
-				teleportHoverId += 5;
-				continue;
-			}
-
-			if (spellData.runes_data.length == 2) {
-				int runes_amount = 2;
-				widget.scripts = new int[runes_amount+1][];
-				for(int i = 0; i < runes_amount; i++) // the amount of runes this spell requires
-					widget.scripts[i] = getScript(spellData.runes_data[i][0]);
-
-				widget.scripts[runes_amount] = new int[3];
-				widget.scripts[runes_amount][0] = 1;
-				widget.scripts[runes_amount][1] = 6;
-				widget.scripts[runes_amount][2] = 0;
-			}
-			else if (spellData.runes_data.length == 3) {
-				widget.valueCompareType = new int[4];
-				widget.requiredValues = new int[4];
-				widget.valueCompareType[0] = 3;
-				widget.requiredValues[0] = spellData.runes_data[0][1];
-				widget.valueCompareType[1] = 3;
-				widget.requiredValues[1] = spellData.runes_data[1][1];
-				widget.valueCompareType[2] = 3;
-				widget.requiredValues[2] = spellData.runes_data[2][1];
-				widget.valueCompareType[3] = 3;
-				widget.requiredValues[3] = spellData.level;
-
-				int runes_amount = 3;
-				widget.scripts = new int[runes_amount+1][];
-				for(int i = 0; i < runes_amount; i++) // the amount of runes this spell requires
-					widget.scripts[i] = getScript(spellData.runes_data[i][0]);
-
-				widget.scripts[runes_amount] = new int[3];
-				widget.scripts[runes_amount][0] = 1;
-				widget.scripts[runes_amount][1] = 6;
-				widget.scripts[runes_amount][2] = 0;
-
-				widget.scripts[3] = new int[3];
-				widget.scripts[3][0] = 1;
-				widget.scripts[3][1] = 6;
-				widget.scripts[3][2] = 0;
-			}
-			else if (spellData.runes_data.length == 4) {
-				widget.valueCompareType = new int[5];
-				widget.requiredValues = new int[5];
-				widget.valueCompareType[0] = 3;
-				widget.requiredValues[0] = spellData.runes_data[0][1];
-				widget.valueCompareType[1] = 3;
-				widget.requiredValues[1] = spellData.runes_data[1][1];
-				widget.valueCompareType[2] = 3;
-				widget.requiredValues[2] = spellData.runes_data[2][1];
-				widget.valueCompareType[3] = 3;
-				widget.requiredValues[3] = spellData.runes_data[3][1];
-				widget.valueCompareType[4] = 3;
-				widget.requiredValues[4] = spellData.level;
-
-				int runes_amount = 4;
-				widget.scripts = new int[runes_amount+1][];
-				for(int i = 0; i < runes_amount; i++) // the amount of runes this spell requires
-					widget.scripts[i] = getScript(spellData.runes_data[i][0]);
-
-				widget.scripts[runes_amount] = new int[3];
-				widget.scripts[runes_amount][0] = 1;
-				widget.scripts[runes_amount][1] = 6;
-				widget.scripts[runes_amount][2] = 0;
-
-				widget.scripts[3] = new int[3];
-				widget.scripts[3][0] = 1;
-				widget.scripts[3][1] = 6;
-				widget.scripts[3][2] = 0;
-			}
-		}
-	}
-
 	public static void extendChildren(RSInterface widget, int extendBy) {
 		int[] childIds = new int[widget.children.length + extendBy];
 		int[] childX = new int[widget.childX.length + extendBy];
@@ -654,73 +505,6 @@ public class RSInterface {
 		System.arraycopy(childIds, 0, widget.children, 0, childIds.length - extendBy);
 		System.arraycopy(childX, 0, widget.childX, 0, childX.length - extendBy);
 		System.arraycopy(childY, 0, widget.childY, 0, childY.length - extendBy);
-	}
-
-	public static void addNewSpell(int ID, int r1, int r2, int r3, int ra1, int ra2, int ra3, int rune1, int rune2, int lvl, String name, String descr, TextDrawingArea[] TDA, int sid, int sid2, int suo, int type) {
-		RSInterface rsInterface = addInterface(ID);
-		rsInterface.interfaceId = ID;
-		rsInterface.parentID = 1151;
-		rsInterface.type = 5;
-		rsInterface.atActionType = type;
-		rsInterface.contentType = 0;
-		rsInterface.hoverType = ID + 1;
-		rsInterface.spellUsableOn = suo;
-		rsInterface.selectedActionName = "Cast on";
-		rsInterface.width = 20;
-		rsInterface.height = 20;
-		rsInterface.tooltip = "Cast <col=475154>" + name;
-		rsInterface.spellName = name;
-		rsInterface.valueCompareType = new int[4];
-		rsInterface.requiredValues = new int[4];
-		rsInterface.valueCompareType[0] = 3;
-		rsInterface.requiredValues[0] = ra1;
-		rsInterface.valueCompareType[1] = 3;
-		rsInterface.requiredValues[1] = ra2;
-		rsInterface.valueCompareType[2] = 3;
-		rsInterface.requiredValues[2] = ra3;
-		rsInterface.valueCompareType[3] = 3;
-		rsInterface.requiredValues[3] = lvl;
-		rsInterface.scripts = new int[4][];
-		rsInterface.scripts[0] = new int[4];
-		rsInterface.scripts[0][0] = 4;
-		rsInterface.scripts[0][1] = 3214;
-		rsInterface.scripts[0][2] = r1;
-		rsInterface.scripts[0][3] = 0;
-		rsInterface.scripts[1] = new int[4];
-		rsInterface.scripts[1][0] = 4;
-		rsInterface.scripts[1][1] = 3214;
-		rsInterface.scripts[1][2] = r2;
-		rsInterface.scripts[1][3] = 0;
-		rsInterface.scripts[2] = new int[4];
-		rsInterface.scripts[2][0] = 4;
-		rsInterface.scripts[2][1] = 3214;
-		rsInterface.scripts[2][2] = r3;
-		rsInterface.scripts[2][3] = 0;
-		rsInterface.scripts[3] = new int[3];
-		rsInterface.scripts[3][0] = 1;
-		rsInterface.scripts[3][1] = 6;
-		rsInterface.scripts[3][2] = 0;
-		rsInterface.disabledSprite = Client.spriteCache.get(sid);
-		rsInterface.enabledSprite = Client.spriteCache.get(sid2);
-		RSInterface INT = addInterface(ID + 1);
-		INT.isMouseoverTriggered = true;
-		INT.hoverType = -1;
-		setChildren(9, INT);
-		addLunarSprite(ID + 2, 580);
-		setBounds(ID + 2, 0, 0, 0, INT);
-		addText(ID + 3, "Level " + (lvl + 1) + ": " + name, 0xFF981F, true, true, 52, TDA, 1);
-		setBounds(ID + 3, 90, 4, 1, INT);
-		addText(ID + 4, descr, 0xAF6A1A, true, true, 52, TDA, 0);
-		setBounds(ID + 4, 90, 21, 2, INT);
-		setBounds(30016, 14, 48, 3, INT);
-		setBounds(rune1, 74, 48, 4, INT);
-		setBounds(rune2, 130, 48, 5, INT);
-		addRuneText2(ID + 5, ra1 + 1, r1, TDA);
-		setBounds(ID + 5, 26, 79, 6, INT);
-		addRuneText2(ID + 6, ra2 + 1, r2, TDA);
-		setBounds(ID + 6, 87, 79, 7, INT);
-		addRuneText2(ID + 7, ra3 + 1, r3, TDA);
-		setBounds(ID + 7, 142, 79, 8, INT);
 	}
 
 	private static void cheapHackCodeGoesHere() {
@@ -3316,24 +3100,6 @@ public class RSInterface {
 		setBounds(id+4, 90, id == 40110 ? 20 : 34, 2, black_box);
 	}
 
-	public static int addTextBoxAncient(StreamLoader archive, int id, int spellLevel, String spellName, String description, TextDrawingArea[] TDA) {
-		RSInterface black_box = addInterface(id);
-		black_box.isMouseoverTriggered = true;
-		black_box.hoverType = -1;
-		black_box.width = 182;
-		black_box.height = 80;
-
-		addSprite(id+1, 3517);
-		addText(id+2, "Level "+(spellLevel+1)+": "+spellName, 0xFF981F, true, true, 52, TDA, 1);
-		addText(id+3, description, 0xAF6A1A, true, true, 52, TDA, 0);
-
-		setChildren(3, black_box);
-		setBounds(id+1, 0, 0, 0, black_box);
-		setBounds(id+2, 90, 4, 1, black_box);
-		setBounds(id+3, 90, 34, 2, black_box);
-		return 3;
-	}
-
 	public static void addBoxWithText(StreamLoader archive, int id, int spellLevel, String top, String spellName, String description, TextDrawingArea[] TDA, int spriteId, int spellUsable, int actionType){
 		RSInterface widget = addInterface(id);
 		widget.interfaceId = id;
@@ -4060,57 +3826,36 @@ public class RSInterface {
 	}
 
 	public enum AncientsSpellData {
-		SMOKE_RUSH("Smoke Rush", "A single target smoke attack", 49, new int[][] { { 562, 1, CHAOS }, { 560, 1, DEATH }, { 554, 0, FIRE }, { 556, 0, AIR } }, 10, 2, SpellType.COMBAT),
-		SHADOW_RUSH("Shadow Rush", "A single target shadow attack", 51, new int[][] { { 562, 1, CHAOS }, { 560, 1, DEATH }, { 556, 0, AIR }, { 566, 0, SOUL } }, 10, 2, SpellType.COMBAT),
-		PADDEWWA_TELEPORT("Seers' Village Teleport", "Teleports you to Seers' Village.\\nRequires no runes.", 53, new int[][] { { 563, 1, LAW }, { 554, 0, FIRE }, { 556, 0, AIR } }, 0, 5, SpellType.TELEPORT),
-		BLOOD_RUSH("Blood Rush", "A single target blood attack", 55, new int[][] { { 562, 1, CHAOS }, { 560, 1, DEATH }, { 565, 0, BLOOD } }, 10, 2, SpellType.COMBAT),
-
-		ICE_RUSH("Ice Rush", "A single target ice attack", 57, new int[][] { { 562, 1, CHAOS }, { 560, 1, DEATH }, { 555, 1, WATER } }, 10, 2, SpellType.COMBAT),
-		SENNTISTEN_TELEPORT("Ardougne Teleport", "Teleports you to Ardougne.\\nRequires no runes.", 59, new int[][] { { 566, 0, SOUL }, { 563, 1, LAW } }, 0, 5, SpellType.TELEPORT),
-		SMOKE_BURST("Smoke Burst", "A multi-target smoke attack", 61, new int[][] { { 562, 3, CHAOS }, { 560, 1, DEATH }, { 554, 1, FIRE }, { 556, 1, AIR } }, 10, 2, SpellType.COMBAT),
-		SHADOW_BURST("Shadow Burst", "A multi-target shadow attack", 63, new int[][] { { 562, 3, CHAOS }, { 560, 1, DEATH }, { 556, 0, AIR }, { 566, 1, SOUL } }, 10, 2, SpellType.COMBAT),
-
-		KHARYRLL_TELEPORT("Catherby Teleport", "Teleports you to Catherby.\\nRequires no runes.", 65, new int[][] { { 565, 0, BLOOD }, { 563, 1, LAW } }, 0, 5, SpellType.TELEPORT),
-		BLOOD_BURST("Blood Burst", "A multi-target blood attack", 67, new int[][] { { 562, 3, CHAOS }, { 560, 1, DEATH }, { 565, 1, BLOOD } }, 10, 2, SpellType.COMBAT),
-		ICE_BURST("Ice Burst", "A multi-target ice attack", 69, new int[][] { { 562, 3, CHAOS }, { 560, 1, DEATH }, { 555, 3, WATER } }, 10, 2, SpellType.COMBAT),
-		LASSAR_TELEPORT("Legends' Guild Teleport", "Teleports you to Legends' Guild.\\nRequires no runes.", 71, new int[][] { { 563, 1, LAW }, { 555, 3, WATER } }, 0, 5, SpellType.TELEPORT),
-
-		SMOKE_BLITZ("Smoke Blitz", "A single target smoke attack", 73, new int[][] { { 560, 1, DEATH }, { 565, 1, BLOOD }, { 554, 1, FIRE }, { 556, 1, AIR } }, 10, 2, SpellType.COMBAT),
-		SHADOW_BLITZ("Shadow Blitz", "A single target shadow attack", 75, new int[][] { { 565, 1, BLOOD }, { 560, 1, DEATH }, { 556, 1, AIR }, { 566, 1, SOUL } }, 10, 2, SpellType.COMBAT),
-		DAREEYAK_TELEPORT("Taverley Teleport", "Teleports you to Taverley.\\nRequires no runes.", 77, new int[][] { { 563, 1, LAW }, { 554, 2, FIRE }, { 556, 1, AIR } }, 0, 5, SpellType.TELEPORT),
-		BLOOD_BLITZ("Blood Blitz", "A single target blood attack", 79, new int[][] { { 560, 1, DEATH }, { 565, 3, BLOOD } }, 10, 2, SpellType.COMBAT),
-
-		ICE_BLITZ("Ice Blitz", "A single target ice attack", 81, new int[][] { { 565, 1, BLOOD}, { 560, 1, DEATH }, { 555, 2, WATER } }, 10, 2, SpellType.COMBAT),
-		CARRALLANGAR_TELEPORT("Fishing Guild Teleport", "Teleports you to Fishing Guild.\\nRequires no runes.", 83, new int[][] { { 566, 1, SOUL }, { 563, 1, LAW } }, 0, 5, SpellType.TELEPORT),
-		SMOKE_BARRAGE("Smoke Barrage", "A multi-target smoke attack", 85, new int[][] { { 560, 3, DEATH }, { 565, 1, BLOOD }, { 554, 3, FIRE }, { 556, 3, AIR } }, 10, 2, SpellType.COMBAT),
-		SHADOW_BARRAGE("Shadow Barrage", "A multi-target shadow attack", 87, new int[][] { { 565, 1, BLOOD }, { 560, 3, DEATH }, { 556, 3, AIR }, { 566, 2, SOUL } }, 10, 2, SpellType.COMBAT),
-
-		ANNAKARL_TELEPORT("Gnome Village Teleport", "Teleports you to Gnome Village.\\nRequires no runes.", 89, new int[][] { { 565, 1, BLOOD }, { 563, 1, LAW } }, 0, 5, SpellType.TELEPORT),
-		BLOOD_BARRAGE("Blood Barrage", "A multi-target blood attack", 91, new int[][] { { 560, 3, DEATH }, { 565, 3, BLOOD }, { 566, 0, SOUL } }, 10, 2, SpellType.COMBAT),
-		ICE_BARRAGE("Ice Barrage", "A multi-target ice attack", 93, new int[][] { { 565, 1, BLOOD }, { 560, 3, DEATH }, { 555, 5, WATER } }, 10, 2, SpellType.COMBAT),
-		GHORROCK_TELEPORT("Yanille Teleport", "Teleports you to Yanille.\\nRequires no runes.", 95, new int[][] { { 563, 1, LAW }, { 555, 7, WATER } }, 0, 5, SpellType.TELEPORT),
+		SMOKE_RUSH("Smoke Rush", "A single target smoke attack", 49, new int[][] { { 562, 1, CHAOS }, { 560, 1, DEATH }, { 554, 0, FIRE }, { 556, 0, AIR } }, 10, 2),
+		SHADOW_RUSH("Shadow Rush", "A single target shadow attack", 51, new int[][] { { 562, 1, CHAOS }, { 560, 1, DEATH }, { 556, 0, AIR }, { 566, 0, SOUL } }, 10, 2),
+		BLOOD_RUSH("Blood Rush", "A single target blood attack", 55, new int[][] { { 562, 1, CHAOS }, { 560, 1, DEATH }, { 565, 0, BLOOD } }, 10, 2),
+		ICE_RUSH("Ice Rush", "A single target ice attack", 57, new int[][] { { 562, 1, CHAOS }, { 560, 1, DEATH }, { 555, 1, WATER } }, 10, 2),
+		SMOKE_BURST("Smoke Burst", "A multi-target smoke attack", 61, new int[][] { { 562, 3, CHAOS }, { 560, 1, DEATH }, { 554, 1, FIRE }, { 556, 1, AIR } }, 10, 2),
+		SHADOW_BURST("Shadow Burst", "A multi-target shadow attack", 63, new int[][] { { 562, 3, CHAOS }, { 560, 1, DEATH }, { 556, 0, AIR }, { 566, 1, SOUL } }, 10, 2),
+		BLOOD_BURST("Blood Burst", "A multi-target blood attack", 67, new int[][] { { 562, 3, CHAOS }, { 560, 1, DEATH }, { 565, 1, BLOOD } }, 10, 2),
+		ICE_BURST("Ice Burst", "A multi-target ice attack", 69, new int[][] { { 562, 3, CHAOS }, { 560, 1, DEATH }, { 555, 3, WATER } }, 10, 2),
+		SMOKE_BLITZ("Smoke Blitz", "A single target smoke attack", 73, new int[][] { { 560, 1, DEATH }, { 565, 1, BLOOD }, { 554, 1, FIRE }, { 556, 1, AIR } }, 10, 2),
+		SHADOW_BLITZ("Shadow Blitz", "A single target shadow attack", 75, new int[][] { { 565, 1, BLOOD }, { 560, 1, DEATH }, { 556, 1, AIR }, { 566, 1, SOUL } }, 10, 2),
+		BLOOD_BLITZ("Blood Blitz", "A single target blood attack", 79, new int[][] { { 560, 1, DEATH }, { 565, 3, BLOOD } }, 10, 2),
+		ICE_BLITZ("Ice Blitz", "A single target ice attack", 81, new int[][] { { 565, 1, BLOOD }, { 560, 1, DEATH }, { 555, 2, WATER } }, 10, 2),
+		SMOKE_BARRAGE("Smoke Barrage", "A multi-target smoke attack", 85, new int[][] { { 560, 3, DEATH }, { 565, 1, BLOOD }, { 554, 3, FIRE }, { 556, 3, AIR } }, 10, 2),
+		SHADOW_BARRAGE("Shadow Barrage", "A multi-target shadow attack", 87, new int[][] { { 565, 1, BLOOD }, { 560, 3, DEATH }, { 556, 3, AIR }, { 566, 2, SOUL } }, 10, 2),
+		BLOOD_BARRAGE("Blood Barrage", "A multi-target blood attack", 91, new int[][] { { 560, 3, DEATH }, { 565, 3, BLOOD }, { 566, 0, SOUL } }, 10, 2),
+		ICE_BARRAGE("Ice Barrage", "A multi-target ice attack", 93, new int[][] { { 565, 1, BLOOD }, { 560, 3, DEATH }, { 555, 5, WATER } }, 10, 2),
 		;
 
 		public String spellName, description;
 		public int level, spellUseable, actionType;
 		public int[][] runes_data;
-		public SpellType spellType;
 
-		private AncientsSpellData(String spellName, String description, int level, int[][] runes_data, int spellUseable, int actionType, SpellType spellType) {
+		private AncientsSpellData(String spellName, String description, int level, int[][] runes_data, int spellUseable, int actionType) {
 			this.spellName = spellName;
 			this.description = description;
 			this.level = level;
 			this.runes_data = runes_data;
 			this.spellUseable = spellUseable;
 			this.actionType = actionType;
-			this.spellType = spellType;
 		}
 	}
 
-	public enum SpellType {
-		COMBAT,
-		TELEPORT,
-		UTILITY,
-		;
-	}
 }

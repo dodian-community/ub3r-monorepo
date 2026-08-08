@@ -15720,6 +15720,9 @@ public class Client extends GameEngine
 
         try {
             int ai[] = class9.scripts[j];
+            if (ai == null || ai.length == 0) {
+                return -2;
+            }
             int k = 0;
             int l = 0;
             int i1 = 0;

@@ -246,8 +246,7 @@ public class CustomInterface extends RSInterface {
         int index = 0;
         ArrayList<Integer> spellSprites = new ArrayList<>();
         for(AncientSpellData data : ancients) {
-            boolean isTeleport = data.spell.spellType == RSInterface.SpellType.TELEPORT;
-            int sidOff = isTeleport ? data.spriteOn : data.spriteOff;
+            int sidOff = data.spriteOff;
             int sidOn = data.spriteOn;
 
             if (data.spell.runes_data.length == 2)
@@ -271,16 +270,12 @@ public class CustomInterface extends RSInterface {
         index = 0;
         for(AncientSpellData data : ancients) {
             int extraIds = 0;
-            if (data.spell.spellType == RSInterface.SpellType.TELEPORT) {
-                extraIds = RSInterface.addTextBoxAncient(archive, interfaceId, data.spell.level, data.spell.spellName, data.spell.description, font);
-            } else {
-                if(data.spell.runes_data.length == 2)
-                    extraIds = build2RunesBoxSmall2(archive, interfaceId, data.spell.runes_data, data.spell.level, data.spell.spellName, data.spell.description, font);
-                else if(data.spell.runes_data.length == 3)
-                    extraIds = build3RunesBoxSmall2(archive, interfaceId, data.spell.runes_data, data.spell.level, data.spell.spellName, data.spell.description, font);
-                else if(data.spell.runes_data.length == 4)
-                    extraIds = build4RunesBoxSmall2(archive, interfaceId, data.spell.runes_data, data.spell.level, data.spell.spellName, data.spell.description, font);
-            }
+            if(data.spell.runes_data.length == 2)
+                extraIds = build2RunesBoxSmall2(archive, interfaceId, data.spell.runes_data, data.spell.level, data.spell.spellName, data.spell.description, font);
+            else if(data.spell.runes_data.length == 3)
+                extraIds = build3RunesBoxSmall2(archive, interfaceId, data.spell.runes_data, data.spell.level, data.spell.spellName, data.spell.description, font);
+            else if(data.spell.runes_data.length == 4)
+                extraIds = build4RunesBoxSmall2(archive, interfaceId, data.spell.runes_data, data.spell.level, data.spell.spellName, data.spell.description, font);
  
             interfaceCache[spellSprites.get(index++).intValue()].hoverType = interfaceId;
  
