@@ -1,0 +1,258 @@
+name: Package Client
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  build-jar:
+    name: Build fat JAR
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build shadow JAR
+        run: ./gradlew :game-client:shadowJar
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: runith-jar
+          path: game-client/build/libs/Runith.jar
+          retention-days: 1
+
+  package-windows:
+    name: Windows EXE
+    needs: build-jar
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: runith-jar
+          path: package-input
+
+      - name: Convert icon to ICO
+        shell: powershell
+        run: |
+          $source = "game-client\src\main\resources\icon.png"
+          $dest   = "package-input\Runith.ico"
+          if (Test-Path $source) {
+            Add-Type -AssemblyName System.Drawing
+            $png = [System.Drawing.Image]::FromFile((Resolve-Path $source))
+            $sizes = @(256, 128, 64, 48, 32, 16)
+            $ms = New-Object System.IO.MemoryStream
+            # ICO header
+            $writer = New-Object System.IO.BinaryWriter($ms)
+            $writer.Write([uint16]0)   # reserved
+            $writer.Write([uint16]1)   # type: ICO
+            $writer.Write([uint16]$sizes.Count)
+            $images = @()
+            foreach ($size in $sizes) {
+              $bmp = New-Object System.Drawing.Bitmap($size, $size)
+              $g   = [System.Drawing.Graphics]::FromImage($bmp)
+              $g.DrawImage($png, 0, 0, $size, $size)
+              $g.Dispose()
+              $imgMs = New-Object System.IO.MemoryStream
+              $bmp.Save($imgMs, [System.Drawing.Imaging.ImageFormat]::Png)
+              $images += $imgMs.ToArray()
+              $bmp.Dispose()
+            }
+            $dataOffset = 6 + $sizes.Count * 16
+            for ($i = 0; $i -lt $sizes.Count; $i++) {
+              $s = $sizes[$i]
+              $writer.Write([byte]$(if ($s -eq 256) { 0 } else { $s }))
+              $writer.Write([byte]$(if ($s -eq 256) { 0 } else { $s }))
+              $writer.Write([byte]0)
+              $writer.Write([byte]0)
+              $writer.Write([uint16]1)
+              $writer.Write([uint16]32)
+              $writer.Write([uint32]$images[$i].Length)
+              $writer.Write([uint32]$dataOffset)
+              $dataOffset += $images[$i].Length
+            }
+            foreach ($img in $images) { $writer.Write($img) }
+            $writer.Flush()
+            [System.IO.File]::WriteAllBytes($dest, $ms.ToArray())
+            $png.Dispose()
+            Write-Host "Icon written to $dest"
+          } else {
+            Write-Host "No icon.png found, continuing without icon"
+          }
+
+      - name: Run jpackage
+        shell: cmd
+        run: |
+          set ICON_OPT=
+          if exist "package-input\Runith.ico" set ICON_OPT=--icon package-input\Runith.ico
+          mkdir package-output
+          jpackage ^
+            --type exe ^
+            --name Runith ^
+            --app-version 1.0 ^
+            --vendor Runith ^
+            --input package-input ^
+            --main-jar Runith.jar ^
+            --dest package-output ^
+            --java-options "-XX:-OmitStackTraceInFastThrow" ^
+            --java-options "--add-opens=java.desktop/sun.awt=ALL-UNNAMED" ^
+            --java-options "-Xmx2g" ^
+            --java-options "-Xms1g" ^
+            --win-dir-chooser ^
+            --win-shortcut ^
+            --win-menu ^
+            --win-menu-group "Runith" ^
+            --win-upgrade-uuid "a1b2c3d4-e5f6-7890-abcd-ef1234567890" ^
+            %ICON_OPT%
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: runith-windows
+          path: package-output/Runith*.exe
+
+  package-macos:
+    name: macOS DMG
+    needs: build-jar
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: runith-jar
+          path: package-input
+
+      - name: Convert icon to ICNS
+        run: |
+          SOURCE="game-client/src/main/resources/icon.png"
+          if [ -f "$SOURCE" ]; then
+            mkdir -p icon.iconset
+            for size in 16 32 64 128 256 512; do
+              sips -z $size $size "$SOURCE" --out "icon.iconset/icon_${size}x${size}.png" 2>/dev/null || true
+              double=$((size * 2))
+              sips -z $double $double "$SOURCE" --out "icon.iconset/icon_${size}x${size}@2x.png" 2>/dev/null || true
+            done
+            iconutil -c icns icon.iconset -o package-input/Runith.icns
+            echo "ICNS created"
+          else
+            echo "No icon.png found"
+          fi
+
+      - name: Run jpackage
+        run: |
+          ICON_OPT=""
+          [ -f "package-input/Runith.icns" ] && ICON_OPT="--icon package-input/Runith.icns"
+          mkdir -p package-output
+          jpackage \
+            --type dmg \
+            --name Runith \
+            --app-version 1.0 \
+            --vendor Runith \
+            --input package-input \
+            --main-jar Runith.jar \
+            --dest package-output \
+            --java-options "-XX:-OmitStackTraceInFastThrow" \
+            --java-options "--add-opens=java.desktop/sun.awt=ALL-UNNAMED" \
+            --java-options "-Xmx2g" \
+            --java-options "-Xms1g" \
+            --mac-package-identifier "com.osroyale.runith" \
+            --mac-package-name "Runith" \
+            $ICON_OPT
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: runith-macos
+          path: package-output/Runith*.dmg
+
+  package-linux:
+    name: Linux DEB + RPM
+    needs: build-jar
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install RPM tools
+        run: sudo apt-get install -y rpm fakeroot
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: runith-jar
+          path: package-input
+
+      - name: Copy icon
+        run: |
+          SOURCE="game-client/src/main/resources/icon.png"
+          [ -f "$SOURCE" ] && cp "$SOURCE" package-input/Runith.png || true
+
+      - name: Run jpackage (DEB)
+        run: |
+          ICON_OPT=""
+          [ -f "package-input/Runith.png" ] && ICON_OPT="--icon package-input/Runith.png"
+          mkdir -p package-output
+          jpackage \
+            --type deb \
+            --name runith \
+            --app-version 1.0 \
+            --vendor Runith \
+            --input package-input \
+            --main-jar Runith.jar \
+            --dest package-output \
+            --java-options "-XX:-OmitStackTraceInFastThrow" \
+            --java-options "--add-opens=java.desktop/sun.awt=ALL-UNNAMED" \
+            --java-options "-Xmx2g" \
+            --java-options "-Xms1g" \
+            --linux-app-summary "Runith Game Client" \
+            --linux-menu-group "Game" \
+            --linux-shortcut \
+            $ICON_OPT
+
+      - name: Run jpackage (RPM)
+        run: |
+          ICON_OPT=""
+          [ -f "package-input/Runith.png" ] && ICON_OPT="--icon package-input/Runith.png"
+          jpackage \
+            --type rpm \
+            --name runith \
+            --app-version 1.0 \
+            --vendor Runith \
+            --input package-input \
+            --main-jar Runith.jar \
+            --dest package-output \
+            --java-options "-XX:-OmitStackTraceInFastThrow" \
+            --java-options "--add-opens=java.desktop/sun.awt=ALL-UNNAMED" \
+            --java-options "-Xmx2g" \
+            --java-options "-Xms1g" \
+            --linux-app-summary "Runith Game Client" \
+            --linux-menu-group "Game" \
+            --linux-shortcut \
+            $ICON_OPT
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: runith-linux
+          path: |
+            package-output/runith*.deb
+            package-output/runith*.rpm

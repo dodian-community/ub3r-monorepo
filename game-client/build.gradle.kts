@@ -116,10 +116,49 @@ tasks {
     }
 
     shadowJar {
-        archiveBaseName.set("Dodian")
+        archiveBaseName.set("Runith")
         archiveClassifier.set("")
         archiveVersion.set("")
         isZip64 = true
+    }
+
+    register<Exec>("jpackageLocal") {
+        group = "distribution"
+        description = "Creates a native package for the current platform (requires JDK 17+ in JAVA_HOME or JPACKAGE_HOME)"
+        dependsOn("shadowJar")
+
+        val javaHome = System.getenv("JPACKAGE_HOME")
+            ?: System.getenv("JAVA_HOME")
+            ?: System.getProperty("java.home")
+        val isWindows = System.getProperty("os.name").lowercase().contains("win")
+        val jpackageBin = if (isWindows) "$javaHome\\bin\\jpackage.exe" else "$javaHome/bin/jpackage"
+
+        val packageType = when {
+            isWindows -> "exe"
+            System.getProperty("os.name").lowercase().contains("mac") -> "dmg"
+            else -> "deb"
+        }
+
+        val outDir = layout.buildDirectory.dir("jpackage").get().asFile
+
+        doFirst { outDir.mkdirs() }
+
+        commandLine(buildList {
+            add(jpackageBin)
+            addAll(listOf("--type", packageType))
+            addAll(listOf("--name", "Runith"))
+            addAll(listOf("--app-version", "1.0"))
+            addAll(listOf("--vendor", "Runith"))
+            addAll(listOf("--input", layout.buildDirectory.dir("libs").get().asFile.absolutePath))
+            addAll(listOf("--main-jar", "Runith.jar"))
+            addAll(listOf("--dest", outDir.absolutePath))
+            addAll(listOf("--java-options", "-XX:-OmitStackTraceInFastThrow"))
+            addAll(listOf("--java-options", "--add-opens=java.desktop/sun.awt=ALL-UNNAMED"))
+            addAll(listOf("--java-options", "-Xmx2g"))
+            addAll(listOf("--java-options", "-Xms1g"))
+            val iconFile = file("src/main/resources/icon.png")
+            if (iconFile.exists()) addAll(listOf("--icon", iconFile.absolutePath))
+        })
     }
 
     named<Zip>("distZip").configure {
