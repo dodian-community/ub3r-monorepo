@@ -68,6 +68,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.time.Duration;
+import java.util.Arrays;
 
 import static javax.swing.JOptionPane.INFORMATION_MESSAGE;
 
@@ -307,7 +308,13 @@ public class ClientUI
 			OSXUtil.tryEnableFullscreen(frame);
 
 			frame.setTitle(title);
-			frame.setIconImage(ICON);
+			frame.setIconImages(Arrays.asList(
+				ImageUtil.resizeImage(ICON, 16, 16),
+				ImageUtil.resizeImage(ICON, 32, 32),
+				ImageUtil.resizeImage(ICON, 48, 48),
+				ImageUtil.resizeImage(ICON, 128, 128),
+				ImageUtil.resizeImage(ICON, 256, 256)
+			));
 			frame.getLayeredPane().setCursor(Cursor.getDefaultCursor()); // Prevent substance from using a resize cursor for pointing
 			frame.setLocationRelativeTo(frame.getOwner());
 			frame.setResizable(true);
