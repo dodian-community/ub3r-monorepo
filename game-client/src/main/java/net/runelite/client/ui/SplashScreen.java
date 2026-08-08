@@ -59,7 +59,7 @@ public class SplashScreen extends JFrame implements ActionListener
 
 	private SplashScreen()
 	{
-		BufferedImage logo = ImageUtil.loadImageResource(SplashScreen.class, "icon.png");
+		BufferedImage logo = ImageUtil.loadImageResource(SplashScreen.class, "/icon.png");
 
 		setTitle("RuneLite Launcher");
 
@@ -72,7 +72,8 @@ public class SplashScreen extends JFrame implements ActionListener
 
 		Font font = new Font(Font.DIALOG, Font.PLAIN, 12);
 
-		JLabel logoLabel = new JLabel(new ImageIcon(logo));
+		Image scaledLogo = logo.getScaledInstance(WIDTH, WIDTH, Image.SCALE_SMOOTH);
+		JLabel logoLabel = new JLabel(new ImageIcon(scaledLogo));
 		pane.add(logoLabel);
 		logoLabel.setBounds(0, 0, WIDTH, WIDTH);
 
