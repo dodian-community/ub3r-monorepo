@@ -546,8 +546,10 @@ public final class ObjectDefinition {
 			model_3.scale(modelSizeX, modelSizeY, modelHeight);
 		if (flag2)
 			model_3.offsetBy(offsetX, offsetHeight, offsetY);
-		if (mergeInteractState == 1)
+		if (mergeInteractState == 1) {
+			model_3.calculateBoundsCylinder();
 			model_3.itemDropHeight = model_3.modelBaseY;
+		}
 		return model_3;
 	}
 
