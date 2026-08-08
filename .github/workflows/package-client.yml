@@ -145,7 +145,7 @@ jobs:
           SOURCE="game-client/src/main/resources/icon.png"
           if [ -f "$SOURCE" ]; then
             mkdir -p icon.iconset
-            for size in 16 32 64 128 256 512; do
+            for size in 16 32 128 256 512; do
               sips -z $size $size "$SOURCE" --out "icon.iconset/icon_${size}x${size}.png" 2>/dev/null || true
               double=$((size * 2))
               sips -z $double $double "$SOURCE" --out "icon.iconset/icon_${size}x${size}@2x.png" 2>/dev/null || true
@@ -224,7 +224,7 @@ jobs:
             --java-options "--add-opens=java.desktop/sun.awt=ALL-UNNAMED" \
             --java-options "-Xmx2g" \
             --java-options "-Xms1g" \
-            --linux-app-summary "Runith Game Client" \
+            --description "Runith Game Client" \
             --linux-menu-group "Game" \
             --linux-shortcut \
             $ICON_OPT
@@ -245,7 +245,7 @@ jobs:
             --java-options "--add-opens=java.desktop/sun.awt=ALL-UNNAMED" \
             --java-options "-Xmx2g" \
             --java-options "-Xms1g" \
-            --linux-app-summary "Runith Game Client" \
+            --description "Runith Game Client" \
             --linux-menu-group "Game" \
             --linux-shortcut \
             $ICON_OPT
