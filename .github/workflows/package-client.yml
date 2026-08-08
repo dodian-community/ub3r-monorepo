@@ -8,6 +8,11 @@ on:
 permissions:
   contents: write
 
+env:
+  APP_NAME: Runeith
+  APP_VERSION: "1.0"
+  APP_VENDOR: Runeith
+
 jobs:
   build-jar:
     name: Build fat JAR
@@ -52,16 +57,15 @@ jobs:
         shell: powershell
         run: |
           $source = "game-client\src\main\resources\icon.png"
-          $dest   = "package-input\Runith.ico"
+          $dest   = "package-input\$env:APP_NAME.ico"
           if (Test-Path $source) {
             Add-Type -AssemblyName System.Drawing
             $png = [System.Drawing.Image]::FromFile((Resolve-Path $source))
             $sizes = @(256, 128, 64, 48, 32, 16)
             $ms = New-Object System.IO.MemoryStream
-            # ICO header
             $writer = New-Object System.IO.BinaryWriter($ms)
-            $writer.Write([uint16]0)   # reserved
-            $writer.Write([uint16]1)   # type: ICO
+            $writer.Write([uint16]0)
+            $writer.Write([uint16]1)
             $writer.Write([uint16]$sizes.Count)
             $images = @()
             foreach ($size in $sizes) {
@@ -100,13 +104,13 @@ jobs:
         shell: cmd
         run: |
           set ICON_OPT=
-          if exist "package-input\Runith.ico" set ICON_OPT=--icon package-input\Runith.ico
+          if exist "package-input\%APP_NAME%.ico" set ICON_OPT=--icon package-input\%APP_NAME%.ico
           mkdir package-output
           jpackage ^
             --type exe ^
-            --name Runith ^
-            --app-version 1.0 ^
-            --vendor Runith ^
+            --name %APP_NAME% ^
+            --app-version %APP_VERSION% ^
+            --vendor %APP_VENDOR% ^
             --input package-input ^
             --main-jar Runith.jar ^
             --dest package-output ^
@@ -117,14 +121,14 @@ jobs:
             --win-dir-chooser ^
             --win-shortcut ^
             --win-menu ^
-            --win-menu-group "Runith" ^
+            --win-menu-group "%APP_NAME%" ^
             --win-upgrade-uuid "a1b2c3d4-e5f6-7890-abcd-ef1234567890" ^
             %ICON_OPT%
 
       - uses: actions/upload-artifact@v4
         with:
           name: runith-windows
-          path: package-output/Runith*.exe
+          path: package-output/${{ env.APP_NAME }}*.exe
 
   package-macos:
     name: macOS DMG
@@ -161,7 +165,7 @@ jobs:
                 sips -s format png -z $double $double "$SOURCE" --out "icon.iconset/icon_${size}x${size}@2x.png"
               done
             fi
-            iconutil -c icns icon.iconset -o package-input/Runith.icns
+            iconutil -c icns icon.iconset -o "package-input/$APP_NAME.icns"
             echo "ICNS created"
           else
             echo "No icon.png found"
@@ -170,13 +174,13 @@ jobs:
       - name: Run jpackage
         run: |
           ICON_OPT=""
-          [ -f "package-input/Runith.icns" ] && ICON_OPT="--icon package-input/Runith.icns"
+          [ -f "package-input/$APP_NAME.icns" ] && ICON_OPT="--icon package-input/$APP_NAME.icns"
           mkdir -p package-output
           jpackage \
             --type dmg \
-            --name Runith \
-            --app-version 1.0 \
-            --vendor Runith \
+            --name "$APP_NAME" \
+            --app-version "$APP_VERSION" \
+            --vendor "$APP_VENDOR" \
             --input package-input \
             --main-jar Runith.jar \
             --dest package-output \
@@ -185,13 +189,13 @@ jobs:
             --java-options "-Xmx2g" \
             --java-options "-Xms1g" \
             --mac-package-identifier "com.osroyale.runith" \
-            --mac-package-name "Runith" \
+            --mac-package-name "$APP_NAME" \
             $ICON_OPT
 
       - uses: actions/upload-artifact@v4
         with:
           name: runith-macos
-          path: package-output/Runith*.dmg
+          path: package-output/${{ env.APP_NAME }}*.dmg
 
   package-linux:
     name: Linux DEB + RPM
@@ -216,18 +220,19 @@ jobs:
       - name: Copy icon
         run: |
           SOURCE="game-client/src/main/resources/icon.png"
-          [ -f "$SOURCE" ] && cp "$SOURCE" package-input/Runith.png || true
+          [ -f "$SOURCE" ] && cp "$SOURCE" "package-input/$APP_NAME.png" || true
 
       - name: Run jpackage (DEB)
         run: |
+          APP_NAME_LOWER="${APP_NAME,,}"
           ICON_OPT=""
-          [ -f "package-input/Runith.png" ] && ICON_OPT="--icon package-input/Runith.png"
+          [ -f "package-input/$APP_NAME.png" ] && ICON_OPT="--icon package-input/$APP_NAME.png"
           mkdir -p package-output
           jpackage \
             --type deb \
-            --name runith \
-            --app-version 1.0 \
-            --vendor Runith \
+            --name "$APP_NAME_LOWER" \
+            --app-version "$APP_VERSION" \
+            --vendor "$APP_VENDOR" \
             --input package-input \
             --main-jar Runith.jar \
             --dest package-output \
@@ -235,20 +240,21 @@ jobs:
             --java-options "--add-opens=java.desktop/sun.awt=ALL-UNNAMED" \
             --java-options "-Xmx2g" \
             --java-options "-Xms1g" \
-            --description "Runith Game Client" \
+            --description "$APP_NAME Game Client" \
             --linux-menu-group "Game" \
             --linux-shortcut \
             $ICON_OPT
 
       - name: Run jpackage (RPM)
         run: |
+          APP_NAME_LOWER="${APP_NAME,,}"
           ICON_OPT=""
-          [ -f "package-input/Runith.png" ] && ICON_OPT="--icon package-input/Runith.png"
+          [ -f "package-input/$APP_NAME.png" ] && ICON_OPT="--icon package-input/$APP_NAME.png"
           jpackage \
             --type rpm \
-            --name runith \
-            --app-version 1.0 \
-            --vendor Runith \
+            --name "$APP_NAME_LOWER" \
+            --app-version "$APP_VERSION" \
+            --vendor "$APP_VENDOR" \
             --input package-input \
             --main-jar Runith.jar \
             --dest package-output \
@@ -256,7 +262,7 @@ jobs:
             --java-options "--add-opens=java.desktop/sun.awt=ALL-UNNAMED" \
             --java-options "-Xmx2g" \
             --java-options "-Xms1g" \
-            --description "Runith Game Client" \
+            --description "$APP_NAME Game Client" \
             --linux-menu-group "Game" \
             --linux-shortcut \
             $ICON_OPT
@@ -265,8 +271,8 @@ jobs:
         with:
           name: runith-linux
           path: |
-            package-output/runith*.deb
-            package-output/runith*.rpm
+            package-output/*.deb
+            package-output/*.rpm
 
   release:
     name: Publish Release
@@ -283,7 +289,7 @@ jobs:
           gh release delete latest --yes --cleanup-tag --repo "$GITHUB_REPOSITORY" 2>/dev/null || true
           gh release create latest \
             --repo "$GITHUB_REPOSITORY" \
-            --title "Latest Build (#${{ github.run_number }})" \
+            --title "${{ env.APP_NAME }} ${{ env.APP_VERSION }} (Build #${{ github.run_number }})" \
             --notes "Automated build from commit ${{ github.sha }}" \
             release-artifacts/*
         env:
