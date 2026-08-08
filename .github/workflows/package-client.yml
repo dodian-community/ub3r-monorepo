@@ -156,9 +156,9 @@ jobs:
               done
             else
               for size in 16 32 128 256 512; do
-                sips -z $size $size "$SOURCE" --out "icon.iconset/icon_${size}x${size}.png"
+                sips -s format png -z $size $size "$SOURCE" --out "icon.iconset/icon_${size}x${size}.png"
                 double=$((size * 2))
-                sips -z $double $double "$SOURCE" --out "icon.iconset/icon_${size}x${size}@2x.png"
+                sips -s format png -z $double $double "$SOURCE" --out "icon.iconset/icon_${size}x${size}@2x.png"
               done
             fi
             iconutil -c icns icon.iconset -o package-input/Runith.icns
