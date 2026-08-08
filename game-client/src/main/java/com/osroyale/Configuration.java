@@ -8,28 +8,28 @@ package com.osroyale;
  */
 public final class Configuration {
 
-    public static final String LIVE_GAME_ADDRESS = "game.tarnishps.com";
-    public static final int LIVE_GAME_PORT = 43594;
+    public static final String LIVE_GAME_ADDRESS = "runith.duckdns.org";
+    public static final int LIVE_GAME_PORT = 34594;
 
-    public static final String LIVE_CACHE_ADDRESS = "cache.tarnishps.com";
+    public static final String LIVE_CACHE_ADDRESS = "runith.duckdns.org";
     public static final int LIVE_CACHE_PORT = 43595;
 
-    public static final String DEV_GAME_ADDRESS = "localhost";
+    public static final String DEV_GAME_ADDRESS = "10.0.0.63";
     public static final int DEV_GAME_PORT = 43594;
 
-    public static final String DEV_CACHE_ADDRESS = "localhost";
+    public static final String DEV_CACHE_ADDRESS = "10.0.0.63";
     public static final int DEV_CACHE_PORT = 43595;
 
     /**
      * The IP address client will be connecting to.
      */
     public static final Connection CONNECTION =
-            Connection.DEV;
+            Connection.ECONOMY;
 
     /**
      * State of client being in debug mode.
      */
-    public static boolean DEBUG_MODE = true;
+    public static boolean DEBUG_MODE = false;
 
     /**
      * Display client data.
@@ -59,12 +59,12 @@ public final class Configuration {
     /**
      * The name of the client.
      */
-    public final static String NAME = "Dodian 3.0";
+    public final static String NAME = "Runith";
 
     /**
      * The cache file name.
      */
-    public final static String CACHE_NAME = ".tarnish";
+    public final static String CACHE_NAME = ".runith";
 
     public static final String SPRITE_FILE_NAME = "main_file_sprites";
 
@@ -103,7 +103,7 @@ public final class Configuration {
         // Only the public client id belongs here. The OAuth client secret lives solely in the
         // server's .env (DISCORD_CLIENT_SECRET) - the token exchange is server-side, and a
         // secret shipped inside the client jar is readable by every player.
-        public static String CLIENT_ID = "1523072866684244139";
+        public static String CLIENT_ID = "1533943718854524949";
         public static int CALLBACK_PORT = 8080;
         public static String REDIRECT_URL = "http://localhost:8080";
     }
