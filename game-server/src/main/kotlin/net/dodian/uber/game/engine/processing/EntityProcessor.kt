@@ -155,9 +155,7 @@ class EntityProcessor : Runnable {
                 val remainingSeconds = (remainingMs / 1000L).toInt()
                 if (remainingSeconds != lastUpdateBroadcastSecond) {
                     lastUpdateBroadcastSecond = remainingSeconds
-                    val minutes = remainingSeconds / 60
-                    val seconds = remainingSeconds % 60
-                    WorldAnnouncementService.broadcastAll("<col=FFFF00>Game update in: %02d:%02d".format(minutes, seconds))
+                    WorldAnnouncementService.broadcastGameMessage(0, remainingSeconds * 50, "Game update in:")
                 }
             }
         } else {
