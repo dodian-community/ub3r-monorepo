@@ -15369,7 +15369,7 @@ public class Client extends GameEngine
             if (game_message_id == 0) {// Update
                 newRegularFont.drawBasicString(game_message_context + " " + Utility.getFormattedTime(game_message_time), 4, 329 + yOffset, 0xffff00, 50);
             } else if (game_message_id == 1) {// announcement
-                newRegularFont.drawBasicString(game_message_context, 4, yPos + yOffset, 0xffff00, 50);
+                newRegularFont.drawBasicString(game_message_context, 4, 329 + yOffset, 0xffff00, 50);
             } else if (game_message_id == 2) {// icon
                 newRegularFont.drawBasicString("<img=14> " + game_message_context, 4, yPos + yOffset, 0xffff00, 50);
             } else if (game_message_id == 3) {// icon with time
