@@ -155,7 +155,7 @@ class EntityProcessor : Runnable {
                 // Adding one extra tick (600ms = 30 frames) prevents the counter reaching 0
                 // between ticks when running at >50fps.
                 val frames = (remainingMs / 20L).toInt() + 30
-                WorldAnnouncementService.broadcastGameMessage(0, frames, "Game update in:")
+                WorldAnnouncementService.broadcastGameMessage(0, frames, "System update in:")
             }
         }
         handleServerCycles()
