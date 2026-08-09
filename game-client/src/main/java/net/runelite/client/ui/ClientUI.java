@@ -315,6 +315,14 @@ public class ClientUI
 				ImageUtil.resizeImage(ICON, 128, 128),
 				ImageUtil.resizeImage(ICON, 256, 256)
 			));
+			if (Taskbar.isTaskbarSupported())
+			{
+				Taskbar taskbar = Taskbar.getTaskbar();
+				if (taskbar.isSupported(Taskbar.Feature.ICON_IMAGE))
+				{
+					taskbar.setIconImage(ICON);
+				}
+			}
 			frame.getLayeredPane().setCursor(Cursor.getDefaultCursor()); // Prevent substance from using a resize cursor for pointing
 			frame.setLocationRelativeTo(frame.getOwner());
 			frame.setResizable(true);

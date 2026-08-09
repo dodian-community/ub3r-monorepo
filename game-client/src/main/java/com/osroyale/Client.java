@@ -13125,7 +13125,7 @@ public class Client extends GameEngine
                 i = MouseHandler.saveClickX - (canvasWidth - 182 + 24);
                 j = MouseHandler.saveClickY - 8;
             }
-            if (inCircle(0, 0, i, j, 76) && mouseMapPosition() && !runHover) {
+            if (inCircle(0, 0, i, j, 76) && mouseMapPosition() && !runHover && !worldHover) {
                 i -= 73;
                 j -= 75;
                 int k = cameraHorizontal + minimapRotation & 0x7ff;
@@ -19012,11 +19012,9 @@ public class Client extends GameEngine
 
         if (Settings.STATUS_ORB) {
             if (worldHover) {
-                menuActionName[2] = constructionMap ? "Open construction builder" : "Open Teleporation Menu";
-                menuActionID[2] = 850;
-                menuActionName[1] = "Previous Teleport";
-                menuActionID[1] = 851;
-                menuActionRow = 3;
+                menuActionName[1] = constructionMap ? "Open construction builder" : "Open World Map";
+                menuActionID[1] = 850;
+                menuActionRow = 2;
             }
             if (prayHover) {
                 menuActionName[2] = prayClicked ? "Turn quick-prayers off" : "Turn quick-prayers on";

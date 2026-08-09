@@ -217,6 +217,10 @@ object UiInterface : InterfaceButtonContent {
             buttonBinding(-1, 18, "ui.tab.override", tabInterfaceOverrideButtons) { client, _ ->
                 client.openInterface(60106)
                 true
+            },
+            buttonBinding(-1, 19, "ui.world_map", intArrayOf(850)) { client, _ ->
+                client.openInterface(595)
+                true
             }
         )
 }

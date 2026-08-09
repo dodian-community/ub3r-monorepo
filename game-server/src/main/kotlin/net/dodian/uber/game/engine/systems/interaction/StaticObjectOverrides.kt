@@ -149,6 +149,7 @@ private class PlaneStaticObjectOverrideBuilder(
         replaceObject(2733, 3374, newObjectId = 375, face = -1, objectType = 11)
         replaceObject(2942, 4688, newObjectId = 12260, face = 3, objectType = 10)
         replaceObject(2443, 5169, newObjectId = 2352, face = 0, objectType = 10)
+        replaceObject(2627, 3117, newObjectId = 34768, face = 0, objectType = 10)
     }
 
     fun homeBoundary() {

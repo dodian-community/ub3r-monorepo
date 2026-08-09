@@ -183,11 +183,6 @@ object TeleportInterface : InterfaceButtonContent {
     }
 
     override val bindings = buildList {
-        // Glove click (button 850)
-        add(buttonBinding(-1, 0, "teleport.glove.click", intArrayOf(850)) { client, _ ->
-            open(client, 0, 0)
-            true
-        })
         
         // Category tabs
         add(buttonBinding(58000, 1, "teleport.tab.favorites", intArrayOf(58006)) { client, _ ->
