@@ -38,6 +38,10 @@ public final class Settings {
 	static boolean SNOW;
 	static boolean PARTICLES = false;
 
+    static boolean TRANSPARENT_TAB_AREA = false;
+    static boolean CHANGE_CHAT_AREA = true;
+    static boolean CHANGE_TAB_AREA = true;
+
     static boolean DAMAGE_MULTIPLIER;
     static boolean ENTITY_FEED = true;
     static boolean STATUS_ORB = true;
@@ -168,6 +172,7 @@ public final class Settings {
                     client.pushMessage("You can't do this while in fixed screen mode!", 0, "", false);
                 } else {
                     Client.transparentTabArea = !Client.transparentTabArea;
+                    TRANSPARENT_TAB_AREA = Client.transparentTabArea;
                     client.toggleConfig(881, Client.transparentTabArea ? 1 : 0);
                 }
                 return true;
@@ -176,6 +181,7 @@ public final class Settings {
                     client.pushMessage("You can't do this while in fixed screen mode!", 0, "", false);
                 } else {
                     Client.changeChatArea = !Client.changeChatArea;
+                    CHANGE_CHAT_AREA = Client.changeChatArea;
                     client.toggleConfig(882, Client.changeChatArea ? 1 : 0);
                 }
                 return true;
@@ -184,6 +190,7 @@ public final class Settings {
                     client.pushMessage("You can't do this while in fixed screen mode!", 0, "", false);
                 } else {
                     Client.changeTabArea = !Client.changeTabArea;
+                    CHANGE_TAB_AREA = Client.changeTabArea;
                     client.toggleConfig(883, Client.changeTabArea ? 1 : 0);
                 }
                 return true;
@@ -429,6 +436,15 @@ public final class Settings {
                     out.writeByte(49);
                     out.writeBoolean(FIRST_CLIENT_START);
 
+                    out.writeByte(50);
+                    out.writeBoolean(TRANSPARENT_TAB_AREA);
+
+                    out.writeByte(51);
+                    out.writeBoolean(CHANGE_CHAT_AREA);
+
+                    out.writeByte(52);
+                    out.writeBoolean(CHANGE_TAB_AREA);
+
                     out.writeByte(0);
                     out.close();
                 } catch (Exception e) {
@@ -615,6 +631,15 @@ public final class Settings {
                 break;
             case 49:
                 FIRST_CLIENT_START = in.readBoolean();
+                break;
+            case 50:
+                TRANSPARENT_TAB_AREA = in.readBoolean();
+                break;
+            case 51:
+                CHANGE_CHAT_AREA = in.readBoolean();
+                break;
+            case 52:
+                CHANGE_TAB_AREA = in.readBoolean();
                 break;
         }
         return false;

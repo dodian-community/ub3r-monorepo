@@ -29,12 +29,12 @@ public final class Configuration {
     /**
      * State of client being in debug mode.
      */
-    public static boolean DEBUG_MODE = true;
+    public static boolean DEBUG_MODE = false;
 
     /**
      * Display client data.
      */
-    static boolean CLIENT_DATA = true;
+    static boolean CLIENT_DATA = false;
 
     /**
      * Debug the interfaces.

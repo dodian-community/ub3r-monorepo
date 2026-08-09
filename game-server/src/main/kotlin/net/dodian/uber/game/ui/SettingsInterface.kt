@@ -36,6 +36,7 @@ object SettingsInterface : InterfaceButtonContent {
     override val bindings =
         listOf(
             buttonBinding(-1, 0, "settings.advanced_options_ack", advancedOptionsAckButtons) { client, _ ->
+                client.sendMessage(":settingupdate:")
                 client.openInterface(28500)
                 true
             },
