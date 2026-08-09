@@ -862,7 +862,7 @@ public final class TarnishOutboundPackets {
     /** Opcode 187 - Send Enter Name. Client: readString title, readUShortA maxLength. */
     public static final class SendEnterName {
         public static final int OPCODE = 187;
-        public static final MessageType TYPE = MessageType.VAR;
+        public static final MessageType TYPE = MessageType.VAR_SHORT;
 
         private final String title;
         private final int maxLength;
