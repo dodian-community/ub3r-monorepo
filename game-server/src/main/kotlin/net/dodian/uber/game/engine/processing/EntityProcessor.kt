@@ -151,11 +151,13 @@ class EntityProcessor : Runnable {
                     requestControlledShutdown()
                 }
             } else {
-                // Send every tick in ms-precision frames (1 frame = 20ms at 50fps).
-                // Adding one extra tick (600ms = 30 frames) prevents the counter reaching 0
-                // between ticks when running at >50fps.
-                val frames = (remainingMs / 20L).toInt() + 30
-                WorldAnnouncementService.broadcastGameMessage(0, frames, "System update in:")
+                val totalSeconds = (remainingMs / 1000L).toInt()
+                val minutes = totalSeconds / 60
+                val seconds = totalSeconds % 60
+                val label = "System update in: %02d:%02d".format(minutes, seconds)
+                // id=1 renders the context string as-is (no client-side time formatting).
+                // time=90 keeps the overlay visible between 600ms server ticks at any framerate.
+                WorldAnnouncementService.broadcastGameMessage(1, 90, label)
             }
         }
         handleServerCycles()
