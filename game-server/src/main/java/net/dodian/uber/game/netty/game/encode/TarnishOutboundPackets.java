@@ -859,20 +859,27 @@ public final class TarnishOutboundPackets {
         }
     }
 
-    /** Opcode 187 - Send Enter Name. Client: readString title. */
+    /** Opcode 187 - Send Enter Name. Client: readString title, readUShortA maxLength. */
     public static final class SendEnterName {
         public static final int OPCODE = 187;
         public static final MessageType TYPE = MessageType.VAR;
 
         private final String title;
+        private final int maxLength;
 
         public SendEnterName(String title) {
+            this(title, 12);
+        }
+
+        public SendEnterName(String title, int maxLength) {
             this.title = title;
+            this.maxLength = maxLength;
         }
 
         public ByteMessage encode() {
             ByteMessage message = ByteMessage.message(OPCODE, TYPE);
             message.putString(title);
+            message.putShort(maxLength, ValueType.ADD);
             return message;
         }
     }

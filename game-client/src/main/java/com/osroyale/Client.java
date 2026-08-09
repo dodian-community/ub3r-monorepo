@@ -7046,23 +7046,21 @@ public class Client extends GameEngine
 
     private boolean promptUserForInput(RSInterface class9) {
         int j = class9.contentType;
-        if (anInt900 == 2) {
-            if (j == 201) {
-                redrawDialogueBox = true;
-                inputDialogState = 0;
-                messagePromptRaised = true;
-                promptInput = "";
-                friendsListAction = 1;
-                aString1121 = "Enter name of friend to add to list";
-            }
-            if (j == 202) {
-                redrawDialogueBox = true;
-                inputDialogState = 0;
-                messagePromptRaised = true;
-                promptInput = "";
-                friendsListAction = 2;
-                aString1121 = "Enter name of friend to delete from list";
-            }
+        if (j == 201) {
+            redrawDialogueBox = true;
+            inputDialogState = 0;
+            messagePromptRaised = true;
+            promptInput = "";
+            friendsListAction = 1;
+            aString1121 = "Enter name of friend to add to list";
+        }
+        if (j == 202) {
+            redrawDialogueBox = true;
+            inputDialogState = 0;
+            messagePromptRaised = true;
+            promptInput = "";
+            friendsListAction = 2;
+            aString1121 = "Enter name of friend to delete from list";
         }
         if (j == 205) {
             anInt1011 = 250;
