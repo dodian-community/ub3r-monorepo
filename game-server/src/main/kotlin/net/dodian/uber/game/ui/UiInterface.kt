@@ -219,7 +219,7 @@ object UiInterface : InterfaceButtonContent {
                 true
             },
             buttonBinding(-1, 19, "ui.world_map", intArrayOf(850)) { client, _ ->
-                client.openInterface(595)
+                //client.openInterface(595)
                 true
             }
         )
