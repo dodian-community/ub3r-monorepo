@@ -293,7 +293,7 @@ public class Utility {
         int seconds = time / 50;
 
         if (seconds < 60)
-            return "0:" + seconds + "";
+            return "0:" + (seconds < 10 ? "0" : "") + seconds;
         else {
             int mins = seconds / 60;
             int remainderSecs = seconds - (mins * 60);

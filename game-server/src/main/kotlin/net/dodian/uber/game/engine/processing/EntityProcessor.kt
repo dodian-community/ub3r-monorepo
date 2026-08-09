@@ -147,19 +147,16 @@ class EntityProcessor : Runnable {
             val endTime = Server.updateStartTime + (Server.updateSeconds * 1000L)
             val remainingMs = endTime - now
             if (remainingMs <= 0) {
-                lastUpdateBroadcastSecond = -1
                 if (PlayerRegistry.getPlayerCount() < 1) {
                     requestControlledShutdown()
                 }
             } else {
-                val remainingSeconds = (remainingMs / 1000L).toInt()
-                if (remainingSeconds != lastUpdateBroadcastSecond) {
-                    lastUpdateBroadcastSecond = remainingSeconds
-                    WorldAnnouncementService.broadcastGameMessage(0, remainingSeconds * 50, "Game update in:")
-                }
+                // Send every tick in ms-precision frames (1 frame = 20ms at 50fps).
+                // Adding one extra tick (600ms = 30 frames) prevents the counter reaching 0
+                // between ticks when running at >50fps.
+                val frames = (remainingMs / 20L).toInt() + 30
+                WorldAnnouncementService.broadcastGameMessage(0, frames, "Game update in:")
             }
-        } else {
-            lastUpdateBroadcastSecond = -1
         }
         handleServerCycles()
     }
@@ -863,6 +860,5 @@ class EntityProcessor : Runnable {
 
         private val shutdownRequested = java.util.concurrent.atomic.AtomicBoolean(false)
         private val chunkIndexMissingLogged = java.util.concurrent.atomic.AtomicBoolean(false)
-        @Volatile private var lastUpdateBroadcastSecond = -1
     }
 }
